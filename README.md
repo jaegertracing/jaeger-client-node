@@ -13,7 +13,7 @@ with Zipkin-compatible data model.
  1. `git submodule init update`
  2. `npm test`
 
-  [ci-img]: https://travis-ci.org/uber/jaeger-client-javascript.svg?branch=master
-  [cov-img]: https://coveralls.io/repos/github/uber/jaeger-client-javascript/badge.svg?branch=master
-  [ci]: https://travis-ci.org/uber/jaeger-client-javascript
-  [cov]: https://coveralls.io/github/uber/jaeger-client-javascript?branch=master
+  [ci-img]: https://travis-ci.org/uber/jaeger-client-node.svg?branch=master
+  [cov-img]: https://coveralls.io/repos/github/uber/jaeger-client-node/badge.svg?branch=master
+  [ci]: https://travis-ci.org/uber/jaeger-client-node
+  [cov]: https://coveralls.io/github/uber/jaeger-client-node?branch=master
