@@ -1,0 +1,26 @@
+sudo: required
+
+language: javascript
+
+services:
+- docker
+
+env:
+  global:
+  - DOCKER_VERSION=1.11.1-0~trusty
+  - DOCKER_COMPOSE_VERSION=1.7.0
+  - COMMIT=${TRAVIS_COMMIT::8}
+
+before_install:
+- apt-cache madison docker-engine
+- sudo apt-get -o Dpkg::Options::="--force-confnew" install -y docker-engine=${DOCKER_VERSION}
+- docker version
+- sudo rm /usr/local/bin/docker-compose
+- curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname
+  -s`-`uname -m` > docker-compose
+- chmod +x docker-compose
+- sudo mv docker-compose /usr/local/bin
+- docker-compose version
+
+script:
+- npm test
