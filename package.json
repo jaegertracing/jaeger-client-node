@@ -36,10 +36,10 @@
     "babel-preset-es2015": "^6.3.13",
     "eslint": "^2.4.0",
     "eslint-config-airbnb": "^6.2.0",
+    "eslint-plugin-react": "^4.3.0",
     "faucet": "0.0.1",
     "nyc": "2.4.0",
-    "tape": "^4.0.0",
-    "uber-standard": "4.0.0"
+    "tape": "^4.0.0"
   },
   "scripts": {
     "check-ls": "npm ls --loglevel=http --parseable 1>/dev/null && echo '# npm is in a good state'",

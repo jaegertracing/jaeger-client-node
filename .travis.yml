@@ -1,6 +1,18 @@
 sudo: required
 
-language: javascript
+language: node_js
+
+node_js:
+- "6"
+- "5"
+- "4"
+- "iojs"
+- "0.12"
+- "0.10"
+
+cache:
+  directories:
+    - ~/.npm
 
 services:
 - docker
@@ -21,6 +33,7 @@ before_install:
 - chmod +x docker-compose
 - sudo mv docker-compose /usr/local/bin
 - docker-compose version
+- npm install babel-cli
 
 script:
 - npm test
