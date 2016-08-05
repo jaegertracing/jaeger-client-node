@@ -22,6 +22,6 @@
       "consistent-return": [0],
 
       // Disabled as the "exceptions" clause does not seem to currently work
-      "spaced-comment": [0]
+      "spaced-comment": [0],
   }
 }
