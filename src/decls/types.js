@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,5 +19,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-export const SAMPLED_MASK = 0x1;
-export const DEBUG_MASK = 0x2;
+import SpanContext from '../span_context.js';
+
+declare type Endpoint = {
+    ipv4: number,
+    port: number,
+    serviceName: string
+};
+
+declare type Annotation = {
+    timestamp: number,
+    value: string,
+    host: ?Endpoint
+};
+
+declare type BinaryAnnotation = {
+    key: string,
+    value: any,
+    annotationType: string,
+    host: ?Endpoint
+};
+
+declare type Reference = {
+    type(): string;
+    referencedContext(): SpanContext;
+};
+
+declare type startSpanArgs = {
+    operationName: string,
+    childOf?: SpanContext,
+    references?: Array<Reference>,
+    tags?: any,
+    startTime?: number,
+};

@@ -1,0 +1,5 @@
++ support different types of spans: client span (new span ID), rpc server span (same span ID) , (component, and lc) local span (new span ID, different zipkin annotations)
++ implement special tag handlers
++ add metrics
++ implement udp/thrift reporter
++ implement udp/thrift sampler

@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,5 +19,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-export const SAMPLED_MASK = 0x1;
-export const DEBUG_MASK = 0x2;
+import Span from '../span.js';
+
+export default class NoopReporter {
+
+    report(span: Span): void {}
+
+    flush(callback: Function): void {
+        if (callback) {
+            callback();
+        }
+    }
+
+    close(callback: Function) {
+        if (callback) {
+            callback();
+        }
+    }
+}

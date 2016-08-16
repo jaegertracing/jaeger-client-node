@@ -12,6 +12,7 @@
   ],
   "dependencies": {
     "assert": "^1.4.1",
+    "lodash": "^4.15.0",
     "my-local-ip": "^1.0.0",
     "node-int64": "^0.4.0",
     "xorshift": "^0.2.0"
@@ -47,7 +48,7 @@
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed'",
     "report-cover": "nyc report --reporter html --reporter text",
-    "test": "npm run lint && ./node_modules/mocha/bin/mocha --compilers js:babel-core/register",
+    "test": "npm run flow & npm run lint && ./node_modules/mocha/bin/mocha --compilers js:babel-core/register",
     "check-cover": "nyc check-coverage --branches=10 --lines=10 --functions=10",
     "view-cover": "opn ./coverage/index.html"
   }
