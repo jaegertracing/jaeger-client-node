@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,28 +19,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-export default class RateLimiter {
+export const CLIENT_SEND = 'cs';
+export const CLIENT_RECV = 'cr';
+export const SERVER_SEND = 'ss';
+export const SERVER_RECV = 'sr';
+export const LOCAL_COMPONENT = 'lc';
+export const CLIENT_ADDR = 'ca';
+export const SERVER_ADDR = 'sa';
+export const annotationType = {
+    BOOL: 'BOOL',
+    BYTES: 'BYTES',
+    I16: 'I16',
+    I32: 'I32',
+    I64: 'I64',
+    DOUBLE: 'DOUBLE',
+    STRING: 'STRING'
+};
 
-    constructor(creditsPerSecond) {
-        this._creditsPerSecond = creditsPerSecond;
-        this._balance = creditsPerSecond;
-        this._lastTick = new Date().getTime();
-    }
-
-    checkCredit(itemCost) {
-        let currentTime = new Date().getTime();
-        let elapsedTime = (currentTime - this._lastTick) / 1000;
-        this.lastTick = currentTime;
-
-        this._balance += elapsedTime * this._creditsPerSecond;
-        if (this._balance > this._creditsPerSecond) {
-            this._balance = this._creditsPerSecond;
-        }
-
-        if (this._balance >= itemCost) {
-            this._balance -= itemCost;
-            return true;
-        }
-        return false;
-    }
-}

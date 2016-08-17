@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,28 +19,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-export default class RateLimiter {
-
-    constructor(creditsPerSecond) {
-        this._creditsPerSecond = creditsPerSecond;
-        this._balance = creditsPerSecond;
-        this._lastTick = new Date().getTime();
-    }
-
-    checkCredit(itemCost) {
-        let currentTime = new Date().getTime();
-        let elapsedTime = (currentTime - this._lastTick) / 1000;
-        this.lastTick = currentTime;
-
-        this._balance += elapsedTime * this._creditsPerSecond;
-        if (this._balance > this._creditsPerSecond) {
-            this._balance = this._creditsPerSecond;
-        }
-
-        if (this._balance >= itemCost) {
-            this._balance -= itemCost;
-            return true;
-        }
-        return false;
-    }
-}
+declare var it: Function;
+declare var describe: Function;
+declare var beforeEach: Function;
+declare var before: Function;
+declare var afterEach: Function;
+declare var after: Function;
