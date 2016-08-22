@@ -112,7 +112,7 @@ export default class SpanContext {
     }
 
     withBaggageItem(key: string, value: string): SpanContext {
-        let newBaggage = _.assign(this._baggage);
+        let newBaggage = _.assign({}, this._baggage);
         newBaggage[key] = value;
         return new SpanContext(this._traceId, this._spanId, this._parentId, this._flags, newBaggage);
     }
@@ -128,22 +128,16 @@ export default class SpanContext {
             return null;
         }
 
-        // TODO(oibe) is it better to throw an exception here, or return null?
-        let traceId: any = Utils.encodeInt64(headers[0]);
-        let spanId: any = Utils.encodeInt64(headers[1]);
-        let parentId: any = headers[2];
-        let flags: number = parseInt(headers[3], 16);
-
-        let convertedParentId: any = null;
-        if (!(parentId === '0')) {
-            convertedParentId = Utils.encodeInt64(parentId);
+        let parentId = null;
+        if (headers[2] !== '0') {
+            parentId = Utils.encodeInt64(headers[2]);
         }
 
         return new SpanContext(
-            traceId,
-            spanId,
-            convertedParentId,
-            flags
+            Utils.encodeInt64(headers[0]),
+            Utils.encodeInt64(headers[1]),
+            parentId,
+            parseInt(headers[3], 16)
         );
     }
 }

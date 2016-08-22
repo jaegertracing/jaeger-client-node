@@ -19,31 +19,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-export default class RateLimiter {
-    _creditsPerSecond: number;
-    _balance: number;
-    _lastTick: number;
+export default class TracerLogger {
+    _logger: any;
 
-    constructor(creditsPerSecond: number) {
-        this._creditsPerSecond = creditsPerSecond;
-        this._balance = creditsPerSecond;
-        this._lastTick = new Date().getTime();
+    constructor(logger: any) {
+        this._logger = logger;
     }
 
-    checkCredit(itemCost: number): boolean {
-        let currentTime: number = new Date().getTime();
-        let elapsedTime: number = (currentTime - this._lastTick) / 1000;
-        this._lastTick = currentTime;
-
-        this._balance += elapsedTime * this._creditsPerSecond;
-        if (this._balance > this._creditsPerSecond) {
-            this._balance = this._creditsPerSecond;
+    info(msg: string): void {
+        if (this._logger) {
+            this._logger.info(msg);
         }
+    }
 
-        if (this._balance >= itemCost) {
-            this._balance -= itemCost;
-            return true;
+    warn(msg: string): void {
+        if (this._logger) {
+            this._logger.warn(msg);
         }
-        return false;
+    }
+
+    error(msg: string): void {
+        if (this._logger) {
+            this._logger.error(msg);
+        }
     }
 }

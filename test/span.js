@@ -24,6 +24,7 @@ import * as constants from '../src/constants.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import Span from '../src/span.js';
 import SpanContext from '../src/span_context.js';
+import sinon from 'sinon';
 import * as thrift from '../src/thrift.js';
 import Tracer from '../src/tracer.js';
 import Utils from '../src/util.js';
@@ -80,35 +81,45 @@ describe('span should', () => {
         assert.equal(reporter.spans[0], span);
     });
 
-    it('add tags as binary annotations', () => {
+    it('add tags', () => {
         span.addTags({
             numberTag: 7,
             stringTag: 'string',
             booleanTag: true,
         });
 
-
-        let keys = [];
-        for (let i in span._binaryAnnotations) {
-            keys.push(span._binaryAnnotations[i].key);
-        }
-
-        assert.equal(span._binaryAnnotations.length, 3);
-        assert.equal(keys[0], 'numberTag');
-        assert.equal(keys[1], 'stringTag');
-        assert.equal(keys[2], 'booleanTag');
+        assert.equal(Object.keys(span._tags).length, 3);
     });
 
-    it('add logs as annotations', () => {
+    it('add logs with timestamp, and event', () => {
         let timestamp = new Date(2016, 8, 12).getTime();
-        span.log({
-            timestamp: timestamp,
-            event: 'some message'
-        });
+        let event = 'some messgae';
+        span.log({ timestamp, event });
 
-        assert.equal(span._annotations.length, 1);
-        assert.equal(span._annotations[0].timestamp, timestamp);
-        assert.equal(span._annotations[0].value, 'some message');
+        assert.equal(span._logs.length, 1);
+        assert.equal(span._logs[0].timestamp, timestamp);
+        assert.equal(span._logs[0].event, event);
+    });
+
+    it('add logs with paylaod', () => {
+        let payload = {a: 1};
+        span.log({payload});
+
+        assert.equal(span._logs.length, 1);
+        assert.equal(JSON.stringify(span._logs[0].payload), JSON.stringify(payload));
+    });
+
+    it('add logs with event, but without timestamp', () => {
+        let expectedTimestamp = new Date(2016, 8, 12).getTime();
+        // mock global clock
+        let clock = sinon.useFakeTimers(expectedTimestamp);
+        let event = 'some messgae';
+        span.log({ event });
+
+        assert.equal(span._logs.length, 1);
+        assert.equal(span._logs[0].timestamp, expectedTimestamp * 1000); // to micros
+        assert.equal(span._logs[0].event, event);
+        clock.restore();
     });
 
     it ('set and retrieve baggage correctly', () => {
@@ -116,7 +127,6 @@ describe('span should', () => {
         let value = 'some-value';
 
         span.setBaggageItem(key, value);
-
         assert.equal(value, span.getBaggageItem(key));
     });
 

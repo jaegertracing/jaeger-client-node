@@ -20,7 +20,6 @@
 // THE SOFTWARE.
 
 import _ from 'lodash';
-import assert from 'assert';
 import ConstSampler from './samplers/const_sampler.js';
 import * as constants from './constants.js';
 import * as opentracing from 'opentracing';
@@ -31,13 +30,14 @@ import pjson from '../package.json';
 import Span from './span.js';
 import SpanContext from './span_context.js';
 import TextMapCodec from './propagators/text_map_codec.js';
-import * as thrift from './thrift.js';
+import TracerLogger from './tracer_logger.js';
 import Utils from './util.js';
 
 export default class Tracer {
     _serviceName: string;
     _reporter: Reporter;
     _sampler: Sampler;
+    _logger: TracerLogger;
     _host: Endpoint;
     _tracerTags: any;
     _injectors: any;
@@ -46,6 +46,7 @@ export default class Tracer {
     constructor(serviceName: string,
             reporter: Reporter = new NoopReporter(),
             sampler: Sampler = new ConstSampler(false),
+            logger: any,
             tracerTags: any = {}) {
         let port = 0;
         tracerTags.jaegerClient = `Node-${pjson.version}`;
@@ -53,6 +54,7 @@ export default class Tracer {
         this._serviceName = serviceName;
         this._reporter = reporter;
         this._sampler = sampler;
+        this._logger = new TracerLogger(logger);
         this._host = Utils.createEndpoint(serviceName, myLocalIp(), port);
         this._injectors = {};
         this._extractors = {};
@@ -79,6 +81,7 @@ export default class Tracer {
             operationName,
             spanContext,
             startTime,
+            this._logger,
             firstInProcess
         );
 
@@ -136,7 +139,7 @@ export default class Tracer {
 
         let parent: ?SpanContext = fields.childOf;
         if (!parent) {
-            // If there is no child of set, then search list of references
+            // If there is no childOf in fields, then search list of references
             for (let i = 0; i < references.length; i++) {
                 let ref: Reference = references[i];
                 let ref_type = ref.type();
@@ -180,7 +183,7 @@ export default class Tracer {
             ctx.flags = parent.flags;
 
             // copy baggage items
-            ctx.baggage = _.assign(parent.baggage);
+            ctx.baggage = parent.baggage;
         }
 
         return this._startInternalSpan(

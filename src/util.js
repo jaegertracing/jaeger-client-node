@@ -65,14 +65,22 @@ export default class Utils {
      * @return {number} - a 32-bit number where each byte represents an
      * octect of an ip address.
      **/
-    static ipToInt(ip: string): number {
+    static ipToInt(ip: string): ?number {
         let ipl = 0;
         let parts = ip.split('.');
+        if (parts.length != 4) {
+            return null;
+        }
+
         for (let i = 0; i < parts.length; i++) {
             ipl <<= 8;
             ipl += parseInt(parts[i], 10);
         }
-        // TODO(oibe) prove that this will never be grater than 2^31 because
+
+        let signedLimit = 0x7fffffff;
+        if (ipl > signedLimit) {
+            return (1 << 31) - ipl;
+        }
         // zipkin core thrift complains
         return ipl;
     }
@@ -179,18 +187,6 @@ export default class Utils {
             value: value,
             host: host
         };
-    }
-
-    /**
-     * A function which creates logged data which is backed by a zipkin annotation.
-     *
-     * @param {number} timestamp - number to be stored in this log
-     * @param {string} name - the name stored in this log 
-     * @param {Endpoint} host - the Endpoint stored in this log
-     * @return {Annotation} - an annotation representing the parameters received.
-     **/
-    static createLogData(timestamp: number, name: string, host?: Endpoint): Annotation {
-        return this.createAnnotation(timestamp, name, host);
     }
 
     /**

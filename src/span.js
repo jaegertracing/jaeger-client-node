@@ -19,52 +19,49 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import _ from 'lodash';
 import * as constants from './constants.js';
-import * as thrift from './thrift.js';
 import Utils from './util.js';
 import SpanContext from './span_context.js';
+import TracerLogger from './tracer_logger.js';
 
 export default class Span {
     _tracer: any;
     _name: string;
     _spanContext: SpanContext;
     _start: number;
+    _logger: TracerLogger;
     _duration: number;
     _firstInProcess: boolean;
     _isClient: boolean;
     _peer: Endpoint;
-    _annotations: Array<Annotation>;
-    _binaryAnnotations: Array<BinaryAnnotation>;
-    _baggageHeaderCache: any;
+    _logs: Array<LogData>;
+    _tags: any;
+    static _baggageHeaderCache: any;
 
     constructor(tracer: any,
                 name: string,
                 spanContext: SpanContext,
                 start: number = Utils.getTimestampMicros(),
-                firstInProcess: boolean = false,
-                annotations: Array<Annotation> = [],
-                binaryAnnotations: Array<BinaryAnnotation> = []
+                logger: TracerLogger = new TracerLogger(),
+                firstInProcess: boolean = false
     ) {
         this._tracer = tracer;
         this._name = name;
         this._spanContext = spanContext;
         this._start = start;
+        this._logger = logger;
         this._firstInProcess = firstInProcess;
-
-        // logs
-        this._annotations = annotations;
-
-        // tags
-        this._binaryAnnotations = binaryAnnotations;
+        this._logs = [];
+        this._tags = {};
     }
 
     static _getBaggageHeaderCache() {
-        if (!this._baggageHeaderCache) {
-            // $FlowIgnore - flow doesn't seem to like how statics are declared
-            this._baggageHeaderCache = {};
+        if (!Span._baggageHeaderCache) {
+            Span._baggageHeaderCache = {};
         }
 
-        return this._baggageHeaderCache;
+        return Span._baggageHeaderCache;
     }
 
     /**
@@ -74,15 +71,12 @@ export default class Span {
      * @return {string} - The normalized key (lower cased and underscores replaced, along with dashes.)
      **/
     _normalizeBaggageKey(key: string) {
-       // TODO(oibe) should be moved to span in newest opentracing version
-        let baggageHeaderCache = this.constructor._getBaggageHeaderCache();
+        let baggageHeaderCache = Span._getBaggageHeaderCache();
         if (key in baggageHeaderCache) {
             return baggageHeaderCache[key];
         }
 
-        // This stackoverflow claims this approach is slower than regex
-        // http://stackoverflow.com/questions/1144783/replacing-all-occurrences-of-a-string-in-javascript
-        let normalizedKey: string = key.toLowerCase().split('_').join('-');
+        let normalizedKey: string = key.replace(/_/g, '-').toLowerCase();
 
         if (Object.keys(baggageHeaderCache).length < 100) {
             baggageHeaderCache[key] = normalizedKey;
@@ -98,9 +92,8 @@ export default class Span {
      * @param {string} value - The baggage value.
      **/
     setBaggageItem(key: string, value: string): void {
-        // TODO(oibe) should be moved to span in newest opentracing version
         let normalizedKey = this._normalizeBaggageKey(key);
-        this._spanContext.withBaggageItem(normalizedKey, value);
+        this._spanContext = this._spanContext.withBaggageItem(normalizedKey, value);
     }
 
     /**
@@ -110,7 +103,6 @@ export default class Span {
      * @return {string} value - The baggage value.
      **/
     getBaggageItem(key: string): string {
-        // TODO(oibe) should be moved to span in newest opentracing version
         let normalizedKey = this._normalizeBaggageKey(key);
         return this._spanContext.baggage[normalizedKey];
     }
@@ -168,20 +160,7 @@ export default class Span {
      **/
     addTags(keyValuePairs: any): void {
         if (this._spanContext.isSampled()) {
-            for (let key in keyValuePairs) {
-                if (keyValuePairs.hasOwnProperty(key)) {
-                    let value = keyValuePairs[key];
-                    let tag;
-                    if (typeof value === 'number' && (Math.floor(value) === value)) {
-                        tag = Utils.createIntegerTag(key, value);
-                    } else if (typeof value === 'boolean') {
-                        tag = Utils.createBooleanTag(key, value);
-                    } else {
-                        tag = Utils.createStringTag(key, value);
-                    }
-                    this._binaryAnnotations.push(tag);
-                }
-            }
+            this._tags = _.assign(this._tags, keyValuePairs);
         }
     }
 
@@ -195,18 +174,21 @@ export default class Span {
      **/
     log(fields: any): void {
         if (this._spanContext.isSampled()) {
+            if (!fields.event && !fields.payload) {
+                this._logger.error('log must be passed either an event of type string, or a payload of type object');
+                return;
+            }
+
             if (!fields.timestamp) {
                 fields.timestamp = Utils.getTimestampMicros();
             }
 
-            if (!fields.event && !fields.payload) {
-                throw new Error('log must be passed either an event of type string, or a payload of type object');
-            }
-            let value = fields.event || JSON.stringify(fields.payload);
-            let logData = Utils.createLogData(fields.timestamp, value);
-
-            logData.host = this._tracer._host;
-            this._annotations.push(logData);
+            let value = fields.event;
+            this._logs.push({
+                timestamp: fields.timestamp,
+                event: fields.event,
+                payload: fields.payload
+            });
         }
     }
 

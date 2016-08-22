@@ -1,5 +1,8 @@
++ Create a diff to recreate object as optional args, since es6 doesn't have real optional args
 + support different types of spans: client span (new span ID), rpc server span (same span ID) , (component, and lc) local span (new span ID, different zipkin annotations)
 + implement special tag handlers
 + add metrics
 + implement udp/thrift reporter
-+ implement udp/thrift sampler
++ implement http sampler
++ profile performance of Noop tracer vs. Jaeger tracer with const sampling off and on
++ opentracing test harness

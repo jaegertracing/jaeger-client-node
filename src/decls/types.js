@@ -21,8 +21,14 @@
 
 import SpanContext from '../span_context.js';
 
+declare type LogData = {
+    timestamp: ?number,
+    event: ?string,
+    payload: ?any
+};
+
 declare type Endpoint = {
-    ipv4: number,
+    ipv4: ?number,
     port: number,
     serviceName: string
 };

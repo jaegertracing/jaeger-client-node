@@ -1,3 +1,4 @@
+// TODO(oibe) replace with opentracing constants once they are merged, and released.
 module.exports = {
 
     /** ------------------------------------------------------------------------

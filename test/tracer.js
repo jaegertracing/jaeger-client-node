@@ -61,7 +61,7 @@ describe('tracer should', () => {
         assert.equal(span.context().flags, flags);
         assert.equal(span._start, start);
         assert.isNotOk(span._firstInProcess);
-        assert.equal(span._binaryAnnotations.length, 2);
+        assert.equal(Object.keys(span._tags).length, 2);
     });
 
     it ('report a span with tracer level tags', () => {
@@ -89,7 +89,7 @@ describe('tracer should', () => {
 
         assert.equal(span.context().traceId, span.context().spanId);
         assert.isNotOk(span.context().parentId);
-        assert.equal(span.context().flags, constants.SAMPLED_MASK);
+        assert.isOk(span.context().isSampled());
         assert.equal(span._start, startTime);
     });
 
@@ -155,7 +155,7 @@ describe('tracer should', () => {
 
             assert.isOk(bufferEqual(span.context().traceId, traceId));
             assert.isOk(bufferEqual(span.context().parentId, parentId));
-            assert.equal(span.context().flags, constants.SAMPLED_MASK);
+            assert.isOk(span.context().isSampled());
             assert.equal(span._start, startTime);
         }
 
@@ -197,8 +197,7 @@ describe('tracer should', () => {
 
     it ('inject url encoded values into headers', () => {
         let baggage = {
-            keyOne: 'leela',
-            keyTwo: 'bender'
+            keyOne: 'Leela vs. Bender',
         };
         let savedContext = new SpanContext(
             Utils.encodeInt64(1),
@@ -210,8 +209,7 @@ describe('tracer should', () => {
         let carrier = {};
 
         tracer.inject(savedContext, opentracing.FORMAT_HTTP_HEADERS, carrier);
-        assert.equal(carrier['UberCtx-keyOne'], encodeURIComponent('leela'));
-        assert.equal(carrier['UberCtx-keyTwo'], encodeURIComponent('bender'));
+        assert.equal(carrier['UberCtx-keyOne'], 'Leela%20vs.%20Bender');
     });
 
     it ('assert inject and extract throw errors when given an invalid format', () => {
