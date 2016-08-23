@@ -27,8 +27,13 @@ declare type LogData = {
     payload: ?any
 };
 
+declare type Tag = {
+    key: string,
+    value: string
+};
+
 declare type Endpoint = {
-    ipv4: ?number,
+    ipv4: number,
     port: number,
     serviceName: string
 };

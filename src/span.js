@@ -19,41 +19,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import _ from 'lodash';
 import * as constants from './constants.js';
 import Utils from './util.js';
 import SpanContext from './span_context.js';
-import TracerLogger from './tracer_logger.js';
+import NullLogger from './logger.js';
 
 export default class Span {
     _tracer: any;
     _name: string;
     _spanContext: SpanContext;
     _start: number;
-    _logger: TracerLogger;
+    _logger: any;
     _duration: number;
     _firstInProcess: boolean;
     _isClient: boolean;
     _peer: Endpoint;
     _logs: Array<LogData>;
-    _tags: any;
+    _tags: Array<Tag>;
     static _baggageHeaderCache: any;
 
     constructor(tracer: any,
                 name: string,
                 spanContext: SpanContext,
-                start: number = Utils.getTimestampMicros(),
-                logger: TracerLogger = new TracerLogger(),
+                start: number,
                 firstInProcess: boolean = false
     ) {
         this._tracer = tracer;
         this._name = name;
         this._spanContext = spanContext;
         this._start = start;
-        this._logger = logger;
+        this._logger = tracer._logger;
         this._firstInProcess = firstInProcess;
         this._logs = [];
-        this._tags = {};
+        this._tags = [];
     }
 
     static _getBaggageHeaderCache() {
@@ -160,7 +158,12 @@ export default class Span {
      **/
     addTags(keyValuePairs: any): void {
         if (this._spanContext.isSampled()) {
-            this._tags = _.assign(this._tags, keyValuePairs);
+            for (let key in keyValuePairs) {
+                if (keyValuePairs.hasOwnProperty(key)) {
+                    let value = keyValuePairs[key];
+                    this._tags.push({key, value});
+                }
+            }
         }
     }
 

@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import {assert} from 'chai';
+import {assert, expect} from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import * as constants from '../src/constants.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
@@ -81,14 +81,43 @@ describe('span should', () => {
         assert.equal(reporter.spans[0], span);
     });
 
+    it('finish span twice throws exception', () => {
+        expect(() => {span.finish(); span.finish();}).to.throw('You can only call finish() on a span once.');
+    });
+
+    it('set debug and sampling version through sampling priority', () => {
+        span._setSamplingPriority(3);
+
+        assert.isOk(span.context().isDebug());
+        assert.isOk(span.context().isSampled());
+    });
+
+    it('unset sampling on span', () => {
+        span._setSamplingPriority(-1);
+
+        assert.isNotOk(span.context().isSampled());
+    });
+
     it('add tags', () => {
-        span.addTags({
+        let keyValuePairs = {
             numberTag: 7,
             stringTag: 'string',
             booleanTag: true,
-        });
+        };
+        span.addTags(keyValuePairs);
+        span.addTags({numberTag: 8});
 
-        assert.equal(Object.keys(span._tags).length, 3);
+        // test to make sure cosecutive calls with same key does not
+        // overwrite the first key.
+        let count = 0;
+        for(let i = 0; i < span._tags.length; i++) {
+            if (span._tags[i].key === 'numberTag') {
+                count += 1;
+            }
+        }
+
+        assert.isOk(span._tags.length, 4);
+        assert.equal(count, 2);
     });
 
     it('add logs with timestamp, and event', () => {

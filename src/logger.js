@@ -19,28 +19,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-export default class TracerLogger {
-    _logger: any;
-
-    constructor(logger: any) {
-        this._logger = logger;
-    }
-
-    info(msg: string): void {
-        if (this._logger) {
-            this._logger.info(msg);
-        }
-    }
-
-    warn(msg: string): void {
-        if (this._logger) {
-            this._logger.warn(msg);
-        }
-    }
-
-    error(msg: string): void {
-        if (this._logger) {
-            this._logger.error(msg);
-        }
-    }
+export default class NullLogger {
+    constructor() {}
 }

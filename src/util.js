@@ -119,101 +119,10 @@ export default class Utils {
         }
 
         return {
-            ipv4: Utils.ipToInt(ipv4),
+            ipv4: Utils.ipToInt(ipv4) || 0,
             port: port || 0,
             serviceName: serviceName
         };
-    }
-
-    /**
-     * @param {string} key - the key of the binary annotation
-     * @param {string} value - the value of the binary annotation
-     * @param {string} annotationType - the annotationType from thrift to be used
-     * @param {Endpoint} host - the endpoint to attach to this annotation.
-     * @return {BinaryAnnotation} - a binary annotation representing the parameters received.
-     **/
-    static createBinaryAnnotation(
-            key: string,
-            value: any,
-            annotationType: string,
-            host?: Endpoint): BinaryAnnotation {
-
-        return {
-            key: key,
-            value: new Buffer(value, 'binary'),
-            annotationType: annotationType,
-            host: host
-        };
-    }
-
-    /**
-     * @param {string} key - the key of the binary annotation
-     * @param {number} value - the value of the binary annotation
-     * @return {BinaryAnnotation} - a binary annotation representing the parameters received.
-     **/
-    static createIntegerTag(key: string, value: number): BinaryAnnotation {
-        let max_16 = 0x7fff;
-        let min_16 = -0x7fff - 1;
-        let max_32 = 0x7fffffff;
-        let min_32 = -0x7fffffff - 1;
-
-        let type;
-        let buf;
-        if (value < min_32 || value > max_32) {
-            type = thrift.annotationType.I64;
-            buf = Utils.encodeInt64(value, 0);
-        } else if (value < min_16 || value > max_16) {
-            type = thrift.annotationType.I32;
-            buf = new Buffer(4);
-            buf.writeInt32BE(value, 0);
-        } else {
-            type = thrift.annotationType.I16;
-            buf = new Buffer(2);
-            buf.writeInt16BE(value, 0);
-        }
-
-        return this.createBinaryAnnotation(key, buf, type);
-    }
-
-    /**
-     * @param {number} timestamp - number to be stored in this annotation
-     * @param {string} value - the string value stored in this annotation
-     * @param {Endpoint} host - the Endpoint stored in this annotation
-     * @return {Annotation} - an annotation representing the parameters received.
-     **/
-    static createAnnotation(timestamp: number, value: string , host?: Endpoint): Annotation {
-        return {
-            timestamp: timestamp,
-            value: value,
-            host: host
-        };
-    }
-
-    /**
-     * A function which creates boolean tags backed by zipkin binary annotations
-     *
-     * @param {string} key - number to be stored in this log
-     * @param {boolean} value - the name stored in this log 
-     * @return {BinaryAnnotation} - a string tag represented by a binary annotation.
-     **/
-    static createBooleanTag(key: string, value: boolean): BinaryAnnotation {
-        let booleanValue = '0x0';
-        if (value) {
-            booleanValue = '0x1';
-        }
-
-        return this.createBinaryAnnotation(key, booleanValue, thrift.annotationType.BOOL);
-    }
-
-    /**
-     * A function which creates string tags backed by zipkin binary annotations
-     *
-     * @param {string} key - number to be stored in this log.
-     * @param {boolean} value - the name stored in this log 
-     * @return {BinaryAnnotation} - a string tag represented by a binary annotation.
-     **/
-    static createStringTag(key: string, value: string): BinaryAnnotation {
-        return this.createBinaryAnnotation(key, value, thrift.annotationType.STRING);
     }
 
     /**

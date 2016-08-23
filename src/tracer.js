@@ -19,7 +19,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import _ from 'lodash';
 import ConstSampler from './samplers/const_sampler.js';
 import * as constants from './constants.js';
 import * as opentracing from 'opentracing';
@@ -30,14 +29,14 @@ import pjson from '../package.json';
 import Span from './span.js';
 import SpanContext from './span_context.js';
 import TextMapCodec from './propagators/text_map_codec.js';
-import TracerLogger from './tracer_logger.js';
+import NullLogger from './logger.js';
 import Utils from './util.js';
 
 export default class Tracer {
     _serviceName: string;
     _reporter: Reporter;
     _sampler: Sampler;
-    _logger: TracerLogger;
+    _logger: NullLogger;
     _host: Endpoint;
     _tracerTags: any;
     _injectors: any;
@@ -54,7 +53,7 @@ export default class Tracer {
         this._serviceName = serviceName;
         this._reporter = reporter;
         this._sampler = sampler;
-        this._logger = new TracerLogger(logger);
+        this._logger = logger || new NullLogger();
         this._host = Utils.createEndpoint(serviceName, myLocalIp(), port);
         this._injectors = {};
         this._extractors = {};
@@ -81,7 +80,6 @@ export default class Tracer {
             operationName,
             spanContext,
             startTime,
-            this._logger,
             firstInProcess
         );
 
@@ -182,7 +180,7 @@ export default class Tracer {
             }
             ctx.flags = parent.flags;
 
-            // copy baggage items
+            // reuse parent's baggage as we'll never change it
             ctx.baggage = parent.baggage;
         }
 
