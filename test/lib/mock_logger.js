@@ -1,4 +1,3 @@
-// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,10 +18,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import Span from '../span.js';
+export default class MockLogger {
+    _infoMsgs: Array<String>;
+    _debugMesgs: Array<String>;
+    _warnMsgs: Array<String>;
+    _errorMsgs: Array<String>;
 
-declare interface Reporter {
-    report(span: Span): void;
-    flush(callback: ?Function): void;
-    close(callback: ?Function): void;
+    constructor() {
+        this._infoMsgs = [];
+        this._debugMsgs = [];
+        this._warnMsgs = [];
+        this._errorMsgs = [];
+    }
+
+    info(msg: string): void {
+        this._infoMsgs.push(msg);
+    }
+
+    debug(msg: string): void {
+        this._debugMsgs.push(msg);
+    }
+
+    warn(msg: string): void {
+        this._warnMsgs.push(msg);
+    }
+
+    error(msg: string): void {
+        this._errorMsgs.push(msg);
+    }
+
+    clear(): void {
+        this._infoMsgs = [];
+        this._debugMsgs = [];
+        this._warnMsgs = [];
+        this._errorMsgs = [];
+    }
+
 }

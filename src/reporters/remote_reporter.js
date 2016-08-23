@@ -19,42 +19,45 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import Span from '../span.js';
+import NullLogger from '../logger.js';
 
-export default class InMemoryReporter {
-    _spans: Array<Span>;
-    _flushed: Array<Span>;
+const DEFAULT_QUEUE_SIZE = 100
+const DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS = 10000;
 
-    constructor() {
-        this._spans = [];
-        this._flushed = [];
+export default class RemoteReporter {
+    _bufferFlushInterval: number;
+    _logger: Logger;
+    _sender: Transport;
+    _intervalHandle: any;
+
+    constructor(sender: Transport,
+                options: any = {}) {
+        if (!options.bufferFlushInterval) {
+            this._bufferFlushInterval = options.bufferFlushInterval || DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS;
+        }
+        this._logger = options.logger || NullLogger;
+        this._sender = sender;
+        this._intervalHandle = setInterval(() => {
+            this.flush();
+        }, this._bufferFlushInterval);
     }
 
     report(span: Span): void {
-        this._spans.push(span);
-    }
-
-    get spans(): Array<Span> {
-        return this._spans;
-    }
-
-    clear(): void {
-        this._spans = [];
+        let response: SenderResponse = this._sender.append(span._toJSON());
+        if (response.err) {
+            this._logger.error('Failed to append spans in reporter.');
+        }
     }
 
     flush(callback: ?Function): void {
-        for (let i = 0; i < this._spans.length; i++) {
-            this._flushed.push(this._spans[i]);
-        }
-
-        if (callback) {
-            callback();
+        let response: SenderResponse = this._sender.flush(callback);
+        if (response.err) {
+            this._logger.error('Failed to flush spans in reporter.');
         }
     }
 
     close(callback: ?Function): void {
-        if(callback) {
-            callback();
-        }
+        this._sender.close(callback);
+        clearInterval(this._intervalHandle);
     }
 }

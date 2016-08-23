@@ -26,9 +26,9 @@ import NullLogger from './logger.js';
 
 export default class Span {
     _tracer: any;
-    _name: string;
+    _operationName: string;
     _spanContext: SpanContext;
-    _start: number;
+    _timestamp: number;
     _logger: any;
     _duration: number;
     _firstInProcess: boolean;
@@ -41,13 +41,13 @@ export default class Span {
     constructor(tracer: any,
                 name: string,
                 spanContext: SpanContext,
-                start: number,
+                timestamp: number,
                 firstInProcess: boolean = false
     ) {
         this._tracer = tracer;
-        this._name = name;
+        this._operationName = name;
         this._spanContext = spanContext;
-        this._start = start;
+        this._timestamp = timestamp;
         this._logger = tracer._logger;
         this._firstInProcess = firstInProcess;
         this._logs = [];
@@ -128,8 +128,8 @@ export default class Span {
      *
      * @param {string} name - The name to use for setting a span's operation name.
      **/
-    setOperationName(name: string): void {
-        this._name = name;
+    setOperationName(operationName: string): void {
+        this._operationName = operationName;
     }
 
     /**
@@ -145,7 +145,7 @@ export default class Span {
 
         if (this._spanContext.isSampled()) {
             let endTime = finishTime || Utils.getTimestampMicros();
-            this._duration = endTime - this._start;
+            this._duration = endTime - this._timestamp;
             this._tracer._report(this);
         }
     }
@@ -200,6 +200,21 @@ export default class Span {
             this._spanContext.flags = this._spanContext.flags | constants.SAMPLED_MASK | constants.DEBUG_MASK;
         } else {
             this._spanContext.flags = this._spanContext.flags & (~constants.SAMPLED_MASK);
+        }
+    }
+
+    _toJSON() {
+        return {
+            trace_id : this._spanContext.traceId,
+            span_id: this._spanContext.spanId,
+            // TODO(oibe) where is parent id?
+            flags: this._spanContext.flags,
+            timestamp: Utils.encodeInt64(this._timestamp),
+            duration: Utils.encodeInt64(this._duration),
+            tags: this._tags,
+            logs: this._logs,
+            operationName: this._operationName,
+            references: [], // TODO(oibe) where do these get populated on span?
         }
     }
 }

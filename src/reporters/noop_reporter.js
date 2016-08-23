@@ -25,13 +25,13 @@ export default class NoopReporter {
 
     report(span: Span): void {}
 
-    flush(callback: Function): void {
+    flush(callback: ?Function): void {
         if (callback) {
             callback();
         }
     }
 
-    close(callback: Function) {
+    close(callback: ?Function) {
         if (callback) {
             callback();
         }

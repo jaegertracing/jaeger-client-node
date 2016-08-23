@@ -41,6 +41,11 @@ describe('tracer should', () => {
         );
     });
 
+    afterEach(() => {
+        reporter.clear();
+        tracer.close();
+    });
+
     it('create a span correctly through _startInternalSpan', () => {
         let traceId = Utils.encodeInt64(1);
         let spanId = Utils.encodeInt64(2);
@@ -59,7 +64,7 @@ describe('tracer should', () => {
         assert.isOk(bufferEqual(span.context().spanId, spanId));
         assert.isOk(bufferEqual(span.context().parentId, parentId));
         assert.equal(span.context().flags, flags);
-        assert.equal(span._start, start);
+        assert.equal(span._timestamp, start);
         assert.isNotOk(span._firstInProcess);
         assert.equal(Object.keys(span._tags).length, 2);
     });
@@ -90,7 +95,7 @@ describe('tracer should', () => {
         assert.equal(span.context().traceId, span.context().spanId);
         assert.isNotOk(span.context().parentId);
         assert.isOk(span.context().isSampled());
-        assert.equal(span._start, startTime);
+        assert.equal(span._timestamp, startTime);
     });
 
     it ('start a child span represented as a separate span from parent, using childOf and references', () => {
@@ -118,7 +123,7 @@ describe('tracer should', () => {
             assert.isOk(bufferEqual(span.context().traceId, traceId));
             assert.isOk(bufferEqual(span.context().parentId, spanId));
             assert.equal(span.context().flags, constants.SAMPLED_MASK);
-            assert.equal(span._start, startTime);
+            assert.equal(span._timestamp, startTime);
         }
 
         assertByStartSpanParameters(childOfParams);
@@ -156,7 +161,7 @@ describe('tracer should', () => {
             assert.isOk(bufferEqual(span.context().traceId, traceId));
             assert.isOk(bufferEqual(span.context().parentId, parentId));
             assert.isOk(span.context().isSampled());
-            assert.equal(span._start, startTime);
+            assert.equal(span._timestamp, startTime);
         }
 
         assertByStartSpanParameters(childOfParams);
@@ -224,5 +229,23 @@ describe('tracer should', () => {
         // subtle but expect wants a function to call not the result of a function call.
         expect(() => {tracer.inject(context, 'fake-format', carrier)}).to.throw('Unsupported format: fake-format');
         expect(() => {tracer.extract('fake-format', carrier)}).to.throw('Unsupported format: fake-format');
+    });
+
+    it ('report spans', () => {
+        let span = tracer.startSpan('operation');
+        tracer._report(span);
+
+        assert.equal(reporter.spans.length, 1);
+    });
+
+    it ('flush spans', (done) => {
+        let span = tracer.startSpan('operation');
+        span.finish();
+
+        // test callback for flush as well
+        tracer.flush(() => {
+            assert.equal(tracer._reporter._flushed.length, 1);
+            done();
+        });
     });
 });
