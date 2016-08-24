@@ -19,31 +19,47 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-export default class RateLimiter {
-    _creditsPerSecond: number;
-    _balance: number;
-    _lastTick: number;
+import SpanContext from '../span_context.js';
 
-    constructor(creditsPerSecond: number) {
-        this._creditsPerSecond = creditsPerSecond;
-        this._balance = creditsPerSecond;
-        this._lastTick = new Date().getTime();
-    }
+declare type LogData = {
+    timestamp: ?number,
+    event: ?string,
+    payload: ?any
+};
 
-    checkCredit(itemCost: number): boolean {
-        let currentTime: number = new Date().getTime();
-        let elapsedTime: number = (currentTime - this._lastTick) / 1000;
-        this._lastTick = currentTime;
+declare type Tag = {
+    key: string,
+    value: string
+};
 
-        this._balance += elapsedTime * this._creditsPerSecond;
-        if (this._balance > this._creditsPerSecond) {
-            this._balance = this._creditsPerSecond;
-        }
+declare type Endpoint = {
+    ipv4: number,
+    port: number,
+    serviceName: string
+};
 
-        if (this._balance >= itemCost) {
-            this._balance -= itemCost;
-            return true;
-        }
-        return false;
-    }
-}
+declare type Annotation = {
+    timestamp: number,
+    value: string,
+    host: ?Endpoint
+};
+
+declare type BinaryAnnotation = {
+    key: string,
+    value: any,
+    annotationType: string,
+    host: ?Endpoint
+};
+
+declare type Reference = {
+    type(): string;
+    referencedContext(): SpanContext;
+};
+
+declare type startSpanArgs = {
+    operationName: string,
+    childOf?: SpanContext,
+    references?: Array<Reference>,
+    tags?: any,
+    startTime?: number,
+};

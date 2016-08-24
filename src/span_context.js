@@ -19,11 +19,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import _ from 'lodash';
+import * as constants from './constants.js';
 import Int64 from 'node-int64';
 import Utils from './util.js';
-
-let SAMPLED_MASK = 0x1;
-let DEBUG_MASK = 0x2;
 
 export default class SpanContext {
     _traceId: any;
@@ -31,7 +30,6 @@ export default class SpanContext {
     _parentId: any;
     _flags: number;
     _baggage: any;
-    _baggageHeaderCache: any;
 
     constructor(traceId: any,
                 spanId: any,
@@ -65,74 +63,38 @@ export default class SpanContext {
         return this._baggage;
     }
 
-    static getBaggageHeaderCache() {
-        if (!this._baggageHeaderCache) {
-            this._baggageHeaderCache = {};
-        }
-
-        return this._baggageHeaderCache;
+    set traceId(traceId: Buffer): void {
+        this._traceId = traceId;
     }
 
-    /**
-     * Returns a normalize key.
-     *
-     * @param {string} key - The key to be normalized for a particular baggage value.
-     * @return {string} - The normalized key (lower cased and underscores replaced, along with dashes.)
-     **/
-    // todo(oibe) moved to span in newest opentracing version
-    _normalizeBaggageKey(key: string) {
-        let baggageHeaderCache = this.constructor.getBaggageHeaderCache();
-        if (key in baggageHeaderCache) {
-            return baggageHeaderCache[key];
-        }
-
-        // This stackoverflow claims this approach is slower than regex
-        // http://stackoverflow.com/questions/1144783/replacing-all-occurrences-of-a-string-in-javascript
-        let normalizedKey: string = key.toLowerCase().split('_').join('-');
-
-        if (Object.keys(baggageHeaderCache).length < 100) {
-            baggageHeaderCache[key] = normalizedKey;
-        }
-
-        return normalizedKey;
+    set spanId(spanId: Buffer): void {
+        this._spanId = spanId;
     }
 
-    /**
-     * Sets a baggage value with an associated key.
-     *
-     * @param {string} key - The baggage key.
-     * @param {string} value - The baggage value.
-     **/
-    // todo(oibe) moved to span in newest opentracing version
-    setBaggageItem(key: string, value: string): void {
-        let normalizedKey = this._normalizeBaggageKey(key);
-        this._baggage[normalizedKey] = value;
+    set parentId(parentId: Buffer): void {
+        this._parentId = parentId;
     }
 
-    /**
-     * Gets a baggage value with an associated key.
-     *
-     * @param {string} key - The baggage key.
-     * @return {string} value - The baggage value.
-     **/
-    // todo(oibe) moved to span in newest opentracing version
-    getBaggageItem(key: string): string {
-        let normalizedKey = this._normalizeBaggageKey(key);
-        return this._baggage[normalizedKey];
+    set flags(flags: number): void {
+        this._flags = flags;
+    }
+
+    set baggage(baggage: any): void {
+        this._baggage = baggage;
     }
 
     /**
      * @return {boolean} - returns whether or not this span context was sampled.
      **/
-    IsSampled(): boolean {
-        return (this.flags & SAMPLED_MASK) === SAMPLED_MASK;
+    isSampled(): boolean {
+        return (this.flags & constants.SAMPLED_MASK) === constants.SAMPLED_MASK;
     }
 
     /**
      * @return {boolean} - returns whether or not this span context has a debug flag set.
      **/
-    IsDebug(): boolean {
-        return (this.flags & DEBUG_MASK) === DEBUG_MASK;
+    isDebug(): boolean {
+        return (this.flags & constants.DEBUG_MASK) === constants.DEBUG_MASK;
     }
 
     /**
@@ -149,6 +111,13 @@ export default class SpanContext {
         ].join(':');
     }
 
+    withBaggageItem(key: string, value: string): SpanContext {
+        let newBaggage = _.assign({}, this._baggage);
+        newBaggage[key] = value;
+        return new SpanContext(this._traceId, this._spanId, this._parentId, this._flags, newBaggage);
+    }
+
+
     /**
      * @param {string} serializedString - a serialized span context.
      * @return {SpanContext} - returns a span context represented by the serializedString.
@@ -159,22 +128,26 @@ export default class SpanContext {
             return null;
         }
 
-        // todo(oibe) is it better to throw an exception here, or return null?
-        let traceId: any = Utils.encodeInt64(headers[0]);
-        let spanId: any = Utils.encodeInt64(headers[1]);
-        let parentId: any = headers[2];
-        let flags: number = parseInt(headers[3], 16);
+        let traceId = parseInt(headers[0], 16);
+        let NaNDetected = (isNaN(traceId, 16) || traceId === 0) ||
+                          isNaN(parseInt(headers[1], 16)) ||
+                          isNaN(parseInt(headers[2], 16)) ||
+                          isNaN(parseInt(headers[3], 16));
 
-        let convertedParentId: any = null;
-        if (!(parentId === '0')) {
-            convertedParentId = Utils.encodeInt64(parentId);
+        if (NaNDetected) {
+            return null;
+        }
+
+        let parentId = null;
+        if (headers[2] !== '0') {
+            parentId = Utils.encodeInt64(headers[2]);
         }
 
         return new SpanContext(
-            traceId,
-            spanId,
-            convertedParentId,
-            flags
+            Utils.encodeInt64(headers[0]),
+            Utils.encodeInt64(headers[1]),
+            parentId,
+            parseInt(headers[3], 16)
         );
     }
 }

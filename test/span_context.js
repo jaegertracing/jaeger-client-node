@@ -20,6 +20,7 @@
 
 import {assert} from 'chai';
 import bufferEqual from 'buffer-equal';
+import * as constants from '../src/constants.js';
 import SpanContext from '../src/span_context.js';
 import Utils from '../src/util.js';
 
@@ -45,22 +46,6 @@ describe ('SpanContext should', () => {
         assert.equal(flags, context.flags);
     });
 
-    it ('set and retrieve baggage correctly', () => {
-        let key = 'some-key';
-        let value = 'some-value';
-
-        let context = new SpanContext(
-                Utils.encodeInt64(1),
-                Utils.encodeInt64(2),
-                Utils.encodeInt64(3),
-                1
-            );
-
-        context.setBaggageItem(key, value);
-
-        assert.equal(value, context.getBaggageItem(key));
-    });
-
     it ('return IsSampled properly', () => {
         let context = new SpanContext(
                 Utils.encodeInt64(1),
@@ -68,12 +53,12 @@ describe ('SpanContext should', () => {
                 Utils.encodeInt64(3),
                 3
             );
-        assert.isOk(context.IsSampled());
-        assert.isOk(context.IsDebug());
+        assert.isOk(context.isSampled());
+        assert.isOk(context.isDebug());
 
         context._flags = 0;
-        assert.isNotOk(context.IsSampled());
-        assert.isNotOk(context.IsDebug());
+        assert.isNotOk(context.isSampled());
+        assert.isNotOk(context.isDebug());
     });
 
     it ('format strings properly with toString', () => {
@@ -107,13 +92,14 @@ describe ('SpanContext should', () => {
         assert.equal(context.flags, 0x1);
     });
 
-    it ('normalized key correctly', () => {
-        let context = new SpanContext();
-        let unnormalizedKey = 'SOME_KEY';
-        let key = context._normalizeBaggageKey(unnormalizedKey);
-
-        assert.equal(key, 'some-key');
-        assert.isOk(unnormalizedKey in SpanContext.getBaggageHeaderCache());
+    it ('return null on malformed traces', () => {
+        assert.equal(SpanContext.fromString('bad value'), null);
+        assert.equal(SpanContext.fromString('1:1:1:1:1'), null, 'Too many colons');
+        assert.equal(SpanContext.fromString('1:1:1'), null, 'Too few colons');
+        assert.equal(SpanContext.fromString('x:1:1:1'), null, 'Not all numbers');
+        assert.equal(SpanContext.fromString('1:x:1:1'), null, 'Not all numbers');
+        assert.equal(SpanContext.fromString('1:1:x:1'), null, 'Not all numbers');
+        assert.equal(SpanContext.fromString('1:1:1:x'),  null, 'Not all numbers');
+        assert.equal(SpanContext.fromString('0:1:1:1'), null, 'Trace ID cannot be zero');
     });
-
 });

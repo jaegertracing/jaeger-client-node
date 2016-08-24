@@ -19,31 +19,42 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-export default class RateLimiter {
-    _creditsPerSecond: number;
-    _balance: number;
-    _lastTick: number;
+import Span from '../span.js';
 
-    constructor(creditsPerSecond: number) {
-        this._creditsPerSecond = creditsPerSecond;
-        this._balance = creditsPerSecond;
-        this._lastTick = new Date().getTime();
+export default class InMemoryReporter {
+    _spans: Array<Span>;
+    _flushed: Array<Span>;
+
+    constructor() {
+        this._spans = [];
+        this._flushed = [];
     }
 
-    checkCredit(itemCost: number): boolean {
-        let currentTime: number = new Date().getTime();
-        let elapsedTime: number = (currentTime - this._lastTick) / 1000;
-        this._lastTick = currentTime;
+    report(span: Span): void {
+        this._spans.push(span);
+    }
 
-        this._balance += elapsedTime * this._creditsPerSecond;
-        if (this._balance > this._creditsPerSecond) {
-            this._balance = this._creditsPerSecond;
+    get spans(): Array<Span> {
+        return this._spans;
+    }
+
+    clear(): void {
+        this._spans = [];
+    }
+
+    flush(callback: Function): void {
+        for (let i = 0; i < this._spans.length; i++) {
+            this._flushed.push(this._spans[i]);
         }
 
-        if (this._balance >= itemCost) {
-            this._balance -= itemCost;
-            return true;
+        if (callback) {
+            callback();
         }
-        return false;
+    }
+
+    close(callback: Function): void {
+        if (callback) {
+            callback();
+        }
     }
 }

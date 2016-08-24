@@ -19,31 +19,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-export default class RateLimiter {
-    _creditsPerSecond: number;
-    _balance: number;
-    _lastTick: number;
+import SpanContext from '../span_context.js';
 
-    constructor(creditsPerSecond: number) {
-        this._creditsPerSecond = creditsPerSecond;
-        this._balance = creditsPerSecond;
-        this._lastTick = new Date().getTime();
-    }
-
-    checkCredit(itemCost: number): boolean {
-        let currentTime: number = new Date().getTime();
-        let elapsedTime: number = (currentTime - this._lastTick) / 1000;
-        this._lastTick = currentTime;
-
-        this._balance += elapsedTime * this._creditsPerSecond;
-        if (this._balance > this._creditsPerSecond) {
-            this._balance = this._creditsPerSecond;
-        }
-
-        if (this._balance >= itemCost) {
-            this._balance -= itemCost;
-            return true;
-        }
-        return false;
-    }
+declare interface Injector {
+    inject(spanContext: SpanContext, carrier: any): void;
 }
