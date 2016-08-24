@@ -128,6 +128,16 @@ export default class SpanContext {
             return null;
         }
 
+        let traceId = parseInt(headers[0], 16);
+        let NaNDetected = (isNaN(traceId, 16) || traceId === 0) ||
+                          isNaN(parseInt(headers[1], 16)) ||
+                          isNaN(parseInt(headers[2], 16)) ||
+                          isNaN(parseInt(headers[3], 16));
+
+        if (NaNDetected) {
+            return null;
+        }
+
         let parentId = null;
         if (headers[2] !== '0') {
             parentId = Utils.encodeInt64(headers[2]);

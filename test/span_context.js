@@ -93,21 +93,13 @@ describe ('SpanContext should', () => {
     });
 
     it ('return null on malformed traces', () => {
-        // TODO(oibe) do we need these tests?  We are the ones creating the serialized
-        // version of these fields.  They should never be corrupt.  We follow this practice
-        // in a lot of places.  Also it makes the code slower.
-        /*
         assert.equal(SpanContext.fromString('bad value'), null);
-        assert.equal(SpanContext.fromString('1:1:1:1:1', null, 'Too many colons');
+        assert.equal(SpanContext.fromString('1:1:1:1:1'), null, 'Too many colons');
         assert.equal(SpanContext.fromString('1:1:1'), null, 'Too few colons');
         assert.equal(SpanContext.fromString('x:1:1:1'), null, 'Not all numbers');
         assert.equal(SpanContext.fromString('1:x:1:1'), null, 'Not all numbers');
         assert.equal(SpanContext.fromString('1:1:x:1'), null, 'Not all numbers');
         assert.equal(SpanContext.fromString('1:1:1:x'),  null, 'Not all numbers');
         assert.equal(SpanContext.fromString('0:1:1:1'), null, 'Trace ID cannot be zero');
-        assert.equal(SpanContext.fromString('1:0:1:1'), null, 'Span ID cannot be zero');
-        assert.equal(SpanContext.fromString('1:1:-1:1'), null, 'Parent ID cannot be negative');
-        assert.equal(SpanContext.fromString('1:1:1:-1'), null, 'Flags cannot be negative');
-        */
     });
 });

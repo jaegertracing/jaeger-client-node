@@ -20,5 +20,8 @@
 // THE SOFTWARE.
 
 export default class NullLogger {
-    constructor() {}
+    info(msg: string): void {}
+    debug(msg: string): void {}
+    warn(msg: string): void {}
+    error(msg: string): void {}
 }

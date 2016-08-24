@@ -93,7 +93,7 @@ describe('span should', () => {
     });
 
     it('unset sampling on span', () => {
-        span._setSamplingPriority(-1);
+        span._setSamplingPriority(0);
 
         assert.isNotOk(span.context().isSampled());
     });
@@ -107,7 +107,7 @@ describe('span should', () => {
         span.addTags(keyValuePairs);
         span.addTags({numberTag: 8});
 
-        // test to make sure cosecutive calls with same key does not
+        // test to make sure consecutive calls with same key does not
         // overwrite the first key.
         let count = 0;
         for(let i = 0; i < span._tags.length; i++) {

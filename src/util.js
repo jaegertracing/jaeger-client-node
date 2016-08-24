@@ -19,7 +19,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import * as thrift from './thrift.js';
 import xorshift from 'xorshift';
 import Int64 from 'node-int64';
 
@@ -81,7 +80,6 @@ export default class Utils {
         if (ipl > signedLimit) {
             return (1 << 31) - ipl;
         }
-        // zipkin core thrift complains
         return ipl;
     }
 
