@@ -21,6 +21,7 @@
 
 import xorshift from 'xorshift';
 import Int64 from 'node-int64';
+import os from 'os';
 
 export default class Utils {
     /**
@@ -132,4 +133,18 @@ export default class Utils {
         // http://stackoverflow.com/questions/11725691/how-to-get-a-microtime-in-node-js
         return Date.now() * 1000;
     }
+
+    static myIp(): number {
+        let ifaces = os.networkInterfaces();
+        let keys = Object.keys(ifaces);
+        for (let i = 0; i < keys.length; i++) {
+            let iface = ifaces[keys[i]];
+            for (let j in iface) {
+                if (iface[j].family === 'IPv4' && !iface[j].internal) {
+                    return iface[j].address;
+                }
+            }
+        }
+    }
+
 }

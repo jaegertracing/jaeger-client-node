@@ -23,7 +23,6 @@ import ConstSampler from './samplers/const_sampler.js';
 import * as constants from './constants.js';
 import * as opentracing from 'opentracing';
 import * as opentracing_tags from './tags.js';
-import myLocalIp from 'my-local-ip';
 import NoopReporter from './reporters/noop_reporter.js';
 import pjson from '../package.json';
 import Span from './span.js';
@@ -54,7 +53,7 @@ export default class Tracer {
         this._reporter = reporter;
         this._sampler = sampler;
         this._logger = logger || new NullLogger();
-        this._host = Utils.createEndpoint(serviceName, myLocalIp(), port);
+        this._host = Utils.createEndpoint(serviceName, Utils.myIp(), port);
         this._injectors = {};
         this._extractors = {};
 
