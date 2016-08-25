@@ -1,4 +1,3 @@
-// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,8 +18,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-declare interface Sampler {
-    isSampled(): boolean;
-    equal(other: Sampler): boolean;
-    close(callback: Function): void;
-}
+import {assert} from 'chai';
+import ProbabilisticSampler from '../src/samplers/probabilistic_sampler.js';
+import RateLimiter from '../src/samplers/ratelimiting_sampler.js';
+import sinon from 'sinon';
+
+describe ('leaky bucket ratelimiter should', () => {
+    it('block after threshold is met', () => {
+        let initialDate = new Date(2011,9,1).getTime();
+        let clock = sinon.useFakeTimers(initialDate);
+        let limiter = new RateLimiter(10);
+        for (let i = 0; i < 10; i++) {
+            limiter.isSampled(1);
+        }
+
+        assert.equal(limiter.maxTracesPerSecond, 10);
+        assert.isNotOk(limiter.equal(new ProbabilisticSampler(0.5)));
+        assert.equal(limiter.isSampled(1), false, 'expected checkCredit to be false');
+        clock = sinon.useFakeTimers(initialDate + 1000);
+        assert.equal(limiter.isSampled(1), true, 'expected checkCredit to be true');
+        clock.restore();
+    });
+
+});
