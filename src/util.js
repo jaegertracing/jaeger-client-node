@@ -134,12 +134,12 @@ export default class Utils {
         return Date.now() * 1000;
     }
 
-    static myIp(): number {
+    static myIp(): ?string {
         let ifaces = os.networkInterfaces();
         let keys = Object.keys(ifaces);
         for (let i = 0; i < keys.length; i++) {
             let iface = ifaces[keys[i]];
-            for (let j in iface) {
+            for (let j = 0; j < iface.length; j++) {
                 if (iface[j].family === 'IPv4' && !iface[j].internal) {
                     return iface[j].address;
                 }
