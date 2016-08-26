@@ -19,21 +19,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import Span from '../span.js';
-
-declare interface Reporter {
-    report(span: Span): void;
-    flush(callback: ?Function): void;
-    close(callback: ?Function): void;
-};
-
-declare class Transport {
-    append(span: Span): SenderResponse;
-    flush(): SenderResponse;
-    close(): void;
-};
-
-declare type SenderResponse = {
-    err: boolean,
-    numSpans: number
+declare class Logger {
+    info(msg: string): void;
+    debug(msg: string): void;
+    warn(msg: string): void;
+    error(msg: string): void;
 };

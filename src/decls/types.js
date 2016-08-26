@@ -63,21 +63,3 @@ declare type startSpanArgs = {
     tags?: any,
     startTime?: number,
 };
-
-declare type SenderResponse = {
-    err: boolean,
-    numSpans: number
-};
-
-declare class Transport {
-    append(span: Span): SenderResponse;
-    flush(): SenderResponse;
-    close(): void;
-};
-
-declare class Logger {
-    info(msg: string): void;
-    debug(msg: string): void;
-    warn(msg: string): void;
-    error(msg: string): void;
-}

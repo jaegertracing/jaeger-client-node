@@ -21,19 +21,22 @@
 import {assert} from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import dgram from 'dgram';
+import fs from 'fs';
 import path from 'path';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
-import thriftify from 'thriftify';
+import TestUtils from './lib/util.js';
 import Tracer from '../src/tracer.js';
+import {Thrift} from 'thriftrw';
 import UDPSender from '../src/reporters/udp_sender.js';
 
 const PORT = 5775;
 const HOST = '127.0.0.1';
 
 describe('udp sender should', () => {
-    let spec = thriftify.readSpecSync(path.join(__dirname, '../src/reporter.thrift'));
     let server;
     let tracer;
+    let thrift;
+
     before(() => {
         server = dgram.createSocket('udp4');
         server.bind(PORT, HOST);
@@ -42,37 +45,47 @@ describe('udp sender should', () => {
             new InMemoryReporter(),
             new ConstSampler(true)
         );
+        thrift = new Thrift({
+            source: fs.readFileSync(path.join(__dirname, '../src/jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
+            allowOptionalArguments: true
+        });
     });
 
     after(() => {
         tracer.close();
     });
 
-    it('read and verify spans sent', (done) => {
+    it ('read and verify spans sent', (done) => {
         let sender = new UDPSender();
+        let spanOne = tracer.startSpan({operationName: 'operation-one'});
+        spanOne.finish(); // finish to set span duration
+        spanOne = spanOne._toThrift();
+        let spanTwo = tracer.startSpan({operationName: 'operation-two'});
+        spanTwo.finish(); // finish to set span duration
+        spanTwo = spanTwo._toThrift();
+
         server.on('message', (msg, remote) => {
-            let thriftObj = thriftify.fromBuffer(msg, spec, 'Agent::emitZipkinBatch_args');
+            let thriftJaegerArgs = thrift.getType('Agent::emitJaegerBatch_args');
+            let thriftObj = thriftJaegerArgs.fromBufferResult(msg).value;
             assert.isOk(thriftObj.spans);
             assert.equal(thriftObj.spans.length, 2);
+            assert.isOk(TestUtils.thriftSpanEqual(spanOne, thriftObj.spans[0]));
+            assert.isOk(TestUtils.thriftSpanEqual(spanTwo, thriftObj.spans[1]));
             sender.close();
             done();
         });
 
-        let spanOne = tracer.startSpan('operation-one');
-        spanOne.finish(); // finish to set span duration
-        let spanTwo = tracer.startSpan('operation-two');
-        spanTwo.finish(); // finish to set span duration
-        sender.append(spanOne._toJSON());
-        sender.append(spanTwo._toJSON());
+        sender.append(spanOne);
+        sender.append(spanTwo);
 
         // cleanup
         sender.flush();
     });
 
     it('flush spans after capacity is met', () => {
-        let spanOne = tracer.startSpan('operation-one');
+        let spanOne = tracer.startSpan({operationName: 'operation-one'});
         spanOne.finish(); // finish to set span duration
-        spanOne = spanOne._toJSON();
+        spanOne = spanOne._toThrift();
         let sender = new UDPSender(undefined, 1);
         let spanSize = sender._calcSpanSize(spanOne);
 

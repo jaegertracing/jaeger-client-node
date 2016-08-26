@@ -39,13 +39,13 @@ export default class Span {
     static _baggageHeaderCache: any;
 
     constructor(tracer: any,
-                name: string,
+                operationName: string,
                 spanContext: SpanContext,
                 timestamp: number,
                 firstInProcess: boolean = false
     ) {
         this._tracer = tracer;
-        this._operationName = name;
+        this._operationName = operationName;
         this._spanContext = spanContext;
         this._timestamp = timestamp;
         this._logger = tracer._logger;
@@ -203,18 +203,34 @@ export default class Span {
         }
     }
 
-    _toJSON() {
+    _toThrift() {
+        let tags = [];
+        for (let i = 0; i < this._tags.length; i++) {
+            let tag = this._tags[i];
+            tags.push({
+                key: tag.key,
+                tagType: 'STRING', // TODO(oibe) support multiple tag types
+                vStr: tag.value,
+                vDouble: 0,
+                vBool: false,
+                vInt16: 0,
+                vInt32: 0,
+                vInt64: 0,
+                vBinary: new Buffer(1)
+            });
+        }
+
         return {
-            trace_id : this._spanContext.traceId,
-            span_id: this._spanContext.spanId,
-            // TODO(oibe) where is parent id?
-            flags: this._spanContext.flags,
-            timestamp: Utils.encodeInt64(this._timestamp),
-            duration: Utils.encodeInt64(this._duration),
-            tags: this._tags,
-            logs: this._logs,
+            traceId : this._spanContext.traceId,
+            spanId: this._spanContext.spanId,
             operationName: this._operationName,
-            references: [], // TODO(oibe) where do these get populated on span?
+            references: [], // TODO(oibe) revist correctness after a spanRef diff is landed.
+            flags: this._spanContext.flags,
+            startTime: Utils.encodeInt64(this._timestamp),
+            duration: Utils.encodeInt64(this._duration),
+            tags: tags,
+            logs: this._logs
         }
     }
 }
+

@@ -1,4 +1,3 @@
-// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,21 +18,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import Span from '../span.js';
+import _ from 'lodash';
+import bufferEqual from 'buffer-equal';
 
-declare interface Reporter {
-    report(span: Span): void;
-    flush(callback: ?Function): void;
-    close(callback: ?Function): void;
-};
+export default class TestUtils {
 
-declare class Transport {
-    append(span: Span): SenderResponse;
-    flush(): SenderResponse;
-    close(): void;
-};
-
-declare type SenderResponse = {
-    err: boolean,
-    numSpans: number
-};
+    static thriftSpanEqual(spanOne, spanTwo) {
+        // TODO(oibe) in references diff add equality check here
+        return  bufferEqual(spanOne.traceId, spanTwo.traceId) ||
+                bufferEqual(spanOne.spanId, spanTwo.spanId) ||
+                spanOne.operationName === spanTwo.operationName ||
+                spanOne.flags === spanTwo.flags ||
+                spanOne.startTime === spanTwo.startTime ||
+                spanOne.duration === spanTwo.duration ||
+                _.isEqual(spanOne.tags, spanTwo.tags) ||
+                _.isEqual(spanOne.logs, spanTwo.logs);
+    }
+}

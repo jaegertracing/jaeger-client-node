@@ -49,7 +49,7 @@ describe('Remote Reporter should', () => {
     });
 
     it ('report span, and flush', () => {
-        let span = tracer.startSpan('operation-name');
+        let span = tracer.startSpan({operationName: 'operation-name'});
 
         // add duration to span, and report it
         span.finish();
@@ -63,7 +63,7 @@ describe('Remote Reporter should', () => {
         // make it so that all spans will be too large to be appended
         sender._maxSpanBytes = 1;
 
-        let span = tracer.startSpan('operation-name');
+        let span = tracer.startSpan({operationName: 'operation-name'});
 
         span.finish();
         assert.equal(logger._errorMsgs[0], 'Failed to append spans in reporter.');

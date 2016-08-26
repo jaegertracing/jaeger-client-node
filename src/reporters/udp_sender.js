@@ -20,8 +20,9 @@
 // THE SOFTWARE.
 
 import dgram from 'dgram';
+import fs from 'fs';
 import path from 'path';
-import thriftify from 'thriftify';
+import {Thrift} from 'thriftrw';
 import Span from '../span.js';
 
 const HOST = 'localhost';
@@ -39,6 +40,7 @@ export default class UDPSender {
     _client: any;
     _spec: any;
     _byteBufferSize: number;
+    _thrift: any;
 
     constructor(hostPort: string = DEFAULT_UDP_SPAN_SERVER_HOST_PORT,
                 maxPacketSize: number = UDP_PACKET_MAX_LENGTH) {
@@ -48,11 +50,16 @@ export default class UDPSender {
         this._byteBufferSize = 0;
         this._spanBuffer = [];
         this._client = dgram.createSocket('udp4');
-        this._spec = thriftify.readSpecSync(path.join(__dirname, '../reporter.thrift'));
+        this._spec = fs.readFileSync(path.join(__dirname, '../jaeger-idl/thrift/jaeger.thrift'), 'ascii');
+        this._thrift = new Thrift({
+            source: this._spec,
+            allowOptionalArguments: true
+        });
     }
 
     _calcSpanSize(span: any): number {
-        let buffer: Buffer = thriftify.toBuffer(span, this._spec, 'Span');
+        let thriftJaegerSpan = this._thrift.getType('Span');
+        let buffer: Buffer = thriftJaegerSpan.toBufferResult(span).value;
         return buffer.length;
     }
 
@@ -77,19 +84,24 @@ export default class UDPSender {
         return flushResponse;
     }
 
-    flush(callback: ?Function): SenderResponse {
+    flush(testCallback: ?Function): SenderResponse {
         let numSpans: number = this._spanBuffer.length;
         if (numSpans == 0) {
             return {err: false, numSpans: 1}
         }
 
-        let thriftBuffer: Buffer = thriftify.toBuffer({spans: this._spanBuffer}, this._spec, 'Agent::emitZipkinBatch_args');
-        this._client.send(thriftBuffer, 0, thriftBuffer.length, PORT, HOST);
+        let thriftJaegerArgs = this._thrift.getType('Agent::emitJaegerBatch_args');
+        let bufferResult = thriftJaegerArgs.toBufferResult({spans: this._spanBuffer});
+        if (bufferResult.err) {
+            return {err: true, numSpans: numSpans};
+        }
 
+        let thriftBuffer: Buffer = bufferResult.value;
+        this._client.send(thriftBuffer, 0, thriftBuffer.length, PORT, HOST);
         this._reset();
 
-        if (callback) {
-            callback();
+        if (testCallback) {
+            testCallback();
         }
 
         return {err: false, numSpans: numSpans};
@@ -100,7 +112,7 @@ export default class UDPSender {
         this._byteBufferSize = 0;
     }
 
-    close(callback: Function): void {
+    close(callback: ?Function): void {
         this._client.close();
 
         if (callback) {

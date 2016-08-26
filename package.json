@@ -15,7 +15,7 @@
     "lodash": "^4.15.0",
     "my-local-ip": "^1.0.0",
     "node-int64": "^0.4.0",
-    "thriftify": "^1.0.0-alpha14",
+    "thriftrw": "^3.4.3",
     "xorshift": "^0.2.0"
   },
   "devDependencies": {

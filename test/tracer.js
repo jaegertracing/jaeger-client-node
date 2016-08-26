@@ -232,14 +232,14 @@ describe('tracer should', () => {
     });
 
     it ('report spans', () => {
-        let span = tracer.startSpan('operation');
+        let span = tracer.startSpan({operationName: 'operation'});
         tracer._report(span);
 
         assert.equal(reporter.spans.length, 1);
     });
 
     it ('flush spans', (done) => {
-        let span = tracer.startSpan('operation');
+        let span = tracer.startSpan({operationName: 'operation'});
         span.finish();
 
         // test callback for flush as well

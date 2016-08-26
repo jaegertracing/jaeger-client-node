@@ -21,7 +21,6 @@
 
 import NullLogger from '../logger.js';
 
-const DEFAULT_QUEUE_SIZE = 100
 const DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS = 10000;
 
 export default class RemoteReporter {
@@ -32,10 +31,8 @@ export default class RemoteReporter {
 
     constructor(sender: Transport,
                 options: any = {}) {
-        if (!options.bufferFlushInterval) {
-            this._bufferFlushInterval = options.bufferFlushInterval || DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS;
-        }
-        this._logger = options.logger || NullLogger;
+        this._bufferFlushInterval = options.bufferFlushInterval || DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS;
+        this._logger = options.logger || new NullLogger();
         this._sender = sender;
         this._intervalHandle = setInterval(() => {
             this.flush();
@@ -43,7 +40,7 @@ export default class RemoteReporter {
     }
 
     report(span: Span): void {
-        let response: SenderResponse = this._sender.append(span._toJSON());
+        let response: SenderResponse = this._sender.append(span._toThrift());
         if (response.err) {
             this._logger.error('Failed to append spans in reporter.');
         }

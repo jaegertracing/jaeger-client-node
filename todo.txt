@@ -2,7 +2,7 @@
 + support different types of spans: client span (new span ID), rpc server span (same span ID) , (component, and lc) local span (new span ID, different zipkin annotations)
 + implement special tag handlers
 + add metrics
-+ implement udp/thrift reporter
 + implement http sampler
 + profile performance of Noop tracer vs. Jaeger tracer with const sampling off and on
 + opentracing test harness
++ propagate 1 or many spanRefs froms startSpan options to created span.
