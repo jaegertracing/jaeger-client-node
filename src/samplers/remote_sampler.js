@@ -26,6 +26,7 @@ import NullLogger from '../logger.js';
 
 const DEFAULT_INITIAL_SAMPLING_RATE = 0.001;
 const SAMPLING_REFRESH_INTERVAL = 60000;
+const DEFAULT_SAMPLING_HOST = '0.0.0.0';
 const DEFAULT_SAMPLING_PORT = 5778;
 const PROBABILISTIC_STRATEGY_TYPE = 0;
 const RATELIMITING_STRATEGY_TYPE = 1;
@@ -35,15 +36,15 @@ export default class RemoteControlledSampler {
     _sampler: Sampler;
     _callerName: string;
     _logger: any;
+    _host: string;
+    _port: number;
     _timeoutHandle: any;
     _intervalHandle: any;
-    _testCallback: Function;
+    _onSamplerUpdate: Function;
     _refreshInterval: number;
 
-    constructor(
-        callerName: string,
-        options: any
-        ) {
+    constructor(callerName: string,
+                options: any) {
 
         this._callerName = callerName;
         this._sampler = options.sampler || new ProbabilisticSampler(DEFAULT_INITIAL_SAMPLING_RATE);
@@ -51,11 +52,12 @@ export default class RemoteControlledSampler {
         this._refreshInterval = options.refreshInterval || SAMPLING_REFRESH_INTERVAL;
 
         let randomDelay: number = Math.random() * this._refreshInterval;
-        this._testCallback = options.testCallback;
+        this._onSamplerUpdate = options.onSamplerUpdate;
+        this._host = options.host || DEFAULT_SAMPLING_HOST;
+        this._port = options.port || DEFAULT_SAMPLING_PORT;
 
-        // This branch is necessary because code in 'setTimeout' does not always run in the same tick
-        // thus in testing the code proceeds without calling 'options.callback', and the tests end without
-        // hitting all the proper assertions.
+        // setTimeout and setInterval have delays, so for testing purposes I allow an alternative path
+        // that immediately executes the _refreshSamplingStrategy
         if (options.firstRefreshDelay) {
             this._timeoutHandle = setTimeout(() => {
                 this._intervalHandle = setInterval(this._refreshSamplingStrategy, this._refreshInterval);
@@ -72,9 +74,9 @@ export default class RemoteControlledSampler {
 
     _getSamplingStrategy(callerName: string): ?SamplingStrategyResponse  {
         let encodedCaller: string = encodeURIComponent(callerName);
-        request.get(`http:\/\/127.0.0.1:${DEFAULT_SAMPLING_PORT}/?service=${encodedCaller}`, (err, response) => {
+        request.get(`http:\/\/${this._host}:${this._port}/?service=${encodedCaller}`, (err, response) => {
             if (err) {
-                this._logger.error('Error in fetching sampling strategy');
+                this._logger.error('Error in fetching sampling strategy.');
                 return null;
             }
 
@@ -96,17 +98,15 @@ export default class RemoteControlledSampler {
             let maxTracesPerSecond = strategy.rateLimitingSampling.maxTracesPerSecond;
             newSampler = new RateLimitingSampler(maxTracesPerSecond);
         } else {
-            this._logger.error('Unrecognized strategy type', {
-                error: strategy
-            });
+            this._logger.error('Unrecognized strategy type: ' + JSON.stringify({error: strategy}));
         }
 
         if (newSampler && (!this._sampler.equal(newSampler))) {
             this._sampler = newSampler;
         }
 
-        if (this._testCallback) {
-            this._testCallback(this._sampler);
+        if (this._onSamplerUpdate) {
+            this._onSamplerUpdate(this._sampler);
         }
     }
 

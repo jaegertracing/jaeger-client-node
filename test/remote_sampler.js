@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 
 import {assert} from 'chai';
-import NullLogger from '../src/logger.js';
+import MockLogger from './lib/mock_logger.js';
 import RemoteSampler from '../src/samplers/remote_sampler.js';
 import SamplingServer from './lib/sampler_server.js';
 
@@ -36,7 +36,7 @@ describe('remote sampler should', () => {
     it('set probabilistic sampler', (done) => {
         let sampler = new RemoteSampler('probabilistic-service', {
             firstRefreshDelay: false,
-            testCallback: (sampler) => {
+            onSamplerUpdate: (sampler) => {
                 assert.equal(sampler._samplingRate, 1.0);
                 sampler.close();
                 done();
@@ -47,7 +47,7 @@ describe('remote sampler should', () => {
     it('set ratelimiting sampler', (done) => {
         let sampler = new RemoteSampler('ratelimiting-service', {
             firstRefreshDelay: false,
-            testCallback: (sampler) => {
+            onSamplerUpdate: (sampler) => {
                 assert.equal(sampler._maxTracesPerSecond, 10);
                 sampler.close();
                 done();
@@ -55,11 +55,15 @@ describe('remote sampler should', () => {
         });
     });
 
-    it('throw error on bad sampling strategy', () => {
+    it('throw error on bad sampling strategy', (done) => {
+        let logger = new MockLogger();
         let sampler = new RemoteSampler('error-service', {
             firstRefreshDelay: false,
-            logger: new NullLogger()
+            logger: logger,
+            onSamplerUpdate: () => {
+                assert.equal(logger._errorMsgs[0], 'Unrecognized strategy type: {"error":{"err":"bad things happened"}}');
+                done();
+            }
         });
-        // TODO(oibe) complete the assertion here by logging a metric
     });
 });

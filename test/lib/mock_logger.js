@@ -18,26 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import {assert} from 'chai';
-import ProbabilisticSampler from '../src/samplers/probabilistic_sampler.js';
-import RateLimiter from '../src/samplers/ratelimiting_sampler.js';
-import sinon from 'sinon';
+export default class MockLogger {
+    _infoMsgs: Array<String>;
+    _debugMesgs: Array<String>;
+    _warnMsgs: Array<String>;
+    _errorMsgs: Array<String>;
 
-describe ('ratelimiting sampler should', () => {
-    it('block after threshold is met', () => {
-        let initialDate = new Date(2011,9,1).getTime();
-        let clock = sinon.useFakeTimers(initialDate);
-        let sampler = new RateLimiter(10);
-        for (let i = 0; i < 10; i++) {
-            sampler.isSampled(1);
-        }
+    constructor() {
+        this._infoMsgs = [];
+        this._debugMsgs = [];
+        this._warnMsgs = [];
+        this._errorMsgs = [];
+    }
 
-        assert.equal(sampler.maxTracesPerSecond, 10);
-        assert.isNotOk(sampler.equal(new ProbabilisticSampler(0.5)));
-        assert.equal(sampler.isSampled(), false, 'expected checkCredit to be false');
-        clock = sinon.useFakeTimers(initialDate + 1000);
-        assert.equal(sampler.isSampled(), true, 'expected checkCredit to be true');
-        clock.restore();
-    });
+    info(msg: string): void {
+        this._infoMsgs.push(msg);
+    }
 
-});
+    debug(msg: string): void {
+        this._debugMsgs.push(msg);
+    }
+
+    warn(msg: string): void {
+        this._warnMsgs.push(msg);
+    }
+
+    error(msg: string): void {
+        this._errorMsgs.push(msg);
+    }
+
+    clear(): void {
+        this._infoMsgs = [];
+        this._debugMsgs = [];
+        this._warnMsgs = [];
+        this._errorMsgs = [];
+    }
+}
