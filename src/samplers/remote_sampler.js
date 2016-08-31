@@ -60,7 +60,7 @@ export default class RemoteControlledSampler {
         // that immediately executes the _refreshSamplingStrategy
         if (options.firstRefreshDelay) {
             this._timeoutHandle = setTimeout(() => {
-                this._intervalHandle = setInterval(this._refreshSamplingStrategy, this._refreshInterval);
+                this._intervalHandle = setInterval(this._refreshSamplingStrategy.bind(this), this._refreshInterval);
             }, randomDelay)
 
         } else {
