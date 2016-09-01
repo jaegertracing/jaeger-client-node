@@ -26,10 +26,10 @@ const DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS = 10000;
 export default class RemoteReporter {
     _bufferFlushInterval: number;
     _logger: Logger;
-    _sender: Transport;
+    _sender: Sender;
     _intervalHandle: any;
 
-    constructor(sender: Transport,
+    constructor(sender: Sender,
                 options: any = {}) {
         this._bufferFlushInterval = options.bufferFlushInterval || DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS;
         this._logger = options.logger || new NullLogger();

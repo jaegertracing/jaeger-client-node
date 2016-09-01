@@ -27,7 +27,7 @@ declare interface Reporter {
     close(callback: ?Function): void;
 };
 
-declare class Transport {
+declare class Sender {
     append(span: Span): SenderResponse;
     flush(): SenderResponse;
     close(): void;

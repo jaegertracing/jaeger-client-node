@@ -70,7 +70,7 @@ describe('span should', () => {
 
     it('finish span with custom duration', () => {
         let initialDate = new Date(2011, 9, 1).getTime();
-        span._timestamp = initialDate;
+        span._startTime = initialDate;
         let expectedDuration = 1000;
         let finishDate = initialDate + expectedDuration;
 

@@ -28,7 +28,7 @@ export default class Span {
     _tracer: any;
     _operationName: string;
     _spanContext: SpanContext;
-    _timestamp: number;
+    _startTime: number;
     _logger: any;
     _duration: number;
     _firstInProcess: boolean;
@@ -41,13 +41,13 @@ export default class Span {
     constructor(tracer: any,
                 operationName: string,
                 spanContext: SpanContext,
-                timestamp: number,
+                startTime: number,
                 firstInProcess: boolean = false
     ) {
         this._tracer = tracer;
         this._operationName = operationName;
         this._spanContext = spanContext;
-        this._timestamp = timestamp;
+        this._startTime = startTime;
         this._logger = tracer._logger;
         this._firstInProcess = firstInProcess;
         this._logs = [];
@@ -145,7 +145,7 @@ export default class Span {
 
         if (this._spanContext.isSampled()) {
             let endTime = finishTime || Utils.getTimestampMicros();
-            this._duration = endTime - this._timestamp;
+            this._duration = endTime - this._startTime;
             this._tracer._report(this);
         }
     }
@@ -226,7 +226,7 @@ export default class Span {
             operationName: this._operationName,
             references: [], // TODO(oibe) revist correctness after a spanRef diff is landed.
             flags: this._spanContext.flags,
-            startTime: Utils.encodeInt64(this._timestamp),
+            startTime: Utils.encodeInt64(this._startTime),
             duration: Utils.encodeInt64(this._duration),
             tags: tags,
             logs: this._logs

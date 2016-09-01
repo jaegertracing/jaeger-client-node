@@ -64,7 +64,7 @@ describe('tracer should', () => {
         assert.isOk(bufferEqual(span.context().spanId, spanId));
         assert.isOk(bufferEqual(span.context().parentId, parentId));
         assert.equal(span.context().flags, flags);
-        assert.equal(span._timestamp, start);
+        assert.equal(span._startTime, start);
         assert.isNotOk(span._firstInProcess);
         assert.equal(Object.keys(span._tags).length, 2);
     });
@@ -95,7 +95,7 @@ describe('tracer should', () => {
         assert.equal(span.context().traceId, span.context().spanId);
         assert.isNotOk(span.context().parentId);
         assert.isOk(span.context().isSampled());
-        assert.equal(span._timestamp, startTime);
+        assert.equal(span._startTime, startTime);
     });
 
     it ('start a child span represented as a separate span from parent, using childOf and references', () => {
@@ -123,7 +123,7 @@ describe('tracer should', () => {
             assert.isOk(bufferEqual(span.context().traceId, traceId));
             assert.isOk(bufferEqual(span.context().parentId, spanId));
             assert.equal(span.context().flags, constants.SAMPLED_MASK);
-            assert.equal(span._timestamp, startTime);
+            assert.equal(span._startTime, startTime);
         }
 
         assertByStartSpanParameters(childOfParams);
@@ -161,7 +161,7 @@ describe('tracer should', () => {
             assert.isOk(bufferEqual(span.context().traceId, traceId));
             assert.isOk(bufferEqual(span.context().parentId, parentId));
             assert.isOk(span.context().isSampled());
-            assert.equal(span._timestamp, startTime);
+            assert.equal(span._startTime, startTime);
         }
 
         assertByStartSpanParameters(childOfParams);
