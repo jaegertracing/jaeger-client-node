@@ -233,4 +233,3 @@ export default class Span {
         }
     }
 }
-

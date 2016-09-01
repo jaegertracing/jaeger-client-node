@@ -19,8 +19,45 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-declare interface Sampler {
-    isSampled(): boolean;
-    equal(other: Sampler): boolean;
-    close(callback: Function): void;
+import RateLimiter from '../leaky_bucket_rate_limiter.js';
+import NullLogger from '../logger.js';
+
+export default class RateLimitingSampler {
+    _rateLimiter: RateLimiter;
+    _maxTracesPerSecond: number;
+    _logger: any;
+
+    constructor(maxTracesPerSecond: number, logger: any) {
+        this._logger = logger || new NullLogger();
+
+        if (maxTracesPerSecond < 0) {
+            this._logger._error(`maxTracesPerSecond must be greater than 0.0.  Received ${maxTracesPerSecond}`);
+            return;
+        }
+
+        this._maxTracesPerSecond = maxTracesPerSecond;
+        this._rateLimiter = new RateLimiter(maxTracesPerSecond);
+    }
+
+    get maxTracesPerSecond(): number {
+        return this._maxTracesPerSecond;
+    }
+
+    isSampled(): boolean {
+        return this._rateLimiter.checkCredit(1.0);
+    }
+
+    equal(other: Sampler): boolean {
+        if (!(other instanceof RateLimitingSampler)) {
+            return false;
+        }
+
+        return this.maxTracesPerSecond === other.maxTracesPerSecond;
+    }
+
+    close(callback: Function): void {
+        if (callback) {
+            callback();
+        }
+    }
 }

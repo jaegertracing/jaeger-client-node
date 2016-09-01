@@ -89,7 +89,7 @@ describe('udp sender should', () => {
         let sender = new UDPSender(undefined, 1);
         let spanSize = sender._calcSpanSize(spanOne);
 
-        // because of zipkin batch overhead being > 0 append on the second 
+        // because of zipkin batch overhead being > 0 append on the second
         // span won't have enough space, and the buffer will be flushed.
         sender = new UDPSender(undefined, spanSize * 2);
 

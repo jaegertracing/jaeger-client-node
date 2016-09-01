@@ -63,3 +63,17 @@ declare type startSpanArgs = {
     tags?: any,
     startTime?: number,
 };
+
+declare type ProbabilisticSamplingStrategy = {
+    samplingRate: number
+};
+
+declare type RateLimitingSamplingStrategy = {
+    maxTracesPerSecond: number
+};
+
+declare type SamplingStrategyResponse = {
+    strategyType: number,
+    probabilisticSampling?: ProbabilisticSamplingStrategy,
+    rateLimitingSampling?: RateLimitingSamplingStrategy
+};

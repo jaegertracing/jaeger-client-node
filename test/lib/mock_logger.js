@@ -53,5 +53,4 @@ export default class MockLogger {
         this._warnMsgs = [];
         this._errorMsgs = [];
     }
-
 }
