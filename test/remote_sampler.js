@@ -35,35 +35,38 @@ describe('remote sampler should', () => {
 
     it('set probabilistic sampler', (done) => {
         let sampler = new RemoteSampler('probabilistic-service', {
-            firstRefreshDelay: false,
+            stopPolling: true,
             onSamplerUpdate: (sampler) => {
                 assert.equal(sampler._samplingRate, 1.0);
                 sampler.close();
                 done();
             }
         });
+        sampler._refreshSamplingStrategy();
     });
 
     it('set ratelimiting sampler', (done) => {
         let sampler = new RemoteSampler('ratelimiting-service', {
-            firstRefreshDelay: false,
+            stopPolling: true,
             onSamplerUpdate: (sampler) => {
                 assert.equal(sampler._maxTracesPerSecond, 10);
                 sampler.close();
                 done();
             }
         });
+        sampler._refreshSamplingStrategy();
     });
 
     it('throw error on bad sampling strategy', (done) => {
         let logger = new MockLogger();
         let sampler = new RemoteSampler('error-service', {
-            firstRefreshDelay: false,
+            stopPolling: true,
             logger: logger,
             onSamplerUpdate: () => {
                 assert.equal(logger._errorMsgs[0], 'Unrecognized strategy type: {"error":{"err":"bad things happened"}}');
                 done();
             }
         });
+        sampler._refreshSamplingStrategy();
     });
 });

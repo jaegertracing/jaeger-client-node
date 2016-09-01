@@ -56,15 +56,10 @@ export default class RemoteControlledSampler {
         this._host = options.host || DEFAULT_SAMPLING_HOST;
         this._port = options.port || DEFAULT_SAMPLING_PORT;
 
-        // setTimeout and setInterval have delays, so for testing purposes I allow an alternative path
-        // that immediately executes the _refreshSamplingStrategy
-        if (options.firstRefreshDelay) {
+        if (!options.stopPolling) {
             this._timeoutHandle = setTimeout(() => {
                 this._intervalHandle = setInterval(this._refreshSamplingStrategy.bind(this), this._refreshInterval);
-            }, randomDelay)
-
-        } else {
-            this._refreshSamplingStrategy();
+            }, randomDelay);
         }
     }
 
