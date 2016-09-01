@@ -19,21 +19,42 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import Span from '../span.js';
+import NullLogger from '../logger.js';
 
-export default class NoopReporter {
+const DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS = 10000;
 
-    report(span: Span): void {}
+export default class RemoteReporter {
+    _bufferFlushInterval: number;
+    _logger: Logger;
+    _sender: Sender;
+    _intervalHandle: any;
 
-    flush(callback: ?Function): void {
-        if (callback) {
-            callback();
+    constructor(sender: Sender,
+                options: any = {}) {
+        this._bufferFlushInterval = options.bufferFlushInterval || DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS;
+        this._logger = options.logger || new NullLogger();
+        this._sender = sender;
+        this._intervalHandle = setInterval(() => {
+            this.flush();
+        }, this._bufferFlushInterval);
+    }
+
+    report(span: Span): void {
+        let response: SenderResponse = this._sender.append(span._toThrift());
+        if (response.err) {
+            this._logger.error('Failed to append spans in reporter.');
         }
     }
 
-    close(callback: ?Function) {
-        if (callback) {
-            callback();
+    flush(callback: ?Function): void {
+        let response: SenderResponse = this._sender.flush(callback);
+        if (response.err) {
+            this._logger.error('Failed to flush spans in reporter.');
         }
+    }
+
+    close(callback: ?Function): void {
+        this._sender.close(callback);
+        clearInterval(this._intervalHandle);
     }
 }

@@ -26,9 +26,9 @@ import NullLogger from './logger.js';
 
 export default class Span {
     _tracer: any;
-    _name: string;
+    _operationName: string;
     _spanContext: SpanContext;
-    _start: number;
+    _startTime: number;
     _logger: any;
     _duration: number;
     _firstInProcess: boolean;
@@ -39,15 +39,15 @@ export default class Span {
     static _baggageHeaderCache: any;
 
     constructor(tracer: any,
-                name: string,
+                operationName: string,
                 spanContext: SpanContext,
-                start: number,
+                startTime: number,
                 firstInProcess: boolean = false
     ) {
         this._tracer = tracer;
-        this._name = name;
+        this._operationName = operationName;
         this._spanContext = spanContext;
-        this._start = start;
+        this._startTime = startTime;
         this._logger = tracer._logger;
         this._firstInProcess = firstInProcess;
         this._logs = [];
@@ -128,8 +128,8 @@ export default class Span {
      *
      * @param {string} name - The name to use for setting a span's operation name.
      **/
-    setOperationName(name: string): void {
-        this._name = name;
+    setOperationName(operationName: string): void {
+        this._operationName = operationName;
     }
 
     /**
@@ -145,7 +145,7 @@ export default class Span {
 
         if (this._spanContext.isSampled()) {
             let endTime = finishTime || Utils.getTimestampMicros();
-            this._duration = endTime - this._start;
+            this._duration = endTime - this._startTime;
             this._tracer._report(this);
         }
     }
@@ -200,6 +200,36 @@ export default class Span {
             this._spanContext.flags = this._spanContext.flags | constants.SAMPLED_MASK | constants.DEBUG_MASK;
         } else {
             this._spanContext.flags = this._spanContext.flags & (~constants.SAMPLED_MASK);
+        }
+    }
+
+    _toThrift() {
+        let tags = [];
+        for (let i = 0; i < this._tags.length; i++) {
+            let tag = this._tags[i];
+            tags.push({
+                key: tag.key,
+                tagType: 'STRING', // TODO(oibe) support multiple tag types
+                vStr: tag.value,
+                vDouble: 0,
+                vBool: false,
+                vInt16: 0,
+                vInt32: 0,
+                vInt64: 0,
+                vBinary: new Buffer(1)
+            });
+        }
+
+        return {
+            traceId : this._spanContext.traceId,
+            spanId: this._spanContext.spanId,
+            operationName: this._operationName,
+            references: [], // TODO(oibe) revist correctness after a spanRef diff is landed.
+            flags: this._spanContext.flags,
+            startTime: Utils.encodeInt64(this._startTime),
+            duration: Utils.encodeInt64(this._duration),
+            tags: tags,
+            logs: this._logs
         }
     }
 }

@@ -42,7 +42,7 @@ export default class InMemoryReporter {
         this._spans = [];
     }
 
-    flush(callback: Function): void {
+    flush(callback: ?Function): void {
         for (let i = 0; i < this._spans.length; i++) {
             this._flushed.push(this._spans[i]);
         }
@@ -52,8 +52,8 @@ export default class InMemoryReporter {
         }
     }
 
-    close(callback: Function): void {
-        if (callback) {
+    close(callback: ?Function): void {
+        if(callback) {
             callback();
         }
     }

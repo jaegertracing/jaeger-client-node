@@ -14,6 +14,7 @@
     "assert": "^1.4.1",
     "lodash": "^4.15.0",
     "node-int64": "^0.4.0",
+    "thriftrw": "^3.4.3",
     "request": "^2.74.0",
     "xorshift": "^0.2.0"
   },

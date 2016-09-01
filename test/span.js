@@ -65,12 +65,12 @@ describe('span should', () => {
 
     it('set operation name correctly', () => {
         span.setOperationName('operation-name');
-        assert.equal(span._name, 'operation-name');
+        assert.equal(span._operationName, 'operation-name');
     });
 
     it('finish span with custom duration', () => {
         let initialDate = new Date(2011, 9, 1).getTime();
-        span._start = initialDate;
+        span._startTime = initialDate;
         let expectedDuration = 1000;
         let finishDate = initialDate + expectedDuration;
 
