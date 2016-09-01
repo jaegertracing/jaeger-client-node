@@ -26,8 +26,20 @@ export default class ConstSampler {
         this._decision = decision;
     }
 
+    get decision(): boolean {
+        return this._decision;
+    }
+
     isSampled(): boolean {
         return this._decision;
+    }
+
+    equal(other: Sampler): boolean {
+        if (!(other instanceof ConstSampler)) {
+            return false;
+        }
+
+        return this.decision === other.decision;
     }
 
     close(callback: Function): void {

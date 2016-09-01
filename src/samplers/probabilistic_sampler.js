@@ -19,8 +19,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-declare interface Sampler {
-    isSampled(): boolean;
-    equal(other: Sampler): boolean;
-    close(callback: Function): void;
+export default class ProbabilisticSampler {
+    _samplingRate: number;
+
+    constructor(samplingRate: number) {
+        if (samplingRate < 0.0 || samplingRate > 1.0) {
+            throw `The sampling rate must be less than 0.0 and grater than 1.0. Received ${samplingRate}`;
+        }
+        this._samplingRate = samplingRate;
+    }
+
+    isSampled(): boolean {
+        return Math.random() < this._samplingRate;
+    }
+
+    get samplingRate(): number {
+        return this._samplingRate;
+    }
+
+    equal(other: Sampler): boolean {
+        if (!(other instanceof ProbabilisticSampler)) {
+            return false;
+        }
+
+        return this.samplingRate === other.samplingRate;
+    }
+
+    close(callback: Function): void {
+        if (callback) {
+            callback();
+        }
+    }
 }
