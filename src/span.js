@@ -195,6 +195,24 @@ export default class Span {
         }
     }
 
+    /**
+     * Logs a event with an optional payload.
+     *
+     * @param  {string} eventName - string associated with the log record
+     * @param  {object} [payload] - arbitrary payload object associated with the
+     *         log record.
+     */
+    logEvent(eventName: string, payload: any): void {
+        return this.log({
+            event: eventName,
+            payload: payload
+        });
+    }
+
+    setTag(key: string, value: string): Span {
+        // TODO(oibe) implement
+    }
+
     _setSamplingPriority(priority: number): void {
         if (priority > 0) {
             this._spanContext.flags = this._spanContext.flags | constants.SAMPLED_MASK | constants.DEBUG_MASK;

@@ -57,10 +57,10 @@ describe('udp sender should', () => {
 
     it ('read and verify spans sent', (done) => {
         let sender = new UDPSender();
-        let spanOne = tracer.startSpan({operationName: 'operation-one'});
+        let spanOne = tracer._startSpan({operationName: 'operation-one'});
         spanOne.finish(); // finish to set span duration
         spanOne = spanOne._toThrift();
-        let spanTwo = tracer.startSpan({operationName: 'operation-two'});
+        let spanTwo = tracer._startSpan({operationName: 'operation-two'});
         spanTwo.finish(); // finish to set span duration
         spanTwo = spanTwo._toThrift();
 
@@ -83,7 +83,7 @@ describe('udp sender should', () => {
     });
 
     it('flush spans after capacity is met', () => {
-        let spanOne = tracer.startSpan({operationName: 'operation-one'});
+        let spanOne = tracer._startSpan({operationName: 'operation-one'});
         spanOne.finish(); // finish to set span duration
         spanOne = spanOne._toThrift();
         let sender = new UDPSender(undefined, 1);

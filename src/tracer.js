@@ -105,7 +105,8 @@ export default class Tracer {
     /**
     * The method for creating a root or child span.
     *
-    * @param {object} fields - the fields to set on the newly created span.
+    * @param {string} name - the name of the operation.
+    * @param {object} [fields] - the fields to set on the newly created span.
     * @param {string} fields.operationName - the name to use for the newly
     *        created span. Required if called with a single argument.
     * @param {SpanContext} [fields.childOf] - a parent SpanContext (or Span,
@@ -125,7 +126,25 @@ export default class Tracer {
     *        to represent time values with sub-millisecond accuracy.
     * @return {Span} - a new Span object.
     **/
-    startSpan(fields: startSpanArgs): Span {
+    startSpan(operationName: string, fields: startSpanArgs): Span {
+        // Convert fields.childOf to fields.references as needed.
+        fields = fields || {};
+        fields.operationName = operationName;
+
+        if (fields.childOf) {
+            // Convert from a Span or a SpanContext into a Reference.
+            let childOf = opentracing.childOf(fields.childOf);
+            if (fields.references) {
+                fields.references.push(childOf);
+            } else {
+                fields.references = [childOf];
+            }
+            delete(fields.childOf);
+        }
+        return this._startSpan(fields);
+    }
+
+    _startSpan(fields: startSpanArgs): Span {
         let tags = fields.tags || {};
         let references = fields.references || [];
         let startTime = fields.startTime;

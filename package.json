@@ -4,7 +4,7 @@
   "description": "client for jaeger node",
   "keywords": [],
   "author": "oibe <oibe@uber.com>",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "contributors": [
     {
       "name": "oibe"

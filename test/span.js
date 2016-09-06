@@ -123,7 +123,7 @@ describe('span should', () => {
     it('add logs with timestamp, and event', () => {
         let timestamp = new Date(2016, 8, 12).getTime();
         let event = 'some messgae';
-        span.log({ timestamp, event });
+        span._log({ timestamp, event });
 
         assert.equal(span._logs.length, 1);
         assert.equal(span._logs[0].timestamp, timestamp);
@@ -132,7 +132,7 @@ describe('span should', () => {
 
     it('add logs with paylaod', () => {
         let payload = {a: 1};
-        span.log({payload});
+        span._log({payload});
 
         assert.equal(span._logs.length, 1);
         assert.equal(JSON.stringify(span._logs[0].payload), JSON.stringify(payload));
@@ -143,7 +143,7 @@ describe('span should', () => {
         // mock global clock
         let clock = sinon.useFakeTimers(expectedTimestamp);
         let event = 'some messgae';
-        span.log({ event });
+        span._log({ event });
 
         assert.equal(span._logs.length, 1);
         assert.equal(span._logs[0].timestamp, expectedTimestamp * 1000); // to micros

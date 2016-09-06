@@ -87,7 +87,7 @@ describe('tracer should', () => {
 
     it ('start a root span with proper structure', () => {
         let startTime = new Date(2016, 8, 18).getTime();
-        let span = tracer.startSpan({
+        let span = tracer._startSpan({
             operationName: 'test-name',
             startTime: startTime
         });
@@ -119,7 +119,7 @@ describe('tracer should', () => {
         };
 
         let assertByStartSpanParameters = (params) => {
-            let span = tracer.startSpan(params);
+            let span = tracer._startSpan(params);
             assert.isOk(bufferEqual(span.context().traceId, traceId));
             assert.isOk(bufferEqual(span.context().parentId, spanId));
             assert.equal(span.context().flags, constants.SAMPLED_MASK);
@@ -156,7 +156,7 @@ describe('tracer should', () => {
         }
 
         let assertByStartSpanParameters = (params) => {
-            let span = tracer.startSpan(params);
+            let span = tracer._startSpan(params);
 
             assert.isOk(bufferEqual(span.context().traceId, traceId));
             assert.isOk(bufferEqual(span.context().parentId, parentId));
@@ -232,14 +232,14 @@ describe('tracer should', () => {
     });
 
     it ('report spans', () => {
-        let span = tracer.startSpan({operationName: 'operation'});
+        let span = tracer._startSpan({operationName: 'operation'});
         tracer._report(span);
 
         assert.equal(reporter.spans.length, 1);
     });
 
     it ('flush spans', (done) => {
-        let span = tracer.startSpan({operationName: 'operation'});
+        let span = tracer._startSpan({operationName: 'operation'});
         span.finish();
 
         // test callback for flush as well
