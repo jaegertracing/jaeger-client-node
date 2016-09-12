@@ -24,7 +24,7 @@ export default class ProbabilisticSampler {
 
     constructor(samplingRate: number) {
         if (samplingRate < 0.0 || samplingRate > 1.0) {
-            throw `The sampling rate must be less than 0.0 and grater than 1.0. Received ${samplingRate}`;
+            throw new Error(`The sampling rate must be less than 0.0 and grater than 1.0. Received ${samplingRate}`);
         }
         this._samplingRate = samplingRate;
     }

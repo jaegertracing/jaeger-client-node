@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import _ from 'lodash';
 import {assert, expect} from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import * as constants from '../src/constants.js';
@@ -123,7 +124,7 @@ describe('span should', () => {
     it('add logs with timestamp, and event', () => {
         let timestamp = new Date(2016, 8, 12).getTime();
         let event = 'some messgae';
-        span._log({ timestamp, event });
+        span.log({ timestamp, event });
 
         assert.equal(span._logs.length, 1);
         assert.equal(span._logs[0].timestamp, timestamp);
@@ -132,7 +133,7 @@ describe('span should', () => {
 
     it('add logs with paylaod', () => {
         let payload = {a: 1};
-        span._log({payload});
+        span.log({payload});
 
         assert.equal(span._logs.length, 1);
         assert.equal(JSON.stringify(span._logs[0].payload), JSON.stringify(payload));
@@ -143,7 +144,7 @@ describe('span should', () => {
         // mock global clock
         let clock = sinon.useFakeTimers(expectedTimestamp);
         let event = 'some messgae';
-        span._log({ event });
+        span.log({ event });
 
         assert.equal(span._logs.length, 1);
         assert.equal(span._logs[0].timestamp, expectedTimestamp * 1000); // to micros
@@ -166,6 +167,14 @@ describe('span should', () => {
         assert.equal(key, 'some-key');
         assert.isOk(unnormalizedKey in Span._getBaggageHeaderCache());
     });
+
+    describe('setTag', () => {
+        it('should set a tag, and return a span', () => {
+            var newSpan = span.setTag('key', 'value');
+            assert.isOk(newSpan instanceof Span);
+            assert.isOk(_.isEqual(span._tags[0], {'key': 'key', 'value': 'value'}));
+        });
+    })
 
     // TODO(oibe) need tests for standard tags, and handlers
 });

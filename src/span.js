@@ -88,10 +88,13 @@ export default class Span {
      *
      * @param {string} key - The baggage key.
      * @param {string} value - The baggage value.
+     *
+     * @return {Span} - returns this span.
      **/
-    setBaggageItem(key: string, value: string): void {
+    setBaggageItem(key: string, value: string): Span {
         let normalizedKey = this._normalizeBaggageKey(key);
         this._spanContext = this._spanContext.withBaggageItem(normalizedKey, value);
+        return this;
     }
 
     /**
@@ -127,9 +130,11 @@ export default class Span {
      * Sets the operation name on this given span.
      *
      * @param {string} name - The name to use for setting a span's operation name.
+     * @return {Span} - returns this span.
      **/
-    setOperationName(operationName: string): void {
+    setOperationName(operationName: string): Span {
         this._operationName = operationName;
+        return this;
     }
 
     /**
@@ -140,7 +145,8 @@ export default class Span {
      **/
     finish(finishTime: number): void {
         if (this._duration !== undefined) {
-            throw 'You can only call finish() on a span once.';
+        console.log('coolio');
+            throw new Error('You can only call finish() on a span once.');
         }
 
         if (this._spanContext.isSampled()) {
@@ -155,16 +161,31 @@ export default class Span {
      *
      * @param {Object} keyValuePairs - An object with key value pairs
      * that represent tags to be added to this span.
+     * @return {Span} - returns this span.
      **/
-    addTags(keyValuePairs: any): void {
-        if (this._spanContext.isSampled()) {
-            for (let key in keyValuePairs) {
-                if (keyValuePairs.hasOwnProperty(key)) {
-                    let value = keyValuePairs[key];
-                    this._tags.push({key, value});
-                }
+    addTags(keyValuePairs: any): Span {
+        for (let key in keyValuePairs) {
+            if (keyValuePairs.hasOwnProperty(key)) {
+                let value = keyValuePairs[key];
+                this.setTag(key, value);
             }
         }
+        return this;
+    }
+
+    /**
+     * Adds a single tag to a span
+     *
+     * @param {string} key - The key for the tag added to this span.
+     * @param {string} value - The value corresponding with the key 
+     * for the tag added to this span.
+     * @return {Span} - returns this span.
+     * */
+    setTag(key: string, value: string): Span {
+        if (this._spanContext.isSampled()) {
+            this._tags.push({key, value});
+        }
+        return this;
     }
 
     /**
@@ -207,10 +228,6 @@ export default class Span {
             event: eventName,
             payload: payload
         });
-    }
-
-    setTag(key: string, value: string): Span {
-        // TODO(oibe) implement
     }
 
     _setSamplingPriority(priority: number): void {

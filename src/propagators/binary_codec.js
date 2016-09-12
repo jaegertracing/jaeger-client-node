@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,21 +19,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import apiCompatibilityChecks from 'opentracing/test/api_compatibility.js';
-import {assert} from 'chai';
-import ConstSampler from '../src/samplers/const_sampler.js';
-import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
-import * as opentracing from 'opentracing';
-import Tracer from '../src/tracer';
 
-describe('Jaeger Tracer', () => {
-    it('is compatible with opentracing', () => {
-        apiCompatibilityChecks(() => {
-            return new Tracer(
-                'test-tracer',
-                new InMemoryReporter(),
-                new ConstSampler(true)
-            );
-        }, {'checkBaggageValues' : true });
-    });
-});
+export default class BinaryCodec {
+    extract(carrir: any): ?SpanContext {
+        return null;
+    }
+
+    inject(spanContext: SpanContext, carrier: any): void {}
+}
