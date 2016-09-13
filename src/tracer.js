@@ -22,7 +22,7 @@
 import ConstSampler from './samplers/const_sampler.js';
 import * as constants from './constants.js';
 import * as opentracing from 'opentracing';
-import * as opentracing_tags from './tags.js';
+import {Tags as opentracing_tags} from 'opentracing';
 import NoopReporter from './reporters/noop_reporter.js';
 import pjson from '../package.json';
 import Span from './span.js';
