@@ -24,7 +24,7 @@ import ConstSampler from '../src/samplers/const_sampler.js';
 import * as constants from '../src/constants.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import * as opentracing from 'opentracing';
-import * as opentracing_tags from '../src/tags.js'
+import {Tags as opentracing_tags} from 'opentracing';
 import SpanContext from '../src/span_context.js';
 import Tracer from '../src/tracer.js';
 import Utils from '../src/util.js';

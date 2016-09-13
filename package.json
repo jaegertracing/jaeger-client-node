@@ -37,7 +37,7 @@
     "flow-bin": "^0.30.0",
     "mocha": "^3.0.1",
     "nyc": "2.4.0",
-    "opentracing": "^0.11.1",
+    "opentracing": "git://github.com/opentracing/opentracing-javascript.git#215ca2ef73c1463d55f70857b8b2becd958a7365",
     "sinon": "^1.17.5",
     "uber-licence": "^2.0.2"
   },
