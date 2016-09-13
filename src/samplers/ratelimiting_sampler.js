@@ -19,6 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import * as constants from '../constants.js';
 import RateLimiter from '../leaky_bucket_rate_limiter.js';
 import NullLogger from '../logger.js';
 
@@ -26,6 +27,7 @@ export default class RateLimitingSampler {
     _rateLimiter: RateLimiter;
     _maxTracesPerSecond: number;
     _logger: any;
+    _tags: Array<Tag>;
 
     constructor(maxTracesPerSecond: number, logger: any) {
         this._logger = logger || new NullLogger();
@@ -37,6 +39,10 @@ export default class RateLimitingSampler {
 
         this._maxTracesPerSecond = maxTracesPerSecond;
         this._rateLimiter = new RateLimiter(maxTracesPerSecond);
+        this._tags = [
+            {'key': constants.SAMPLER_TYPE_TAG_KEY, 'value': constants.SAMPLER_TYPE_RATE_LIMITING},
+            {'key': constants.SAMPLER_PARAM_TAG_KEY, 'value': `${this._maxTracesPerSecond}`}
+        ];
     }
 
     get maxTracesPerSecond(): number {
@@ -53,6 +59,10 @@ export default class RateLimitingSampler {
         }
 
         return this.maxTracesPerSecond === other.maxTracesPerSecond;
+    }
+
+    getTags(): Array<Tag> {
+        return this._tags;
     }
 
     close(callback: Function): void {

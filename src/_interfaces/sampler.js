@@ -22,5 +22,6 @@
 declare interface Sampler {
     isSampled(): boolean;
     equal(other: Sampler): boolean;
+    getTags(): Array<Tag>;
     close(callback: Function): void;
 }

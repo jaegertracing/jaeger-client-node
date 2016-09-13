@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import _ from 'lodash';
 import {assert, expect} from 'chai';
 import bufferEqual from 'buffer-equal';
 import ConstSampler from '../src/samplers/const_sampler.js';
@@ -54,11 +55,12 @@ describe('tracer should', () => {
         let context = new SpanContext(traceId, spanId, parentId, flags);
         let start = Utils.getTimestampMicros();
         let rpcServer = false;
+        let internalTags = [];
         let tags = {
             'keyOne': 'leela',
             'keyTwo': 'bender'
         };
-        let span = tracer._startInternalSpan(context, 'op-name', start, tags, rpcServer);
+        let span = tracer._startInternalSpan(context, 'op-name', start, internalTags, tags, rpcServer);
 
         assert.isOk(bufferEqual(span.context().traceId, traceId));
         assert.isOk(bufferEqual(span.context().spanId, spanId));
@@ -70,19 +72,19 @@ describe('tracer should', () => {
     });
 
     it ('report a span with tracer level tags', () => {
-        let traceId = Utils.encodeInt64(1);
-        let spanId = Utils.encodeInt64(2);
-        let parentId = Utils.encodeInt64(3);
-        let flags = 1;
-        let startTime = Utils.getTimestampMicros();
-
-        let context = new SpanContext(traceId, spanId, parentId, flags);
-        let span = tracer._startInternalSpan(context, 'op-name', startTime);
-
+        let span = tracer.startSpan('op-name');
         tracer._report(span);
-
         assert.isOk(reporter.spans.length, 1);
-        assert.equal(span, reporter.spans[0]);
+        let actualTags = _.sortBy(span._tags, (o) => {
+            return o.key;
+        });
+
+        assert.equal(actualTags[0].key, 'jaeger.hostname');
+        assert.equal(actualTags[1].key, 'jaeger.version');
+        assert.equal(actualTags[2].key, 'sampler.param');
+        assert.equal(actualTags[3].key, 'sampler.type');
+        assert.equal(actualTags[2].value, 'true');
+        assert.equal(actualTags[3].value, 'const');
     });
 
     it ('start a root span with proper structure', () => {

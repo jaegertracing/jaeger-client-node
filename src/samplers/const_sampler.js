@@ -19,11 +19,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import * as constants from '../constants.js';
+
 export default class ConstSampler {
     _decision: boolean;
+    _tags: Array<Tag>;
 
     constructor(decision: boolean) {
         this._decision = decision;
+        this._tags = [
+            {'key': constants.SAMPLER_TYPE_TAG_KEY, 'value': constants.SAMPLER_TYPE_CONST},
+            {'key': constants.SAMPLER_PARAM_TAG_KEY, 'value': this._decision.toString()}
+        ];
     }
 
     get decision(): boolean {
@@ -40,6 +47,10 @@ export default class ConstSampler {
         }
 
         return this.decision === other.decision;
+    }
+
+    getTags(): Array<Tag> {
+        return this._tags;
     }
 
     close(callback: Function): void {
