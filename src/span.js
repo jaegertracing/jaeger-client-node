@@ -145,7 +145,6 @@ export default class Span {
      **/
     finish(finishTime: number): void {
         if (this._duration !== undefined) {
-        console.log('coolio');
             throw new Error('You can only call finish() on a span once.');
         }
 
@@ -192,11 +191,11 @@ export default class Span {
      * Adds a log event, or payload to a span.
      *
      * @param {Object} fields - an object that represents the fields to log.
-     * @param {number} [fields.timestamp] - the starting timestamp of a span.
+     * @param {number} [timestamp] - the starting timestamp of a span.
      * @param {string} [fields.event] - a string message to be logged on a span.
      * @param {string} [fields.payload] - an object to be logged on a span as a json string.
      **/
-    log(fields: any): void {
+    log(fields: any, timestamp: ?number): void {
         if (this._spanContext.isSampled()) {
             if (!fields.event && !fields.payload) {
                 this._logger.error('log must be passed either an event of type string, or a payload of type object');
@@ -204,7 +203,7 @@ export default class Span {
             }
 
             if (!fields.timestamp) {
-                fields.timestamp = Utils.getTimestampMicros();
+                fields.timestamp = timestamp || Utils.getTimestampMicros();
             }
 
             let value = fields.event;
@@ -242,6 +241,8 @@ export default class Span {
         let tags = [];
         for (let i = 0; i < this._tags.length; i++) {
             let tag = this._tags[i];
+            let emptyBuffer = new Buffer(1);
+            emptyBuffer.fill(0);
             tags.push({
                 key: tag.key,
                 tagType: 'STRING', // TODO(oibe) support multiple tag types
@@ -251,7 +252,7 @@ export default class Span {
                 vInt16: 0,
                 vInt32: 0,
                 vInt64: 0,
-                vBinary: new Buffer(1)
+                vBinary: emptyBuffer
             });
         }
 
