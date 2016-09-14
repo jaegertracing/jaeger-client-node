@@ -86,10 +86,6 @@ export default class Tracer {
             firstInProcess
         );
 
-        if (opentracing_tags.SAMPLING_PRIORITY in tags) {
-            span._setSamplingPriority(tags[opentracing_tags.SAMPLING_PRIORITY])
-        }
-
         span.addTags(tags);
         return span;
     }

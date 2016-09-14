@@ -20,9 +20,10 @@
 // THE SOFTWARE.
 
 import * as constants from './constants.js';
-import Utils from './util.js';
-import SpanContext from './span_context.js';
 import NullLogger from './logger.js';
+import SpanContext from './span_context.js';
+import {Tags as opentracing_tags} from 'opentracing';
+import Utils from './util.js';
 
 export default class Span {
     _tracer: any;
@@ -163,10 +164,16 @@ export default class Span {
      * @return {Span} - returns this span.
      **/
     addTags(keyValuePairs: any): Span {
-        for (let key in keyValuePairs) {
-            if (keyValuePairs.hasOwnProperty(key)) {
-                let value = keyValuePairs[key];
-                this.setTag(key, value);
+        if (opentracing_tags.SAMPLING_PRIORITY in keyValuePairs) {
+            this._setSamplingPriority(keyValuePairs[opentracing_tags.SAMPLING_PRIORITY]);
+        }
+
+        if (this._spanContext.isSampled()) {
+            for (let key in keyValuePairs) {
+                if (keyValuePairs.hasOwnProperty(key)) {
+                    let value = keyValuePairs[key];
+                    this._tags.push({'key': key, 'value': value});
+                }
             }
         }
         return this;
@@ -180,7 +187,11 @@ export default class Span {
      * for the tag added to this span.
      * @return {Span} - returns this span.
      * */
-    setTag(key: string, value: string): Span {
+    setTag(key: string, value: any): Span {
+        if (key === opentracing_tags.SAMPLING_PRIORITY) {
+            this._setSamplingPriority(value);
+        }
+
         if (this._spanContext.isSampled()) {
             this._tags.push({key, value});
         }
@@ -206,12 +217,7 @@ export default class Span {
                 fields.timestamp = timestamp || Utils.getTimestampMicros();
             }
 
-            let value = fields.event;
-            this._logs.push({
-                timestamp: fields.timestamp,
-                event: fields.event,
-                payload: fields.payload
-            });
+            this._logs.push(fields);
         }
     }
 
@@ -246,7 +252,7 @@ export default class Span {
             tags.push({
                 key: tag.key,
                 tagType: 'STRING', // TODO(oibe) support multiple tag types
-                vStr: tag.value,
+                vStr: tag.value.toString(),
                 vDouble: 0,
                 vBool: false,
                 vInt16: 0,
