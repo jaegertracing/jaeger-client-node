@@ -199,7 +199,7 @@ export default class Span {
         }
 
         if (this._spanContext.isSampled()) {
-            this._tags.push({key, value});
+            this._tags.push({'key': key, 'value': value});
         }
         return this;
     }
