@@ -7,3 +7,5 @@
 + upgrade span code to use latest jaeger-idl model
 + test span attributes are populated correctly
 + tag values can be any type, so toString is not sufficient
++ Add makefile
+    + publish, and build dist as part of that

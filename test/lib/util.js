@@ -19,14 +19,14 @@
 // THE SOFTWARE.
 
 import _ from 'lodash';
-import bufferEqual from 'buffer-equal';
 
 export default class TestUtils {
 
     static thriftSpanEqual(spanOne, spanTwo) {
         // TODO(oibe) in references diff add equality check here
-        return  bufferEqual(spanOne.traceId, spanTwo.traceId) ||
-                bufferEqual(spanOne.spanId, spanTwo.spanId) ||
+        return  spanOne.traceId.equals(spanTwo.traceId) ||
+                spanOne.spanId.equals(spanTwo.spanId) ||
+                (spanOne.parentId && spanOne.parentId.equals(spanTwo.parentId)) ||
                 spanOne.operationName === spanTwo.operationName ||
                 spanOne.flags === spanTwo.flags ||
                 spanOne.startTime === spanTwo.startTime ||

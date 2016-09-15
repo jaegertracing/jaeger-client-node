@@ -19,9 +19,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import xorshift from 'xorshift';
-import Int64 from 'node-int64';
+import Long from 'long';
 import os from 'os';
+import xorshift from 'xorshift';
 
 export default class Utils {
     /**
@@ -39,26 +39,19 @@ export default class Utils {
     /**
      * Determines whether a string contains a given prefix.
      *
-     * @return {Buffer}  - returns a buffer representing a random 64 bit
+     * @return {object}  - returns a Long representing a random 64 bit
      * number.
      **/
-    static getRandom64(): Buffer {
-        let randint = xorshift.randomint();
-        let buf = new Buffer(8);
-        buf.writeUInt32BE(randint[0], 0);
-        buf.writeUInt32BE(randint[1], 4);
-        return buf;
+    static getRandom64(): Long {
+        let randint: Array<number> = xorshift.randomint();
+        let unsigned: boolean = true;
+        return new Long(randint[0], randint[1], unsigned);
     }
 
-    /**
-     * @param {string|number} numberValue - a string or number to be encoded
-     * as a 64 bit byte array.
-     * @return {Buffer} - returns a buffer representing the encoded string, or number.
-     **/
-    static encodeInt64(numberValue: any): any {
-        return new Int64(numberValue).toBuffer();
+    static encodeInt64(lower, higher): Long {
+        let unsigned: boolean =  true;
+        return new Long(lower, higher, unsigned);
     }
-
 
     /**
      * @param {string} ip - a string representation of an ip address.
@@ -156,5 +149,19 @@ export default class Utils {
         }
 
         return newObj;
+    }
+
+    static isParsableHex64(inputStr: string): any {
+        let hexLookup = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8',
+            '9': '9', 'a': 'a', 'b': 'b', 'c': 'c', 'd': 'd', 'e': 'e', 'f': 'f'};
+        let unsigned = true;
+
+        for (let i = 0 ; i < inputStr.length; i++) {
+            if(!(inputStr[i] in hexLookup)) {
+                return Number.NaN;
+            }
+        }
+
+        return Long.fromString(inputStr, unsigned, 16);
     }
 }

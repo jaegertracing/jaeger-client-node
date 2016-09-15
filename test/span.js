@@ -41,12 +41,7 @@ describe('span should', () => {
             new ConstSampler(true)
         );
 
-        spanContext = new SpanContext(
-            Utils.encodeInt64(1),
-            Utils.encodeInt64(2),
-            Utils.encodeInt64(3),
-            constants.SAMPLED_MASK
-        );
+        spanContext = tracer.startSpan('op-name').context();
 
         span = new Span(
             tracer,
