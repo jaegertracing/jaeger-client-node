@@ -19,7 +19,6 @@
     "xorshift": "^0.2.0"
   },
   "devDependencies": {
-    "async": "^2.0.1",
     "babel-cli": "^6.11.4",
     "babel-istanbul": "^0.11.0",
     "babel-node-debug": "^2.0.0",
