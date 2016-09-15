@@ -44,7 +44,7 @@ export default class RemoteControlledSampler {
     _refreshInterval: number;
 
     constructor(callerName: string,
-                options: any) {
+                options: any = {}) {
 
         this._callerName = callerName;
         this._sampler = options.sampler || new ProbabilisticSampler(DEFAULT_INITIAL_SAMPLING_RATE);
@@ -108,6 +108,10 @@ export default class RemoteControlledSampler {
 
     isSampled(): boolean {
         return this._sampler.isSampled();
+    }
+
+    getTags(): Array<Tag> {
+        return this._sampler.getTags();
     }
 
     close(callback: Function): void {

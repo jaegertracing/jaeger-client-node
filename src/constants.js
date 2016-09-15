@@ -18,5 +18,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+// SAMPLED_MASK is the bit mask indicating that a span has been sampled.
 export const SAMPLED_MASK = 0x1;
+
+// DEBUG_MASK is the bit mask indicationg that a span has been marked for debug.
 export const DEBUG_MASK = 0x2;
+
+// JAEGER_CLIENT_VERSION_TAG_KEY is the name of the tag used to report client version.
+export const JAEGER_CLIENT_VERSION_TAG_KEY = 'jaeger.version';
+
+// TRACER_HOSTNAME_TAG_KEY used to report host name of the process.
+export const TRACER_HOSTNAME_TAG_KEY = 'jaeger.hostname';
+
+// SAMPLER_TYPE_TAG_KEY reports which sampler was used on the root span.
+export const SAMPLER_TYPE_TAG_KEY = 'sampler.type';
+
+// SAMPLER_PARAM_TAG_KEY reports which sampler was used on the root span.
+export const SAMPLER_PARAM_TAG_KEY = 'sampler.param';
+
+// SAMPLER_TYPE_CONST is the type of the sampler that always makes the same decision.
+export const SAMPLER_TYPE_CONST = 'const';
+
+// SAMPLER_TYPE_PROBABILISTIC is the type of sampler that samples traces
+// with a certain fixed probability.
+export const SAMPLER_TYPE_PROBABILISTIC = 'probabilistic';
+
+// SAMPLER_TYPE_RATE_LIMITING is the type of sampler that samples
+// only up to a fixed number of traces per second.
+export const SAMPLER_TYPE_RATE_LIMITING = 'ratelimiting';
+
+// SAMPLER_TYPE_REMOTE is the type of sampler that polls Jaeger agent for sampling strategy.
+export const SAMPLER_TYPE_REMOTE = "remote"
