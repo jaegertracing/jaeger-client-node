@@ -18,12 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// SAMPLED_MASK represents the power of two that indicates we have set the sampled
-// flag in a span context's flags section.
+// SAMPLED_MASK is the bit mask indicating that a span has been sampled.
 export const SAMPLED_MASK = 0x1;
 
-// DEBUG_MASK represents the power of two that indicates we have set the debug flag in
-// a span context's flags section.
+// DEBUG_MASK is the bit mask indicationg that a span has been marked for debug.
 export const DEBUG_MASK = 0x2;
 
 // JAEGER_CLIENT_VERSION_TAG_KEY is the name of the tag used to report client version.

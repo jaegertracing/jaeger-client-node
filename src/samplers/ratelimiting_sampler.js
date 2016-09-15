@@ -27,7 +27,7 @@ export default class RateLimitingSampler {
     _rateLimiter: RateLimiter;
     _maxTracesPerSecond: number;
     _logger: any;
-    _tags: Array<Tag>;
+    _tags: any;
 
     constructor(maxTracesPerSecond: number, logger: any) {
         this._logger = logger || new NullLogger();
@@ -39,10 +39,9 @@ export default class RateLimitingSampler {
 
         this._maxTracesPerSecond = maxTracesPerSecond;
         this._rateLimiter = new RateLimiter(maxTracesPerSecond);
-        this._tags = [
-            {'key': constants.SAMPLER_TYPE_TAG_KEY, 'value': constants.SAMPLER_TYPE_RATE_LIMITING},
-            {'key': constants.SAMPLER_PARAM_TAG_KEY, 'value': `${this._maxTracesPerSecond}`}
-        ];
+        this._tags = {};
+        this._tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_RATE_LIMITING;
+        this._tags[constants.SAMPLER_PARAM_TAG_KEY] = this._maxTracesPerSecond;
     }
 
     get maxTracesPerSecond(): number {
@@ -61,7 +60,7 @@ export default class RateLimitingSampler {
         return this.maxTracesPerSecond === other.maxTracesPerSecond;
     }
 
-    getTags(): Array<Tag> {
+    getTags(): any {
         return this._tags;
     }
 

@@ -45,10 +45,10 @@ export default class Tracer {
             reporter: Reporter = new NoopReporter(),
             sampler: Sampler = new ConstSampler(false),
             logger: any,
-            tags: any = []) {
+            tags: any = {}) {
         this._tags = tags;
-        this._tags.push({'key': constants.JAEGER_CLIENT_VERSION_TAG_KEY, 'value': `Node-${pjson.version}`});
-        this._tags.push({'key': constants.JAEGER_HOSTNAME_TAG_KEY = 'jaeger.hostname', 'value': Utils.myIp()});
+        this._tags[constants.JAEGER_CLIENT_VERSION_TAG_KEY] = `Node-${pjson.version}`;
+        this._tags[constants.TRACER_HOSTNAME_TAG_KEY] = Utils.myIp();
 
         this._serviceName = serviceName;
         this._reporter = reporter;
@@ -74,7 +74,7 @@ export default class Tracer {
             spanContext: SpanContext,
             operationName: string,
             startTime: number,
-            internalTags: any = [],
+            internalTags: any = {},
             tags: any = {},
             rpcServer: boolean): Span {
 
@@ -87,20 +87,16 @@ export default class Tracer {
             firstInProcess
         );
 
-        // set all sampler tags
-        for (let i = 0; i < internalTags.length; i++) {
-            span.setTag(internalTags[i].key, internalTags[i].value);
-        }
-
-        // set all tags provided by instrumentation
         span.addTags(tags);
+        span.addTags(internalTags);
         return span;
     }
 
     _report(span: Span): void {
         if (span.firstInProcess) {
-            span._setTracerTags(this._tags);
+            span.addTags(this._tags);
         }
+
         this._reporter.report(span);
     }
 
@@ -171,7 +167,7 @@ export default class Tracer {
 
         // $FlowIgnore - I just want a span context up front.
         let ctx: SpanContext = new SpanContext();
-        let samplerTags: Array<Tag> = [];
+        let samplerTags: any = {};
         if (!parent) {
             let randomId = Utils.getRandom64();
             let flags = 0;

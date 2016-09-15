@@ -29,20 +29,21 @@ import RemoteSampler from '../src/samplers/remote_sampler.js';
 describe('samplers should', () => {
     it('return correct tags', () => {
         var samplers = [
-            {'sampler': new ConstSampler(true), 'type': constants.SAMPLER_TYPE_CONST, 'param': 'true'},
-            {'sampler': new ConstSampler(false), 'type': constants.SAMPLER_TYPE_CONST, 'param': 'false'},
-            {'sampler': new ProbabilisticSampler(0.1), 'type': constants.SAMPLER_TYPE_PROBABILISTIC, 'param': '0.1'},
-            {'sampler': new RateLimitingSampler(2), 'type': constants.SAMPLER_TYPE_RATE_LIMITING, 'param': '2'},
-            {'sampler': new RemoteSampler('some-caller-name'), 'type': constants.SAMPLER_TYPE_PROBABILISTIC, 'param': '0.001'},
+            {'sampler': new ConstSampler(true), 'type': constants.SAMPLER_TYPE_CONST, 'param': true},
+            {'sampler': new ConstSampler(false), 'type': constants.SAMPLER_TYPE_CONST, 'param': false},
+            {'sampler': new ProbabilisticSampler(0.1), 'type': constants.SAMPLER_TYPE_PROBABILISTIC, 'param': 0.1},
+            {'sampler': new RateLimitingSampler(2), 'type': constants.SAMPLER_TYPE_RATE_LIMITING, 'param': 2},
+            {'sampler': new RemoteSampler('some-caller-name'), 'type': constants.SAMPLER_TYPE_PROBABILISTIC, 'param': 0.001},
         ];
 
         _.each(samplers, (samplerSetup) => {
             let sampler = samplerSetup['sampler'];
-            let tags = sampler.getTags();
-            assert.equal(tags[0].key, constants.SAMPLER_TYPE_TAG_KEY);
-            assert.equal(tags[1].key, constants.SAMPLER_PARAM_TAG_KEY);
-            assert.equal(tags[0].value, samplerSetup['type']);
-            assert.equal(tags[1].value, samplerSetup['param']);
+            let expectedTags = {};
+            expectedTags[constants.SAMPLER_TYPE_TAG_KEY] = samplerSetup['type'];
+            expectedTags[constants.SAMPLER_PARAM_TAG_KEY] = samplerSetup['param'];
+            let actualTags = sampler.getTags();
+
+            assert.isOk(_.isEqual(expectedTags, actualTags));
         });
     });
 });

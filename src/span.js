@@ -241,13 +241,6 @@ export default class Span {
         });
     }
 
-    _setTracerTags(tags: Array<Tag>): void {
-        for (let i = 0; i < tags.length; i++) {
-            let tag = tags[i];
-            this._tags.push(tag);
-        }
-    }
-
     _setSamplingPriority(priority: number): void {
         if (priority > 0) {
             this._spanContext.flags = this._spanContext.flags | constants.SAMPLED_MASK | constants.DEBUG_MASK;

@@ -23,14 +23,13 @@ import * as constants from '../constants.js';
 
 export default class ConstSampler {
     _decision: boolean;
-    _tags: Array<Tag>;
+    _tags: any;
 
     constructor(decision: boolean) {
         this._decision = decision;
-        this._tags = [
-            {'key': constants.SAMPLER_TYPE_TAG_KEY, 'value': constants.SAMPLER_TYPE_CONST},
-            {'key': constants.SAMPLER_PARAM_TAG_KEY, 'value': this._decision.toString()}
-        ];
+        this._tags = {};
+        this._tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_CONST;
+        this._tags[constants.SAMPLER_PARAM_TAG_KEY] = this._decision;
     }
 
     get decision(): boolean {
@@ -49,7 +48,7 @@ export default class ConstSampler {
         return this.decision === other.decision;
     }
 
-    getTags(): Array<Tag> {
+    getTags(): any {
         return this._tags;
     }
 
