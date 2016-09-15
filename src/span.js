@@ -166,6 +166,7 @@ export default class Span {
     addTags(keyValuePairs: any): Span {
         if (opentracing_tags.SAMPLING_PRIORITY in keyValuePairs) {
             this._setSamplingPriority(keyValuePairs[opentracing_tags.SAMPLING_PRIORITY]);
+            delete keyValuePairs[opentracing_tags.SAMPLING_PRIORITY];
         }
 
         if (this._spanContext.isSampled()) {
@@ -190,10 +191,11 @@ export default class Span {
     setTag(key: string, value: any): Span {
         if (key === opentracing_tags.SAMPLING_PRIORITY) {
             this._setSamplingPriority(value);
+            return this;
         }
 
         if (this._spanContext.isSampled()) {
-            this._tags.push({key, value});
+            this._tags.push({'key': key, 'value': value});
         }
         return this;
     }
