@@ -19,14 +19,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import * as constants from '../constants.js';
+
 export default class ProbabilisticSampler {
     _samplingRate: number;
+    _tags: any;
 
     constructor(samplingRate: number) {
         if (samplingRate < 0.0 || samplingRate > 1.0) {
             throw new Error(`The sampling rate must be less than 0.0 and grater than 1.0. Received ${samplingRate}`);
         }
+
         this._samplingRate = samplingRate;
+        this._tags = {};
+        this._tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_PROBABILISTIC;
+        this._tags[constants.SAMPLER_PARAM_TAG_KEY] = this._samplingRate;
     }
 
     isSampled(): boolean {
@@ -43,6 +50,10 @@ export default class ProbabilisticSampler {
         }
 
         return this.samplingRate === other.samplingRate;
+    }
+
+    getTags(): any {
+        return this._tags;
     }
 
     close(callback: Function): void {

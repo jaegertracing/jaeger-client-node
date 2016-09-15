@@ -55,6 +55,10 @@ export default class Span {
         this._tags = [];
     }
 
+    get firstInProcess(): boolean {
+        return this._firstInProcess;
+    }
+
     static _getBaggageHeaderCache() {
         if (!Span._baggageHeaderCache) {
             Span._baggageHeaderCache = {};

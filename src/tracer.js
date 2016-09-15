@@ -37,7 +37,7 @@ export default class Tracer {
     _reporter: Reporter;
     _sampler: Sampler;
     _logger: NullLogger;
-    _tracerTags: any;
+    _tags: any;
     _injectors: any;
     _extractors: any;
 
@@ -45,11 +45,11 @@ export default class Tracer {
             reporter: Reporter = new NoopReporter(),
             sampler: Sampler = new ConstSampler(false),
             logger: any,
-            tracerTags: any = {}) {
-        tracerTags.jaegerClient = `Node-${pjson.version}`;
-        tracerTags.ipv4Address = Utils.myIp();
-        let port = 0;
-        this._tracerTags = tracerTags
+            tags: any = {}) {
+        this._tags = tags;
+        this._tags[constants.JAEGER_CLIENT_VERSION_TAG_KEY] = `Node-${pjson.version}`;
+        this._tags[constants.TRACER_HOSTNAME_TAG_KEY] = Utils.myIp();
+
         this._serviceName = serviceName;
         this._reporter = reporter;
         this._sampler = sampler;
@@ -74,6 +74,7 @@ export default class Tracer {
             spanContext: SpanContext,
             operationName: string,
             startTime: number,
+            internalTags: any = {},
             tags: any = {},
             rpcServer: boolean): Span {
 
@@ -87,11 +88,15 @@ export default class Tracer {
         );
 
         span.addTags(tags);
+        span.addTags(internalTags);
         return span;
     }
 
     _report(span: Span): void {
-        span.addTags(this._tracerTags);
+        if (span.firstInProcess) {
+            span.addTags(this._tags);
+        }
+
         this._reporter.report(span);
     }
 
@@ -162,11 +167,13 @@ export default class Tracer {
 
         // $FlowIgnore - I just want a span context up front.
         let ctx: SpanContext = new SpanContext();
+        let samplerTags: any = {};
         if (!parent) {
             let randomId = Utils.getRandom64();
             let flags = 0;
             if (this._sampler.isSampled()) {
                 flags |= constants.SAMPLED_MASK;
+                samplerTags = this._sampler.getTags();
             }
 
             ctx.traceId = randomId;
@@ -193,6 +200,7 @@ export default class Tracer {
             ctx,
             fields.operationName,
             startTime,
+            samplerTags,
             tags,
             rpcServer
         );
