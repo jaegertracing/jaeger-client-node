@@ -4,7 +4,7 @@
   "description": "client for jaeger node",
   "keywords": [],
   "author": "oibe <oibe@uber.com>",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "contributors": [
     {
       "name": "oibe"
@@ -37,9 +37,10 @@
     "flow-bin": "^0.30.0",
     "mocha": "^3.0.1",
     "nyc": "2.4.0",
-    "opentracing": "git://github.com/opentracing/opentracing-javascript.git#215ca2ef73c1463d55f70857b8b2becd958a7365",
+    "opentracing": "git://github.com/opentracing/opentracing-javascript.git#575e8149aadba97d27e9cadff3b8e47a15c2db09",
     "sinon": "^1.17.5",
-    "uber-licence": "^2.0.2"
+    "uber-licence": "^2.0.2",
+    "underscore": "^1.8.3"
   },
   "scripts": {
     "add-license": "./node_modules/.bin/uber-licence",

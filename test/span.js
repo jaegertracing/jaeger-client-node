@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import _ from 'lodash';
 import {assert, expect} from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import * as constants from '../src/constants.js';
@@ -166,6 +167,14 @@ describe('span should', () => {
         assert.equal(key, 'some-key');
         assert.isOk(unnormalizedKey in Span._getBaggageHeaderCache());
     });
+
+    describe('setTag', () => {
+        it('should set a tag, and return a span', () => {
+            var newSpan = span.setTag('key', 'value');
+            assert.isOk(newSpan instanceof Span);
+            assert.isOk(_.isEqual(span._tags[0], {'key': 'key', 'value': 'value'}));
+        });
+    })
 
     // TODO(oibe) need tests for standard tags, and handlers
 });

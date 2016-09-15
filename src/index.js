@@ -1,4 +1,3 @@
-// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,35 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-export default class ProbabilisticSampler {
-    _samplingRate: number;
+import SpanContext from './span_context';
+import Span from './span';
+import Tracer from './tracer';
 
-    constructor(samplingRate: number) {
-        if (samplingRate < 0.0 || samplingRate > 1.0) {
-            throw new Error(`The sampling rate must be less than 0.0 and grater than 1.0. Received ${samplingRate}`);
-        }
-        this._samplingRate = samplingRate;
-    }
-
-    isSampled(): boolean {
-        return Math.random() < this._samplingRate;
-    }
-
-    get samplingRate(): number {
-        return this._samplingRate;
-    }
-
-    equal(other: Sampler): boolean {
-        if (!(other instanceof ProbabilisticSampler)) {
-            return false;
-        }
-
-        return this.samplingRate === other.samplingRate;
-    }
-
-    close(callback: Function): void {
-        if (callback) {
-            callback();
-        }
-    }
-}
+module.exports = {
+    SpanContext   : SpanContext,
+    Span          : Span,
+    Tracer        : Tracer,
+};

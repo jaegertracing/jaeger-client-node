@@ -37,7 +37,7 @@ describe('udp sender should', () => {
     let tracer;
     let thrift;
 
-    before(() => {
+    beforeEach(() => {
         server = dgram.createSocket('udp4');
         server.bind(PORT, HOST);
         tracer = new Tracer(
@@ -51,18 +51,23 @@ describe('udp sender should', () => {
         });
     });
 
-    after(() => {
+    afterEach(() => {
         tracer.close();
+        server.close();
     });
 
     it ('read and verify spans sent', (done) => {
         let sender = new UDPSender();
-        let spanOne = tracer.startSpan({operationName: 'operation-one'});
+        let spanOne = tracer.startSpan('operation-one');
         spanOne.finish(); // finish to set span duration
         spanOne = spanOne._toThrift();
-        let spanTwo = tracer.startSpan({operationName: 'operation-two'});
+        let spanTwo = tracer.startSpan('operation-two');
         spanTwo.finish(); // finish to set span duration
         spanTwo = spanTwo._toThrift();
+
+        // make sure sender can fit both spans
+        let maxSpanBytes = sender._calcSpanSize(spanOne) + sender._calcSpanSize(spanTwo) + 30;
+        sender._maxSpanBytes = maxSpanBytes;
 
         server.on('message', (msg, remote) => {
             let thriftJaegerArgs = thrift.getType('Agent::emitJaegerBatch_args');
@@ -77,13 +82,11 @@ describe('udp sender should', () => {
 
         sender.append(spanOne);
         sender.append(spanTwo);
-
-        // cleanup
         sender.flush();
     });
 
     it('flush spans after capacity is met', () => {
-        let spanOne = tracer.startSpan({operationName: 'operation-one'});
+        let spanOne = tracer.startSpan('operation-one');
         spanOne.finish(); // finish to set span duration
         spanOne = spanOne._toThrift();
         let sender = new UDPSender(undefined, 1);

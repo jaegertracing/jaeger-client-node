@@ -6,3 +6,4 @@
 + propagate 1 or many spanRefs froms startSpan options to created span.
 + upgrade span code to use latest jaeger-idl model
 + test span attributes are populated correctly
++ tag values can be any type, so toString is not sufficient

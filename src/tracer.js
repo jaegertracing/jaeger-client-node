@@ -19,6 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import BinaryCodec from './propagators/binary_codec.js';
 import ConstSampler from './samplers/const_sampler.js';
 import * as constants from './constants.js';
 import * as opentracing from 'opentracing';
@@ -63,6 +64,10 @@ export default class Tracer {
         let httpCodec = new TextMapCodec(true);
         this.registerInjector(opentracing.FORMAT_HTTP_HEADERS, httpCodec);
         this.registerExtractor(opentracing.FORMAT_HTTP_HEADERS, httpCodec);
+
+        let binaryCodec = new BinaryCodec();
+        this.registerInjector(opentracing.FORMAT_BINARY, binaryCodec);
+        this.registerExtractor(opentracing.FORMAT_BINARY, binaryCodec);
     }
 
     _startInternalSpan(
@@ -80,10 +85,6 @@ export default class Tracer {
             startTime,
             firstInProcess
         );
-
-        if (opentracing_tags.SAMPLING_PRIORITY in tags) {
-            span._setSamplingPriority(tags[opentracing_tags.SAMPLING_PRIORITY])
-        }
 
         span.addTags(tags);
         return span;
@@ -105,7 +106,8 @@ export default class Tracer {
     /**
     * The method for creating a root or child span.
     *
-    * @param {object} fields - the fields to set on the newly created span.
+    * @param {string} name - the name of the operation.
+    * @param {object} [fields] - the fields to set on the newly created span.
     * @param {string} fields.operationName - the name to use for the newly
     *        created span. Required if called with a single argument.
     * @param {SpanContext} [fields.childOf] - a parent SpanContext (or Span,
@@ -125,7 +127,11 @@ export default class Tracer {
     *        to represent time values with sub-millisecond accuracy.
     * @return {Span} - a new Span object.
     **/
-    startSpan(fields: startSpanArgs): Span {
+    startSpan(operationName: string, fields: startSpanArgs): Span {
+        // Convert fields.childOf to fields.references as needed.
+        fields = fields || {};
+        fields.operationName = operationName;
+
         let tags = fields.tags || {};
         let references = fields.references || [];
         let startTime = fields.startTime;
@@ -133,6 +139,7 @@ export default class Tracer {
             startTime = Utils.getTimestampMicros();
         }
 
+        // TODO(oibe) support use of references
         let parent: ?SpanContext = fields.childOf;
         if (!parent) {
             // If there is no childOf in fields, then search list of references
@@ -205,7 +212,7 @@ export default class Tracer {
     inject(spanContext: SpanContext, format: string, carrier: any): void {
         let injector = this._injectors[format];
         if (!injector) {
-            throw `Unsupported format: ${format}`;
+            throw new Error(`Unsupported format: ${format}`);
         }
 
         injector.inject(spanContext, carrier);
@@ -224,7 +231,7 @@ export default class Tracer {
     extract(format: string, carrier: any): SpanContext {
         let extractor = this._extractors[format];
         if (!extractor) {
-            throw `Unsupported format: ${format}`;
+            throw new Error(`Unsupported format: ${format}`);
         }
 
         return extractor.extract(carrier);

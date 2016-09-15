@@ -19,35 +19,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-export default class ProbabilisticSampler {
-    _samplingRate: number;
 
-    constructor(samplingRate: number) {
-        if (samplingRate < 0.0 || samplingRate > 1.0) {
-            throw new Error(`The sampling rate must be less than 0.0 and grater than 1.0. Received ${samplingRate}`);
-        }
-        this._samplingRate = samplingRate;
+export default class BinaryCodec {
+    extract(carrir: any): ?SpanContext {
+        return null;
     }
 
-    isSampled(): boolean {
-        return Math.random() < this._samplingRate;
-    }
-
-    get samplingRate(): number {
-        return this._samplingRate;
-    }
-
-    equal(other: Sampler): boolean {
-        if (!(other instanceof ProbabilisticSampler)) {
-            return false;
-        }
-
-        return this.samplingRate === other.samplingRate;
-    }
-
-    close(callback: Function): void {
-        if (callback) {
-            callback();
-        }
-    }
+    inject(spanContext: SpanContext, carrier: any): void {}
 }
