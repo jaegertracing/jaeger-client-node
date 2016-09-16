@@ -34,6 +34,7 @@ function benchmarkTracer() {
 
     var constTracer = new Tracer('const-tracer', new InMemoryReporter(), new ConstSampler(true));
     var span = constTracer.startSpan('op-name');
+    var context = constTracer.startSpan('sampled-context').context();
 
     var httpCarrier = {};
     constTracer.inject(span.context(), opentracing.FORMAT_HTTP_HEADERS, httpCarrier);
@@ -55,9 +56,6 @@ function benchmarkTracer() {
                 tracer.startSpan({operationName: 'test-op'});
             })
             .add('Tracer:startSpan:childOf', function() {
-                // note for multiple outbound client calls context wouldn't be allocated
-                // multiple times.
-                var context = SpanContext.fromString('10:19:0:1');
                 tracer.startSpan('test-op', {childOf: context});
             })
             .add('Tracer:extract:text', function() {

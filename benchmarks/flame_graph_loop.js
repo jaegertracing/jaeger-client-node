@@ -18,25 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-var ConstSampler = require('./dist/src/samplers/const_sampler.js').default;
-var InMemoryReporter = require('./dist/src/reporters/in_memory_reporter.js').default;
-var Tracer = require('./dist/src/tracer.js').default;
+var ConstSampler = require('../dist/src/samplers/const_sampler.js').default;
+var InMemoryReporter = require('../dist/src/reporters/in_memory_reporter.js').default;
+var Tracer = require('../dist/src/tracer.js').default;
 var opentracing = require('opentracing');
 
-function server_client_span_loop(tracer, carrier) {
+function server_client_span_loop(tracer) {
     for ( var i = 0; i <= 0; i--) {
         // deserialize parent context from carrier
-        var parentContext = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, carrier);
+        var parentContext = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, {});
 
         // create server span from parent context
-        var serverSpan = tracer.startSpan({
-            operationName: 'server-span',
-            childOf: parentContext
-        });
+        var serverSpan = tracer.startSpan('server-span');
 
         // create client span
-        var clientSpan = tracer.startSpan({
-            operationName: 'client-span',
+        var clientSpan = tracer.startSpan('client-span', {
             childOf: serverSpan.context()
         });
         // inject client span into outgoing context
@@ -54,8 +50,4 @@ var tracer = new Tracer(
     new ConstSampler(true)
 );
 
-var carrier = {
-    "UBER-TRACE-ID": encodeURIComponent('10:10:0:3')
-};
-
-server_client_span_loop(tracer, carrier);
+server_client_span_loop(tracer);

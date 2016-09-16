@@ -11,15 +11,12 @@
     }
   ],
   "dependencies": {
-    "assert": "^1.4.1",
-    "lodash": "^4.15.0",
     "node-int64": "^0.4.0",
     "thriftrw": "^3.4.3",
     "request": "^2.74.0",
     "xorshift": "^0.2.0"
   },
   "devDependencies": {
-    "async": "^2.0.1",
     "babel-cli": "^6.11.4",
     "babel-istanbul": "^0.11.0",
     "babel-node-debug": "^2.0.0",
@@ -36,11 +33,11 @@
     "eslint-plugin-flowtype": "^2.4.0",
     "eslint-plugin-react": "^4.3.0",
     "express": "^4.14.0",
-    "faucet": "0.0.1",
     "flow-bin": "^0.30.0",
+    "lodash": "^4.15.0",
     "mocha": "^3.0.1",
-    "nyc": "2.4.0",
     "opentracing": "git://github.com/opentracing/opentracing-javascript.git#575e8149aadba97d27e9cadff3b8e47a15c2db09",
+    "rsvp": "^3.3.1",
     "sinon": "^1.17.5",
     "uber-licence": "^2.0.2",
     "underscore": "^1.8.3"

@@ -23,17 +23,33 @@ var Benchmark = require('benchmark');
 var benchmarks = require('beautify-benchmark');
 var ConstSampler = require('../dist/src/samplers/const_sampler.js').default;
 var InMemoryReporter = require('../dist/src/reporters/in_memory_reporter.js').default;
+var ProbabilisticSampler = require('../dist/src/samplers/probabilistic_sampler.js').default;
 var SpanContext = require('../dist/src/span_context.js').default;
 var Tracer = require('../dist/src/tracer.js').default;
 var opentracing = require('opentracing');
 
 function benchmarkSpan() {
-    var tracer = new Tracer('benchmark-tracer', new InMemoryReporter(), new ConstSampler(true));
-    var spanWithBaggage = tracer.startSpan('op-name');
-    spanWithBaggage.setBaggageItem('key', 'value');
+
+    var constTracer = new Tracer('const-tracer', new InMemoryReporter(), new ConstSampler(true));
+    var probabilisticTracer = new Tracer('probabilistic-tracer', new InMemoryReporter(), new ProbabilisticSampler(0.1));
+
+    var params = [
+        constTracer,
+        probabilisticTracer
+    ];
+
+    function createSpanFactory(tracer) {
+        return function() {
+            var span = tracer.startSpan('op-name');
+            span.setBaggageItem('key', 'value');
+            return span;
+        }
+    }
+
+
 
     console.log('Beginning Span Benchmark...');
-    function run(span) {
+    function run(createSpan) {
         var suite = new Benchmark.Suite()
             .add('Span:setBaggageItem', function() {
                 span.setBaggageItem('key', 'value');
@@ -66,6 +82,7 @@ function benchmarkSpan() {
             })
             .on('cycle', function(event) {
                 benchmarks.add(event.target);
+                span = createSpan();
             })
             .on('complete', function() {
                 benchmarks.log();
@@ -74,7 +91,9 @@ function benchmarkSpan() {
             .run({ 'async': true });
     }
 
-    run(spanWithBaggage);
+    _.each(params, function(tracer) {
+        run(createSpanFactory(tracer));
+    });
 }
 
 exports.benchmarkSpan = benchmarkSpan;

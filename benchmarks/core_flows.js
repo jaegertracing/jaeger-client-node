@@ -54,13 +54,14 @@ function benchmarkCoreFlows() {
         var suite = new Benchmark.Suite(tracer, carrier)
             .add('Fundamental Request flow', function() {
                 var context = tracer.extract(format, carrier);
-                var fields = {
+                var options = {
+                    'childOf': context,
                     'tags': {
                         'tag-key-one': 'tag-value-one',
                         'tag-key-two': 'tag-value-two'
                     }
                 };
-                var serverSpan = tracer.startSpan('server-span', fields);
+                var serverSpan = tracer.startSpan('server-span', options);
                 var clientSpan = tracer.startSpan('client-span', {childOf: serverSpan.context()});
                 var outgoingCarrier = {};
                 tracer.inject(clientSpan.context(), format, outgoingCarrier);
