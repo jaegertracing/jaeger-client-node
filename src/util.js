@@ -147,4 +147,14 @@ export default class Utils {
         }
     }
 
+    static clone(obj: any): any {
+        let newObj = {};
+        for (let key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                newObj[key] = obj[key];
+            }
+        }
+
+        return newObj;
+    }
 }

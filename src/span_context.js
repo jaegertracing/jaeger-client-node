@@ -19,7 +19,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import _ from 'lodash';
 import * as constants from './constants.js';
 import Int64 from 'node-int64';
 import Utils from './util.js';
@@ -112,7 +111,7 @@ export default class SpanContext {
     }
 
     withBaggageItem(key: string, value: string): SpanContext {
-        let newBaggage = _.assign({}, this._baggage);
+        let newBaggage = Utils.clone(this._baggage);
         newBaggage[key] = value;
         return new SpanContext(this._traceId, this._spanId, this._parentId, this._flags, newBaggage);
     }
