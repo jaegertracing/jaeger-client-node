@@ -104,9 +104,9 @@ export default class SpanContext {
         var parentId = this._parentId ? this._parentId.toString(16) : '0';
 
         return [
-            Utils.removeLeadingZeros(this._traceId.toString(16)),
-            Utils.removeLeadingZeros(this._spanId.toString(16)),
-            Utils.removeLeadingZeros(parentId),
+            this._traceId.toString(16),
+            this._spanId.toString(16),
+            parentId,
             this._flags.toString(16)
         ].join(':');
     }
@@ -128,9 +128,9 @@ export default class SpanContext {
             return null;
         }
 
-        let traceId = Utils.isParsableHex64(headers[0]);
-        let spanId = Utils.isParsableHex64(headers[1]);
-        let parentId = Utils.isParsableHex64(headers[2]);
+        let traceId = Utils.parseHex64(headers[0]);
+        let spanId = Utils.parseHex64(headers[1]);
+        let parentId = Utils.parseHex64(headers[2]);
         let flags = parseInt(headers[3], 16);
         let NaNDetected = ((isNaN(traceId) || traceId.toNumber() === 0) ||
                           isNaN(spanId)   ||
@@ -142,7 +142,7 @@ export default class SpanContext {
         }
 
         // The collector expects null instead of zero.
-        if (parentId.toNumber() === 0) {
+        if (parentId.low === 0 && parentId.high === 0) {
             parentId = null;
         }
 

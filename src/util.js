@@ -78,27 +78,6 @@ export default class Utils {
     }
 
     /**
-     * @param {string} input - the input for which leading zeros should be removed.
-     * @return {string} - returns the input string without leading zeros.
-     **/
-    static removeLeadingZeros(input: string): string {
-        if (input.length == 1) {
-            return input;
-        }
-
-        let counter = 0;
-        for (let i = 0; i < input.length; i++) {
-            if(input.charAt(i) === '0') {
-                counter++;
-            } else {
-                break;
-            }
-        }
-
-        return input.substring(counter);
-    }
-
-    /**
      * @param {string} serviceName - the service name of the endpoint
      * @param {string} ipv4 - the ip address of the endpoint
      * @param {number} port - the port of the endpoint
@@ -151,14 +130,13 @@ export default class Utils {
         return newObj;
     }
 
-    static isParsableHex64(inputStr: string): any {
-        let hexLookup = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8',
-            '9': '9', 'a': 'a', 'b': 'b', 'c': 'c', 'd': 'd', 'e': 'e', 'f': 'f'};
+    static parseHex64(inputStr: string): any {
         let unsigned = true;
 
         for (let i = 0 ; i < inputStr.length; i++) {
-            if(!(inputStr[i] in hexLookup)) {
-                return Number.NaN;
+            let c = inputStr[0];
+            if (!(c >= '0' && c <= '9' || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f')) {
+                  return Number.NaN;
             }
         }
 
