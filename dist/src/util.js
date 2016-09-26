@@ -189,6 +189,18 @@ var Utils = function () {
                 }
             }
         }
+    }, {
+        key: 'clone',
+        value: function clone(obj) {
+            var newObj = {};
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    newObj[key] = obj[key];
+                }
+            }
+
+            return newObj;
+        }
     }]);
 
     return Utils;

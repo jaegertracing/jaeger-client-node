@@ -34,8 +34,8 @@ function benchmarkSpan() {
     var probabilisticTracer = new Tracer('probabilistic-tracer', new InMemoryReporter(), new ProbabilisticSampler(0.1));
 
     var params = [
-        constTracer,
-        probabilisticTracer
+        { 'tracer': constTracer, 'description': ' with constant tracer' },
+        { 'tracer': probabilisticTracer, 'description': ' with probabilitic tracer' }
     ];
 
     function createSpanFactory(tracer) {
@@ -49,7 +49,8 @@ function benchmarkSpan() {
 
 
     console.log('Beginning Span Benchmark...');
-    function run(createSpan) {
+    function run(createSpan, description) {
+        var span = createSpan();
         var suite = new Benchmark.Suite()
             .add('Span:setBaggageItem', function() {
                 span.setBaggageItem('key', 'value');
@@ -74,6 +75,9 @@ function benchmarkSpan() {
             .add('Span:setTag', function() {
                 span.setTag('key', 'value');
             })
+            .add('Span._toThrift', function() {
+                span._toThrift();
+            })
             .add('Span.log', function() {
                 span.log({
                     'event': 'event message',
@@ -82,17 +86,18 @@ function benchmarkSpan() {
             })
             .on('cycle', function(event) {
                 benchmarks.add(event.target);
+                event.target.name = event.target.name + description;
                 span = createSpan();
             })
             .on('complete', function() {
                 benchmarks.log();
             })
             // run async
-            .run({ 'async': true });
+            .run({ 'async': false });
     }
 
-    _.each(params, function(tracer) {
-        run(createSpanFactory(tracer));
+    _.each(params, function(o) {
+        run(createSpanFactory(o['tracer']), o['description']);
     });
 }
 

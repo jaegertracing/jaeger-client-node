@@ -25,10 +25,6 @@ var _createClass = function () { function defineProperties(target, props) { for 
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-var _lodash = require('lodash');
-
-var _lodash2 = _interopRequireDefault(_lodash);
-
 var _constants = require('./constants.js');
 
 var constants = _interopRequireWildcard(_constants);
@@ -41,9 +37,9 @@ var _util = require('./util.js');
 
 var _util2 = _interopRequireDefault(_util);
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -95,7 +91,7 @@ var SpanContext = function () {
     }, {
         key: 'withBaggageItem',
         value: function withBaggageItem(key, value) {
-            var newBaggage = _lodash2.default.assign({}, this._baggage);
+            var newBaggage = _util2.default.clone(this._baggage);
             newBaggage[key] = value;
             return new SpanContext(this._traceId, this._spanId, this._parentId, this._flags, newBaggage);
         }
