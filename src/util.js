@@ -19,9 +19,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import xorshift from 'xorshift';
-import Int64 from 'node-int64';
+import Long from 'long';
 import os from 'os';
+import xorshift from 'xorshift';
 
 export default class Utils {
     /**
@@ -39,26 +39,19 @@ export default class Utils {
     /**
      * Determines whether a string contains a given prefix.
      *
-     * @return {Buffer}  - returns a buffer representing a random 64 bit
+     * @return {object}  - returns a Long representing a random 64 bit
      * number.
      **/
-    static getRandom64(): Buffer {
-        let randint = xorshift.randomint();
-        let buf = new Buffer(8);
-        buf.writeUInt32BE(randint[0], 0);
-        buf.writeUInt32BE(randint[1], 4);
-        return buf;
+    static getRandom64(): Long {
+        let randint: Array<number> = xorshift.randomint();
+        let unsigned: boolean = true;
+        return new Long(randint[0], randint[1], unsigned);
     }
 
-    /**
-     * @param {string|number} numberValue - a string or number to be encoded
-     * as a 64 bit byte array.
-     * @return {Buffer} - returns a buffer representing the encoded string, or number.
-     **/
-    static encodeInt64(numberValue: any): any {
-        return new Int64(numberValue).toBuffer();
+    static encodeInt64(lower, higher): Long {
+        let unsigned: boolean =  true;
+        return new Long(lower, higher, unsigned);
     }
-
 
     /**
      * @param {string} ip - a string representation of an ip address.
@@ -82,27 +75,6 @@ export default class Utils {
             return (1 << 31) - ipl;
         }
         return ipl;
-    }
-
-    /**
-     * @param {string} input - the input for which leading zeros should be removed.
-     * @return {string} - returns the input string without leading zeros.
-     **/
-    static removeLeadingZeros(input: string): string {
-        if (input.length == 1) {
-            return input;
-        }
-
-        let counter = 0;
-        for (let i = 0; i < input.length; i++) {
-            if(input.charAt(i) === '0') {
-                counter++;
-            } else {
-                break;
-            }
-        }
-
-        return input.substring(counter);
     }
 
     /**
@@ -156,5 +128,18 @@ export default class Utils {
         }
 
         return newObj;
+    }
+
+    static parseHex64(inputStr: string): any {
+        let unsigned = true;
+
+        for (let i = 0 ; i < inputStr.length; i++) {
+            let c = inputStr[0];
+            if (!(c >= '0' && c <= '9' || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f')) {
+                  return Number.NaN;
+            }
+        }
+
+        return Long.fromString(inputStr, unsigned, 16);
     }
 }

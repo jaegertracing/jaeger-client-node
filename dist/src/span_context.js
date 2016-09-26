@@ -29,13 +29,13 @@ var _constants = require('./constants.js');
 
 var constants = _interopRequireWildcard(_constants);
 
-var _nodeInt = require('node-int64');
-
-var _nodeInt2 = _interopRequireDefault(_nodeInt);
-
 var _util = require('./util.js');
 
 var _util2 = _interopRequireDefault(_util);
+
+var _long = require('long');
+
+var _long2 = _interopRequireDefault(_long);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -84,9 +84,9 @@ var SpanContext = function () {
     }, {
         key: 'toString',
         value: function toString() {
-            var parentId = this._parentId ? this._parentId.toString('hex') : '0';
+            var parentId = this._parentId ? this._parentId.toString(16) : '0';
 
-            return [_util2.default.removeLeadingZeros(this._traceId.toString('hex')), _util2.default.removeLeadingZeros(this._spanId.toString('hex')), _util2.default.removeLeadingZeros(parentId), this._flags.toString(16)].join(':');
+            return [this._traceId.toString(16), this._spanId.toString(16), parentId, this._flags.toString(16)].join(':');
         }
     }, {
         key: 'withBaggageItem',
@@ -149,19 +149,22 @@ var SpanContext = function () {
                 return null;
             }
 
-            var traceId = parseInt(headers[0], 16);
-            var NaNDetected = isNaN(traceId, 16) || traceId === 0 || isNaN(parseInt(headers[1], 16)) || isNaN(parseInt(headers[2], 16)) || isNaN(parseInt(headers[3], 16));
+            var traceId = _util2.default.parseHex64(headers[0]);
+            var spanId = _util2.default.parseHex64(headers[1]);
+            var parentId = _util2.default.parseHex64(headers[2]);
+            var flags = parseInt(headers[3], 16);
+            var NaNDetected = isNaN(traceId) || traceId.toNumber() === 0 || isNaN(spanId) || isNaN(parentId) || isNaN(flags);
 
             if (NaNDetected) {
                 return null;
             }
 
-            var parentId = null;
-            if (headers[2] !== '0') {
-                parentId = _util2.default.encodeInt64(headers[2]);
+            // The collector expects null instead of zero.
+            if (parentId.low === 0 && parentId.high === 0) {
+                parentId = null;
             }
 
-            return new SpanContext(_util2.default.encodeInt64(headers[0]), _util2.default.encodeInt64(headers[1]), parentId, parseInt(headers[3], 16));
+            return new SpanContext(traceId, spanId, parentId, flags);
         }
     }]);
 

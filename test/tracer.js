@@ -20,7 +20,6 @@
 
 import _ from 'lodash';
 import {assert, expect} from 'chai';
-import bufferEqual from 'buffer-equal';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import * as constants from '../src/constants.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
@@ -47,12 +46,8 @@ describe('tracer should', () => {
         tracer.close();
     });
 
-    it('create a span correctly through _startInternalSpan', () => {
-        let traceId = Utils.encodeInt64(1);
-        let spanId = Utils.encodeInt64(2);
-        let parentId = Utils.encodeInt64(3);
-        let flags = 1;
-        let context = new SpanContext(traceId, spanId, parentId, flags);
+    it ('create a span correctly through _startInternalSpan', () => {
+        let context = tracer.startSpan('op-name').context();
         let start = Utils.getTimestampMicros();
         let rpcServer = false;
         let internalTags = [];
@@ -62,12 +57,12 @@ describe('tracer should', () => {
         };
         let span = tracer._startInternalSpan(context, 'op-name', start, internalTags, tags, rpcServer);
 
-        assert.isOk(bufferEqual(span.context().traceId, traceId));
-        assert.isOk(bufferEqual(span.context().spanId, spanId));
-        assert.isOk(bufferEqual(span.context().parentId, parentId));
-        assert.equal(span.context().flags, flags);
+        assert.isOk(span.context().traceId.equals(context.traceId));
+        assert.isOk(span.context().spanId.equals(context.spanId));
+        assert.isNotOk(span.context().parentId);
+        assert.equal(span.context().flags, context.flags);
         assert.equal(span._startTime, start);
-        assert.isNotOk(span._firstInProcess);
+        assert.isOk(span._firstInProcess);
         assert.equal(Object.keys(span._tags).length, 2);
     });
 
@@ -93,18 +88,14 @@ describe('tracer should', () => {
             startTime: startTime
         });
 
-        assert.equal(span.context().traceId, span.context().spanId);
+        assert.isOk(span.context().traceId.equals(span.context().spanId));
         assert.isNotOk(span.context().parentId);
         assert.isOk(span.context().isSampled());
         assert.equal(span._startTime, startTime);
     });
 
     it ('start a child span represented as a separate span from parent, using childOf and references', () => {
-        let traceId = Utils.encodeInt64(1);
-        let spanId = Utils.encodeInt64(2);
-        let parentId = Utils.encodeInt64(3);
-        let flags = 1;
-        let context = new SpanContext(traceId, spanId, parentId, flags);
+        let context = tracer.startSpan('op-name').context();
         let startTime = Utils.getTimestampMicros();
 
         let childOfParams = {
@@ -120,9 +111,9 @@ describe('tracer should', () => {
         };
 
         let assertByStartSpanParameters = (params) => {
-            let span = tracer.startSpan('test-span', params);
-            assert.isOk(bufferEqual(span.context().traceId, traceId));
-            assert.isOk(bufferEqual(span.context().parentId, spanId));
+            let span = tracer.startSpan('op-name', params);
+            assert.isOk(span.context().traceId.equals(context.traceId));
+            assert.equal(span.context().parentId, context.spanId);
             assert.equal(span.context().flags, constants.SAMPLED_MASK);
             assert.equal(span._startTime, startTime);
         }
@@ -132,11 +123,7 @@ describe('tracer should', () => {
     });
 
     it ('start a child span represented as same span (Zipkins one-span-per-rpc)', () => {
-        let traceId = Utils.encodeInt64(1);
-        let spanId = Utils.encodeInt64(2);
-        let parentId = Utils.encodeInt64(3);
-        let flags = 1;
-        let context = new SpanContext(traceId, spanId, parentId, flags);
+        let context = tracer.startSpan('op-name').context();
         let startTime = Utils.getTimestampMicros();
 
         let tags = {};
@@ -147,20 +134,22 @@ describe('tracer should', () => {
             childOf: context,
             startTime: startTime,
             tags
-        }
+        };
 
         let referenceParams = {
             operationName: 'test-name',
             references: [new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, context)],
             startTime: startTime,
             tags
-        }
+        };
 
         let assertByStartSpanParameters = (params) => {
             let span = tracer.startSpan('test-span', params);
 
-            assert.isOk(bufferEqual(span.context().traceId, traceId));
-            assert.isOk(bufferEqual(span.context().parentId, parentId));
+            assert.isOk(span.context().traceId.equals(context.traceId));
+            // parentId is null because in one-span-per-RPC model we inherit parent's parentId
+            // Since parent is a root span then this will be null.
+            assert.isNotOk(span.context().parentId);
             assert.isOk(span.context().isSampled());
             assert.equal(span._startTime, startTime);
         }
@@ -176,22 +165,17 @@ describe('tracer should', () => {
             keyOne: 'leela',
             keyTwo: 'bender'
         };
-        let savedContext = new SpanContext(
-            Utils.encodeInt64(1),
-            Utils.encodeInt64(2),
-            Utils.encodeInt64(3),
-            constants.SAMPLED_MASK,
-            baggage
-        );
+        let savedContext = tracer.startSpan('op-name').context();
+        savedContext.baggage = baggage;
 
         let assertByFormat = (format) => {
             let carrier = {};
             tracer.inject(savedContext, format, carrier);
             let extractedContext = tracer.extract(format, carrier);
 
-            assert.isOk(bufferEqual(savedContext.traceId, extractedContext.traceId));
-            assert.isOk(bufferEqual(savedContext.spanId, extractedContext.spanId));
-            assert.isOk(bufferEqual(savedContext.parentId, extractedContext.parentId));
+            assert.isOk(savedContext.traceId.equals(extractedContext.traceId));
+            assert.isOk(savedContext.spanId.equals(extractedContext.spanId));
+            assert.equal(savedContext.parentId, extractedContext.parentId);
             assert.equal(savedContext.flags, extractedContext.flags);
             assert.equal(savedContext.baggage[keyOne], extractedContext.baggage[keyOne]);
             assert.equal(savedContext.baggage[keyTwo], extractedContext.baggage[keyTwo]);
@@ -205,13 +189,8 @@ describe('tracer should', () => {
         let baggage = {
             keyOne: 'Leela vs. Bender',
         };
-        let savedContext = new SpanContext(
-            Utils.encodeInt64(1),
-            Utils.encodeInt64(2),
-            Utils.encodeInt64(3),
-            constants.SAMPLED_MASK,
-            baggage
-        );
+        let savedContext = tracer.startSpan('op-name').context();
+        savedContext.baggage = baggage;
         let carrier = {};
 
         tracer.inject(savedContext, opentracing.FORMAT_HTTP_HEADERS, carrier);
@@ -220,12 +199,7 @@ describe('tracer should', () => {
 
     it ('assert inject and extract throw errors when given an invalid format', () => {
         let carrier = {};
-        let context = new SpanContext(
-            Utils.encodeInt64(1),
-            Utils.encodeInt64(2),
-            Utils.encodeInt64(3),
-            constants.SAMPLED_MASK
-        );
+        let context = tracer.startSpan('op-name').context();
 
         // subtle but expect wants a function to call not the result of a function call.
         expect(() => {tracer.inject(context, 'fake-format', carrier)}).to.throw('Unsupported format: fake-format');

@@ -19,38 +19,35 @@
 // THE SOFTWARE.
 
 import {assert} from 'chai';
-import bufferEqual from 'buffer-equal';
 import * as constants from '../src/constants.js';
 import SpanContext from '../src/span_context.js';
 import Utils from '../src/util.js';
 
 describe ('SpanContext should', () => {
-    let LARGEST_64_BUFFER;
+    let LARGEST_64;
     before (() => {
-        LARGEST_64_BUFFER = new Buffer(8);
-        LARGEST_64_BUFFER.writeUInt32BE(0xffffffff, 0);
-        LARGEST_64_BUFFER.writeUInt32BE(0xffffffff, 4);
+        LARGEST_64 = Utils.encodeInt64(0xffffffff, 0xffffffff);
     });
 
     it ('return given values as they were set', () => {
-        let traceId = Utils.encodeInt64(1);
-        let spanId = Utils.encodeInt64(2);
-        let parentId = Utils.encodeInt64(3);
+        let traceId = Utils.getRandom64();
+        let spanId = Utils.getRandom64();
+        let parentId = Utils.getRandom64();
         let flags = 1;
 
         let context = new SpanContext(traceId, spanId, parentId, flags);
 
-        assert.isOk(bufferEqual(traceId, context.traceId));
-        assert.isOk(bufferEqual(spanId, context.spanId));
-        assert.isOk(bufferEqual(parentId, context.parentId));
+        assert.isOk(traceId.equals(context.traceId));
+        assert.isOk(spanId.equals(context.spanId));
+        assert.equal(parentId, context.parentId);
         assert.equal(flags, context.flags);
     });
 
     it ('return IsSampled properly', () => {
         let context = new SpanContext(
-                Utils.encodeInt64(1),
-                Utils.encodeInt64(2),
-                Utils.encodeInt64(3),
+                Utils.getRandom64(),
+                Utils.getRandom64(),
+                Utils.getRandom64(),
                 3
             );
         assert.isOk(context.isSampled());
@@ -70,9 +67,9 @@ describe ('SpanContext should', () => {
 
         // test large numbers
         let ctx3 = new SpanContext(
-            LARGEST_64_BUFFER,
-            LARGEST_64_BUFFER,
-            LARGEST_64_BUFFER,
+            LARGEST_64,
+            LARGEST_64,
+            LARGEST_64,
             0).toString();
         assert.equal(ctx3, 'ffffffffffffffff:ffffffffffffffff:ffffffffffffffff:0');
     });
@@ -80,16 +77,16 @@ describe ('SpanContext should', () => {
     it ('turn properly formatted strings into correct span contexts', () => {
         let context = SpanContext.fromString('100:7f:0:1');
 
-        assert.isOk(bufferEqual(Utils.encodeInt64(0x100), context.traceId));
-        assert.isOk(bufferEqual(Utils.encodeInt64(0x7f), context.spanId));
+        assert.isOk(Utils.encodeInt64(0x100).equals(context.traceId));
+        assert.isOk(Utils.encodeInt64(Utils.encodeInt64(0x7f), context.spanId));
         assert.equal(null, context.parentId);
         assert.equal(1, context.flags);
 
         // test large numbers
         context = SpanContext.fromString('ffffffffffffffff:ffffffffffffffff:5:1');
-        assert.isOk(bufferEqual(LARGEST_64_BUFFER, context.spanId));
-        assert.isOk(bufferEqual(Utils.encodeInt64(0x5), context.parentId));
-        assert.equal(context.flags, 0x1);
+        assert.isOk(LARGEST_64.equals(context.spanId));
+        assert.isOk(Utils.encodeInt64(0x5).equals(context.parentId));
+        assert.equal(context.flags, constants.SAMPLED_MASK);
     });
 
     it ('return null on malformed traces', () => {

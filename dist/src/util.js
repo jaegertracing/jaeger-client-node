@@ -25,17 +25,17 @@ var _createClass = function () { function defineProperties(target, props) { for 
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-var _xorshift = require('xorshift');
+var _long = require('long');
 
-var _xorshift2 = _interopRequireDefault(_xorshift);
-
-var _nodeInt = require('node-int64');
-
-var _nodeInt2 = _interopRequireDefault(_nodeInt);
+var _long2 = _interopRequireDefault(_long);
 
 var _os = require('os');
 
 var _os2 = _interopRequireDefault(_os);
+
+var _xorshift = require('xorshift');
+
+var _xorshift2 = _interopRequireDefault(_xorshift);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -64,7 +64,7 @@ var Utils = function () {
         /**
          * Determines whether a string contains a given prefix.
          *
-         * @return {Buffer}  - returns a buffer representing a random 64 bit
+         * @return {object}  - returns a Long representing a random 64 bit
          * number.
          **/
 
@@ -72,22 +72,14 @@ var Utils = function () {
         key: 'getRandom64',
         value: function getRandom64() {
             var randint = _xorshift2.default.randomint();
-            var buf = new Buffer(8);
-            buf.writeUInt32BE(randint[0], 0);
-            buf.writeUInt32BE(randint[1], 4);
-            return buf;
+            var unsigned = true;
+            return new _long2.default(randint[0], randint[1], unsigned);
         }
-
-        /**
-         * @param {string|number} numberValue - a string or number to be encoded
-         * as a 64 bit byte array.
-         * @return {Buffer} - returns a buffer representing the encoded string, or number.
-         **/
-
     }, {
         key: 'encodeInt64',
-        value: function encodeInt64(numberValue) {
-            return new _nodeInt2.default(numberValue).toBuffer();
+        value: function encodeInt64(lower, higher) {
+            var unsigned = true;
+            return new _long2.default(lower, higher, unsigned);
         }
 
         /**
@@ -115,30 +107,6 @@ var Utils = function () {
                 return (1 << 31) - ipl;
             }
             return ipl;
-        }
-
-        /**
-         * @param {string} input - the input for which leading zeros should be removed.
-         * @return {string} - returns the input string without leading zeros.
-         **/
-
-    }, {
-        key: 'removeLeadingZeros',
-        value: function removeLeadingZeros(input) {
-            if (input.length == 1) {
-                return input;
-            }
-
-            var counter = 0;
-            for (var i = 0; i < input.length; i++) {
-                if (input.charAt(i) === '0') {
-                    counter++;
-                } else {
-                    break;
-                }
-            }
-
-            return input.substring(counter);
         }
 
         /**
@@ -200,6 +168,20 @@ var Utils = function () {
             }
 
             return newObj;
+        }
+    }, {
+        key: 'parseHex64',
+        value: function parseHex64(inputStr) {
+            var unsigned = true;
+
+            for (var i = 0; i < inputStr.length; i++) {
+                var c = inputStr[0];
+                if (!(c >= '0' && c <= '9' || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f')) {
+                    return Number.NaN;
+                }
+            }
+
+            return _long2.default.fromString(inputStr, unsigned, 16);
         }
     }]);
 

@@ -20,19 +20,19 @@
 // THE SOFTWARE.
 
 import * as constants from './constants.js';
-import Int64 from 'node-int64';
 import Utils from './util.js';
+import Long from 'long';
 
 export default class SpanContext {
-    _traceId: any;
-    _spanId: any;
-    _parentId: any;
+    _traceId: Long;
+    _spanId: Long;
+    _parentId: Long;
     _flags: number;
     _baggage: any;
 
-    constructor(traceId: any,
-                spanId: any,
-                parentId: any,
+    constructor(traceId: Long,
+                spanId: Long,
+                parentId: Long,
                 flags: number,
                 baggage: any = {}) {
         this._traceId = traceId;
@@ -42,15 +42,16 @@ export default class SpanContext {
         this._baggage = baggage;
     }
 
-    get traceId(): any {
+    get traceId(): Long {
         return this._traceId;
     }
 
-    get spanId(): any {
+
+    get spanId(): Long {
         return this._spanId;
     }
 
-    get parentId(): any {
+    get parentId(): Long {
         return this._parentId;
     }
 
@@ -62,15 +63,15 @@ export default class SpanContext {
         return this._baggage;
     }
 
-    set traceId(traceId: Buffer): void {
+    set traceId(traceId: Long): void {
         this._traceId = traceId;
     }
 
-    set spanId(spanId: Buffer): void {
+    set spanId(spanId: Long): void {
         this._spanId = spanId;
     }
 
-    set parentId(parentId: Buffer): void {
+    set parentId(parentId: Long): void {
         this._parentId = parentId;
     }
 
@@ -100,12 +101,12 @@ export default class SpanContext {
      * @return {string} - returns a string version of this span context.
      **/
     toString(): string {
-        var parentId = this._parentId ? this._parentId.toString('hex') : '0';
+        var parentId = this._parentId ? this._parentId.toString(16) : '0';
 
         return [
-            Utils.removeLeadingZeros(this._traceId.toString('hex')),
-            Utils.removeLeadingZeros(this._spanId.toString('hex')),
-            Utils.removeLeadingZeros(parentId),
+            this._traceId.toString(16),
+            this._spanId.toString(16),
+            parentId,
             this._flags.toString(16)
         ].join(':');
     }
@@ -127,26 +128,29 @@ export default class SpanContext {
             return null;
         }
 
-        let traceId = parseInt(headers[0], 16);
-        let NaNDetected = (isNaN(traceId, 16) || traceId === 0) ||
-                          isNaN(parseInt(headers[1], 16)) ||
-                          isNaN(parseInt(headers[2], 16)) ||
-                          isNaN(parseInt(headers[3], 16));
+        let traceId = Utils.parseHex64(headers[0]);
+        let spanId = Utils.parseHex64(headers[1]);
+        let parentId = Utils.parseHex64(headers[2]);
+        let flags = parseInt(headers[3], 16);
+        let NaNDetected = ((isNaN(traceId) || traceId.toNumber() === 0) ||
+                          isNaN(spanId)   ||
+                          isNaN(parentId) ||
+                          isNaN(flags));
 
         if (NaNDetected) {
             return null;
         }
 
-        let parentId = null;
-        if (headers[2] !== '0') {
-            parentId = Utils.encodeInt64(headers[2]);
+        // The collector expects null instead of zero.
+        if (parentId.low === 0 && parentId.high === 0) {
+            parentId = null;
         }
 
         return new SpanContext(
-            Utils.encodeInt64(headers[0]),
-            Utils.encodeInt64(headers[1]),
+            traceId,
+            spanId,
             parentId,
-            parseInt(headers[3], 16)
+            flags
         );
     }
 }
