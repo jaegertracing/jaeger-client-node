@@ -42,7 +42,6 @@ function benchmarkSpan() {
         return function() {
             var span = tracer.startSpan('op-name');
             span.setBaggageItem('key', 'value');
-            span.finish();
             return span;
         }
     }
