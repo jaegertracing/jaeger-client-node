@@ -22,6 +22,8 @@
 import Span from '../span.js';
 
 export default class NoopReporter {
+    _process: Process;
+    _sender: Sender;
 
     report(span: Span): void {}
 
@@ -35,5 +37,10 @@ export default class NoopReporter {
         if (callback) {
             callback();
         }
+    }
+
+    setProcess(process: Process): void {
+        this._process = process;
+        this._sender.setProcess(process);
     }
 }

@@ -24,10 +24,13 @@ import Span from '../span.js';
 export default class InMemoryReporter {
     _spans: Array<Span>;
     _flushed: Array<Span>;
+    _process: Process;
+    _sender: Sender
 
-    constructor() {
+    constructor(sender: Sender) {
         this._spans = [];
         this._flushed = [];
+        this._sender = sender;
     }
 
     report(span: Span): void {
@@ -55,6 +58,13 @@ export default class InMemoryReporter {
     close(callback: ?Function): void {
         if(callback) {
             callback();
+        }
+    }
+
+    setProcess(process: Process): void {
+        this._process = process;
+        if (this._sender) {
+            this._sender.setProcess(process);
         }
     }
 }

@@ -20,6 +20,7 @@
 
 import {assert} from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
+import * as constants from '../src/constants.js'
 import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
@@ -36,13 +37,16 @@ describe('udp sender should', () => {
     let server;
     let tracer;
     let thrift;
+    let sender;
 
     beforeEach(() => {
         server = dgram.createSocket('udp4');
         server.bind(PORT, HOST);
+        sender = new UDPSender();
+        let reporter = new InMemoryReporter(sender);
         tracer = new Tracer(
             'test-service-name',
-            new InMemoryReporter(),
+            reporter,
             new ConstSampler(true)
         );
         thrift = new Thrift({
@@ -57,7 +61,6 @@ describe('udp sender should', () => {
     });
 
     it ('read and verify spans sent', (done) => {
-        let sender = new UDPSender();
         let spanOne = tracer.startSpan('operation-one');
         spanOne.finish(); // finish to set span duration
         spanOne = spanOne._toThrift();
@@ -70,12 +73,14 @@ describe('udp sender should', () => {
         sender._maxSpanBytes = maxSpanBytes;
 
         server.on('message', (msg, remote) => {
-            let thriftJaegerArgs = thrift.getType('Agent::emitJaegerBatch_args');
+            let thriftJaegerArgs = thrift.getType('Agent::emitBatch_args');
             let thriftObj = thriftJaegerArgs.fromBufferResult(msg).value;
-            assert.isOk(thriftObj.spans);
-            assert.equal(thriftObj.spans.length, 2);
-            assert.isOk(TestUtils.thriftSpanEqual(spanOne, thriftObj.spans[0]));
-            assert.isOk(TestUtils.thriftSpanEqual(spanTwo, thriftObj.spans[1]));
+            assert.isOk(thriftObj.batch);
+            assert.equal(thriftObj.batch.spans.length, 2);
+
+            assert.isOk(TestUtils.thriftSpanEqual(spanOne, thriftObj.batch.spans[0]));
+            assert.isOk(TestUtils.thriftSpanEqual(spanTwo, thriftObj.batch.spans[1]));
+
             sender.close();
             done();
         });
@@ -85,16 +90,13 @@ describe('udp sender should', () => {
         sender.flush();
     });
 
-    it('flush spans after capacity is met', () => {
+    it ('flush spans when capacity is reached', () => {
         let spanOne = tracer.startSpan('operation-one');
         spanOne.finish(); // finish to set span duration
         spanOne = spanOne._toThrift();
-        let sender = new UDPSender(undefined, 1);
+        sender._maxSpanBytes = 1;
         let spanSize = sender._calcSpanSize(spanOne);
-
-        // because of zipkin batch overhead being > 0 append on the second
-        // span won't have enough space, and the buffer will be flushed.
-        sender = new UDPSender(undefined, spanSize * 2);
+        sender._maxSpanBytes = spanSize * 2;
 
         let responseOne = sender.append(spanOne);
         let responseTwo = sender.append(spanOne);
@@ -102,11 +104,11 @@ describe('udp sender should', () => {
         assert.equal(responseOne.err, false);
         assert.equal(responseOne.numSpans, 0);
         assert.equal(responseTwo.err, false);
-        assert.equal(responseTwo.numSpans, 1);
+        assert.equal(responseTwo.numSpans, 2);
 
-        // the span that wasn't flushed gets appended
-        assert.equal(sender._spanBuffer.length, 1);
-        assert.equal(sender._byteBufferSize, spanSize);
+        // sender state reset
+        assert.equal(sender._spanBuffer.length, 0);
+        assert.equal(sender._byteBufferSize, 0);
     });
 
     it ('return error response on span too large', () => {

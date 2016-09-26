@@ -28,6 +28,7 @@ export default class RemoteReporter {
     _logger: Logger;
     _sender: Sender;
     _intervalHandle: any;
+    _process: Process;
 
     constructor(sender: Sender,
                 options: any = {}) {
@@ -56,5 +57,10 @@ export default class RemoteReporter {
     close(callback: ?Function): void {
         this._sender.close(callback);
         clearInterval(this._intervalHandle);
+    }
+
+    setProcess(process: Process): void {
+        this._process = process;
+        this._sender.setProcess(process);
     }
 }

@@ -25,13 +25,13 @@ export default class TestUtils {
 
     static thriftSpanEqual(spanOne, spanTwo) {
         // TODO(oibe) in references diff add equality check here
-        return  bufferEqual(spanOne.traceId, spanTwo.traceId) ||
-                bufferEqual(spanOne.spanId, spanTwo.spanId) ||
-                spanOne.operationName === spanTwo.operationName ||
-                spanOne.flags === spanTwo.flags ||
-                spanOne.startTime === spanTwo.startTime ||
-                spanOne.duration === spanTwo.duration ||
-                _.isEqual(spanOne.tags, spanTwo.tags) ||
-                _.isEqual(spanOne.logs, spanTwo.logs);
+        return  bufferEqual(spanOne.traceIdLow, spanTwo.traceIdLow) &&
+                bufferEqual(spanOne.traceIdHigh, spanTwo.traceIdHigh) &&
+                bufferEqual(spanOne.spanId, spanTwo.spanId) &&
+                bufferEqual(spanOne.parentSpanId, spanTwo.parentSpanId) &&
+                spanOne.operationName === spanTwo.operationName &&
+                spanOne.flags === spanTwo.flags &&
+                bufferEqual(spanOne.startTime, spanTwo.startTime) &&
+                bufferEqual(spanOne.duration, spanTwo.duration);
     }
 }

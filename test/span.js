@@ -124,11 +124,11 @@ describe('span should', () => {
     it('add logs with timestamp, and event', () => {
         let timestamp = new Date(2016, 8, 12).getTime();
         let event = 'some messgae';
-        span.log({ timestamp, event });
+        span.log({ 'event': event }, timestamp);
 
         assert.equal(span._logs.length, 1);
         assert.equal(span._logs[0].timestamp, timestamp);
-        assert.equal(span._logs[0].event, event);
+        assert.equal(span._logs[0].fields[0].value, event);
     });
 
     it('add logs with paylaod', () => {
@@ -136,7 +136,7 @@ describe('span should', () => {
         span.log({payload});
 
         assert.equal(span._logs.length, 1);
-        assert.equal(JSON.stringify(span._logs[0].payload), JSON.stringify(payload));
+        assert.equal(JSON.stringify(span._logs[0].fields[0].value), JSON.stringify(payload));
     });
 
     it('add logs with event, but without timestamp', () => {
@@ -148,7 +148,7 @@ describe('span should', () => {
 
         assert.equal(span._logs.length, 1);
         assert.equal(span._logs[0].timestamp, expectedTimestamp * 1000); // to micros
-        assert.equal(span._logs[0].event, event);
+        assert.equal(span._logs[0].fields[0].value, event);
         clock.restore();
     });
 

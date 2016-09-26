@@ -19,11 +19,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import fs from 'fs';
+import path from 'path';
 import * as constants from './constants.js';
 import NullLogger from './logger.js';
 import SpanContext from './span_context.js';
 import {Tags as opentracing_tags} from 'opentracing';
+import {Thrift} from 'thriftrw';
 import Utils from './util.js';
+import Long from 'long';
 
 export default class Span {
     _tracer: any;
@@ -35,7 +39,12 @@ export default class Span {
     _firstInProcess: boolean;
     _logs: Array<LogData>;
     _tags: Array<Tag>;
+    static emptyBuffer: Buffer = new Buffer(8);
     static _baggageHeaderCache: any;
+    static _thrift = new Thrift({
+        source: fs.readFileSync(path.join(__dirname, './jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
+        allowOptionalArguments: true
+    });
 
     constructor(tracer: any,
                 operationName: string,
@@ -205,18 +214,25 @@ export default class Span {
     /**
      * Adds a log event, or payload to a span.
      *
-     * @param {Object} fields - an object that represents the fields to log.
+     * @param {Object} keyValuePairs - an object that represents the keyValuePairs to log.
      * @param {number} [timestamp] - the starting timestamp of a span.
-     * @param {string} [fields.event] - a string message to be logged on a span.
-     * @param {string} [fields.payload] - an object to be logged on a span as a json string.
+     * @param {string} [keyValuePairs.event] - a string message to be logged on a span.
+     * @param {string} [keyValuePairs.payload] - an object to be logged on a span as a json string.
      **/
-    log(fields: any, timestamp: ?number): void {
+    log(keyValuePairs: any, timestamp: ?number): void {
         if (this._spanContext.isSampled()) {
-            if (!fields.timestamp) {
-                fields.timestamp = timestamp || Utils.getTimestampMicros();
+            let tags = [];
+            for (let key in keyValuePairs) {
+                let value = keyValuePairs[key];
+                if (keyValuePairs.hasOwnProperty(key)) {
+                    tags.push({'key': key, 'value': value});
+                }
             }
 
-            this._logs.push(fields);
+            this._logs.push({
+                'timestamp': timestamp || Utils.getTimestampMicros(),
+                'fields': tags
+            });
         }
     }
 
@@ -242,35 +258,97 @@ export default class Span {
         }
     }
 
-    _toThrift() {
-        let tags = [];
-        for (let i = 0; i < this._tags.length; i++) {
-            let tag = this._tags[i];
-            let emptyBuffer = new Buffer(1);
-            emptyBuffer.fill(0);
-            tags.push({
-                key: tag.key,
-                tagType: 'STRING', // TODO(oibe) support multiple tag types
-                vStr: tag.value.toString(),
-                vDouble: 0,
-                vBool: false,
-                vInt16: 0,
-                vInt32: 0,
-                vInt64: 0,
-                vBinary: emptyBuffer
+    static _getTagType(tag: Tag): string {
+        if (tag.value instanceof Number) {
+            return Span._thrift.TagType.DOUBLE;
+        } else if (tag.value instanceof Boolean) {
+            return Span._thrift.TagType.BOOL;
+        } else if (tag.value instanceof Long) { //TODO(oibe) how else to recognize a long?
+            return Span._thrift.TagType.LONG;
+        } else if (tag.value instanceof Buffer) {
+            return Span._thrift.TagType.BUFFER;
+        } else {
+            return Span._thrift.TagType.STRING;
+        }
+    }
+
+    static _getThriftTags(initialTags: Array<Tag>): Array<any> {
+        let thriftTags = [];
+        for (let i = 0; i < initialTags.length; i++) {
+            let tag = initialTags[i];
+
+            let key: string = tag.key;
+            let vType: string = Span._getTagType(tag);
+
+            let vLong: Buffer = Span.emptyBuffer;
+            if (vType === Span._thrift.TagType.LONG) {
+                vLong = tag.value;
+            }
+
+            let vBinary: Buffer = Span.emptyBuffer;
+            if (vType === Span._thrift.TagType.BUFFER) {
+                vBinary = tag.value;
+            }
+
+            let vBool: boolean = false;
+            if (vType === Span._thrift.TagType.BOOL) {
+                vBool = tag.value;
+            }
+
+            let vDouble: number = 0;
+            if (vType === Span._thrift.TagType.DOUBLE) {
+                vDouble = tag.value;
+            }
+
+            let vStr: string = '';
+            if (vType === Span._thrift.TagType.STRING) {
+                vStr = tag.value.toString();
+            }
+
+            thriftTags.push({
+                key: key,
+                vType: vType,
+                vStr: vStr,
+                vDouble: vDouble,
+                vBool: vBool,
+                vLong: vLong,
+                vBinary: vBinary
             });
         }
 
+        return thriftTags;
+    }
+
+    _getThriftLogs(): Array<any> {
+        let thriftLogs = [];
+        for (let i = 0; i < this._logs.length; i++) {
+            let log = this._logs[i];
+            thriftLogs.push({
+                'timestamp': log.timestamp,
+                'fields': Span._getThriftTags(log.fields)
+            });
+        }
+
+        return thriftLogs;
+    }
+
+    _toThrift() {
+        let tags = Span._getThriftTags(this._tags);
+        let logs = this._getThriftLogs();
+        let unsigned = true;
+
         return {
-            traceId : this._spanContext.traceId,
+            traceIdLow: this._spanContext.traceId,
+            traceIdHigh: Span.emptyBuffer,  // TODO(oibe) implement 128 bit ids
             spanId: this._spanContext.spanId,
+            parentSpanId: this._spanContext.parentId || Span.emptyBuffer, //TODO(oibe) how should thrift send null?
             operationName: this._operationName,
             references: [], // TODO(oibe) revist correctness after a spanRef diff is landed.
             flags: this._spanContext.flags,
             startTime: Utils.encodeInt64(this._startTime),
             duration: Utils.encodeInt64(this._duration),
             tags: tags,
-            logs: this._logs
+            logs: logs
         }
     }
 }

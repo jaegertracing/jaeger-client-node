@@ -19,6 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import * as constants from '../constants.js';
 import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
@@ -28,12 +29,12 @@ import Span from '../span.js';
 const HOST = 'localhost';
 const PORT =  5775;
 const DEFAULT_UDP_SPAN_SERVER_HOST_PORT = `${HOST}:${PORT}`;
-const EMIT_SPAN_BATCH_OVERHEAD = 30;
 const UDP_PACKET_MAX_LENGTH = 65000;
 
 export default class UDPSender {
     _hostPort: string;
     _maxPacketSize: number;
+    _process: Process;
     _maxSpanBytes: number;
     _spanBuffer: Array<Span>;
     _thriftBuffer: Buffer;
@@ -46,7 +47,7 @@ export default class UDPSender {
                 maxPacketSize: number = UDP_PACKET_MAX_LENGTH) {
         this._hostPort = hostPort;
         this._maxPacketSize = maxPacketSize;
-        this._maxSpanBytes = this._maxPacketSize - EMIT_SPAN_BATCH_OVERHEAD;
+        this._maxSpanBytes = this._maxPacketSize - constants.EMIT_SPAN_BATCH_OVERHEAD;
         this._byteBufferSize = 0;
         this._spanBuffer = [];
         this._client = dgram.createSocket('udp4');
@@ -61,6 +62,10 @@ export default class UDPSender {
         let thriftJaegerSpan = this._thrift.getType('Span');
         let buffer: Buffer = thriftJaegerSpan.toBufferResult(span).value;
         return buffer.length;
+    }
+
+    setProcess(process: Process): void {
+        this._process = process;
     }
 
     append(span: any): SenderResponse {
@@ -90,8 +95,12 @@ export default class UDPSender {
             return {err: false, numSpans: 1}
         }
 
-        let thriftJaegerArgs = this._thrift.getType('Agent::emitJaegerBatch_args');
-        let bufferResult = thriftJaegerArgs.toBufferResult({spans: this._spanBuffer});
+        let thriftJaegerArgs = this._thrift.getType('Agent::emitBatch_args');
+        let batch = {
+            process: this._process,
+            spans: this._spanBuffer
+        };
+        let bufferResult = thriftJaegerArgs.toBufferResult({batch: batch});
         if (bufferResult.err) {
             return {err: true, numSpans: numSpans};
         }

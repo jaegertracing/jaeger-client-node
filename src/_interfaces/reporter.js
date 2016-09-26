@@ -25,12 +25,14 @@ declare interface Reporter {
     report(span: Span): void;
     flush(callback: ?Function): void;
     close(callback: ?Function): void;
+    setProcess(process: Process): void;
 };
 
 declare class Sender {
     append(span: Span): SenderResponse;
     flush(): SenderResponse;
     close(): void;
+    setProcess(process: Process): void;
 };
 
 declare type SenderResponse = {

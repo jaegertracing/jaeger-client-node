@@ -21,15 +21,19 @@
 
 import SpanContext from '../span_context.js';
 
-declare type LogData = {
-    timestamp: ?number,
-    event: ?string,
-    payload: ?any
-};
-
 declare type Tag = {
     key: string,
-    value: string
+    value: any
+};
+
+declare type LogData = {
+    timestamp: number,
+    fields: Array<Tag>
+};
+
+declare type Process = {
+    serviceName: string,
+    tags?: Array<Tag>
 };
 
 declare type Endpoint = {
