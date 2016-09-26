@@ -215,7 +215,6 @@ describe('tracer should', () => {
         let carrier = {};
 
         tracer.inject(savedContext, opentracing.FORMAT_HTTP_HEADERS, carrier);
-        console.log('carrier', carrier);
         assert.equal(carrier['uberctx-keyOne'], 'Leela%20vs.%20Bender');
     });
 

@@ -148,7 +148,7 @@ export default class Span {
      *
      * @param {number} finishTime - The time on which this span finished.
      **/
-    finish(finishTime: number): void {
+    finish(finishTime: ?number): void {
         if (this._duration !== undefined) {
             throw new Error('You can only call finish() on a span once.');
         }

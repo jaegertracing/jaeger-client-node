@@ -1,3 +1,5 @@
+-include crossdock/rules.mk
+
 .PHONY: publish
 publish:
 	npm run compile
