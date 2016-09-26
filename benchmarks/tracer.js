@@ -24,7 +24,6 @@ var benchmarks = require('beautify-benchmark');
 var ConstSampler = require('../dist/src/samplers/const_sampler.js').default;
 var ProbabilisticSampler = require('../dist/src/samplers/probabilistic_sampler.js').default;
 var InMemoryReporter = require('../dist/src/reporters/in_memory_reporter.js').default;
-var SpanContext = require('../dist/src/span_context.js').default;
 var Tracer = require('../dist/src/tracer.js').default;
 var opentracing = require('opentracing');
 
@@ -44,7 +43,7 @@ function benchmarkTracer() {
 
     var probabilisticTracer = new Tracer('probabilistic-tracer', new InMemoryReporter(), new ProbabilisticSampler(0.01));
     var params = [
-        {'format': opentracing.FORMAT_HTTP_HEADERS, 'tracer': constTracer, 'carrier': httpCarrier, escription: ' with const tracer and http carrier'},
+        {'format': opentracing.FORMAT_HTTP_HEADERS, 'tracer': constTracer, 'carrier': httpCarrier, description: ' with const tracer and http carrier'},
         {'format': opentracing.FORMAT_TEXT_MAP, 'tracer': constTracer, 'carrier': textCarrier, description: ' with const tracer and text carrier'},
         {'format': opentracing.FORMAT_HTTP_HEADERS, 'tracer': probabilisticTracer, 'carrier': httpCarrier, description: ' with probabilistic tracer and http carrier'},
         {'format': opentracing.FORMAT_TEXT_MAP, 'tracer': probabilisticTracer, 'carrier': textCarrier, description: ' with probabilistic tracer and text carrier'},
@@ -72,7 +71,7 @@ function benchmarkTracer() {
                 benchmarks.log();
             })
             // run async
-            .run({ 'async': true });
+            .run({ 'async': false });
     }
 
     _.each(params, function(o) {

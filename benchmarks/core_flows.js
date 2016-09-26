@@ -77,7 +77,7 @@ function benchmarkCoreFlows() {
             })
 
             // run async
-            .run({ 'async': true });
+            .run({ 'async': false });
     }
 
     _.each(params, function(o) {
