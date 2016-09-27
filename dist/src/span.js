@@ -233,26 +233,26 @@ var Span = function () {
         /**
          * Adds a log event, or payload to a span.
          *
-         * @param {Object} fields - an object that represents the fields to log.
+         * @param {Object} keyValuePairs - an object that represents the keyValuePairs to log.
          * @param {number} [timestamp] - the starting timestamp of a span.
-         * @param {string} [fields.event] - a string message to be logged on a span.
-         * @param {string} [fields.payload] - an object to be logged on a span as a json string.
          **/
 
     }, {
         key: 'log',
-        value: function log(fields, timestamp) {
+        value: function log(keyValuePairs, timestamp) {
             if (this._spanContext.isSampled()) {
-                if (!fields.event && !fields.payload) {
-                    this._logger.error('log must be passed either an event of type string, or a payload of type object');
-                    return;
+                var fields = [];
+                for (var key in keyValuePairs) {
+                    var value = keyValuePairs[key];
+                    if (keyValuePairs.hasOwnProperty(key)) {
+                        fields.push({ 'key': key, 'value': value });
+                    }
                 }
 
-                if (!fields.timestamp) {
-                    fields.timestamp = timestamp || _util2.default.getTimestampMicros();
-                }
-
-                this._logs.push(fields);
+                this._logs.push({
+                    'timestamp': timestamp || _util2.default.getTimestampMicros(),
+                    'fields': fields
+                });
             }
         }
 
@@ -280,39 +280,6 @@ var Span = function () {
             } else {
                 this._spanContext.flags = this._spanContext.flags & ~constants.SAMPLED_MASK;
             }
-        }
-    }, {
-        key: '_toThrift',
-        value: function _toThrift() {
-            var tags = [];
-            for (var i = 0; i < this._tags.length; i++) {
-                var tag = this._tags[i];
-                var emptyBuffer = new Buffer(1);
-                emptyBuffer.fill(0);
-                tags.push({
-                    key: tag.key,
-                    tagType: 'STRING', // TODO(oibe) support multiple tag types
-                    vStr: tag.value.toString(),
-                    vDouble: 0,
-                    vBool: false,
-                    vInt16: 0,
-                    vInt32: 0,
-                    vInt64: 0,
-                    vBinary: emptyBuffer
-                });
-            }
-
-            return {
-                traceId: this._spanContext.traceId,
-                spanId: this._spanContext.spanId,
-                operationName: this._operationName,
-                references: [], // TODO(oibe) revist correctness after a spanRef diff is landed.
-                flags: this._spanContext.flags,
-                startTime: _util2.default.encodeInt64(this._startTime),
-                duration: _util2.default.encodeInt64(this._duration),
-                tags: tags,
-                logs: this._logs
-            };
         }
     }, {
         key: 'firstInProcess',

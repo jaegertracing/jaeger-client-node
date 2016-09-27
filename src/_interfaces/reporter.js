@@ -25,7 +25,7 @@ declare interface Reporter {
     report(span: Span): void;
     flush(callback: ?Function): void;
     close(callback: ?Function): void;
-    setProcess(process: Process): void;
+    setProcess(serviceName: string, tags: Array<Tag>): void;
 };
 
 declare class Sender {

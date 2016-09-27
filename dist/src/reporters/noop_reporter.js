@@ -55,6 +55,9 @@ var NoopReporter = function () {
                 callback();
             }
         }
+    }, {
+        key: 'setProcess',
+        value: function setProcess(serviceName, tags) {}
     }]);
 
     return NoopReporter;

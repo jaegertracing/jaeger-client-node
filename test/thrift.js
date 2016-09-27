@@ -1,4 +1,3 @@
-// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,23 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import Span from '../span.js';
+import {assert} from 'chai';
+import bufferEqual from 'buffer-equal';
+import Long from 'long';
+import ThriftUtils from '../src/thrift.js';
 
-export default class NoopReporter {
+describe ('ThriftUtils should', () => {
+    it ('exercise all paths in getTagType', () => {
+        let tags = ThriftUtils.getThriftTags([
+            {'key': 'double', 'value': 1.0 },
+            {'key': 'boolean', 'value': true },
+            {'key': 'long', 'value': new Long() },
+            {'key': 'binary', 'value': new Buffer(1) },
+            {'key': 'string', 'value': 'some-string' }
+        ]);
 
-    report(span: Span): void {}
+        assert.equal(tags[0].vType, 'DOUBLE');
+        assert.equal(tags[1].vType, 'BOOL');
+        assert.equal(tags[2].vType, 'LONG');
+        assert.equal(tags[3].vType, 'BINARY');
+        assert.equal(tags[4].vType, 'STRING');
+    });
 
-    flush(callback: ?Function): void {
-        if (callback) {
-            callback();
-        }
-    }
+    it ('initialize emptyBuffer to all zeros', () => {
+        let buf = new Buffer(8);
+        buf.fill(0);
 
-    close(callback: ?Function) {
-        if (callback) {
-            callback();
-        }
-    }
-
-    setProcess(serviceName: string, tags: Array<Tag>): void {}
-}
+        assert.isOk(bufferEqual(ThriftUtils.emptyBuffer, buf));
+    });
+});

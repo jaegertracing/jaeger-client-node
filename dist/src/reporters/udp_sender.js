@@ -25,6 +25,10 @@ var _createClass = function () { function defineProperties(target, props) { for 
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+var _constants = require('../constants.js');
+
+var constants = _interopRequireWildcard(_constants);
+
 var _dgram = require('dgram');
 
 var _dgram2 = _interopRequireDefault(_dgram);
@@ -45,12 +49,13 @@ var _span2 = _interopRequireDefault(_span);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var HOST = 'localhost';
-var PORT = 5775;
+var PORT = 6832;
 var DEFAULT_UDP_SPAN_SERVER_HOST_PORT = HOST + ':' + PORT;
-var EMIT_SPAN_BATCH_OVERHEAD = 30;
 var UDP_PACKET_MAX_LENGTH = 65000;
 
 var UDPSender = function () {
@@ -62,7 +67,7 @@ var UDPSender = function () {
 
         this._hostPort = hostPort;
         this._maxPacketSize = maxPacketSize;
-        this._maxSpanBytes = this._maxPacketSize - EMIT_SPAN_BATCH_OVERHEAD;
+        this._maxSpanBytes = this._maxPacketSize - constants.EMIT_SPAN_BATCH_OVERHEAD;
         this._byteBufferSize = 0;
         this._spanBuffer = [];
         this._client = _dgram2.default.createSocket('udp4');
@@ -79,6 +84,11 @@ var UDPSender = function () {
             var thriftJaegerSpan = this._thrift.getType('Span');
             var buffer = thriftJaegerSpan.toBufferResult(span).value;
             return buffer.length;
+        }
+    }, {
+        key: 'setProcess',
+        value: function setProcess(process) {
+            this._process = process;
         }
     }, {
         key: 'append',
@@ -110,9 +120,14 @@ var UDPSender = function () {
                 return { err: false, numSpans: 1 };
             }
 
-            var thriftJaegerArgs = this._thrift.getType('Agent::emitJaegerBatch_args');
-            var bufferResult = thriftJaegerArgs.toBufferResult({ spans: this._spanBuffer });
+            var thriftJaegerArgs = this._thrift.getType('Agent::emitBatch_args');
+            var batch = {
+                process: this._process,
+                spans: this._spanBuffer
+            };
+            var bufferResult = thriftJaegerArgs.toBufferResult({ batch: batch });
             if (bufferResult.err) {
+                console.log('err', bufferResult.err);
                 return { err: true, numSpans: numSpans };
             }
 

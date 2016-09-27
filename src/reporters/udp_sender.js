@@ -27,7 +27,7 @@ import {Thrift} from 'thriftrw';
 import Span from '../span.js';
 
 const HOST = 'localhost';
-const PORT =  5775;
+const PORT =  6832;
 const DEFAULT_UDP_SPAN_SERVER_HOST_PORT = `${HOST}:${PORT}`;
 const UDP_PACKET_MAX_LENGTH = 65000;
 
@@ -102,6 +102,7 @@ export default class UDPSender {
         };
         let bufferResult = thriftJaegerArgs.toBufferResult({batch: batch});
         if (bufferResult.err) {
+            console.log('err', bufferResult.err);
             return {err: true, numSpans: numSpans};
         }
 

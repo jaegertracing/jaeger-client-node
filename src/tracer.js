@@ -81,10 +81,7 @@ export default class Tracer {
             }
         }
 
-        this._reporter.setProcess({
-            'serviceName': this._serviceName,
-            'tags': Span._getThriftTags(tags)
-        });
+        this._reporter.setProcess(this._serviceName, tags);
     }
 
     _startInternalSpan(

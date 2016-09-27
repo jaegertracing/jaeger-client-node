@@ -28,9 +28,10 @@ import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import TestUtils from './lib/util.js';
 import Tracer from '../src/tracer.js';
 import {Thrift} from 'thriftrw';
+import ThriftUtils from '../src/thrift.js';
 import UDPSender from '../src/reporters/udp_sender.js';
 
-const PORT = 5775;
+const PORT = 6832;
 const HOST = '127.0.0.1';
 
 describe('udp sender should', () => {
@@ -63,10 +64,10 @@ describe('udp sender should', () => {
     it ('read and verify spans sent', (done) => {
         let spanOne = tracer.startSpan('operation-one');
         spanOne.finish(); // finish to set span duration
-        spanOne = spanOne._toThrift();
+        spanOne = ThriftUtils.spanToThrift(spanOne);
         let spanTwo = tracer.startSpan('operation-two');
         spanTwo.finish(); // finish to set span duration
-        spanTwo = spanTwo._toThrift();
+        spanTwo = ThriftUtils.spanToThrift(spanTwo);
 
         // make sure sender can fit both spans
         let maxSpanBytes = sender._calcSpanSize(spanOne) + sender._calcSpanSize(spanTwo) + 30;
@@ -93,7 +94,7 @@ describe('udp sender should', () => {
     it ('flush spans when capacity is reached', () => {
         let spanOne = tracer.startSpan('operation-one');
         spanOne.finish(); // finish to set span duration
-        spanOne = spanOne._toThrift();
+        spanOne = ThriftUtils.spanToThrift(spanOne);
         sender._maxSpanBytes = 1;
         let spanSize = sender._calcSpanSize(spanOne);
         sender._maxSpanBytes = spanSize * 2;

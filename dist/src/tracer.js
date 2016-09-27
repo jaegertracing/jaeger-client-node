@@ -106,9 +106,24 @@ var Tracer = function () {
         var binaryCodec = new _binary_codec2.default();
         this.registerInjector(opentracing.FORMAT_BINARY, binaryCodec);
         this.registerExtractor(opentracing.FORMAT_BINARY, binaryCodec);
+
+        this._setProcess();
     }
 
     _createClass(Tracer, [{
+        key: '_setProcess',
+        value: function _setProcess() {
+            var tags = [];
+            for (var key in this._tags) {
+                var value = this._tags[key];
+                if (this._tags.hasOwnProperty(key)) {
+                    tags.push({ 'key': key, 'value': value });
+                }
+            }
+
+            this._reporter.setProcess(this._serviceName, tags);
+        }
+    }, {
         key: '_startInternalSpan',
         value: function _startInternalSpan(spanContext, operationName, startTime) {
             var internalTags = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};

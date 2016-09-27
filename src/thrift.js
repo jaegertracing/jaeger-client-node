@@ -19,20 +19,94 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-export const CLIENT_SEND = 'cs';
-export const CLIENT_RECV = 'cr';
-export const SERVER_SEND = 'ss';
-export const SERVER_RECV = 'sr';
-export const LOCAL_COMPONENT = 'lc';
-export const CLIENT_ADDR = 'ca';
-export const SERVER_ADDR = 'sa';
-export const annotationType = {
-    BOOL: 'BOOL',
-    BYTES: 'BYTES',
-    I16: 'I16',
-    I32: 'I32',
-    I64: 'I64',
-    DOUBLE: 'DOUBLE',
-    STRING: 'STRING'
-};
+import fs from 'fs';
+import Long from 'long';
+import path from 'path';
+import {Thrift} from 'thriftrw';
+import Utils from './util.js';
 
+export default class ThriftUtils {
+    static _thrift = new Thrift({
+        source: fs.readFileSync(path.join(__dirname, './jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
+        allowOptionalArguments: true
+    });
+    static emptyBuffer: Buffer =new Buffer([0, 0 , 0, 0, 0, 0, 0, 0]);
+
+    static getThriftTags(initialTags: Array<Tag>): Array<any> {
+        let thriftTags = [];
+        for (let i = 0; i < initialTags.length; i++) {
+            let tag = initialTags[i];
+
+            let key: string = tag.key;
+
+            let vLong: Buffer = ThriftUtils.emptyBuffer;
+            let vBinary: Buffer = ThriftUtils.emptyBuffer;
+            let vBool: boolean = false;
+            let vDouble: number = 0;
+            let vStr: string = '';
+
+            let vType: string = '';
+            if (typeof(tag.value) === 'number') {
+                vType = ThriftUtils._thrift.TagType.DOUBLE;
+                vDouble = tag.value;
+            } else if (typeof(tag.value) === 'boolean') {
+                vType = ThriftUtils._thrift.TagType.BOOL;
+                vBool = tag.value;
+            } else if (tag.value instanceof Long) { //TODO(oibe) how else to recognize a long?
+                vType = ThriftUtils._thrift.TagType.LONG;
+                vLong = tag.value;
+            } else if (tag.value instanceof Buffer) {
+                vType = ThriftUtils._thrift.TagType.BINARY;
+                vBinary = tag.value;
+            } else {
+                vType = ThriftUtils._thrift.TagType.STRING;
+                vStr = tag.value;
+            }
+
+            thriftTags.push({
+                key: key,
+                vType: vType,
+                vStr: vStr,
+                vDouble: vDouble,
+                vBool: vBool,
+                vLong: vLong,
+                vBinary: vBinary
+            });
+        }
+
+        return thriftTags;
+    }
+
+    static getThriftLogs(logs: Array<LogData>): Array<any> {
+        let thriftLogs = [];
+        for (let i = 0; i < logs.length; i++) {
+            let log = logs[i];
+            thriftLogs.push({
+                'timestamp': log.timestamp,
+                'fields': ThriftUtils.getThriftTags(log.fields)
+            });
+        }
+
+        return thriftLogs;
+    }
+
+    static spanToThrift(span: Span): any {
+        let tags = ThriftUtils.getThriftTags(span._tags);
+        let logs = ThriftUtils.getThriftLogs(span._logs);
+        let unsigned = true;
+
+        return {
+            traceIdLow: span._spanContext.traceId,
+            traceIdHigh: ThriftUtils.emptyBuffer,  // TODO(oibe) implement 128 bit ids
+            spanId: span._spanContext.spanId,
+            parentSpanId: span._spanContext.parentId || ThriftUtils.emptyBuffer,
+            operationName: span._operationName,
+            references: [], // TODO(oibe) revist correctness after a spanRef diff is landed.
+            flags: span._spanContext.flags,
+            startTime: Utils.encodeInt64(span._startTime),
+            duration: Utils.encodeInt64(span._duration),
+            tags: tags,
+            logs: logs
+        }
+    }
+}
