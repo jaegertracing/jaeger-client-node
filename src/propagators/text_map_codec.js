@@ -19,6 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import * as constants from '../constants.js';
 import SpanContext from '../span_context.js';
 import Utils from '../util.js';
 
@@ -56,21 +57,28 @@ export default class TextMapCodec {
     }
 
     extract(carrier: any): ?SpanContext {
-        let header = carrier[this._contextKey];
-        let spanContext: ?SpanContext = null;
-        if (header) {
-            spanContext = SpanContext.fromString(this._decodedValue(header));
-            let baggage = {};
-            for (let key in carrier) {
-                if (carrier.hasOwnProperty(key) && Utils.startsWith(key, this._baggagePrefix)) {
+        // $FlowIgnore - I just want an empty span context.
+        let spanContext = new SpanContext();
+        let baggage = {};
+
+        for (let key in carrier) {
+            if (carrier.hasOwnProperty(key)) {
+                if (key === this._contextKey) {
+                    spanContext = SpanContext.fromString(this._decodedValue(carrier[this._contextKey]));
+                }
+
+                if (Utils.startsWith(key, this._baggagePrefix)) {
                     let keyWithoutPrefix = key.substring(this._baggagePrefix.length);
-                    let value = this._decodedValue(carrier[key]);
-                    baggage[keyWithoutPrefix] = value;
+                    baggage[keyWithoutPrefix] = this._decodedValue(carrier[key]);
+                }
+
+                if (key === constants.JAEGER_DEBUG_HEADER) {
+                    spanContext.debugId = this._decodedValue(carrier[key]);
                 }
             }
-            spanContext.baggage = baggage;
         }
 
+        spanContext.baggage = baggage;
         return spanContext;
     }
 
