@@ -43,13 +43,14 @@ describe('udp sender should', () => {
     beforeEach(() => {
         server = dgram.createSocket('udp4');
         server.bind(PORT, HOST);
-        sender = new UDPSender();
-        let reporter = new InMemoryReporter(sender);
+        let reporter = new InMemoryReporter();
         tracer = new Tracer(
             'test-service-name',
             reporter,
             new ConstSampler(true)
         );
+        sender = new UDPSender();
+        sender.setProcess(reporter._process);
         thrift = new Thrift({
             source: fs.readFileSync(path.join(__dirname, '../src/jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
             allowOptionalArguments: true
@@ -113,8 +114,11 @@ describe('udp sender should', () => {
     });
 
     it ('return error response on span too large', () => {
-        let sender = new UDPSender(undefined, 1);
-        let response = sender.append({'key': 'keyone', 'value': 'valueone'});
+        let span = tracer.startSpan('op-name');
+        span.finish(); // otherwise duration will be undefined
+
+        sender._maxSpanBytes = 1;
+        let response = sender.append(ThriftUtils.spanToThrift(span));
         assert.isOk(response.err);
         assert.equal(response.numSpans, 1);
         sender.flush();

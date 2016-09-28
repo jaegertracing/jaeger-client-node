@@ -35,6 +35,7 @@ export default class UDPSender {
     _hostPort: string;
     _maxPacketSize: number;
     _process: Process;
+    _emitSpanBatchOverhead: number;
     _maxSpanBytes: number;
     _spanBuffer: Array<Span>;
     _thriftBuffer: Buffer;
@@ -42,12 +43,13 @@ export default class UDPSender {
     _spec: any;
     _byteBufferSize: number;
     _thrift: any;
+    _batch: Batch;
 
     constructor(hostPort: string = DEFAULT_UDP_SPAN_SERVER_HOST_PORT,
                 maxPacketSize: number = UDP_PACKET_MAX_LENGTH) {
         this._hostPort = hostPort;
         this._maxPacketSize = maxPacketSize;
-        this._maxSpanBytes = this._maxPacketSize - constants.EMIT_SPAN_BATCH_OVERHEAD;
+        this._maxSpanBytes = this._maxPacketSize;
         this._byteBufferSize = 0;
         this._spanBuffer = [];
         this._client = dgram.createSocket('udp4');
@@ -58,6 +60,12 @@ export default class UDPSender {
         });
     }
 
+    _calcBatchSize(batch: Batch) {
+        let thriftBatch = this._thrift.getType('Batch');
+        let buffer: Buffer = thriftBatch.toBufferResult(batch).value;
+        return buffer.length;
+    }
+
     _calcSpanSize(span: any): number {
         let thriftJaegerSpan = this._thrift.getType('Span');
         let buffer: Buffer = thriftJaegerSpan.toBufferResult(span).value;
@@ -65,7 +73,15 @@ export default class UDPSender {
     }
 
     setProcess(process: Process): void {
+        // This function is only called once during reporter construction, and thus will
+        // give us the length of the batch before any spans have been added to _spanBuffer.
         this._process = process;
+        this._batch = {
+            'process': this._process,
+            'spans': this._spanBuffer
+        };
+        this._emitSpanBatchOverhead = this._calcBatchSize(this._batch);
+        this._maxSpanBytes -= this._emitSpanBatchOverhead;
     }
 
     append(span: any): SenderResponse {
@@ -96,11 +112,7 @@ export default class UDPSender {
         }
 
         let thriftJaegerArgs = this._thrift.getType('Agent::emitBatch_args');
-        let batch = {
-            process: this._process,
-            spans: this._spanBuffer
-        };
-        let bufferResult = thriftJaegerArgs.toBufferResult({batch: batch});
+        let bufferResult = thriftJaegerArgs.toBufferResult({batch: this._batch});
         if (bufferResult.err) {
             console.log('err', bufferResult.err);
             return {err: true, numSpans: numSpans};

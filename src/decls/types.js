@@ -36,6 +36,11 @@ declare type Process = {
     tags?: Array<Tag>
 };
 
+declare type Batch = {
+    process: Process,
+    tags?: Array<Tag>
+};
+
 declare type Endpoint = {
     ipv4: number,
     port: number,

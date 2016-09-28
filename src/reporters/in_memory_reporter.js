@@ -26,12 +26,10 @@ export default class InMemoryReporter {
     _spans: Array<Span>;
     _flushed: Array<Span>;
     _process: Process;
-    _sender: Sender
 
-    constructor(sender: Sender) {
+    constructor() {
         this._spans = [];
         this._flushed = [];
-        this._sender = sender;
     }
 
     report(span: Span): void {
@@ -67,9 +65,5 @@ export default class InMemoryReporter {
             'serviceName': serviceName,
             'tags': ThriftUtils.getThriftTags(tags)
         };
-
-        if (this._sender) {
-            this._sender.setProcess(this._process);
-        }
     }
 }
