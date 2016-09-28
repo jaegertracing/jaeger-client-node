@@ -37,58 +37,26 @@ export default class TChannelServer {
             'entryPoint': crossdockSpecPath
         });
 
-        let startTraceContext = {};
-        let joinTraceContext = {};
-        tchannelThrift.register(serverChannel, 'TracedService::startTrace', startTraceContext, this.startTrace.bind(this));
-        tchannelThrift.register(serverChannel, 'TracedService::joinTrace', joinTraceContext, this.joinTrace.bind(this));
+        tchannelThrift.register(serverChannel, 'TracedService::startTrace', {}, this.handleTChannelRequest.bind(this));
+        tchannelThrift.register(serverChannel, 'TracedService::joinTrace', {}, this.handleTChannelRequest.bind(this));
 
         serverChannel.listen(8082, Utils.myIp(), () => {
             console.log('TChannel server listening on port 8082...');
         });
     }
 
-    startTrace(context: any, req: any, head: any, body: any, callback: Function) {
-        let startTraceRequest = body['request'];
-        let span = this.observeSpan(context)
-
+    handleTChannelRequest(context: any, req: any, head: any, body: any, callback: Function) {
         callback(null, {
                 'ok': true,
                 'body': {
                     'notImplementedError': 'TChannel crossdock not implemented for node.',
-                    'span': span
+                    'span': {
+                        'traceId': 'no span found',
+                        'sampled': false,
+                        'baggage': 'no span found'
+                    }
                 }
             });
-    }
-
-    joinTrace(context: any, req: any, head: any, body: any, callback: Function) {
-        let joinTraceRequest = body['request'];
-        let span = this.observeSpan(context);
-
-        callback(null, {
-                'ok': true,
-                'body': {
-                    'notImplementedError': 'TChannel crossdock not implemented for node.',
-                    'span': span
-                }
-            });
-    }
-
-    observeSpan(context: any): ObservedSpan {
-        console.log('observe_span_context', context);
-        let span = context.span;
-        if (!span) {
-            return {
-                traceId: 'no span found',
-                sampled: false,
-                baggage: 'no span found'
-            };
-        }
-
-        return {
-            traceId: Utils.removeLeadingZeros(span.context().traceId.toString('hex')),
-            sampled: context.span.context().isSampled(),
-            baggage: span.getBaggageItem(constants.BAGGAGE_KEY)
-        };
     }
 }
 

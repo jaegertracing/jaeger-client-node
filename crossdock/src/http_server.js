@@ -26,6 +26,7 @@ import dns from 'dns';
 import express from 'express';
 import InMemoryReporter from '../../src/reporters/in_memory_reporter.js';
 import opentracing from 'opentracing';
+import {Tags as opentracing_tags} from 'opentracing';
 import request from 'request';
 import RSVP from 'rsvp';
 import Span from '../../src/span.js';
@@ -38,66 +39,17 @@ export default class HttpServer {
 
     constructor() {
         let app = express();
-        this._tracer = new Tracer('crossdock', new InMemoryReporter(), new ConstSampler(false));
+        this._tracer = new Tracer('node', new InMemoryReporter(), new ConstSampler(false));
 
         // json responses need bodyParser when working with express
         app.use(bodyParser.json());
 
         app.post('/start_trace', (req, res) => {
-            let startRequest = req.body;
-            console.log('start_trace_request:', startRequest);
-
-            // create or deserialize a span from the headers
-            let spanContext = this._tracer.extract(opentracing.FORMAT_HTTP_HEADERS, req.headers);
-            console.log('start_trace_extract_span_context:', spanContext);
-            let serverSpan = this._tracer.startSpan('start-trace', { childOf: spanContext });
-
-            // set sampling and baggage on the span
-            serverSpan.setBaggageItem(constants.BAGGAGE_KEY, startRequest.baggage);
-            if (startRequest.sampled) {
-                serverSpan._setSamplingPriority(1);
-            }
-            console.log('start_trace_server_span_context:', serverSpan.context());
-
-            // do async call to prepareResponse
-            let promise = new RSVP.Promise((resolve, reject) => {
-                this.prepareResponse(startRequest.downstream, { span: serverSpan }).then((response) => {
-                    resolve(response)
-                });
-            });
-
-            // then return result of prepareResponse
-            promise.then((response) => {
-                let traceResponse = JSON.stringify(response);
-                console.log('start_trace_response:', traceResponse);
-                res.send(traceResponse);
-            });
+            this.handleRequest(true, 'start_trace#', req, res);
         });
 
         app.post('/join_trace', (req, res) => {
-            let joinTraceRequest = req.body;
-            console.log('join_trace_request:', joinTraceRequest);
-
-            // create or deserialize a span from the headers
-            console.log('join_trace_headers:', req.headers);
-            let spanContext = this._tracer.extract(opentracing.FORMAT_HTTP_HEADERS, req.headers);
-            console.log('join_trace_extract_span_context:', spanContext);
-            let serverSpan = this._tracer.startSpan('join-trace', { childOf: spanContext });
-            console.log('join_trace_server_span_context:', serverSpan.context());
-
-            // do async call to prepareResponse
-            let promise = new RSVP.Promise((resolve, reject) => {
-                this.prepareResponse(joinTraceRequest.downstream, {span: serverSpan}).then((response) => {
-                    resolve(response);
-                });
-            });
-
-            // then return result of prepareResponse
-            promise.then((response) => {
-                let traceResponse = JSON.stringify(response);
-                console.log('join_trace_response:', traceResponse);
-                res.send(traceResponse);
-            });
+            this.handleRequest(false, 'join_trace#', req, res);
         });
 
         app.listen(8081, () => {
@@ -105,7 +57,40 @@ export default class HttpServer {
         });
     }
 
+    handleRequest(startRequest: boolean, endpointLabel: string, req: any, res: any): void {
+        console.log(endpointLabel, 'request:', req.body);
+
+        console.log(endpointLabel, 'headers:', req.headers);
+        // create or deserialize a span from the headers
+        let spanContext = this._tracer.extract(opentracing.FORMAT_HTTP_HEADERS, req.headers);
+        console.log(endpointLabel, 'extract_span_context:', spanContext);
+        let serverSpan = this._tracer.startSpan(endpointLabel, { childOf: spanContext });
+        console.log(endpointLabel, 'server_span_context:', serverSpan.context());
+
+        if (startRequest) {
+            serverSpan.setBaggageItem(constants.BAGGAGE_KEY, req.body.baggage);
+            serverSpan.setTag(opentracing_tags.SAMPLING_PRIORITY, 1);
+        }
+
+        // do async call to prepareResponse
+        let promise = new RSVP.Promise((resolve, reject) => {
+            console.log('body', req.body);
+            this.prepareResponse(req.body.downstream, {span: serverSpan}).then((response) => {
+                resolve(response);
+            });
+        });
+
+        // then return result of prepareResponse
+        promise.then((response) => {
+            let traceResponse = JSON.stringify(response);
+            console.log(endpointLabel, 'response:', traceResponse);
+            serverSpan.finish();
+            res.send(traceResponse);
+        });
+    }
+
     prepareResponse(downstream: Downstream, context: any): any {
+        console.log('prepare response', downstream);
         return new RSVP.Promise((resolve, reject) => {
             let observedSpan = this.observeSpan(context);
             let response: TraceResponse = {
@@ -150,6 +135,7 @@ export default class HttpServer {
             // $FlowIgnore - Honestly don't know why flow compalins about family.
             dns.lookup(downstream.host, (err, address, family) => {
                 if (err) {
+                    console.log('dns_lookup_err', err);
                     return;
                 }
 
@@ -157,7 +143,6 @@ export default class HttpServer {
                 let downstreamUrl = `http:\/\/${address}:${port}/join_trace`;
 
                 let clientSpan = this._tracer.startSpan('client-span', { childOf: context.span.context() });
-                context.span = clientSpan;
                 let headers = { 'Content-Type': 'application/json' };
                 this._tracer.inject(clientSpan.context(), opentracing.FORMAT_HTTP_HEADERS, headers);
                 console.log('call_downstream_http:', downstreamUrl);
@@ -175,6 +160,7 @@ export default class HttpServer {
                     if (err) {
                         console.log('error in downstream call:', err);
                         reject(err);
+                        clientSpan.finish();
                         return;
                     }
 

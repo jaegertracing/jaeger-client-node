@@ -2,14 +2,14 @@ PROJECT=crossdock
 XDOCK_YAML=$(PROJECT)/docker-compose.yml
 
 .PHONY: crossdock
-crossdock:
+crossdock: install_node_modules
 	docker-compose -f $(XDOCK_YAML) kill node
 	docker-compose -f $(XDOCK_YAML) rm -f node
 	docker-compose -f $(XDOCK_YAML) build node
 	docker-compose -f $(XDOCK_YAML) run crossdock
 
 .PHONY: crossdock-fresh
-crossdock-fresh:
+crossdock-fresh: install_node_modules
 	docker-compose -f $(XDOCK_YAML) kill
 	docker-compose -f $(XDOCK_YAML) rm --force
 	docker-compose -f $(XDOCK_YAML) pull
@@ -20,8 +20,7 @@ crossdock-fresh:
 crossdock-logs:
 	docker-compose -f $(XDOCK_YAML) logs
 
-#foo.bak: foo.bar
-#	    echo "foo"
-#		    if [ -d "~/Dropbox" ]; then \
-#				        echo "Dir exists"; \
-#						    fi
+.PHONY: install_node_modules
+install_node_modules:
+	npm install
+	rm -rf ./node_modules/tchannel/
