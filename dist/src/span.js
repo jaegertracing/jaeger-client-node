@@ -51,7 +51,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var Span = function () {
     function Span(tracer, operationName, spanContext, startTime) {
-        var firstInProcess = arguments.length <= 4 || arguments[4] === undefined ? false : arguments[4];
+        var firstInProcess = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : false;
 
         _classCallCheck(this, Span);
 
