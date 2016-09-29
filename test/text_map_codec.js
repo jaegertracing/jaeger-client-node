@@ -30,7 +30,7 @@ describe('Text Map Codec should', () => {
         let tracer = new Tracer(
             'test-tracer',
             new InMemoryReporter(),
-            new ConstSampler(true)
+            new ConstSampler(false)
         );
         let headers = {};
         headers[constants.JAEGER_DEBUG_HEADER] = encodeURIComponent('value1');

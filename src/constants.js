@@ -50,7 +50,7 @@ export const SAMPLER_TYPE_RATE_LIMITING = 'ratelimiting';
 // SAMPLER_TYPE_REMOTE is the type of sampler that polls Jaeger agent for sampling strategy.
 export const SAMPLER_TYPE_REMOTE = 'remote';
 
-// JaegerDebugHeader is the name of an HTTP header or a TextMap carrier key which,
+// JAEGER_DEBUG_HEADER is the name of an HTTP header or a TextMap carrier key which,
 // if found in the carrier, forces the trace to be sampled as "debug" trace.
 // The value of the header is recorded as the tag on the root span, so that the
 // trace can be found in the UI using this value as a correlation ID.

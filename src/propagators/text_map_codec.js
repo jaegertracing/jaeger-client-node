@@ -23,8 +23,8 @@ import * as constants from '../constants.js';
 import SpanContext from '../span_context.js';
 import Utils from '../util.js';
 
-let TRACER_STATE_HEADER_NAME = 'UBER-TRACE-ID';
-let TRACER_BAGGAGE_HEADER_PREFIX = 'UberCtx-';
+let TRACER_STATE_HEADER_NAME = 'uber-trace-id';
+let TRACER_BAGGAGE_HEADER_PREFIX = 'uberctx-';
 
 export default class TextMapCodec {
     _urlEncoding: boolean;
@@ -63,11 +63,12 @@ export default class TextMapCodec {
 
         for (let key in carrier) {
             if (carrier.hasOwnProperty(key)) {
-                if (key === this._contextKey) {
-                    spanContext = SpanContext.fromString(this._decodedValue(carrier[this._contextKey]));
+                let lowerKey = key.toLowerCase();
+                if (lowerKey === this._contextKey) {
+                    spanContext = SpanContext.fromString(this._decodedValue(carrier[key]));
                 }
 
-                if (Utils.startsWith(key, this._baggagePrefix)) {
+                if (Utils.startsWith(lowerKey, this._baggagePrefix)) {
                     let keyWithoutPrefix = key.substring(this._baggagePrefix.length);
                     baggage[keyWithoutPrefix] = this._decodedValue(carrier[key]);
                 }
