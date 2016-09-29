@@ -36,7 +36,7 @@ describe('Text Map Codec should', () => {
         headers[constants.JAEGER_DEBUG_HEADER] = encodeURIComponent('value1');
 
         let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
-        assert.isNotOk(context.parentId);
+        assert.isOk(context.isDebugIDContainerOnly());
         assert.equal(context.debugId, 'value1');
 
         let span = tracer.startSpan("root", { childOf: context });

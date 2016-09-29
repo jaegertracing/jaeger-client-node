@@ -71,11 +71,11 @@ export default class TextMapCodec {
                     let keyWithoutPrefix = key.substring(this._baggagePrefix.length);
                     baggage[keyWithoutPrefix] = this._decodedValue(carrier[key]);
                 }
-
-                if (key === constants.JAEGER_DEBUG_HEADER) {
-                    spanContext.debugId = this._decodedValue(carrier[key]);
-                }
             }
+        }
+
+        if (constants.JAEGER_DEBUG_HEADER in carrier) {
+            spanContext.debugId = this._decodedValue(carrier[constants.JAEGER_DEBUG_HEADER]);
         }
 
         spanContext.baggage = baggage;
