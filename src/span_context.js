@@ -29,14 +29,14 @@ export default class SpanContext {
     _parentId: any;
     _flags: number;
     _baggage: any;
-    _debugId: string;
+    _debugId: ?string;
 
     constructor(traceId: any,
                 spanId: any,
                 parentId: any,
                 flags: number,
                 baggage: any = {},
-                debugId: string = '') {
+                debugId: ?string = '') {
         this._traceId = traceId;
         this._spanId = spanId;
         this._parentId = parentId;
@@ -65,7 +65,7 @@ export default class SpanContext {
         return this._baggage;
     }
 
-    get debugId(): string {
+    get debugId(): ?string {
         return this._debugId;
     }
 
@@ -89,7 +89,7 @@ export default class SpanContext {
         this._baggage = baggage;
     }
 
-    set debugId(debugId: string): void {
+    set debugId(debugId: ?string): void {
         this._debugId = debugId;
     }
 

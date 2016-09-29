@@ -60,12 +60,17 @@ export default class TextMapCodec {
         // $FlowIgnore - I just want an empty span context.
         let spanContext = new SpanContext();
         let baggage = {};
+        let debugId;
 
         for (let key in carrier) {
             if (carrier.hasOwnProperty(key)) {
                 let lowerKey = key.toLowerCase();
                 if (lowerKey === this._contextKey) {
                     spanContext = SpanContext.fromString(this._decodedValue(carrier[key]));
+                }
+
+                if (lowerKey === constants.JAEGER_DEBUG_HEADER) {
+                    debugId = this._decodedValue(carrier[key]);
                 }
 
                 if (Utils.startsWith(lowerKey, this._baggagePrefix)) {
@@ -75,10 +80,7 @@ export default class TextMapCodec {
             }
         }
 
-        if (constants.JAEGER_DEBUG_HEADER in carrier) {
-            spanContext.debugId = this._decodedValue(carrier[constants.JAEGER_DEBUG_HEADER]);
-        }
-
+        spanContext.debugId = debugId;
         spanContext.baggage = baggage;
         return spanContext;
     }
