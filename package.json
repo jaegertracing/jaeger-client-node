@@ -11,6 +11,7 @@
     }
   ],
   "dependencies": {
+    "long": "^3.2.0",
     "node-int64": "^0.4.0",
     "thriftrw": "^3.4.3",
     "request": "^2.74.0",
@@ -46,9 +47,8 @@
   "scripts": {
     "add-license": "./node_modules/.bin/uber-licence",
     "check-license": "./node_modules/.bin/uber-licence --dry",
-    "copy-submodule": "git submodule init -- ./src/jaeger-idl && cp -R ./src/jaeger-idl ./dist/src/",
+    "copy-submodule": "git submodule init -- ./src/jaeger-idl && cp -R ./src/jaeger-idl ./dist/src/ && rm -rf ./dist/src/jaeger-idl/.git",
     "check-ls": "npm ls --loglevel=http --parseable 1>/dev/null && echo '# npm is in a good state'",
-    "compile": "rm -rf ./dist/ && babel --presets es2015 --plugins transform-class-properties -d dist/src/ src/ && cp package.json dist/ && npm run copy-submodule",
     "cover": "./node_modules/.bin/babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/",
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed'",

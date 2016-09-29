@@ -19,7 +19,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import * as constants from '../constants.js';
 import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
@@ -49,7 +48,6 @@ export default class UDPSender {
                 maxPacketSize: number = UDP_PACKET_MAX_LENGTH) {
         this._hostPort = hostPort;
         this._maxPacketSize = maxPacketSize;
-        this._maxSpanBytes = this._maxPacketSize;
         this._byteBufferSize = 0;
         this._spanBuffer = [];
         this._client = dgram.createSocket('udp4');
@@ -61,8 +59,8 @@ export default class UDPSender {
     }
 
     _calcBatchSize(batch: Batch) {
-        let thriftBatch = this._thrift.getType('Batch');
-        let buffer: Buffer = thriftBatch.toBufferResult(batch).value;
+        let thriftBatch = this._thrift.getType('Agent::emitBatch_args');
+        let buffer: Buffer = thriftBatch.toBufferResult({'batch': batch}).value;
         return buffer.length;
     }
 

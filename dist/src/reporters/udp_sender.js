@@ -25,10 +25,6 @@ var _createClass = function () { function defineProperties(target, props) { for 
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-var _constants = require('../constants.js');
-
-var constants = _interopRequireWildcard(_constants);
-
 var _dgram = require('dgram');
 
 var _dgram2 = _interopRequireDefault(_dgram);
@@ -49,8 +45,6 @@ var _span2 = _interopRequireDefault(_span);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var HOST = 'localhost';
@@ -67,7 +61,6 @@ var UDPSender = function () {
 
         this._hostPort = hostPort;
         this._maxPacketSize = maxPacketSize;
-        this._maxSpanBytes = this._maxPacketSize - constants.EMIT_SPAN_BATCH_OVERHEAD;
         this._byteBufferSize = 0;
         this._spanBuffer = [];
         this._client = _dgram2.default.createSocket('udp4');
@@ -79,6 +72,13 @@ var UDPSender = function () {
     }
 
     _createClass(UDPSender, [{
+        key: '_calcBatchSize',
+        value: function _calcBatchSize(batch) {
+            var thriftBatch = this._thrift.getType('Agent::emitBatch_args');
+            var buffer = thriftBatch.toBufferResult({ 'batch': batch }).value;
+            return buffer.length;
+        }
+    }, {
         key: '_calcSpanSize',
         value: function _calcSpanSize(span) {
             var thriftJaegerSpan = this._thrift.getType('Span');
@@ -88,7 +88,15 @@ var UDPSender = function () {
     }, {
         key: 'setProcess',
         value: function setProcess(process) {
+            // This function is only called once during reporter construction, and thus will
+            // give us the length of the batch before any spans have been added to _spanBuffer.
             this._process = process;
+            this._batch = {
+                'process': this._process,
+                'spans': this._spanBuffer
+            };
+            this._emitSpanBatchOverhead = this._calcBatchSize(this._batch);
+            this._maxSpanBytes -= this._emitSpanBatchOverhead;
         }
     }, {
         key: 'append',
@@ -121,11 +129,7 @@ var UDPSender = function () {
             }
 
             var thriftJaegerArgs = this._thrift.getType('Agent::emitBatch_args');
-            var batch = {
-                process: this._process,
-                spans: this._spanBuffer
-            };
-            var bufferResult = thriftJaegerArgs.toBufferResult({ batch: batch });
+            var bufferResult = thriftJaegerArgs.toBufferResult({ batch: this._batch });
             if (bufferResult.err) {
                 console.log('err', bufferResult.err);
                 return { err: true, numSpans: numSpans };

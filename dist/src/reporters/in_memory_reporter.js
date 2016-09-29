@@ -38,12 +38,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var InMemoryReporter = function () {
-    function InMemoryReporter(sender) {
+    function InMemoryReporter() {
         _classCallCheck(this, InMemoryReporter);
 
         this._spans = [];
         this._flushed = [];
-        this._sender = sender;
     }
 
     _createClass(InMemoryReporter, [{
@@ -81,10 +80,6 @@ var InMemoryReporter = function () {
                 'serviceName': serviceName,
                 'tags': _thrift2.default.getThriftTags(tags)
             };
-
-            if (this._sender) {
-                this._sender.setProcess(this._process);
-            }
         }
     }, {
         key: 'spans',
