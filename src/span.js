@@ -210,17 +210,10 @@ export default class Span {
      **/
     log(keyValuePairs: any, timestamp: ?number): void {
         if (this._spanContext.isSampled()) {
-            let fields = [];
-            for (let key in keyValuePairs) {
-                let value = keyValuePairs[key];
-                if (keyValuePairs.hasOwnProperty(key)) {
-                    fields.push({'key': key, 'value': value});
-                }
-            }
 
             this._logs.push({
                 'timestamp': timestamp || Utils.getTimestampMicros(),
-                'fields': fields
+                'fields': Utils.convertObjectToTags(keyValuePairs)
             });
         }
     }

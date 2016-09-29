@@ -73,15 +73,7 @@ export default class Tracer {
     }
 
     _setProcess(): void {
-        let tags = [];
-        for (let key in this._tags) {
-            let value = this._tags[key];
-            if (this._tags.hasOwnProperty(key)) {
-                tags.push({ 'key': key, 'value': value });
-            }
-        }
-
-        this._reporter.setProcess(this._serviceName, tags);
+        this._reporter.setProcess(this._serviceName, Utils.convertObjectToTags(this._tags));
     }
 
     _startInternalSpan(

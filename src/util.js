@@ -157,4 +157,16 @@ export default class Utils {
 
         return newObj;
     }
+
+    static convertObjectToTags(dict: any): Array<Tag> {
+        let tags: Array<Tag> = [];
+        for (let key in dict) {
+            let value = dict[key];
+            if (dict.hasOwnProperty(key)) {
+                tags.push({ 'key': key, 'value': value });
+            }
+        }
+
+        return tags;
+    }
 }
