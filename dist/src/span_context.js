@@ -45,7 +45,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var SpanContext = function () {
     function SpanContext(traceId, spanId, parentId, flags) {
-        var baggage = arguments.length <= 4 || arguments[4] === undefined ? {} : arguments[4];
+        var baggage = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
 
         _classCallCheck(this, SpanContext);
 

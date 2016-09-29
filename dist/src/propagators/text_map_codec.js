@@ -42,8 +42,8 @@ var TRACER_BAGGAGE_HEADER_PREFIX = 'UberCtx-';
 
 var TextMapCodec = function () {
     function TextMapCodec(urlEncoding) {
-        var contextKey = arguments.length <= 1 || arguments[1] === undefined ? TRACER_STATE_HEADER_NAME : arguments[1];
-        var baggagePrefix = arguments.length <= 2 || arguments[2] === undefined ? TRACER_BAGGAGE_HEADER_PREFIX : arguments[2];
+        var contextKey = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : TRACER_STATE_HEADER_NAME;
+        var baggagePrefix = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : TRACER_BAGGAGE_HEADER_PREFIX;
 
         _classCallCheck(this, TextMapCodec);
 
