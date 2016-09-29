@@ -55,8 +55,8 @@ var UDP_PACKET_MAX_LENGTH = 65000;
 
 var UDPSender = function () {
     function UDPSender() {
-        var hostPort = arguments.length <= 0 || arguments[0] === undefined ? DEFAULT_UDP_SPAN_SERVER_HOST_PORT : arguments[0];
-        var maxPacketSize = arguments.length <= 1 || arguments[1] === undefined ? UDP_PACKET_MAX_LENGTH : arguments[1];
+        var hostPort = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : DEFAULT_UDP_SPAN_SERVER_HOST_PORT;
+        var maxPacketSize = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : UDP_PACKET_MAX_LENGTH;
 
         _classCallCheck(this, UDPSender);
 

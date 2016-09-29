@@ -77,10 +77,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var Tracer = function () {
     function Tracer(serviceName) {
-        var reporter = arguments.length <= 1 || arguments[1] === undefined ? new _noop_reporter2.default() : arguments[1];
-        var sampler = arguments.length <= 2 || arguments[2] === undefined ? new _const_sampler2.default(false) : arguments[2];
+        var reporter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new _noop_reporter2.default();
+        var sampler = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new _const_sampler2.default(false);
         var logger = arguments[3];
-        var tags = arguments.length <= 4 || arguments[4] === undefined ? {} : arguments[4];
+        var tags = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
 
         _classCallCheck(this, Tracer);
 
@@ -111,8 +111,8 @@ var Tracer = function () {
     _createClass(Tracer, [{
         key: '_startInternalSpan',
         value: function _startInternalSpan(spanContext, operationName, startTime) {
-            var internalTags = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
-            var tags = arguments.length <= 4 || arguments[4] === undefined ? {} : arguments[4];
+            var internalTags = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+            var tags = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
             var rpcServer = arguments[5];
 
 
