@@ -19,11 +19,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import * as constants from '../constants.js';
 import SpanContext from '../span_context.js';
 import Utils from '../util.js';
 
-let TRACER_STATE_HEADER_NAME = 'UBER-TRACE-ID';
-let TRACER_BAGGAGE_HEADER_PREFIX = 'UberCtx-';
+let TRACER_STATE_HEADER_NAME = 'uber-trace-id';
+let TRACER_BAGGAGE_HEADER_PREFIX = 'uberctx-';
 
 export default class TextMapCodec {
     _urlEncoding: boolean;
@@ -56,21 +57,31 @@ export default class TextMapCodec {
     }
 
     extract(carrier: any): ?SpanContext {
-        let header = carrier[this._contextKey];
-        let spanContext: ?SpanContext = null;
-        if (header) {
-            spanContext = SpanContext.fromString(this._decodedValue(header));
-            let baggage = {};
-            for (let key in carrier) {
-                if (carrier.hasOwnProperty(key) && Utils.startsWith(key, this._baggagePrefix)) {
+        // $FlowIgnore - I just want an empty span context.
+        let spanContext = new SpanContext();
+        let baggage = {};
+        let debugId;
+
+        for (let key in carrier) {
+            if (carrier.hasOwnProperty(key)) {
+                let lowerKey = key.toLowerCase();
+                if (lowerKey === this._contextKey) {
+                    spanContext = SpanContext.fromString(this._decodedValue(carrier[key]));
+                }
+
+                if (lowerKey === constants.JAEGER_DEBUG_HEADER) {
+                    debugId = this._decodedValue(carrier[key]);
+                }
+
+                if (Utils.startsWith(lowerKey, this._baggagePrefix)) {
                     let keyWithoutPrefix = key.substring(this._baggagePrefix.length);
-                    let value = this._decodedValue(carrier[key]);
-                    baggage[keyWithoutPrefix] = value;
+                    baggage[keyWithoutPrefix] = this._decodedValue(carrier[key]);
                 }
             }
-            spanContext.baggage = baggage;
         }
 
+        spanContext.debugId = debugId;
+        spanContext.baggage = baggage;
         return spanContext;
     }
 

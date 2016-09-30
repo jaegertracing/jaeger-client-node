@@ -145,7 +145,7 @@ export default class Tracer {
         }
 
         // TODO(oibe) support use of references
-        let parent: ?SpanContext = fields.childOf;
+        let parent: ?SpanContext = fields.childOf instanceof Span ? fields.childOf.context(): fields.childOf;
         if (!parent) {
             // If there is no childOf in fields, then search list of references
             for (let i = 0; i < references.length; i++) {
@@ -168,10 +168,15 @@ export default class Tracer {
         // $FlowIgnore - I just want a span context up front.
         let ctx: SpanContext = new SpanContext();
         let samplerTags: any = {};
-        if (!parent) {
+        let debugRequest = (parent && parent.isDebugIDContainerOnly());
+        if (!parent || debugRequest) {
             let randomId = Utils.getRandom64();
             let flags = 0;
-            if (this._sampler.isSampled()) {
+            if (debugRequest) {
+                flags |= (constants.SAMPLED_MASK | constants.DEBUG_MASK);
+                // $FlowIgnore - parent can't be null, if debugRequest is true. Flow doesn't realize this.
+                samplerTags[constants.JAEGER_DEBUG_HEADER] = parent.debugId;
+            } else if (this._sampler.isSampled()) {
                 flags |= constants.SAMPLED_MASK;
                 samplerTags = this._sampler.getTags();
             }

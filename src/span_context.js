@@ -29,17 +29,20 @@ export default class SpanContext {
     _parentId: any;
     _flags: number;
     _baggage: any;
+    _debugId: ?string;
 
     constructor(traceId: any,
                 spanId: any,
                 parentId: any,
                 flags: number,
-                baggage: any = {}) {
+                baggage: any = {},
+                debugId: ?string = '') {
         this._traceId = traceId;
         this._spanId = spanId;
         this._parentId = parentId;
         this._flags = flags;
         this._baggage = baggage;
+        this._debugId = debugId;
     }
 
     get traceId(): any {
@@ -62,6 +65,10 @@ export default class SpanContext {
         return this._baggage;
     }
 
+    get debugId(): ?string {
+        return this._debugId;
+    }
+
     set traceId(traceId: Buffer): void {
         this._traceId = traceId;
     }
@@ -80,6 +87,14 @@ export default class SpanContext {
 
     set baggage(baggage: any): void {
         this._baggage = baggage;
+    }
+
+    set debugId(debugId: ?string): void {
+        this._debugId = debugId;
+    }
+
+    isDebugIDContainerOnly(): boolean {
+        return !this._traceId && this._debugId !== '';
     }
 
     /**
@@ -113,7 +128,7 @@ export default class SpanContext {
     withBaggageItem(key: string, value: string): SpanContext {
         let newBaggage = Utils.clone(this._baggage);
         newBaggage[key] = value;
-        return new SpanContext(this._traceId, this._spanId, this._parentId, this._flags, newBaggage);
+        return new SpanContext(this._traceId, this._spanId, this._parentId, this._flags, newBaggage, this._debugId);
     }
 
 
