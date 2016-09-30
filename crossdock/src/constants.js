@@ -1,4 +1,3 @@
-// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,61 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import SpanContext from '../span_context.js';
-
-declare type LogData = {
-    timestamp: ?number,
-    event: ?string,
-    payload: ?any
-};
-
-declare type Tag = {
-    key: string,
-    value: string
-};
-
-declare type Endpoint = {
-    ipv4: number,
-    port: number,
-    serviceName: string
-};
-
-declare type Annotation = {
-    timestamp: number,
-    value: string,
-    host: ?Endpoint
-};
-
-declare type BinaryAnnotation = {
-    key: string,
-    value: any,
-    annotationType: string,
-    host: ?Endpoint
-};
-
-declare type Reference = {
-    type(): string;
-    referencedContext(): SpanContext;
-};
-
-declare type startSpanArgs = {
-    operationName?: string,
-    childOf?: SpanContext,
-    references?: Array<Reference>,
-    tags?: any,
-    startTime?: number,
-};
-
-declare type ProbabilisticSamplingStrategy = {
-    samplingRate: number
-};
-
-declare type RateLimitingSamplingStrategy = {
-    maxTracesPerSecond: number
-};
-
-declare type SamplingStrategyResponse = {
-    strategyType: number,
-    probabilisticSampling?: ProbabilisticSamplingStrategy,
-    rateLimitingSampling?: RateLimitingSamplingStrategy
-};
+export const BAGGAGE_KEY = 'crossdock-baggage-key';
+export const TRANSPORT_HTTP = 'HTTP';
+export const TRANSPORT_TCHANNEL = 'TCHANNEL';
+export const TRANSPORT_DUMMY = 'DUMMY';

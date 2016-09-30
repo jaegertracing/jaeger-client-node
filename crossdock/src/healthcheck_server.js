@@ -19,61 +19,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import SpanContext from '../span_context.js';
+import express from 'express';
+import bodyParser from 'body-parser';
 
-declare type LogData = {
-    timestamp: ?number,
-    event: ?string,
-    payload: ?any
-};
+export default class HealthcheckServer {
+    constructor() {
+        let app: any = express();
+        app.use(bodyParser.json());
+        app.head('/', (req, res) => {
+            res.sendStatus(200);
+        });
 
-declare type Tag = {
-    key: string,
-    value: string
-};
+        app.listen(8080, () => {
+            console.log('Healthcheck server on port 8080...');
+        });
+    }
+}
 
-declare type Endpoint = {
-    ipv4: number,
-    port: number,
-    serviceName: string
-};
-
-declare type Annotation = {
-    timestamp: number,
-    value: string,
-    host: ?Endpoint
-};
-
-declare type BinaryAnnotation = {
-    key: string,
-    value: any,
-    annotationType: string,
-    host: ?Endpoint
-};
-
-declare type Reference = {
-    type(): string;
-    referencedContext(): SpanContext;
-};
-
-declare type startSpanArgs = {
-    operationName?: string,
-    childOf?: SpanContext,
-    references?: Array<Reference>,
-    tags?: any,
-    startTime?: number,
-};
-
-declare type ProbabilisticSamplingStrategy = {
-    samplingRate: number
-};
-
-declare type RateLimitingSamplingStrategy = {
-    maxTracesPerSecond: number
-};
-
-declare type SamplingStrategyResponse = {
-    strategyType: number,
-    probabilisticSampling?: ProbabilisticSamplingStrategy,
-    rateLimitingSampling?: RateLimitingSamplingStrategy
-};
+if (require.main === module) {
+    let healthcheck = new HealthcheckServer();
+}

@@ -19,61 +19,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import SpanContext from '../span_context.js';
+import * as constants from './constants.js';
+import Utils from '../../src/util.js';
 
-declare type LogData = {
-    timestamp: ?number,
-    event: ?string,
-    payload: ?any
-};
+export default class Helpers {
+    static observeSpan(context: any): ObservedSpan {
+        let span = context.span;
+        if (!span) {
+            return {
+                traceId: 'no span found',
+                sampled: false,
+                baggage: 'no span found'
+            };
+        }
 
-declare type Tag = {
-    key: string,
-    value: string
-};
-
-declare type Endpoint = {
-    ipv4: number,
-    port: number,
-    serviceName: string
-};
-
-declare type Annotation = {
-    timestamp: number,
-    value: string,
-    host: ?Endpoint
-};
-
-declare type BinaryAnnotation = {
-    key: string,
-    value: any,
-    annotationType: string,
-    host: ?Endpoint
-};
-
-declare type Reference = {
-    type(): string;
-    referencedContext(): SpanContext;
-};
-
-declare type startSpanArgs = {
-    operationName?: string,
-    childOf?: SpanContext,
-    references?: Array<Reference>,
-    tags?: any,
-    startTime?: number,
-};
-
-declare type ProbabilisticSamplingStrategy = {
-    samplingRate: number
-};
-
-declare type RateLimitingSamplingStrategy = {
-    maxTracesPerSecond: number
-};
-
-declare type SamplingStrategyResponse = {
-    strategyType: number,
-    probabilisticSampling?: ProbabilisticSamplingStrategy,
-    rateLimitingSampling?: RateLimitingSamplingStrategy
-};
+        return {
+            traceId: Utils.removeLeadingZeros(span.context().traceId.toString('hex')),
+            sampled: context.span.context().isSampled(),
+            baggage: span.getBaggageItem(constants.BAGGAGE_KEY)
+        };
+    }
+}
