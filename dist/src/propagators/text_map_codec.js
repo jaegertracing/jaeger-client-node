@@ -25,6 +25,10 @@ var _createClass = function () { function defineProperties(target, props) { for 
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+var _constants = require('../constants.js');
+
+var constants = _interopRequireWildcard(_constants);
+
 var _span_context = require('../span_context.js');
 
 var _span_context2 = _interopRequireDefault(_span_context);
@@ -35,10 +39,12 @@ var _util2 = _interopRequireDefault(_util);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var TRACER_STATE_HEADER_NAME = 'UBER-TRACE-ID';
-var TRACER_BAGGAGE_HEADER_PREFIX = 'UberCtx-';
+var TRACER_STATE_HEADER_NAME = 'uber-trace-id';
+var TRACER_BAGGAGE_HEADER_PREFIX = 'uberctx-';
 
 var TextMapCodec = function () {
     function TextMapCodec(urlEncoding) {
@@ -48,8 +54,8 @@ var TextMapCodec = function () {
         _classCallCheck(this, TextMapCodec);
 
         this._urlEncoding = urlEncoding;
-        this._contextKey = contextKey;
-        this._baggagePrefix = baggagePrefix;
+        this._contextKey = contextKey.toLowerCase();
+        this._baggagePrefix = baggagePrefix.toLowerCase();
     }
 
     _createClass(TextMapCodec, [{
@@ -73,21 +79,31 @@ var TextMapCodec = function () {
     }, {
         key: 'extract',
         value: function extract(carrier) {
-            var header = carrier[this._contextKey];
-            var spanContext = null;
-            if (header) {
-                spanContext = _span_context2.default.fromString(this._decodedValue(header));
-                var baggage = {};
-                for (var key in carrier) {
-                    if (carrier.hasOwnProperty(key) && _util2.default.startsWith(key, this._baggagePrefix)) {
+            // $FlowIgnore - I just want an empty span context.
+            var spanContext = new _span_context2.default();
+            var baggage = {};
+            var debugId = void 0;
+
+            for (var key in carrier) {
+                if (carrier.hasOwnProperty(key)) {
+                    var lowerKey = key.toLowerCase();
+                    if (lowerKey === this._contextKey) {
+                        spanContext = _span_context2.default.fromString(this._decodedValue(carrier[key]));
+                    }
+
+                    if (lowerKey === constants.JAEGER_DEBUG_HEADER) {
+                        debugId = this._decodedValue(carrier[key]);
+                    }
+
+                    if (_util2.default.startsWith(lowerKey, this._baggagePrefix)) {
                         var keyWithoutPrefix = key.substring(this._baggagePrefix.length);
-                        var value = this._decodedValue(carrier[key]);
-                        baggage[keyWithoutPrefix] = value;
+                        baggage[keyWithoutPrefix] = this._decodedValue(carrier[key]);
                     }
                 }
-                spanContext.baggage = baggage;
             }
 
+            spanContext.debugId = debugId;
+            spanContext.baggage = baggage;
             return spanContext;
         }
     }, {
