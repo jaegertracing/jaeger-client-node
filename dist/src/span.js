@@ -241,17 +241,10 @@ var Span = function () {
         key: 'log',
         value: function log(keyValuePairs, timestamp) {
             if (this._spanContext.isSampled()) {
-                var fields = [];
-                for (var key in keyValuePairs) {
-                    var value = keyValuePairs[key];
-                    if (keyValuePairs.hasOwnProperty(key)) {
-                        fields.push({ 'key': key, 'value': value });
-                    }
-                }
 
                 this._logs.push({
                     'timestamp': timestamp || _util2.default.getTimestampMicros(),
-                    'fields': fields
+                    'fields': _util2.default.convertObjectToTags(keyValuePairs)
                 });
             }
         }

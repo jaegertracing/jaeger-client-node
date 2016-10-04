@@ -11,8 +11,9 @@
     }
   ],
   "dependencies": {
+    "long": "^3.2.0",
     "node-int64": "^0.4.0",
-    "thriftrw": "^3.4.3",
+    "thriftrw": "^3.5.0",
     "request": "^2.74.0",
     "xorshift": "^0.2.0"
   },

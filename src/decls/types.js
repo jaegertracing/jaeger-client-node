@@ -33,12 +33,12 @@ declare type LogData = {
 
 declare type Process = {
     serviceName: string,
-    tags?: Array<Tag>
+    tags: Array<Tag>
 };
 
 declare type Batch = {
     process: Process,
-    tags?: Array<Tag>
+    spans: Array<any>
 };
 
 declare type Endpoint = {

@@ -113,15 +113,7 @@ var Tracer = function () {
     _createClass(Tracer, [{
         key: '_setProcess',
         value: function _setProcess() {
-            var tags = [];
-            for (var key in this._tags) {
-                var value = this._tags[key];
-                if (this._tags.hasOwnProperty(key)) {
-                    tags.push({ 'key': key, 'value': value });
-                }
-            }
-
-            this._reporter.setProcess(this._serviceName, tags);
+            this._reporter.setProcess(this._serviceName, _util2.default.convertObjectToTags(this._tags));
         }
     }, {
         key: '_startInternalSpan',

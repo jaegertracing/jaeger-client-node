@@ -36,7 +36,6 @@ export default class UDPSender {
     _process: Process;
     _emitSpanBatchOverhead: number;
     _maxSpanBytes: number;
-    _spanBuffer: Array<Span>;
     _thriftBuffer: Buffer;
     _client: any;
     _spec: any;
@@ -49,7 +48,6 @@ export default class UDPSender {
         this._hostPort = hostPort;
         this._maxPacketSize = maxPacketSize;
         this._byteBufferSize = 0;
-        this._spanBuffer = [];
         this._client = dgram.createSocket('udp4');
         this._spec = fs.readFileSync(path.join(__dirname, '../jaeger-idl/thrift/jaeger.thrift'), 'ascii');
         this._thrift = new Thrift({
@@ -59,27 +57,26 @@ export default class UDPSender {
     }
 
     _calcBatchSize(batch: Batch) {
-        let thriftBatch = this._thrift.getType('Agent::emitBatch_args');
-        let buffer: Buffer = thriftBatch.toBufferResult({'batch': batch}).value;
-        return buffer.length;
+        return this._thrift.Agent.emitBatch.argumentsMessageRW.byteLength(
+            this._convertBatchToThriftMessage(this._batch)
+        ).length;
     }
 
     _calcSpanSize(span: any): number {
-        let thriftJaegerSpan = this._thrift.getType('Span');
-        let buffer: Buffer = thriftJaegerSpan.toBufferResult(span).value;
-        return buffer.length;
+        return this._thrift.Span.rw.byteLength(new this._thrift.Span(span)).length;
     }
 
     setProcess(process: Process): void {
         // This function is only called once during reporter construction, and thus will
-        // give us the length of the batch before any spans have been added to _spanBuffer.
+        // give us the length of the batch before any spans have been added to the span
+        // list in batch.
         this._process = process;
         this._batch = {
             'process': this._process,
-            'spans': this._spanBuffer
+            'spans': []
         };
         this._emitSpanBatchOverhead = this._calcBatchSize(this._batch);
-        this._maxSpanBytes -= this._emitSpanBatchOverhead;
+        this._maxSpanBytes = this._maxPacketSize - this._emitSpanBatchOverhead;
     }
 
     append(span: any): SenderResponse {
@@ -90,7 +87,7 @@ export default class UDPSender {
 
         this._byteBufferSize += spanSize;
         if (this._byteBufferSize <= this._maxSpanBytes) {
-            this._spanBuffer.push(span);
+            this._batch.spans.push(span);
             if (this._byteBufferSize < this._maxSpanBytes) {
                 return {err: false, numSpans: 0};
             }
@@ -98,25 +95,28 @@ export default class UDPSender {
         }
 
         let flushResponse: SenderResponse = this.flush();
-        this._spanBuffer.push(span);
+        this._batch.spans.push(span);
         this._byteBufferSize = spanSize;
         return flushResponse;
     }
 
     flush(testCallback: ?Function): SenderResponse {
-        let numSpans: number = this._spanBuffer.length;
+        let numSpans: number = this._batch.spans.length;
         if (numSpans == 0) {
             return {err: false, numSpans: 1}
         }
 
-        let thriftJaegerArgs = this._thrift.getType('Agent::emitBatch_args');
-        let bufferResult = thriftJaegerArgs.toBufferResult({batch: this._batch});
+        let bufferLen = this._calcBatchSize(this._batch);
+        let thriftBuffer = new Buffer(bufferLen);
+        let bufferResult = this._thrift.Agent.emitBatch.argumentsMessageRW.writeInto(
+            this._convertBatchToThriftMessage(this._batch), thriftBuffer, 0
+        );
+
         if (bufferResult.err) {
             console.log('err', bufferResult.err);
             return {err: true, numSpans: numSpans};
         }
 
-        let thriftBuffer: Buffer = bufferResult.value;
         this._client.send(thriftBuffer, 0, thriftBuffer.length, PORT, HOST);
         this._reset();
 
@@ -127,8 +127,34 @@ export default class UDPSender {
         return {err: false, numSpans: numSpans};
     }
 
+    _convertBatchToThriftMessage() {
+        let spanMessages = [];
+        for (let i = 0; i < this._batch.spans.length; i++) {
+            let span = this._batch.spans[i];
+            spanMessages.push(new this._thrift.Span(span))
+        }
+
+        let tagMessages = [];
+        for (let j = 0; j < this._batch.process.tags.length; j++) {
+            let tag = this._batch.process.tags[j];
+            tagMessages.push(new this._thrift.Tag(tag));
+        }
+
+        return new this._thrift.Agent.emitBatch.ArgumentsMessage({
+            version: 1,
+            id: 0,
+            body: {batch: new this._thrift.Batch({
+                    process: new this._thrift.Process({
+                        serviceName: this._batch.process.serviceName,
+                        tags: tagMessages
+                    }),
+                    spans: spanMessages
+            })}
+        });
+    }
+
     _reset() {
-        this._spanBuffer = [];
+        this._batch.spans = [];
         this._byteBufferSize = 0;
     }
 

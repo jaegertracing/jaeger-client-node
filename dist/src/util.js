@@ -201,6 +201,19 @@ var Utils = function () {
 
             return newObj;
         }
+    }, {
+        key: 'convertObjectToTags',
+        value: function convertObjectToTags(dict) {
+            var tags = [];
+            for (var key in dict) {
+                var value = dict[key];
+                if (dict.hasOwnProperty(key)) {
+                    tags.push({ 'key': key, 'value': value });
+                }
+            }
+
+            return tags;
+        }
     }]);
 
     return Utils;

@@ -75,13 +75,13 @@ describe('udp sender should', () => {
         sender._maxSpanBytes = maxSpanBytes;
 
         server.on('message', (msg, remote) => {
-            let thriftJaegerArgs = thrift.getType('Agent::emitBatch_args');
-            let thriftObj = thriftJaegerArgs.fromBufferResult(msg).value;
-            assert.isOk(thriftObj.batch);
-            assert.equal(thriftObj.batch.spans.length, 2);
+            let thriftObj = thrift.Agent.emitBatch.argumentsMessageRW.readFrom(msg, 0);
+            let batch = thriftObj.value.body.batch;
+            assert.isOk(batch);
+            assert.equal(batch.spans.length, 2);
 
-            assert.isOk(TestUtils.thriftSpanEqual(spanOne, thriftObj.batch.spans[0]));
-            assert.isOk(TestUtils.thriftSpanEqual(spanTwo, thriftObj.batch.spans[1]));
+            assert.isOk(TestUtils.thriftSpanEqual(spanOne, batch.spans[0]));
+            assert.isOk(TestUtils.thriftSpanEqual(spanTwo, batch.spans[1]));
 
             sender.close();
             done();
@@ -109,7 +109,7 @@ describe('udp sender should', () => {
         assert.equal(responseTwo.numSpans, 2);
 
         // sender state reset
-        assert.equal(sender._spanBuffer.length, 0);
+        assert.equal(sender._batch.spans.length, 0);
         assert.equal(sender._byteBufferSize, 0);
     });
 
