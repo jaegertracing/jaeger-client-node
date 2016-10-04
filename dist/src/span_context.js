@@ -46,6 +46,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var SpanContext = function () {
     function SpanContext(traceId, spanId, parentId, flags) {
         var baggage = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+        var debugId = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : '';
 
         _classCallCheck(this, SpanContext);
 
@@ -54,15 +55,21 @@ var SpanContext = function () {
         this._parentId = parentId;
         this._flags = flags;
         this._baggage = baggage;
+        this._debugId = debugId;
     }
 
     _createClass(SpanContext, [{
-        key: 'isSampled',
-
+        key: 'isDebugIDContainerOnly',
+        value: function isDebugIDContainerOnly() {
+            return !this._traceId && this._debugId !== '';
+        }
 
         /**
          * @return {boolean} - returns whether or not this span context was sampled.
          **/
+
+    }, {
+        key: 'isSampled',
         value: function isSampled() {
             return (this.flags & constants.SAMPLED_MASK) === constants.SAMPLED_MASK;
         }
@@ -93,7 +100,7 @@ var SpanContext = function () {
         value: function withBaggageItem(key, value) {
             var newBaggage = _util2.default.clone(this._baggage);
             newBaggage[key] = value;
-            return new SpanContext(this._traceId, this._spanId, this._parentId, this._flags, newBaggage);
+            return new SpanContext(this._traceId, this._spanId, this._parentId, this._flags, newBaggage, this._debugId);
         }
 
         /**
@@ -140,6 +147,14 @@ var SpanContext = function () {
         },
         set: function set(baggage) {
             this._baggage = baggage;
+        }
+    }, {
+        key: 'debugId',
+        get: function get() {
+            return this._debugId;
+        },
+        set: function set(debugId) {
+            this._debugId = debugId;
         }
     }], [{
         key: 'fromString',
