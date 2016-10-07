@@ -106,7 +106,7 @@ export default class UDPSender {
             return {err: false, numSpans: 1}
         }
 
-        let bufferLen = this._calcBatchSize(this._batch);
+        let bufferLen = this._byteBufferSize + this._emitSpanBatchOverhead;
         let thriftBuffer = new Buffer(bufferLen);
         let bufferResult = this._thrift.Agent.emitBatch.argumentsMessageRW.writeInto(
             this._convertBatchToThriftMessage(this._batch), thriftBuffer, 0
