@@ -103,7 +103,7 @@ export default class UDPSender {
     flush(testCallback: ?Function): SenderResponse {
         let numSpans: number = this._batch.spans.length;
         if (numSpans == 0) {
-            return {err: false, numSpans: 1}
+            return {err: false, numSpans: 0}
         }
 
         let bufferLen = this._byteBufferSize + this._emitSpanBatchOverhead;

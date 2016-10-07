@@ -126,4 +126,11 @@ describe('udp sender should', () => {
         // cleanup
         sender.close();
     });
+
+    it ('flush with no spans returns false for error, and 0', () => {
+        let response = sender.flush();
+
+        assert.equal(response.err, false);
+        assert.equal(response.numSpans, 0);
+    });
 });
