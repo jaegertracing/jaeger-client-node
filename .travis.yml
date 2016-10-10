@@ -39,6 +39,6 @@ before_install:
 - npm install babel-cli
 
 script:
-- npm test-ci
+- npm run test-ci
 - if [ "$COVER" = "1" ]; then npm run cover-ci ; fi
 
