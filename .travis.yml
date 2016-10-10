@@ -10,6 +10,11 @@ node_js:
 - "0.12"
 - "0.10"
 
+matrix:
+  include:
+  - node_js: "0.10"
+    env: COVER=1
+
 cache:
   directories:
     - ~/.npm
@@ -34,4 +39,6 @@ before_install:
 - npm install babel-cli
 
 script:
-- npm test
+- npm test-ci
+- if [ "$COVER" = "1" ]; then npm run cover-ci ; fi
+
