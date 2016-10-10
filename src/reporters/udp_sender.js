@@ -42,6 +42,7 @@ export default class UDPSender {
     _byteBufferSize: number;
     _thrift: any;
     _batch: Batch;
+    _thriftProcessMessage: any;
 
     constructor(hostPort: string = DEFAULT_UDP_SPAN_SERVER_HOST_PORT,
                 maxPacketSize: number = UDP_PACKET_MAX_LENGTH) {
@@ -75,6 +76,17 @@ export default class UDPSender {
             'process': this._process,
             'spans': []
         };
+
+        let tagMessages = [];
+        for (let j = 0; j < this._batch.process.tags.length; j++) {
+            let tag = this._batch.process.tags[j];
+            tagMessages.push(new this._thrift.Tag(tag));
+        }
+
+        this._thriftProcessMessage = new this._thrift.Process({
+            serviceName: this._batch.process.serviceName,
+            tags: tagMessages
+        });
         this._emitSpanBatchOverhead = this._calcBatchSize(this._batch);
         this._maxSpanBytes = this._maxPacketSize - this._emitSpanBatchOverhead;
     }
@@ -134,20 +146,11 @@ export default class UDPSender {
             spanMessages.push(new this._thrift.Span(span))
         }
 
-        let tagMessages = [];
-        for (let j = 0; j < this._batch.process.tags.length; j++) {
-            let tag = this._batch.process.tags[j];
-            tagMessages.push(new this._thrift.Tag(tag));
-        }
-
         return new this._thrift.Agent.emitBatch.ArgumentsMessage({
             version: 1,
             id: 0,
             body: {batch: new this._thrift.Batch({
-                    process: new this._thrift.Process({
-                        serviceName: this._batch.process.serviceName,
-                        tags: tagMessages
-                    }),
+                    process: this._thriftProcessMessage,
                     spans: spanMessages
             })}
         });
