@@ -30,6 +30,7 @@
     "body-parser": "^1.15.2",
     "buffer-equal": "^1.0.0",
     "chai": "^3.5.0",
+    "coveralls": "^2.11.14",
     "eslint": "^2.4.0",
     "eslint-config-airbnb": "^6.2.0",
     "eslint-plugin-flowtype": "^2.4.0",
@@ -50,11 +51,12 @@
     "copy-submodule": "git submodule init -- ./src/jaeger-idl && cp -R ./src/jaeger-idl ./dist/src/ && rm -rf ./dist/src/jaeger-idl/.git",
     "check-ls": "npm ls --loglevel=http --parseable 1>/dev/null && echo '# npm is in a good state'",
     "cover": "./node_modules/.bin/babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/",
+    "cover-ci": "npm run cover && cat ./coverage/lcov.info | coveralls",
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed'",
-    "report-cover": "nyc report --reporter html --reporter text",
+    "lint-ci": "npm run lint && echo '# TODO: ADD npm run check-license'",
     "test": "npm run flow & npm run lint && ./node_modules/mocha/bin/mocha --compilers js:babel-core/register",
-    "check-cover": "nyc check-coverage --branches=10 --lines=10 --functions=10",
-    "view-cover": "opn ./coverage/index.html"
+    "test-ci": "npm run test && npm run lint-ci && npm run cover-ci",
+    "show-cover": "open coverage/lcov-report/index.html"
   }
 }
