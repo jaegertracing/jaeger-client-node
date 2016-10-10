@@ -36,4 +36,6 @@ export default class NoopReporter {
             callback();
         }
     }
+
+    setProcess(serviceName: string, tags: Array<Tag>): void {}
 }

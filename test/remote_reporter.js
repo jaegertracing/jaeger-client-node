@@ -53,10 +53,10 @@ describe('Remote Reporter should', () => {
 
         // add duration to span, and report it
         span.finish();
-        assert.equal(sender._spanBuffer.length, 1);
+        assert.equal(sender._batch.spans.length, 1);
 
         reporter.flush()
-        assert.equal(sender._spanBuffer.length, 0);
+        assert.equal(sender._batch.spans.length, 0);
     });
 
     it ('report and flush span that is causes an error to be logged', () => {

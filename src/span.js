@@ -205,18 +205,16 @@ export default class Span {
     /**
      * Adds a log event, or payload to a span.
      *
-     * @param {Object} fields - an object that represents the fields to log.
+     * @param {Object} keyValuePairs - an object that represents the keyValuePairs to log.
      * @param {number} [timestamp] - the starting timestamp of a span.
-     * @param {string} [fields.event] - a string message to be logged on a span.
-     * @param {string} [fields.payload] - an object to be logged on a span as a json string.
      **/
-    log(fields: any, timestamp: ?number): void {
+    log(keyValuePairs: any, timestamp: ?number): void {
         if (this._spanContext.isSampled()) {
-            if (!fields.timestamp) {
-                fields.timestamp = timestamp || Utils.getTimestampMicros();
-            }
 
-            this._logs.push(fields);
+            this._logs.push({
+                'timestamp': timestamp || Utils.getTimestampMicros(),
+                'fields': Utils.convertObjectToTags(keyValuePairs)
+            });
         }
     }
 
@@ -239,38 +237,6 @@ export default class Span {
             this._spanContext.flags = this._spanContext.flags | constants.SAMPLED_MASK | constants.DEBUG_MASK;
         } else {
             this._spanContext.flags = this._spanContext.flags & (~constants.SAMPLED_MASK);
-        }
-    }
-
-    _toThrift() {
-        let tags = [];
-        for (let i = 0; i < this._tags.length; i++) {
-            let tag = this._tags[i];
-            let emptyBuffer = new Buffer(1);
-            emptyBuffer.fill(0);
-            tags.push({
-                key: tag.key,
-                tagType: 'STRING', // TODO(oibe) support multiple tag types
-                vStr: tag.value.toString(),
-                vDouble: 0,
-                vBool: false,
-                vInt16: 0,
-                vInt32: 0,
-                vInt64: 0,
-                vBinary: emptyBuffer
-            });
-        }
-
-        return {
-            traceId : this._spanContext.traceId,
-            spanId: this._spanContext.spanId,
-            operationName: this._operationName,
-            references: [], // TODO(oibe) revist correctness after a spanRef diff is landed.
-            flags: this._spanContext.flags,
-            startTime: Utils.encodeInt64(this._startTime),
-            duration: Utils.encodeInt64(this._duration),
-            tags: tags,
-            logs: this._logs
         }
     }
 }

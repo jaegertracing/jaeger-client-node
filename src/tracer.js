@@ -68,6 +68,12 @@ export default class Tracer {
         let binaryCodec = new BinaryCodec();
         this.registerInjector(opentracing.FORMAT_BINARY, binaryCodec);
         this.registerExtractor(opentracing.FORMAT_BINARY, binaryCodec);
+
+        this._setProcess();
+    }
+
+    _setProcess(): void {
+        this._reporter.setProcess(this._serviceName, Utils.convertObjectToTags(this._tags));
     }
 
     _startInternalSpan(

@@ -26,6 +26,7 @@ var InMemoryReporter = require('../dist/src/reporters/in_memory_reporter.js').de
 var ProbabilisticSampler = require('../dist/src/samplers/probabilistic_sampler.js').default;
 var SpanContext = require('../dist/src/span_context.js').default;
 var Tracer = require('../dist/src/tracer.js').default;
+var ThriftUtils = require('../dist/src/thrift.js').default;
 var opentracing = require('opentracing');
 
 function benchmarkSpan() {
@@ -75,8 +76,8 @@ function benchmarkSpan() {
             .add('Span:setTag', function() {
                 span.setTag('key', 'value');
             })
-            .add('Span._toThrift', function() {
-                span._toThrift();
+            .add('Span.spanToThrift', function() {
+                Thrift.spanToThrift(span);
             })
             .add('Span.log', function() {
                 span.log({

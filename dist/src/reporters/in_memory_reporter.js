@@ -29,6 +29,10 @@ var _span = require('../span.js');
 
 var _span2 = _interopRequireDefault(_span);
 
+var _thrift = require('../thrift.js');
+
+var _thrift2 = _interopRequireDefault(_thrift);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -68,6 +72,14 @@ var InMemoryReporter = function () {
             if (callback) {
                 callback();
             }
+        }
+    }, {
+        key: 'setProcess',
+        value: function setProcess(serviceName, tags) {
+            this._process = {
+                'serviceName': serviceName,
+                'tags': _thrift2.default.getThriftTags(tags)
+            };
         }
     }, {
         key: 'spans',

@@ -18,20 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import _ from 'lodash';
+import {assert} from 'chai';
 import bufferEqual from 'buffer-equal';
+import Long from 'long';
+import ThriftUtils from '../src/thrift.js';
 
-export default class TestUtils {
+describe ('ThriftUtils should', () => {
+    it ('exercise all paths in getTagType', () => {
+        let tags = ThriftUtils.getThriftTags([
+            {'key': 'double', 'value': 1.0 },
+            {'key': 'boolean', 'value': true },
+            {'key': 'long', 'value': new Long() },
+            {'key': 'binary', 'value': new Buffer(1) },
+            {'key': 'string', 'value': 'some-string' }
+        ]);
 
-    static thriftSpanEqual(spanOne, spanTwo) {
-        // TODO(oibe) in references diff add equality check here
-        return  bufferEqual(spanOne.traceIdLow, spanTwo.traceIdLow) &&
-                bufferEqual(spanOne.traceIdHigh, spanTwo.traceIdHigh) &&
-                bufferEqual(spanOne.spanId, spanTwo.spanId) &&
-                bufferEqual(spanOne.parentSpanId, spanTwo.parentSpanId) &&
-                spanOne.operationName === spanTwo.operationName &&
-                spanOne.flags === spanTwo.flags &&
-                bufferEqual(spanOne.startTime, spanTwo.startTime) &&
-                bufferEqual(spanOne.duration, spanTwo.duration);
-    }
-}
+        assert.equal(tags[0].vType, 'DOUBLE');
+        assert.equal(tags[1].vType, 'BOOL');
+        assert.equal(tags[2].vType, 'LONG');
+        assert.equal(tags[3].vType, 'BINARY');
+        assert.equal(tags[4].vType, 'STRING');
+    });
+
+    it ('initialize emptyBuffer to all zeros', () => {
+        let buf = new Buffer(8);
+        buf.fill(0);
+
+        assert.isOk(bufferEqual(ThriftUtils.emptyBuffer, buf));
+    });
+});

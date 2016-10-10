@@ -20,6 +20,7 @@
 // THE SOFTWARE.
 
 import NullLogger from '../logger.js';
+import ThriftUtils from '../thrift.js';
 
 const DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS = 10000;
 
@@ -28,6 +29,7 @@ export default class RemoteReporter {
     _logger: Logger;
     _sender: Sender;
     _intervalHandle: any;
+    _process: Process;
 
     constructor(sender: Sender,
                 options: any = {}) {
@@ -40,7 +42,7 @@ export default class RemoteReporter {
     }
 
     report(span: Span): void {
-        let response: SenderResponse = this._sender.append(span._toThrift());
+        let response: SenderResponse = this._sender.append(ThriftUtils.spanToThrift(span));
         if (response.err) {
             this._logger.error('Failed to append spans in reporter.');
         }
@@ -56,5 +58,16 @@ export default class RemoteReporter {
     close(callback: ?Function): void {
         this._sender.close(callback);
         clearInterval(this._intervalHandle);
+    }
+
+    setProcess(serviceName: string, tags: Array<Tag>): void {
+        this._process = {
+            'serviceName': serviceName,
+            'tags': ThriftUtils.getThriftTags(tags)
+        };
+
+        if (this._sender) {
+            this._sender.setProcess(this._process);
+        }
     }
 }

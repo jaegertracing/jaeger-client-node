@@ -106,9 +106,16 @@ var Tracer = function () {
         var binaryCodec = new _binary_codec2.default();
         this.registerInjector(opentracing.FORMAT_BINARY, binaryCodec);
         this.registerExtractor(opentracing.FORMAT_BINARY, binaryCodec);
+
+        this._setProcess();
     }
 
     _createClass(Tracer, [{
+        key: '_setProcess',
+        value: function _setProcess() {
+            this._reporter.setProcess(this._serviceName, _util2.default.convertObjectToTags(this._tags));
+        }
+    }, {
         key: '_startInternalSpan',
         value: function _startInternalSpan(spanContext, operationName, startTime) {
             var internalTags = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};

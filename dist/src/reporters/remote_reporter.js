@@ -29,6 +29,10 @@ var _logger = require('../logger.js');
 
 var _logger2 = _interopRequireDefault(_logger);
 
+var _thrift = require('../thrift.js');
+
+var _thrift2 = _interopRequireDefault(_thrift);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -54,7 +58,7 @@ var RemoteReporter = function () {
     _createClass(RemoteReporter, [{
         key: 'report',
         value: function report(span) {
-            var response = this._sender.append(span._toThrift());
+            var response = this._sender.append(_thrift2.default.spanToThrift(span));
             if (response.err) {
                 this._logger.error('Failed to append spans in reporter.');
             }
@@ -72,6 +76,18 @@ var RemoteReporter = function () {
         value: function close(callback) {
             this._sender.close(callback);
             clearInterval(this._intervalHandle);
+        }
+    }, {
+        key: 'setProcess',
+        value: function setProcess(serviceName, tags) {
+            this._process = {
+                'serviceName': serviceName,
+                'tags': _thrift2.default.getThriftTags(tags)
+            };
+
+            if (this._sender) {
+                this._sender.setProcess(this._process);
+            }
         }
     }]);
 

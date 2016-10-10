@@ -20,10 +20,12 @@
 // THE SOFTWARE.
 
 import Span from '../span.js';
+import ThriftUtils from '../thrift.js';
 
 export default class InMemoryReporter {
     _spans: Array<Span>;
     _flushed: Array<Span>;
+    _process: Process;
 
     constructor() {
         this._spans = [];
@@ -56,5 +58,12 @@ export default class InMemoryReporter {
         if(callback) {
             callback();
         }
+    }
+
+    setProcess(serviceName: string, tags: Array<Tag>): void {
+        this._process = {
+            'serviceName': serviceName,
+            'tags': ThriftUtils.getThriftTags(tags)
+        };
     }
 }
