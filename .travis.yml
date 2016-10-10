@@ -15,6 +15,8 @@ matrix:
   - node_js: "0.10"
     env: COVER=1
     sudo: required
+    services:
+    - docker
 
 cache:
   directories:
@@ -41,5 +43,5 @@ before_install:
 
 script:
 - npm run test-ci
-- if [ "$COVER" = "1" ]; then npm run cover-ci ; fi
+- if [ "$COVER" = "1" ]; then npm run coveralls ; fi
 
