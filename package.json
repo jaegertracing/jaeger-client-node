@@ -1,10 +1,15 @@
 {
   "name": "jaeger-client",
   "version": "0.1.0",
-  "description": "client for jaeger node",
+  "description": "Jaeger binding for OpenTracing Node",
+  "licence": "MIT",
   "keywords": [],
   "author": "oibe <oibe@uber.com>",
   "main": "./dist/src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/uber/jaeger-client-node.git"
+  },
   "contributors": [
     {
       "name": "oibe"

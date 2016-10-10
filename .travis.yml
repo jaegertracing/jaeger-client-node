@@ -3,11 +3,11 @@ sudo: required
 language: node_js
 
 node_js:
-#- "6"
-#- "5"
-#- "4"
-#- "iojs"
-#- "0.12"
+- "6"
+- "5"
+- "4"
+- "iojs"
+- "0.12"
 - "0.10"
 
 matrix:
