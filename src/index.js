@@ -20,10 +20,185 @@
 
 import SpanContext from './span_context';
 import Span from './span';
+import ConstSampler from './samplers/const_sampler';
+import InMemoryReporter from './reporters/in_memory_reporter';
+import NoopReporter from './reporters/noop_reporter';
+import ProbabilisticSampler from './samplers/probabilistic_sampler';
+import RatelimitingSampler from './samplers/ratelimiting_sampler';
+import RemoteReporter from './reporters/remote_reporter';
+import RemoteSampler from './samplers/remote_sampler';
 import Tracer from './tracer';
+import UDPSender from './reporters/udp_sender';
+import {Validator} from 'jsonschema';
+
+
+let configSchema = {
+    'type': 'object',
+    'required': ['jaeger'],
+    'properties': {
+        'jaeger': {
+            'type': 'object',
+            '$ref': '/jaeger'
+        }
+    },
+};
+
+let constSamplerSchema = {
+    'id': '/const',
+    'type': 'object',
+    'properties': {
+        'type': {'type': 'string' },
+        'param': {'type': 'boolean' }
+    },
+    'required': ['type', 'param'],
+    'additionalProperties': false
+};
+
+let probabilisticSamplerSchema = {
+    'id': '/probabilistic',
+    'type': 'object',
+    'properties': {
+        'type': {'type': 'string' },
+        'param': {'type': 'number' }
+    },
+    'required': ['type', 'param'],
+    'additionalProperties': false
+};
+
+let ratelimitingSamplerSchema = {
+    'id': '/ratelimiting',
+    'type': 'object',
+    'properties': {
+        'type': {'type': 'string' },
+        'param': {'type': 'number' }
+    },
+    'required': ['type', 'param'],
+    'additionalProperties': false
+};
+
+let remoteSamplerSchema = {
+    'id': '/remote',
+    'type': 'object',
+    'properties': {
+        'type': {'type': 'string' },
+        'param': {'type': 'string' },
+        'managerHostPort': {'type': 'string'}
+    },
+    'required': ['type', 'param'],
+    'additionalProperties': false
+};
+
+let jaegerSchema = {
+    'id': '/jaeger',
+    'type': 'object',
+    'required': ['serviceName'],
+    'properties': {
+        'serviceName': {'type': 'string'},
+        'disable': {'type': 'boolean'},
+        'sampler': {
+            'type': 'object',
+            // should be 'oneOf', but that doesn't work properly with this implementation.
+            'anyOf': [
+                {'$ref': 'const'},
+                {'$ref': 'probabilistic'},
+                {'$ref': 'ratelimiting'},
+                {'$ref': 'remote'}
+            ]
+        },
+        'reporter': {
+            'properties': {
+                'logSpans': {'type': 'boolean'},
+                'agentHost': {'type': 'string'},
+                'agentPort': {'type': 'number'},
+                'flushIntervalMs': {'type': 'number'}
+            },
+            'additionalProperties': false
+        }
+    }
+};
+
+let getSampler = (options) => {
+    let type = options.sampler.type;
+    let param = options.sampler.param;
+
+    let sampler;
+    if (type === 'probabilistic') {
+       sampler = new ProbabilisticSampler(param);
+    }
+
+    if (type === 'ratelimiting') {
+        sampler = new RatelimitingSampler(param);
+    }
+
+    if (type === 'const') {
+        sampler = new ConstSampler(param);
+    }
+
+    if (type === 'remote') {
+        sampler = new RemoteSampler(options.serviceName);
+    }
+
+    return sampler;
+}
+
+let initTracer = (options) => {
+    let v = new Validator();
+    v.addSchema(constSamplerSchema);
+    v.addSchema(probabilisticSamplerSchema);
+    v.addSchema(ratelimitingSamplerSchema);
+    v.addSchema(remoteSamplerSchema);
+    v.addSchema(jaegerSchema);
+    v.validate(options, configSchema, {
+        throwError: true
+    });
+
+    options = options.jaeger;
+
+    let reporter = null;
+    let sampler = null;
+    if (options.disable) {
+        reporter = new NoopReporter();
+        sampler = new ConstSampler(false);
+    } else {
+        let sender;
+        let reporterOptions = {};
+        if (options.reporter) {
+            if (options.reporter.logSpans) {
+                // use logging reporter
+            }
+            if (options.reporter.flushIntervalMs) {
+                reporterOptions['bufferFlushInterval'] = options.reporter.flushIntervalMs;
+            }
+
+            if (options.reporter.agentHost && options.reporter.agentPort) {
+                let hostPort = `${options.reporter.agentHost}:${options.reporter.agentPort}`;
+                sender = new UDPSender(hostPort);
+            } else {
+                // use default sender
+                sender = new UDPSender();
+            }
+        } else {
+            // use default sender
+            sender = new UDPSender();
+        }
+
+
+        reporter = new RemoteReporter(sender, reporterOptions);
+
+        if (options.sampler) {
+            sampler = getSampler(options);
+        } else {
+            sampler = new RemoteSampler(options.serviceName);
+        }
+    }
+
+    return new Tracer(
+        options.serviceName,
+        reporter,
+        sampler
+    );
+}
 
 module.exports = {
-    SpanContext   : SpanContext,
-    Span          : Span,
-    Tracer        : Tracer,
+    initTracer: initTracer
 };

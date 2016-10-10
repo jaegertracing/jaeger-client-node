@@ -18,8 +18,10 @@
   "dependencies": {
     "long": "^3.2.0",
     "node-int64": "^0.4.0",
-    "thriftrw": "^3.5.0",
+    "js-yaml": "^3.6.1",
+    "jsonschema": "^1.1.0",
     "request": "^2.74.0",
+    "thriftrw": "^3.5.0",
     "xorshift": "^0.2.0"
   },
   "devDependencies": {

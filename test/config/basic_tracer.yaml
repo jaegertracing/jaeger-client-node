@@ -1,0 +1,2 @@
+jaeger:
+    serviceName: 'test-service'
