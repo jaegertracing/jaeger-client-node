@@ -33,8 +33,6 @@ export default class Span {
     _logger: any;
     _duration: number;
     _firstInProcess: boolean;
-    _isClient: boolean;
-    _peer: Endpoint;
     _logs: Array<LogData>;
     _tags: Array<Tag>;
     static _baggageHeaderCache: any;
@@ -214,11 +212,6 @@ export default class Span {
      **/
     log(fields: any, timestamp: ?number): void {
         if (this._spanContext.isSampled()) {
-            if (!fields.event && !fields.payload) {
-                this._logger.error('log must be passed either an event of type string, or a payload of type object');
-                return;
-            }
-
             if (!fields.timestamp) {
                 fields.timestamp = timestamp || Utils.getTimestampMicros();
             }
