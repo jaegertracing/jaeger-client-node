@@ -43,6 +43,7 @@
     "express": "^4.14.0",
     "flow-bin": "^0.30.0",
     "lodash": "^4.15.0",
+    "minimist": "1.2.0",
     "mocha": "^3.0.1",
     "opentracing": "git://github.com/opentracing/opentracing-javascript.git#575e8149aadba97d27e9cadff3b8e47a15c2db09",
     "rsvp": "^3.3.1",
