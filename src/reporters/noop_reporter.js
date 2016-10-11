@@ -23,6 +23,10 @@ import Span from '../span.js';
 
 export default class NoopReporter {
 
+    name(): string {
+        return 'NoopReporter';
+    }
+
     report(span: Span): void {}
 
     flush(callback: ?Function): void {

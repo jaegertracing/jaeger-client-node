@@ -23,22 +23,23 @@ import {assert, expect} from 'chai';
 import fs from 'fs';
 import path from 'path';
 import NoopReporter from '../src/reporters/noop_reporter';
+import CompositeReporter from '../src/reporters/composite_reporter';
 import RemoteReporter from '../src/reporters/remote_reporter';
 import ConstSampler from '../src/samplers/const_sampler';
 import ProbabilisticSampler from '../src/samplers/probabilistic_sampler';
 import RemoteSampler from '../src/samplers/remote_sampler';
-import RatelimitingSampler from '../src/samplers/ratelimiting_sampler';
+import RateLimitingSampler from '../src/samplers/ratelimiting_sampler';
 import yaml from 'js-yaml';
 import {initTracer} from '../src/index.js';
+import opentracing from 'opentracing';
 
 describe('initTracer', () => {
-    it ('should initialize noop when disable is set', () => {
+    it ('should initialize noop tracer when disable is set', () => {
         let configFile = fs.readFileSync(path.join(__dirname, 'config' , 'disable_tracer.yaml'), 'utf8');
         let config = yaml.safeLoad(configFile);
         let tracer = initTracer(config);
 
-        expect(tracer._sampler).to.be.an.instanceof(ConstSampler);
-        expect(tracer._reporter).to.be.an.instanceof(NoopReporter);
+        expect(tracer).to.be.an.instanceof(opentracing.Tracer);
     });
 
     it ('should initialize normal tracer when only service name given', () => {
@@ -47,7 +48,7 @@ describe('initTracer', () => {
         let tracer = initTracer(config);
 
         expect(tracer._sampler).to.be.an.instanceof(RemoteSampler);
-        expect(tracer._reporter).to.be.an.instanceof(RemoteReporter);
+        expect(tracer._reporter).to.be.an.instanceof(CompositeReporter);
     });
 
     it ('should initialize proper samplers', () => {
@@ -57,18 +58,23 @@ describe('initTracer', () => {
             }
         };
         var options = [
-            { type: 'const', param: true, expected: ConstSampler },
-            { type: 'ratelimiting', param: true, expected: RatelimitingSampler },
-            { type: 'probabilistic', param: true, expected: ProbabilisticSampler },
-            { type: 'remote', param: true, expected: RemoteSampler },
+            { type: 'const', param: 1, expectedType: ConstSampler, expectedParam: 1 },
+            { type: 'ratelimiting', param: 2, expectedType: RateLimitingSampler, expectedParam: 2 },
+            { type: 'probabilistic', param: 0.5, expectedType: ProbabilisticSampler, expectedParam: 0.5 },
+            { type: 'remote', param: 1, expectedType: RemoteSampler, expectedParam: 1 }
         ];
 
         _.each(options, (samplerConfig) => {
-            let expected = samplerConfig.expected;
-            delete samplerConfig.expected;
+            let expectedType = samplerConfig.expectedType;
+            let expectedParam = samplerConfig.expectedParam;
+            delete samplerConfig.expectedType;
+            delete samplerConfig.expectedParam;
+
             config.jaeger.sampler = samplerConfig;
             let tracer = initTracer(config);
-            expect(tracer._sampler).to.be.an.instanceof(expected);
+
+            expect(tracer._sampler).to.be.an.instanceof(expectedType);
+            // TODO(oibe:head) test utils for expectedParam here?
         });
     });
 
@@ -82,7 +88,7 @@ describe('initTracer', () => {
             { type: 'const', param: 'bad-value' },
             { type: 'ratelimiting', param: 'bad-value' },
             { type: 'probabilistic', param: 'bad-value' },
-            { type: 'remote', param: 0xbad },
+            { type: 'remote', param: 'bad-value' },
         ];
 
         let count = 0;
@@ -106,8 +112,17 @@ describe('initTracer', () => {
         let config = yaml.load(configFile);
         let tracer = initTracer(config);
 
+        let remoteReporter;
+        for (let i = 0; i < tracer._reporter._reporters.length; i++) {
+            let reporter = tracer._reporter._reporters[i];
+            if (reporter instanceof RemoteReporter) {
+                remoteReporter = reporter;
+                break;
+            }
+        }
+
         // TODO(oibe) replace with TestUtils
-        assert.equal(tracer._reporter._bufferFlushInterval, 2000);
-        assert.equal(tracer._reporter._sender._hostPort, '127.0.0.1:4939');
+        assert.equal(remoteReporter._bufferFlushInterval, 2000);
+        assert.equal(remoteReporter._sender._hostPort, '127.0.0.1:4939');
     });
 });

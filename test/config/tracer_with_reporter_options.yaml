@@ -2,7 +2,7 @@ jaeger:
     serviceName: 'test-service'
     sampler:
         type: 'const'
-        param: true
+        param: 0
     reporter:
         logSpans: true
         agentHost: '127.0.0.1'

@@ -20,54 +20,35 @@
 // THE SOFTWARE.
 
 import Span from '../span.js';
-import ThriftUtils from '../thrift.js';
 
-export default class InMemoryReporter {
-    _spans: Array<Span>;
-    _flushed: Array<Span>;
-    _process: Process;
+export default class CompositeReporter {
+    _reporters: Array<Reporter>
 
-    constructor() {
-        this._spans = [];
-        this._flushed = [];
+    constructor(reporters: Array<Reporter>) {
+        this._reporters = reporters;
     }
 
     name(): string {
-        return 'InMemoryReporter';
+        return 'CompositeReporter';
     }
 
     report(span: Span): void {
-        this._spans.push(span);
+        for (let i = 0; i < this._reporters.length; i++) {
+            let reporter = this._reporters[i];
+            reporter.report(span);
+        }
     }
 
-    get spans(): Array<Span> {
-        return this._spans;
-    }
+    clear(): void {}
 
-    clear(): void {
-        this._spans = [];
-    }
-
-    flush(callback: ?Function): void {
-        for (let i = 0; i < this._spans.length; i++) {
-            this._flushed.push(this._spans[i]);
+    close(callback: ?Function): void {
+        for (let i = 0; i < this._reporters.length; i++) {
+            let reporter = this._reporters[i];
+            reporter.close();
         }
 
         if (callback) {
             callback();
         }
-    }
-
-    close(callback: ?Function): void {
-        if(callback) {
-            callback();
-        }
-    }
-
-    setProcess(serviceName: string, tags: Array<Tag>): void {
-        this._process = {
-            'serviceName': serviceName,
-            'tags': ThriftUtils.getThriftTags(tags)
-        };
     }
 }
