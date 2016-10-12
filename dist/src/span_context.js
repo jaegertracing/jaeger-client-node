@@ -44,15 +44,18 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var SpanContext = function () {
-    function SpanContext(traceId, spanId, parentId, flags) {
-        var baggage = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
-        var debugId = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : '';
+    function SpanContext(traceId, spanId, parentId, traceIdStr, spanIdStr, parentIdStr, flags) {
+        var baggage = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : {};
+        var debugId = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : '';
 
         _classCallCheck(this, SpanContext);
 
         this._traceId = traceId;
         this._spanId = spanId;
         this._parentId = parentId;
+        this._traceIdStr = traceIdStr;
+        this._spanIdStr = spanIdStr;
+        this._parentIdStr = parentIdStr;
         this._flags = flags;
         this._baggage = baggage;
         this._debugId = debugId;
@@ -83,6 +86,13 @@ var SpanContext = function () {
         value: function isDebug() {
             return (this.flags & constants.DEBUG_MASK) === constants.DEBUG_MASK;
         }
+    }, {
+        key: 'withBaggageItem',
+        value: function withBaggageItem(key, value) {
+            var newBaggage = _util2.default.clone(this._baggage);
+            newBaggage[key] = value;
+            return new SpanContext(this._traceId, this._spanId, this._parentId, this._traceIdStr, this._spanIdStr, this._parentIdStr, this._flags, newBaggage, this._debugId);
+        }
 
         /**
          * @return {string} - returns a string version of this span context.
@@ -91,16 +101,7 @@ var SpanContext = function () {
     }, {
         key: 'toString',
         value: function toString() {
-            var parentId = this._parentId ? this._parentId.toString('hex') : '0';
-
-            return [_util2.default.removeLeadingZeros(this._traceId.toString('hex')), _util2.default.removeLeadingZeros(this._spanId.toString('hex')), _util2.default.removeLeadingZeros(parentId), this._flags.toString(16)].join(':');
-        }
-    }, {
-        key: 'withBaggageItem',
-        value: function withBaggageItem(key, value) {
-            var newBaggage = _util2.default.clone(this._baggage);
-            newBaggage[key] = value;
-            return new SpanContext(this._traceId, this._spanId, this._parentId, this._flags, newBaggage, this._debugId);
+            return [this.traceIdStr, this.spanIdStr, this.parentIdStr || "0", this._flags.toString(16)].join(':');
         }
 
         /**
@@ -111,26 +112,62 @@ var SpanContext = function () {
     }, {
         key: 'traceId',
         get: function get() {
+            if (this._traceId == null && this._traceIdStr != null) {
+                this._traceId = _util2.default.encodeInt64(this._traceIdStr);
+            }
             return this._traceId;
         },
         set: function set(traceId) {
             this._traceId = traceId;
+            this._traceIdStr = null;
         }
     }, {
         key: 'spanId',
         get: function get() {
+            if (this._spanId == null && this._spanIdStr != null) {
+                this._spanId = _util2.default.encodeInt64(this._spanIdStr);
+            }
             return this._spanId;
         },
         set: function set(spanId) {
             this._spanId = spanId;
+            this._spanIdStr = null;
         }
     }, {
         key: 'parentId',
         get: function get() {
+            if (this._parentId == null && this._parentIdStr != null) {
+                this._parentId = _util2.default.encodeInt64(this._parentIdStr);
+            }
             return this._parentId;
         },
         set: function set(parentId) {
             this._parentId = parentId;
+            this._parentIdStr = null;
+        }
+    }, {
+        key: 'traceIdStr',
+        get: function get() {
+            if (this._traceIdStr == null && this._traceId != null) {
+                this._traceIdStr = _util2.default.removeLeadingZeros(this._traceId.toString('hex'));
+            }
+            return this._traceIdStr;
+        }
+    }, {
+        key: 'spanIdStr',
+        get: function get() {
+            if (this._spanIdStr == null && this._spanId != null) {
+                this._spanIdStr = _util2.default.removeLeadingZeros(this._spanId.toString('hex'));
+            }
+            return this._spanIdStr;
+        }
+    }, {
+        key: 'parentIdStr',
+        get: function get() {
+            if (this._parentIdStr == null && this._parentId != null) {
+                this._parentIdStr = _util2.default.removeLeadingZeros(this._parentId.toString('hex'));
+            }
+            return this._parentIdStr;
         }
     }, {
         key: 'flags',
@@ -164,8 +201,8 @@ var SpanContext = function () {
                 return null;
             }
 
-            var traceId = parseInt(headers[0], 16);
-            var NaNDetected = isNaN(traceId, 16) || traceId === 0 || isNaN(parseInt(headers[1], 16)) || isNaN(parseInt(headers[2], 16)) || isNaN(parseInt(headers[3], 16));
+            var approxTraceId = parseInt(headers[0], 16);
+            var NaNDetected = isNaN(approxTraceId, 16) || approxTraceId === 0 || isNaN(parseInt(headers[1], 16)) || isNaN(parseInt(headers[2], 16)) || isNaN(parseInt(headers[3], 16));
 
             if (NaNDetected) {
                 return null;
@@ -173,10 +210,32 @@ var SpanContext = function () {
 
             var parentId = null;
             if (headers[2] !== '0') {
-                parentId = _util2.default.encodeInt64(headers[2]);
+                parentId = headers[2];
             }
 
-            return new SpanContext(_util2.default.encodeInt64(headers[0]), _util2.default.encodeInt64(headers[1]), parentId, parseInt(headers[3], 16));
+            return SpanContext.withStringIds(headers[0], headers[1], parentId, parseInt(headers[3], 16));
+        }
+    }, {
+        key: 'withBinaryIds',
+        value: function withBinaryIds(traceId, spanId, parentId, flags) {
+            var baggage = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+            var debugId = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : '';
+
+            return new SpanContext(traceId, spanId, parentId, null, // traceIdStr: string,
+            null, // spanIdStr: string,
+            null, // parentIdStr: string,
+            flags, baggage, debugId);
+        }
+    }, {
+        key: 'withStringIds',
+        value: function withStringIds(traceIdStr, spanIdStr, parentIdStr, flags) {
+            var baggage = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+            var debugId = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : '';
+
+            return new SpanContext(null, // traceId,
+            null, // spanId,
+            null, // parentId,
+            traceIdStr, spanIdStr, parentIdStr, flags, baggage, debugId);
         }
     }]);
 

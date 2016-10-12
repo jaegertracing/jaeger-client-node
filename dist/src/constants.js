@@ -60,7 +60,3 @@ var SAMPLER_TYPE_REMOTE = exports.SAMPLER_TYPE_REMOTE = 'remote';
 // The value of the header is recorded as the tag on the root span, so that the
 // trace can be found in the UI using this value as a correlation ID.
 var JAEGER_DEBUG_HEADER = exports.JAEGER_DEBUG_HEADER = 'jaeger-debug-id';
-
-// EMIT_SPAN_BATCH_OVERHEAD is the rough estimate of header space taken up in a
-// thrift frame.
-var EMIT_SPAN_BATCH_OVERHEAD = exports.EMIT_SPAN_BATCH_OVERHEAD = 30;

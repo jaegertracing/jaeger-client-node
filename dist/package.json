@@ -1,10 +1,15 @@
 {
   "name": "jaeger-client",
-  "version": "0.0.1",
-  "description": "client for jaeger node",
+  "version": "0.1.0",
+  "description": "Jaeger binding for OpenTracing Node",
+  "licence": "MIT",
   "keywords": [],
   "author": "oibe <oibe@uber.com>",
-  "main": "./dist/index.js",
+  "main": "./dist/src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/uber/jaeger-client-node.git"
+  },
   "contributors": [
     {
       "name": "oibe"
@@ -30,6 +35,7 @@
     "body-parser": "^1.15.2",
     "buffer-equal": "^1.0.0",
     "chai": "^3.5.0",
+    "coveralls": "^2.11.14",
     "eslint": "^2.4.0",
     "eslint-config-airbnb": "^6.2.0",
     "eslint-plugin-flowtype": "^2.4.0",
@@ -37,6 +43,7 @@
     "express": "^4.14.0",
     "flow-bin": "^0.30.0",
     "lodash": "^4.15.0",
+    "minimist": "1.2.0",
     "mocha": "^3.0.1",
     "opentracing": "git://github.com/opentracing/opentracing-javascript.git#575e8149aadba97d27e9cadff3b8e47a15c2db09",
     "rsvp": "^3.3.1",
@@ -50,11 +57,12 @@
     "copy-submodule": "git submodule init -- ./src/jaeger-idl && cp -R ./src/jaeger-idl ./dist/src/ && rm -rf ./dist/src/jaeger-idl/.git",
     "check-ls": "npm ls --loglevel=http --parseable 1>/dev/null && echo '# npm is in a good state'",
     "cover": "./node_modules/.bin/babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/",
+    "coveralls": "cat ./coverage/lcov.info | coveralls",
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed'",
-    "report-cover": "nyc report --reporter html --reporter text",
+    "lint-ci": "npm run lint && echo '# TODO: ADD npm run check-license'",
     "test": "npm run flow & npm run lint && ./node_modules/mocha/bin/mocha --compilers js:babel-core/register",
-    "check-cover": "nyc check-coverage --branches=10 --lines=10 --functions=10",
-    "view-cover": "opn ./coverage/index.html"
+    "test-ci": "npm run test && npm run lint-ci && npm run cover",
+    "show-cover": "open coverage/lcov-report/index.html"
   }
 }
