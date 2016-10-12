@@ -1,8 +1,7 @@
 -include crossdock/rules.mk
 
 .PHONY: publish
-publish:
-	npm run compile
+publish: build-node
 	npm version $(shell ./scripts/version_prompt.sh)
 	git push  --set-upstream origin $(shell bash -c "git rev-parse --abbrev-ref HEAD")
 	git push origin --tags
