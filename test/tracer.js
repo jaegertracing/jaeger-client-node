@@ -28,7 +28,10 @@ import * as opentracing from 'opentracing';
 import {Tags as opentracing_tags} from 'opentracing';
 import SpanContext from '../src/span_context.js';
 import Tracer from '../src/tracer.js';
+import TestUtils from '../src/test_util.js';
 import Utils from '../src/util.js';
+import MetricsContainer from '../src/metrics/metrics.js';
+import LocalMetricFactory from '../src/metrics/local/metric_factory.js';
 
 describe('tracer should', () => {
     let tracer;
@@ -247,6 +250,47 @@ describe('tracer should', () => {
         tracer.flush(() => {
             assert.equal(tracer._reporter._flushed.length, 1);
             done();
+        });
+    });
+
+    describe('Metrics', () => {
+        it ('startSpanInternal', () => {
+            let params = [
+                { 'context': '1:2:0:1', 'sampled': true, 'rpcServer': true, 'metrics': ['spansStarted', 'spansSampled', 'tracesJoinedSampled']},
+                { 'context': '1:2:0:1', 'sampled': true, 'rpcServer': false, 'metrics': ['spansStarted', 'spansSampled', 'tracesStartedSampled']},
+                { 'context': '1:2:0:0', 'sampled': false, 'rpcServer': true, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesJoinedNotSampled']},
+                { 'context': '1:2:0:0', 'sampled': false, 'rpcServer': false, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesStartedNotSampled']},
+            ];
+
+            _.each(params, (o) => {
+                let metrics = new MetricsContainer(new LocalMetricFactory());
+                tracer = new Tracer('fry', new InMemoryReporter(), new ConstSampler(o.sampled), {
+                    metrics: metrics
+                });
+                tracer._startInternalSpan(
+                    SpanContext.fromString(o.context),
+                    'bender',
+                    Utils.getTimestampMicros(),
+                    undefined,
+                    undefined,
+                    o.rpcServer
+                );
+
+                _.each(o.metrics, (metricName) => {
+                    assert.isOk(TestUtils.counterEquals(metrics[metricName], 1));
+                });
+            });
+        });
+
+        it ('emits counter when report called', () => {
+            let metrics = new MetricsContainer(new LocalMetricFactory());
+            tracer = new Tracer('fry', new InMemoryReporter(), new ConstSampler(true), {
+                metrics: metrics
+            });
+            let span = tracer.startSpan('bender');
+            tracer._report(span);
+
+            assert.isOk(TestUtils.counterEquals(metrics.spansFinished, 1));
         });
     });
 });

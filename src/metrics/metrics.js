@@ -21,15 +21,99 @@
 
 export default class Metrics {
     _factory: MetricFactory;
+    tracesStartedSampled: Counter;
+    tracesStartedNotSampled: Counter;
+    tracesJoinedSampled: Counter;
+    tracesJoinedNotSampled: Counter;
+    spansStarted: Counter;
+    spansFinished: Counter;
+    spansSampled: Counter;
+    spansNotSampled: Counter;
+    decodingErrors: Counter;
+    reporterSuccess: Counter;
+    reporterFailure: Counter;
+    reporterDropped: Counter;
+    reporterQueueLength: Gauge;
+    samplerRetrieved: Counter;
+    samplerUpdated: Counter;
+    samplerQueryFailure: Counter;
+    samplerParsingFailure: Counter;
 
     constructor(factory: MetricFactory) {
         this._factory = factory;
-    }
 
-    get tracesStartedSampled = () => {
-        return this._factory.createCounter('traces', {
+        this.tracesStartedSampled = this._factory.createCounter('traces', {
             state: 'started',
             sampled: 'y'
+        });
+
+        this.tracesStartedNotSampled = this._factory.createCounter('traces', {
+            state: 'started',
+            sampled: 'n'
+        });
+
+        this.tracesJoinedSampled = this._factory.createCounter('traces', {
+            state: 'joined',
+            sampled: 'y'
+        });
+
+        this.tracesJoinedNotSampled = this._factory.createCounter('traces', {
+            state: 'joined',
+            sampled: 'n'
+        });
+
+        this.spansStarted = this._factory.createCounter('spans', {
+            group: 'lifecycle',
+            state: 'started'
+        });
+
+        this.spansFinished = this._factory.createCounter('spans', {
+            group: 'lifecycle',
+            state: 'finished'
+        });
+
+        this.spansSampled = this._factory.createCounter('spans', {
+            group: 'sampling',
+            sampled: 'y'
+        });
+
+        this.spansNotSampled = this._factory.createCounter('spans', {
+            group: 'sampling',
+            sampled: 'n'
+        });
+
+        this.decodingErrors = this._factory.createCounter('decoding-errors');
+
+        this.reporterSuccess = this._factory.createCounter('reporter-spans', {
+            state: 'success'
+        });
+
+        this.reporterFailure = this._factory.createCounter('reporter-spans', {
+            state: 'failure'
+        });
+
+        this.reporterDropped = this._factory.createCounter('reporter-spans', {
+            state: 'dropped'
+        });
+
+        this.reporterQueueLength = this._factory.createGauge('reporter-queue');
+
+        this.samplerRetrieved = this._factory.createCounter('sampler', {
+            state: 'retrieved'
+        });
+
+        this.samplerUpdated = this._factory.createCounter('sampler', {
+            state: 'updated'
+        });
+
+        this.samplerQueryFailure = this._factory.createCounter('sampler', {
+            state: 'failure',
+            phase: 'query'
+        });
+
+        this.samplerParsingFailure = this._factory.createCounter('sampler', {
+            state: 'failure',
+            phase: 'parsing'
         });
     }
 }

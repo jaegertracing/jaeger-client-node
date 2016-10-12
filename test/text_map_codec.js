@@ -24,8 +24,29 @@ import ConstSampler from '../src/samplers/const_sampler.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import opentracing from 'opentracing';
 import Tracer from '../src/tracer.js';
+import MetricsContainer from '../src/metrics/metrics.js';
+import LocalMetricFactory from '../src/metrics/local/metric_factory.js';
+import TestUtils from '../src/test_util.js';
 
 describe('Text Map Codec should', () => {
+    it ('report metric when failing to decode tracer stawte', () => {
+        let metrics = new MetricsContainer(new LocalMetricFactory());
+        let tracer = new Tracer(
+            'test-tracer',
+            new InMemoryReporter(),
+            new ConstSampler(false), {
+                metrics: metrics
+            }
+        );
+
+        let headers = {
+            'uber-trace-id': 'bad-value'
+        };
+        tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
+
+        assert.isOk(TestUtils.counterEquals(metrics.decodingErrors, 1));
+    });
+
     it('set debug flag when debug-id-header is received', () => {
         let tracer = new Tracer(
             'test-tracer',

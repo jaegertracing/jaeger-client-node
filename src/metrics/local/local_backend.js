@@ -28,6 +28,10 @@ export default class LocalBackend {
     _gaugeTags: any;
 
     constructor() {
+        this.reset();
+    }
+
+    reset() {
         this._counterValues = {};
         this._counterTags = {};
         this._timerValues = {};

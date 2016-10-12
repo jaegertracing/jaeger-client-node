@@ -19,9 +19,12 @@
 // THE SOFTWARE.
 
 import {assert} from 'chai';
-import MockLogger from './lib/mock_logger.js';
-import RemoteSampler from '../src/samplers/remote_sampler.js';
-import SamplingServer from './lib/sampler_server.js';
+import MockLogger from './lib/mock_logger';
+import RemoteSampler from '../src/samplers/remote_sampler';
+import SamplingServer from './lib/sampler_server';
+import MetricsContainer from '../src/metrics/metrics.js';
+import LocalMetricFactory from '../src/metrics/local/metric_factory.js';
+import TestUtils from '../src/test_util';
 
 describe('remote sampler should', () => {
     let server: SamplingServer;
@@ -34,14 +37,41 @@ describe('remote sampler should', () => {
     });
 
     it('set probabilistic sampler', (done) => {
+        let metrics = new MetricsContainer(new LocalMetricFactory());
         let sampler = new RemoteSampler('probabilistic-service', {
             stopPolling: true,
+            metrics: metrics,
             onSamplerUpdate: (sampler) => {
                 assert.equal(sampler._samplingRate, 1.0);
+
+                // metrics
+                assert.isOk(TestUtils.counterEquals(metrics.samplerRetrieved, 1));
+                assert.isOk(TestUtils.counterEquals(metrics.samplerUpdated, 1));
+
                 sampler.close();
                 done();
             }
         });
+        sampler._refreshSamplingStrategy();
+    });
+
+    it ('log metric on failing sampling strategy', (done) => {
+        let logger = new MockLogger();
+        let metrics = new MetricsContainer(new LocalMetricFactory());
+        let sampler = new RemoteSampler('error-service', {
+            stopPolling: true,
+            metrics: metrics,
+            logger: logger,
+            onSamplerUpdate: () => {
+                assert.equal(logger._errorMsgs[0], 'Error in fetching sampling strategy.');
+
+                //metrics
+                assert.isOk(TestUtils.counterEquals(metrics.samplerQueryFailure, 1));
+                done();
+            }
+        });
+
+        sampler._host = 'fake-host';
         sampler._refreshSamplingStrategy();
     });
 
@@ -59,11 +89,17 @@ describe('remote sampler should', () => {
 
     it('throw error on bad sampling strategy', (done) => {
         let logger = new MockLogger();
+        let metrics = new MetricsContainer(new LocalMetricFactory());
         let sampler = new RemoteSampler('error-service', {
             stopPolling: true,
+            metrics: metrics,
             logger: logger,
             onSamplerUpdate: () => {
                 assert.equal(logger._errorMsgs[0], 'Unrecognized strategy type: {"error":{"err":"bad things happened"}}');
+
+                //metrics
+                assert.isOk(TestUtils.counterEquals(metrics.samplerParsingFailure, 1));
+
                 done();
             }
         });

@@ -31,15 +31,34 @@ export default class LocalFactory {
         this._backend = new LocalBackend();
     }
 
-    createCounter(name: string, tags: any): void {
-        return new LocalCounter(name, tags, this._backend);
+    _uniqueNameWithTags(name: string, tags: any): string {
+        let kvPairs = [];
+        let sortedKeys = Object.keys(tags).sort();
+        for (let i = 0; i < sortedKeys.length; i++) {
+            let key = sortedKeys[i];
+            let value = tags[key];
+            if (tags.hasOwnProperty(key)) {
+                kvPairs.push(`${key}=${value}`);
+            }
+        }
+
+        let tagName = kvPairs.join();
+        let metricName = `${name}.${tagName}`;
+        return metricName;
     }
 
-    createTimer(name: string, tags: any): void {
-        return new LocalTimer(name, tags, this._backend)
+    createCounter(name: string, tags: any = {}): Counter {
+        let uniqueMetricName = this._uniqueNameWithTags(name, tags);
+        return new LocalCounter(uniqueMetricName, tags, this._backend);
     }
 
-    createGauge(name: string, tags: any): void {
-        return new LocalGauge(name, tags, this._backend)
+    createTimer(name: string, tags: any = {}): Timer {
+        let uniqueMetricName = this._uniqueNameWithTags(name, tags);
+        return new LocalTimer(uniqueMetricName, tags, this._backend)
+    }
+
+    createGauge(name: string, tags: any = {}): Gauge {
+        let uniqueMetricName = this._uniqueNameWithTags(name, tags);
+        return new LocalGauge(uniqueMetricName, tags, this._backend)
     }
 }

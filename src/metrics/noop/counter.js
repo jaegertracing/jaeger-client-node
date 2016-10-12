@@ -20,5 +20,5 @@
 // THE SOFTWARE.
 
 export default class NoopCounter {
-    increment(delta: number) {}
+    increment(delta: number): void {}
 }
