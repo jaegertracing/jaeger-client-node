@@ -41,7 +41,7 @@ describe('span should', () => {
             new ConstSampler(true)
         );
 
-        spanContext = new SpanContext(
+        spanContext = SpanContext.withBinaryIds(
             Utils.encodeInt64(1),
             Utils.encodeInt64(2),
             Utils.encodeInt64(3),

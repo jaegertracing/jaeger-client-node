@@ -52,7 +52,7 @@ describe('tracer should', () => {
         let spanId = Utils.encodeInt64(2);
         let parentId = Utils.encodeInt64(3);
         let flags = 1;
-        let context = new SpanContext(traceId, spanId, parentId, flags);
+        let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
         let start = Utils.getTimestampMicros();
         let rpcServer = false;
         let internalTags = [];
@@ -104,7 +104,7 @@ describe('tracer should', () => {
         let spanId = Utils.encodeInt64(2);
         let parentId = Utils.encodeInt64(3);
         let flags = 1;
-        let context = new SpanContext(traceId, spanId, parentId, flags);
+        let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
         let startTime = Utils.getTimestampMicros();
 
         let childOfParams = {
@@ -136,7 +136,7 @@ describe('tracer should', () => {
         let spanId = Utils.encodeInt64(2);
         let parentId = Utils.encodeInt64(3);
         let flags = 1;
-        let context = new SpanContext(traceId, spanId, parentId, flags);
+        let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
         let startTime = Utils.getTimestampMicros();
 
         let tags = {};
@@ -176,7 +176,7 @@ describe('tracer should', () => {
             keyOne: 'leela',
             keyTwo: 'bender'
         };
-        let savedContext = new SpanContext(
+        let savedContext = SpanContext.withBinaryIds(
             Utils.encodeInt64(1),
             Utils.encodeInt64(2),
             Utils.encodeInt64(3),
@@ -205,7 +205,7 @@ describe('tracer should', () => {
         let baggage = {
             keyOne: 'Leela vs. Bender',
         };
-        let savedContext = new SpanContext(
+        let savedContext = SpanContext.withBinaryIds(
             Utils.encodeInt64(1),
             Utils.encodeInt64(2),
             Utils.encodeInt64(3),
@@ -220,7 +220,7 @@ describe('tracer should', () => {
 
     it ('assert inject and extract throw errors when given an invalid format', () => {
         let carrier = {};
-        let context = new SpanContext(
+        let context = SpanContext.withBinaryIds(
             Utils.encodeInt64(1),
             Utils.encodeInt64(2),
             Utils.encodeInt64(3),
