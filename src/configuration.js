@@ -32,7 +32,6 @@ import RemoteSampler from './samplers/remote_sampler';
 import Tracer from './tracer';
 import UDPSender from './reporters/udp_sender';
 import {Validator} from 'jsonschema';
-import Logtron from 'logtron';
 import opentracing from 'opentracing';
 
 let configSchema = {
@@ -101,7 +100,7 @@ export default class Configuration {
         return sampler;
     }
 
-    static initTracer(options) {
+    static initTracer(options, logger) {
         let v = new Validator();
         v.addSchema(jaegerSchema);
         v.validate(options, configSchema, {
@@ -121,15 +120,6 @@ export default class Configuration {
             let hostPort = '';
             if (options.reporter) {
                 if (options.reporter.logSpans) {
-                    let logger = Logtron({
-                        meta: {
-                            team: 'jaeger',
-                            project: 'jaeger'
-                        },
-                        backends: Logtron.defaultBackends({
-                            console: true
-                        })
-                    });
                     reporters.push(new LoggingReporter(logger));
                 }
 

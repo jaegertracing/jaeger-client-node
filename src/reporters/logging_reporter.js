@@ -20,12 +20,13 @@
 // THE SOFTWARE.
 
 import Span from '../span.js';
+import NullLogger from '../logger.js';
 
 export default class LoggingReporter {
     _logger: Logger;
 
     constructor(logger: Logger) {
-        this._logger = logger;
+        this._logger = logger || new NullLogger();
     }
 
     report(span: Span): void {
