@@ -77,7 +77,7 @@ export default class RemoteControlledSampler {
 
     _getSamplingStrategy(callerName: string): ?SamplingStrategyResponse  {
         let encodedCaller: string = encodeURIComponent(callerName);
-        request.get(`http:\/\/${this._host}:${this._port}/?service=${encodedCaller}`, (err, response) => {
+        request.get(`http://${this._host}:${this._port}/?service=${encodedCaller}`, (err, response) => {
             if (err) {
                 this._logger.error('Error in fetching sampling strategy.');
                 this._metrics.samplerQueryFailure.increment(1);

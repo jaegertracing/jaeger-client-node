@@ -26,10 +26,10 @@ import opentracing from 'opentracing';
 import Tracer from '../src/tracer.js';
 import MetricsContainer from '../src/metrics/metrics.js';
 import LocalMetricFactory from '../src/metrics/local/metric_factory.js';
-import TestUtils from '../src/test_util.js';
+import LocalBackend from '../src/metrics/local/backend.js';
 
 describe('Text Map Codec should', () => {
-    it ('report metric when failing to decode tracer stawte', () => {
+    it ('report metric when failing to decode tracer state', () => {
         let metrics = new MetricsContainer(new LocalMetricFactory());
         let tracer = new Tracer(
             'test-tracer',
@@ -44,7 +44,7 @@ describe('Text Map Codec should', () => {
         };
         tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
 
-        assert.isOk(TestUtils.counterEquals(metrics.decodingErrors, 1));
+        assert.isOk(LocalBackend.counterEquals(metrics.decodingErrors, 1));
     });
 
     it('set debug flag when debug-id-header is received', () => {

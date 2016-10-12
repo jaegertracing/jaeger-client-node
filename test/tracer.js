@@ -28,10 +28,10 @@ import * as opentracing from 'opentracing';
 import {Tags as opentracing_tags} from 'opentracing';
 import SpanContext from '../src/span_context.js';
 import Tracer from '../src/tracer.js';
-import TestUtils from '../src/test_util.js';
 import Utils from '../src/util.js';
 import MetricsContainer from '../src/metrics/metrics.js';
 import LocalMetricFactory from '../src/metrics/local/metric_factory.js';
+import LocalBackend from '../src/metrics/local/backend.js';
 
 describe('tracer should', () => {
     let tracer;
@@ -256,10 +256,10 @@ describe('tracer should', () => {
     describe('Metrics', () => {
         it ('startSpanInternal', () => {
             let params = [
-                { 'context': '1:2:0:1', 'sampled': true, 'rpcServer': true, 'metrics': ['spansStarted', 'spansSampled', 'tracesJoinedSampled']},
-                { 'context': '1:2:0:1', 'sampled': true, 'rpcServer': false, 'metrics': ['spansStarted', 'spansSampled', 'tracesStartedSampled']},
-                { 'context': '1:2:0:0', 'sampled': false, 'rpcServer': true, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesJoinedNotSampled']},
-                { 'context': '1:2:0:0', 'sampled': false, 'rpcServer': false, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesStartedNotSampled']},
+                { 'context': '1:2:0:1', 'sampled': true, 'rpcServer': true, 'metrics': ['spansStarted', 'spansSampled', 'tracesStartedSampled']},
+                { 'context': '1:2:100:1', 'sampled': true, 'rpcServer': false, 'metrics': ['spansStarted', 'spansSampled', 'tracesJoinedSampled']},
+                { 'context': '1:2:0:0', 'sampled': false, 'rpcServer': true, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesStartedNotSampled']},
+                { 'context': '1:2:100:0', 'sampled': false, 'rpcServer': false, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesJoinedNotSampled']},
             ];
 
             _.each(params, (o) => {
@@ -277,7 +277,7 @@ describe('tracer should', () => {
                 );
 
                 _.each(o.metrics, (metricName) => {
-                    assert.isOk(TestUtils.counterEquals(metrics[metricName], 1));
+                    assert.isOk(LocalBackend.counterEquals(metrics[metricName], 1));
                 });
             });
         });
@@ -290,7 +290,7 @@ describe('tracer should', () => {
             let span = tracer.startSpan('bender');
             tracer._report(span);
 
-            assert.isOk(TestUtils.counterEquals(metrics.spansFinished, 1));
+            assert.isOk(LocalBackend.counterEquals(metrics.spansFinished, 1));
         });
     });
 });

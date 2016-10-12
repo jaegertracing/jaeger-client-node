@@ -19,6 +19,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import _ from 'lodash';
+import LocalCounter from './counter';
+
 export default class LocalBackend {
     _counterValues: any;
     _counterTags: any;
@@ -29,6 +32,12 @@ export default class LocalBackend {
 
     constructor() {
         this.reset();
+    }
+
+    static counterEquals(counter: LocalCounter, value: number): boolean {
+        let valueEqual = counter._backend._counterValues[counter._name] === value;
+        let tagsEqual =  _.isEqual(counter._backend._counterTags[counter._name], counter._tags);
+        return valueEqual && tagsEqual;
     }
 
     reset() {

@@ -27,7 +27,7 @@ import Tracer from '../src/tracer.js';
 import UDPSender from '../src/reporters/udp_sender.js';
 import MetricsContainer from '../src/metrics/metrics.js';
 import LocalMetricFactory from '../src/metrics/local/metric_factory.js';
-import TestUtils from '../src/test_util';
+import LocalBackend from '../src/metrics/local/backend.js';
 
 describe('Remote Reporter should', () => {
     let tracer;
@@ -65,7 +65,7 @@ describe('Remote Reporter should', () => {
 
         reporter.flush()
         assert.equal(sender._batch.spans.length, 0);
-        assert.isOk(TestUtils.counterEquals(metrics.reporterSuccess, 1));
+        assert.isOk(LocalBackend.counterEquals(metrics.reporterSuccess, 1));
     });
 
     it ('report and flush span that is causes an error to be logged', () => {
@@ -78,7 +78,7 @@ describe('Remote Reporter should', () => {
         assert.equal(logger._errorMsgs[0], 'Failed to append spans in reporter.');
 
         // metrics
-        assert.isOk(TestUtils.counterEquals(metrics.reporterDropped, 1));
+        assert.isOk(LocalBackend.counterEquals(metrics.reporterDropped, 1));
     });
 
     it ('failed to flush spans with reporter', () => {
@@ -96,6 +96,6 @@ describe('Remote Reporter should', () => {
         reporter.flush();
 
         assert.equal(logger._errorMsgs[0], 'Failed to flush spans in reporter.');
-        assert.isOk(TestUtils.counterEquals(metrics.reporterFailure, 1));
+        assert.isOk(LocalBackend.counterEquals(metrics.reporterFailure, 1));
     });
 });

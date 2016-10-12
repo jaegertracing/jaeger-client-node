@@ -53,7 +53,7 @@ export default class RemoteReporter {
         let response: SenderResponse = this._sender.append(ThriftUtils.spanToThrift(span));
         if (response.err) {
             this._logger.error('Failed to append spans in reporter.');
-            this._metrics.reporterDropped.increment(1);
+            this._metrics.reporterDropped.increment(response.numSpans);
         }
     }
 

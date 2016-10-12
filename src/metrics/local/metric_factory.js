@@ -19,10 +19,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import LocalCounter from './local_counter';
-import LocalGauge from './local_gauge';
-import LocalTimer from './local_timer';
-import LocalBackend from './local_backend';
+import LocalCounter from './counter';
+import LocalGauge from './gauge';
+import LocalTimer from './timer';
+import LocalBackend from './backend';
 
 export default class LocalFactory {
     _backend: any;

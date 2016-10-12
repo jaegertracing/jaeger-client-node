@@ -23,8 +23,7 @@ import _ from 'lodash';
 import bufferEqual from 'buffer-equal';
 import opentracing from 'opentracing';
 import Span from './span';
-import Utils from './util';
-import LocalCounter from './metrics/local/local_counter';
+import Utils from './util'; import LocalCounter from './metrics/local/counter';
 
 export default class TestUtils {
     static traceIdEqual(span: Span, traceId: number): boolean {
@@ -156,11 +155,5 @@ export default class TestUtils {
         }
 
         return true;
-    }
-
-    static counterEquals(counter: LocalCounter, value: number): boolean {
-        let valueEqual = counter._backend._counterValues[counter._name] === value;
-        let tagsEqual =  _.isEqual(counter._backend._counterTags[counter._name], counter._tags);
-        return valueEqual && tagsEqual;
     }
 }
