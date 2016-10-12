@@ -27,6 +27,9 @@ export default class SpanContext {
     _traceId: any;
     _spanId: any;
     _parentId: any;
+    _traceIdStr: ?string;
+    _spanIdStr: ?string;
+    _parentIdStr: ?string;
     _flags: number;
     _baggage: any;
     _debugId: ?string;
@@ -34,27 +37,63 @@ export default class SpanContext {
     constructor(traceId: any,
                 spanId: any,
                 parentId: any,
+                traceIdStr: ?string,
+                spanIdStr: ?string,
+                parentIdStr: ?string,
                 flags: number,
                 baggage: any = {},
                 debugId: ?string = '') {
         this._traceId = traceId;
         this._spanId = spanId;
         this._parentId = parentId;
+        this._traceIdStr = traceIdStr;
+        this._spanIdStr = spanIdStr;
+        this._parentIdStr = parentIdStr;
         this._flags = flags;
         this._baggage = baggage;
         this._debugId = debugId;
     }
 
     get traceId(): any {
+        if (this._traceId == null && this._traceIdStr != null) {
+            this._traceId = Utils.encodeInt64(this._traceIdStr);
+        }
         return this._traceId;
     }
 
     get spanId(): any {
+        if (this._spanId == null && this._spanIdStr != null) {
+            this._spanId = Utils.encodeInt64(this._spanIdStr);
+        }
         return this._spanId;
     }
 
     get parentId(): any {
+        if (this._parentId == null && this._parentIdStr != null) {
+            this._parentId = Utils.encodeInt64(this._parentIdStr);
+        }
         return this._parentId;
+    }
+
+    get traceIdStr(): ?string {
+        if (this._traceIdStr == null && this._traceId != null) {
+            this._traceIdStr = Utils.removeLeadingZeros(this._traceId.toString('hex'));
+        }
+        return this._traceIdStr;
+    }
+
+    get spanIdStr(): ?string {
+        if (this._spanIdStr == null && this._spanId != null) {
+            this._spanIdStr = Utils.removeLeadingZeros(this._spanId.toString('hex'));
+        }
+        return this._spanIdStr;
+    }
+
+    get parentIdStr(): ?string {
+        if (this._parentIdStr == null && this._parentId != null) {
+            this._parentIdStr = Utils.removeLeadingZeros(this._parentId.toString('hex'));
+        }
+        return this._parentIdStr;
     }
 
     get flags(): number {
@@ -71,14 +110,17 @@ export default class SpanContext {
 
     set traceId(traceId: Buffer): void {
         this._traceId = traceId;
+        this._traceIdStr = null;
     }
 
     set spanId(spanId: Buffer): void {
         this._spanId = spanId;
+        this._spanIdStr = null;
     }
 
     set parentId(parentId: Buffer): void {
         this._parentId = parentId;
+        this._parentIdStr = null;
     }
 
     set flags(flags: number): void {
@@ -111,26 +153,32 @@ export default class SpanContext {
         return (this.flags & constants.DEBUG_MASK) === constants.DEBUG_MASK;
     }
 
+    withBaggageItem(key: string, value: string): SpanContext {
+        let newBaggage = Utils.clone(this._baggage);
+        newBaggage[key] = value;
+        return new SpanContext(
+            this._traceId,
+            this._spanId,
+            this._parentId,
+            this._traceIdStr,
+            this._spanIdStr,
+            this._parentIdStr,
+            this._flags,
+            newBaggage,
+            this._debugId);
+    }
+
     /**
      * @return {string} - returns a string version of this span context.
      **/
     toString(): string {
-        var parentId = this._parentId ? this._parentId.toString('hex') : '0';
-
         return [
-            Utils.removeLeadingZeros(this._traceId.toString('hex')),
-            Utils.removeLeadingZeros(this._spanId.toString('hex')),
-            Utils.removeLeadingZeros(parentId),
+            this.traceIdStr,
+            this.spanIdStr,
+            this.parentIdStr || "0",
             this._flags.toString(16)
         ].join(':');
     }
-
-    withBaggageItem(key: string, value: string): SpanContext {
-        let newBaggage = Utils.clone(this._baggage);
-        newBaggage[key] = value;
-        return new SpanContext(this._traceId, this._spanId, this._parentId, this._flags, newBaggage, this._debugId);
-    }
-
 
     /**
      * @param {string} serializedString - a serialized span context.
@@ -142,8 +190,14 @@ export default class SpanContext {
             return null;
         }
 
-        let traceId = parseInt(headers[0], 16);
-        let NaNDetected = (isNaN(traceId, 16) || traceId === 0) ||
+        // Note: Number type in JS cannot represent the full range of 64bit unsigned ints,
+        // so using parseInt() on strings representing 64bit hex numbers only returns
+        // an approximation of the actual value. Fortunately, we do not depend on parsing
+        // the IDs with parseInt(), we are only using it to validate that the string is
+        // a valid hex number (which is faster than doing it manually).  We cannot use
+        // Int64(numberValue).toBuffer() because it throws exceptions on bad strings.
+        let approxTraceId = parseInt(headers[0], 16);
+        let NaNDetected = (isNaN(approxTraceId, 16) || approxTraceId === 0) ||
                           isNaN(parseInt(headers[1], 16)) ||
                           isNaN(parseInt(headers[2], 16)) ||
                           isNaN(parseInt(headers[3], 16));
@@ -154,14 +208,52 @@ export default class SpanContext {
 
         let parentId = null;
         if (headers[2] !== '0') {
-            parentId = Utils.encodeInt64(headers[2]);
+            parentId = headers[2];
         }
 
-        return new SpanContext(
-            Utils.encodeInt64(headers[0]),
-            Utils.encodeInt64(headers[1]),
+        return SpanContext.withStringIds(
+            headers[0],
+            headers[1],
             parentId,
             parseInt(headers[3], 16)
+        );
+    }
+
+    static withBinaryIds(traceId: any,
+                         spanId: any,
+                         parentId: any,
+                         flags: number,
+                         baggage: any = {},
+                         debugId: ?string = '') : SpanContext {
+        return new SpanContext(
+            traceId,
+            spanId,
+            parentId,
+            null, // traceIdStr: string,
+            null, // spanIdStr: string,
+            null, // parentIdStr: string,
+            flags,
+            baggage,
+            debugId
+        );
+    }
+
+    static withStringIds(traceIdStr: any,
+                         spanIdStr: any,
+                         parentIdStr: any,
+                         flags: number,
+                         baggage: any = {},
+                         debugId: ?string = '') : SpanContext {
+        return new SpanContext(
+            null, // traceId,
+            null, // spanId,
+            null, // parentId,
+            traceIdStr,
+            spanIdStr,
+            parentIdStr,
+            flags,
+            baggage,
+            debugId
         );
     }
 }

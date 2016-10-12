@@ -22,14 +22,14 @@ var _ = require('lodash');
 var Benchmark = require('benchmark');
 var benchmarks = require('beautify-benchmark');
 var ConstSampler = require('../dist/src/samplers/const_sampler.js').default;
-var InMemoryReporter = require('../dist/src/reporters/in_memory_reporter.js').default;
+var NoopReporter = require('../dist/src/reporters/noop_reporter.js').default;
 var SpanContext = require('../dist/src/span_context.js').default;
 var Tracer = require('../dist/src/tracer.js').default;
 
 function benchmarkSpanContext() {
     console.log('Beginning Span Context Benchmark...');
 
-    var tracer = new Tracer('const-tracer', new InMemoryReporter(), new ConstSampler(true));
+    var tracer = new Tracer('const-tracer', new NoopReporter(), new ConstSampler(true));
     var span = tracer.startSpan('op-name');
     var context = span.context();
 

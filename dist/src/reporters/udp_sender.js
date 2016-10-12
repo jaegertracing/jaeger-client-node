@@ -73,16 +73,12 @@ var UDPSender = function () {
     _createClass(UDPSender, [{
         key: '_calcBatchSize',
         value: function _calcBatchSize(batch) {
-            return this._thrift.Agent.emitBatch.argumentsMessageRW.byteLength(
-                this._convertBatchToThriftMessage(this._batch)
-            ).length;
+            return this._thrift.Agent.emitBatch.argumentsMessageRW.byteLength(this._convertBatchToThriftMessage(this._batch)).length;
         }
     }, {
         key: '_calcSpanSize',
         value: function _calcSpanSize(span) {
-            return this._thrift.Span.rw.byteLength(
-                new this._thrift.Span(span)
-            ).length;
+            return this._thrift.Span.rw.byteLength(new this._thrift.Span(span)).length;
         }
     }, {
         key: 'setProcess',
@@ -95,6 +91,17 @@ var UDPSender = function () {
                 'process': this._process,
                 'spans': []
             };
+
+            var tagMessages = [];
+            for (var j = 0; j < this._batch.process.tags.length; j++) {
+                var tag = this._batch.process.tags[j];
+                tagMessages.push(new this._thrift.Tag(tag));
+            }
+
+            this._thriftProcessMessage = new this._thrift.Process({
+                serviceName: this._batch.process.serviceName,
+                tags: tagMessages
+            });
             this._emitSpanBatchOverhead = this._calcBatchSize(this._batch);
             this._maxSpanBytes = this._maxPacketSize - this._emitSpanBatchOverhead;
         }
@@ -125,17 +132,18 @@ var UDPSender = function () {
         value: function flush(testCallback) {
             var numSpans = this._batch.spans.length;
             if (numSpans == 0) {
-                return { err: false, numSpans: 1 };
+                return { err: false, numSpans: 0 };
             }
 
-            var buffer = new Buffer(this._calcBatchSize(this._batch));
-            var bufferResult = this._thrift.Agent.emitBatch.argumentsMessageRW.writeInto(this._batch, buffer, 0);
+            var bufferLen = this._byteBufferSize + this._emitSpanBatchOverhead;
+            var thriftBuffer = new Buffer(bufferLen);
+            var bufferResult = this._thrift.Agent.emitBatch.argumentsMessageRW.writeInto(this._convertBatchToThriftMessage(this._batch), thriftBuffer, 0);
+
             if (bufferResult.err) {
                 console.log('err', bufferResult.err);
                 return { err: true, numSpans: numSpans };
             }
 
-            var thriftBuffer = bufferResult.value;
             this._client.send(thriftBuffer, 0, thriftBuffer.length, PORT, HOST);
             this._reset();
 
@@ -151,23 +159,14 @@ var UDPSender = function () {
             var spanMessages = [];
             for (var i = 0; i < this._batch.spans.length; i++) {
                 var span = this._batch.spans[i];
-                spanMessages.push(this._thrift.Span(span));
-            }
-
-            var tagMessages = [];
-            for (var j = 0; j < this._batch.process.tags; j++) {
-                var tag = this._batch.process.tags[j];
-                tagMessages.push(tag);
+                spanMessages.push(new this._thrift.Span(span));
             }
 
             return new this._thrift.Agent.emitBatch.ArgumentsMessage({
                 version: 1,
                 id: 0,
                 body: { batch: new this._thrift.Batch({
-                        process: new this._thrift.Process({
-                            serviceName: this._batch.process.serviceName,
-                            tags: tagMessages
-                        }),
+                        process: this._thriftProcessMessage,
                         spans: spanMessages
                     }) }
             });

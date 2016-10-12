@@ -38,7 +38,7 @@ describe ('SpanContext should', () => {
         let parentId = Utils.encodeInt64(3);
         let flags = 1;
 
-        let context = new SpanContext(traceId, spanId, parentId, flags);
+        let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
 
         assert.isOk(bufferEqual(traceId, context.traceId));
         assert.isOk(bufferEqual(spanId, context.spanId));
@@ -47,7 +47,7 @@ describe ('SpanContext should', () => {
     });
 
     it ('return IsSampled properly', () => {
-        let context = new SpanContext(
+        let context = SpanContext.withBinaryIds(
                 Utils.encodeInt64(1),
                 Utils.encodeInt64(2),
                 Utils.encodeInt64(3),
@@ -62,19 +62,22 @@ describe ('SpanContext should', () => {
     });
 
     it ('format strings properly with toString', () => {
-        let ctx1 = new SpanContext(Utils.encodeInt64(0x100), Utils.encodeInt64(0x7f), null, 1).toString();
-        assert.equal(ctx1, '100:7f:0:1');
+        let ctx1 = SpanContext.withBinaryIds(Utils.encodeInt64(0x100), Utils.encodeInt64(0x7f), null, 1);
+        assert.equal(ctx1.toString(), '100:7f:0:1');
 
-        let ctx2 = new SpanContext(Utils.encodeInt64(255 << 4), Utils.encodeInt64(127), Utils.encodeInt64(256), 0).toString();
-        assert.equal(ctx2, 'ff0:7f:100:0');
+        let ctx2 = SpanContext.withBinaryIds(Utils.encodeInt64(255 << 4), Utils.encodeInt64(127), Utils.encodeInt64(256), 0);
+        assert.equal(ctx2.toString(), 'ff0:7f:100:0');
 
         // test large numbers
-        let ctx3 = new SpanContext(
+        let ctx3 = SpanContext.withBinaryIds(
             LARGEST_64_BUFFER,
             LARGEST_64_BUFFER,
             LARGEST_64_BUFFER,
-            0).toString();
-        assert.equal(ctx3, 'ffffffffffffffff:ffffffffffffffff:ffffffffffffffff:0');
+            0);
+        assert.equal(ctx3.toString(), 'ffffffffffffffff:ffffffffffffffff:ffffffffffffffff:0');
+        assert.equal('ffffffffffffffff', ctx3.traceIdStr);
+        assert.equal('ffffffffffffffff', ctx3.spanIdStr);
+        assert.equal('ffffffffffffffff', ctx3.parentIdStr);
     });
 
     it ('turn properly formatted strings into correct span contexts', () => {
@@ -87,6 +90,8 @@ describe ('SpanContext should', () => {
 
         // test large numbers
         context = SpanContext.fromString('ffffffffffffffff:ffffffffffffffff:5:1');
+        assert.equal('ffffffffffffffff', context.traceIdStr);
+        assert.equal('ffffffffffffffff', context.spanIdStr);
         assert.isOk(bufferEqual(LARGEST_64_BUFFER, context.spanId));
         assert.isOk(bufferEqual(Utils.encodeInt64(0x5), context.parentId));
         assert.equal(context.flags, 0x1);

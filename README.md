@@ -10,8 +10,10 @@ with Zipkin-compatible data model.
 
 ## Developing
 
- 1. `git submodule init update`
- 2. `npm test`
+ 1. `git submodule update --init`
+ 2. `npm install`
+ 3. `npm test`
+ 4. `make build-node`
 
   [ci-img]: https://travis-ci.org/uber/jaeger-client-node.svg?branch=master
   [cov-img]: https://coveralls.io/repos/github/uber/jaeger-client-node/badge.svg?branch=master
