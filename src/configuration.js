@@ -80,7 +80,7 @@ export default class Configuration {
 
         let sampler;
         if (type === 'probabilistic') {
-        sampler = new ProbabilisticSampler(param);
+            sampler = new ProbabilisticSampler(param);
         }
 
         if (type === 'ratelimiting') {
@@ -100,7 +100,31 @@ export default class Configuration {
         return sampler;
     }
 
-    static initTracer(config, options) {
+    static _getReporter(config, options) {
+        let sender;
+        let reporterConfig = {};
+        let reporters = [];
+        let hostPort = '';
+        if (config.reporter) {
+            if (config.reporter.logSpans) {
+                reporters.push(new LoggingReporter(options.logger));
+            }
+
+            if (config.reporter.flushIntervalMs) {
+                reporterConfig['bufferFlushInterval'] = config.reporter.flushIntervalMs;
+            }
+
+            if (config.reporter.agentHost && config.reporter.agentPort) {
+                hostPort = `${config.reporter.agentHost}:${config.reporter.agentPort}`;
+            }
+        }
+
+        sender = new UDPSender(hostPort);
+        reporters.push(new RemoteReporter(sender, reporterConfig));
+        return new CompositeReporter(reporters);
+    }
+
+    static initTracer(config, options = {}) {
         let v = new Validator();
         v.addSchema(jaegerSchema);
         v.validate(config, configSchema, {
@@ -116,26 +140,7 @@ export default class Configuration {
             return new opentracing.Tracer();
         } else {
             if (!options.reporter) {
-                let sender;
-                let reporterconfig = {};
-                let hostPort = '';
-                if (config.reporter) {
-                    if (config.reporter.logSpans) {
-                        reporters.push(new LoggingReporter(options.logger));
-                    }
-
-                    if (config.reporter.flushIntervalMs) {
-                        reporterconfig['bufferFlushInterval'] = config.reporter.flushIntervalMs;
-                    }
-
-                    if (config.reporter.agentHost && config.reporter.agentPort) {
-                        hostPort = `${config.reporter.agentHost}:${config.reporter.agentPort}`;
-                    }
-                }
-
-                sender = new UDPSender(hostPort);
-                reporters.push(new RemoteReporter(sender, reporterconfig));
-                reporter = new CompositeReporter(reporters);
+                reporter = Configuration._getReporter(config, options);
 
                 if (config.sampler) {
                     sampler = Configuration._getSampler(config);
