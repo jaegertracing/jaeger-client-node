@@ -20,5 +20,5 @@
 // THE SOFTWARE.
 
 export default class NoopTimer {
-    timing(timestamp: number): void {}
+    record(value: number): void {}
 }

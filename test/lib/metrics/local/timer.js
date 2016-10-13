@@ -30,7 +30,7 @@ export default class LocalTimer {
         this._backend = backend;
     }
 
-    timing(timestamp: number): void {
-        this._backend.timing(this._name, timestamp, this._tags);
+    record(value: number): void {
+        this._backend.record(this._name, value, this._tags);
     }
 }

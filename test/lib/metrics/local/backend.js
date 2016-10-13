@@ -54,8 +54,8 @@ export default class LocalBackend {
         this._counterTags[name] = tags;
     }
 
-    timing(name: string, timestamp: number, tags: any): void {
-        this._timerValues[name] = timestamp;
+    record(name: string, value: number, tags: any): void {
+        this._timerValues[name] = value;
         this._timerTags[name] = tags;
     }
 

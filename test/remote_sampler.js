@@ -22,9 +22,9 @@ import {assert} from 'chai';
 import MockLogger from './lib/mock_logger';
 import RemoteSampler from '../src/samplers/remote_sampler';
 import SamplingServer from './lib/sampler_server';
-import MetricsContainer from '../src/metrics/metrics.js';
-import LocalMetricFactory from '../src/metrics/local/metric_factory.js';
-import LocalBackend from '../src/metrics/local/backend.js';
+import Metrics from '../src/metrics/metrics.js';
+import LocalMetricFactory from './lib/metrics/local/metric_factory.js';
+import LocalBackend from './lib/metrics/local/backend.js';
 
 describe('remote sampler should', () => {
     let server: SamplingServer;
@@ -37,7 +37,7 @@ describe('remote sampler should', () => {
     });
 
     it('set probabilistic sampler', (done) => {
-        let metrics = new MetricsContainer(new LocalMetricFactory());
+        let metrics = new Metrics(new LocalMetricFactory());
         let sampler = new RemoteSampler('probabilistic-service', {
             stopPolling: true,
             metrics: metrics,
@@ -57,7 +57,7 @@ describe('remote sampler should', () => {
 
     it ('log metric on failing sampling strategy', (done) => {
         let logger = new MockLogger();
-        let metrics = new MetricsContainer(new LocalMetricFactory());
+        let metrics = new Metrics(new LocalMetricFactory());
         let sampler = new RemoteSampler('error-service', {
             stopPolling: true,
             metrics: metrics,
@@ -89,7 +89,7 @@ describe('remote sampler should', () => {
 
     it('throw error on bad sampling strategy', (done) => {
         let logger = new MockLogger();
-        let metrics = new MetricsContainer(new LocalMetricFactory());
+        let metrics = new Metrics(new LocalMetricFactory());
         let sampler = new RemoteSampler('error-service', {
             stopPolling: true,
             metrics: metrics,

@@ -24,13 +24,13 @@ import ConstSampler from '../src/samplers/const_sampler.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import opentracing from 'opentracing';
 import Tracer from '../src/tracer.js';
-import MetricsContainer from '../src/metrics/metrics.js';
-import LocalMetricFactory from '../src/metrics/local/metric_factory.js';
-import LocalBackend from '../src/metrics/local/backend.js';
+import Metrics from '../src/metrics/metrics.js';
+import LocalMetricFactory from './lib/metrics/local/metric_factory.js';
+import LocalBackend from './lib/metrics/local/backend.js';
 
 describe('Text Map Codec should', () => {
     it ('report metric when failing to decode tracer state', () => {
-        let metrics = new MetricsContainer(new LocalMetricFactory());
+        let metrics = new Metrics(new LocalMetricFactory());
         let tracer = new Tracer(
             'test-tracer',
             new InMemoryReporter(),

@@ -86,6 +86,7 @@ export default class Tracer {
             startTime: number,
             internalTags: any = {},
             tags: any = {},
+            hadParent: boolean,
             rpcServer: boolean): Span {
 
         let firstInProcess = rpcServer || (spanContext.parentId == null);
@@ -104,17 +105,17 @@ export default class Tracer {
         this._metrics.spansStarted.increment(1);
         if (span.context().isSampled()) {
             this._metrics.spansSampled.increment(1);
-            if (!firstInProcess) {
-                this._metrics.tracesJoinedSampled.increment(1);
-            } else if (!span.context().parentId) {
+            if (!hadParent) {
                 this._metrics.tracesStartedSampled.increment(1);
+            } else if (rpcServer) {
+                this._metrics.tracesJoinedSampled.increment(1);
             }
         } else {
             this._metrics.spansNotSampled.increment(1);
-            if (!firstInProcess) {
-                this._metrics.tracesJoinedNotSampled.increment(1);
-            } else if (!span.context().parentId) {
+            if (!hadParent) {
                 this._metrics.tracesStartedNotSampled.increment(1);
+            } else if (rpcServer) {
+                this._metrics.tracesJoinedNotSampled.increment(1);
             }
         }
 
@@ -237,6 +238,7 @@ export default class Tracer {
             startTime,
             samplerTags,
             tags,
+            !!parent,
             rpcServer
         );
     }

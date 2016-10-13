@@ -25,9 +25,9 @@ import MockLogger from './lib/mock_logger.js';
 import RemoteReporter from '../src/reporters/remote_reporter.js';
 import Tracer from '../src/tracer.js';
 import UDPSender from '../src/reporters/udp_sender.js';
-import MetricsContainer from '../src/metrics/metrics.js';
-import LocalMetricFactory from '../src/metrics/local/metric_factory.js';
-import LocalBackend from '../src/metrics/local/backend.js';
+import Metrics from '../src/metrics/metrics.js';
+import LocalMetricFactory from './lib/metrics/local/metric_factory.js';
+import LocalBackend from './lib/metrics/local/backend.js';
 
 describe('Remote Reporter should', () => {
     let tracer;
@@ -37,7 +37,7 @@ describe('Remote Reporter should', () => {
     let metrics;
 
     beforeEach(() => {
-        metrics = new MetricsContainer(new LocalMetricFactory());
+        metrics = new Metrics(new LocalMetricFactory());
         sender = new UDPSender();
         logger = new MockLogger();
         reporter = new RemoteReporter(sender, {

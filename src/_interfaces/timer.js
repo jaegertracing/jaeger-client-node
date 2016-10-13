@@ -19,6 +19,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+// Timer tracks how long an envent has occurred.
 declare interface Timer {
-    timing(timestamp: number): void;
+    // Records the time passed in.
+    record(value: number): void;
 }

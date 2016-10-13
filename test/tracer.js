@@ -29,9 +29,9 @@ import {Tags as opentracing_tags} from 'opentracing';
 import SpanContext from '../src/span_context.js';
 import Tracer from '../src/tracer.js';
 import Utils from '../src/util.js';
-import MetricsContainer from '../src/metrics/metrics.js';
-import LocalMetricFactory from '../src/metrics/local/metric_factory.js';
-import LocalBackend from '../src/metrics/local/backend.js';
+import Metrics from '../src/metrics/metrics.js';
+import LocalMetricFactory from './lib/metrics/local/metric_factory.js';
+import LocalBackend from './lib/metrics/local/backend.js';
 
 describe('tracer should', () => {
     let tracer;
@@ -254,26 +254,28 @@ describe('tracer should', () => {
     });
 
     describe('Metrics', () => {
-        it ('startSpanInternal', () => {
+        it ('startInternalSpan', () => {
             let params = [
-                { 'context': '1:2:0:1', 'sampled': true, 'rpcServer': true, 'metrics': ['spansStarted', 'spansSampled', 'tracesStartedSampled']},
-                { 'context': '1:2:100:1', 'sampled': true, 'rpcServer': false, 'metrics': ['spansStarted', 'spansSampled', 'tracesJoinedSampled']},
-                { 'context': '1:2:0:0', 'sampled': false, 'rpcServer': true, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesStartedNotSampled']},
-                { 'context': '1:2:100:0', 'sampled': false, 'rpcServer': false, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesJoinedNotSampled']},
+                { 'hasParent': false, 'context': '1:2:0:1', 'sampled': true, 'metrics': ['spansStarted', 'spansSampled', 'tracesStartedSampled']},
+                { 'hasParent': true, 'context': '1:2:100:1', 'sampled': true, 'metrics': ['spansStarted', 'spansSampled', 'tracesJoinedSampled']},
+                { 'hasParent': false, 'context': '1:2:0:0', 'sampled': false, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesStartedNotSampled']},
+                { 'hasParent': true, 'context': '1:2:100:0', 'sampled': false, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesJoinedNotSampled']},
             ];
 
             _.each(params, (o) => {
-                let metrics = new MetricsContainer(new LocalMetricFactory());
+                let metrics = new Metrics(new LocalMetricFactory());
                 tracer = new Tracer('fry', new InMemoryReporter(), new ConstSampler(o.sampled), {
                     metrics: metrics
                 });
+                let rpcServer = true;
                 tracer._startInternalSpan(
                     SpanContext.fromString(o.context),
                     'bender',
                     Utils.getTimestampMicros(),
                     undefined,
                     undefined,
-                    o.rpcServer
+                    o.hasParent,
+                    rpcServer
                 );
 
                 _.each(o.metrics, (metricName) => {
@@ -283,7 +285,7 @@ describe('tracer should', () => {
         });
 
         it ('emits counter when report called', () => {
-            let metrics = new MetricsContainer(new LocalMetricFactory());
+            let metrics = new Metrics(new LocalMetricFactory());
             tracer = new Tracer('fry', new InMemoryReporter(), new ConstSampler(true), {
                 metrics: metrics
             });
