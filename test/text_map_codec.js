@@ -42,16 +42,20 @@ describe('Text Map Codec should', () => {
         let headers = {
             'uber-trace-id': 'bad-value'
         };
-        tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
+        let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
 
+        assert.isOk(context);
         assert.isOk(LocalBackend.counterEquals(metrics.decodingErrors, 1));
     });
 
-    it('set debug flag when debug-id-header is received', () => {
+    it ('set debug flag when debug-id-header is received', () => {
+        let metrics = new Metrics(new LocalMetricFactory());
         let tracer = new Tracer(
             'test-tracer',
             new InMemoryReporter(),
-            new ConstSampler(false)
+            new ConstSampler(false), {
+                metrics: metrics
+            }
         );
         let headers = {};
         headers[constants.JAEGER_DEBUG_HEADER] = encodeURIComponent('value1');
@@ -76,5 +80,8 @@ describe('Text Map Codec should', () => {
         }
 
         assert.isOk(tagFound);
+
+        // metrics
+        assert.isOk(LocalBackend.counterEquals(metrics.tracesStartedSampled, 1));
     });
 });

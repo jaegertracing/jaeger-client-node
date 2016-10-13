@@ -34,10 +34,8 @@ export default class TextMapCodec {
     _baggagePrefix: string;
     _metrics: any;
 
-    constructor(urlEncoding: boolean,
-            options: any = {}
-    ) {
-        this._urlEncoding = urlEncoding;
+    constructor(options: any = {}) {
+        this._urlEncoding = !!options.urlEncoding;
         this._contextKey = options.contextKey || TRACER_STATE_HEADER_NAME;
         this._contextKey = this._contextKey.toLowerCase();
         this._baggagePrefix = options.baggagePrefix || TRACER_BAGGAGE_HEADER_PREFIX;

@@ -61,11 +61,17 @@ export default class Tracer {
         this._injectors = {};
         this._extractors = {};
 
-        let textCodec = new TextMapCodec(false, { metrics: this._metrics });
+        let textCodec = new TextMapCodec({
+            urlEncoding: false,
+            metrics: this._metrics
+        });
         this.registerInjector(opentracing.FORMAT_TEXT_MAP, textCodec);
         this.registerExtractor(opentracing.FORMAT_TEXT_MAP, textCodec);
 
-        let httpCodec = new TextMapCodec(true, { metrics: this._metrics });
+        let httpCodec = new TextMapCodec({
+            urlEncoding: true,
+            metrics: this._metrics
+        });
         this.registerInjector(opentracing.FORMAT_HTTP_HEADERS, httpCodec);
         this.registerExtractor(opentracing.FORMAT_HTTP_HEADERS, httpCodec);
 
@@ -86,10 +92,12 @@ export default class Tracer {
             startTime: number,
             internalTags: any = {},
             tags: any = {},
-            hadParent: boolean,
+            parentContext: ?SpanContext,
             rpcServer: boolean): Span {
 
-        let firstInProcess = rpcServer || (spanContext.parentId == null);
+
+        let hadParent = parentContext && !parentContext.isDebugIDContainerOnly();
+        let firstInProcess: boolean = rpcServer || (spanContext.parentId == null);
         let span = new Span(
             this,
             operationName,
@@ -218,14 +226,8 @@ export default class Tracer {
             ctx.flags = flags;
         } else {
             ctx.traceId = parent.traceId;
-            if (rpcServer) {
-                // Support Zipkin's one-span-per-RPC model
-                ctx.spanId = parent.spanId;
-                ctx.parentId = parent.parentId;
-            } else {
-                ctx.spanId = Utils.getRandom64();
-                ctx.parentId = parent.spanId;
-            }
+            ctx.spanId = Utils.getRandom64();
+            ctx.parentId = parent.spanId;
             ctx.flags = parent.flags;
 
             // reuse parent's baggage as we'll never change it
@@ -238,7 +240,7 @@ export default class Tracer {
             startTime,
             samplerTags,
             tags,
-            !!parent,
+            parent,
             rpcServer
         );
     }

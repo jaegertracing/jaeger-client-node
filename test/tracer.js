@@ -63,7 +63,7 @@ describe('tracer should', () => {
             'keyOne': 'leela',
             'keyTwo': 'bender'
         };
-        let span = tracer._startInternalSpan(context, 'op-name', start, internalTags, tags, rpcServer);
+        let span = tracer._startInternalSpan(context, 'op-name', start, internalTags, tags, null, rpcServer);
 
         assert.isOk(bufferEqual(span.context().traceId, traceId));
         assert.isOk(bufferEqual(span.context().spanId, spanId));
@@ -127,44 +127,6 @@ describe('tracer should', () => {
             assert.isOk(bufferEqual(span.context().traceId, traceId));
             assert.isOk(bufferEqual(span.context().parentId, spanId));
             assert.equal(span.context().flags, constants.SAMPLED_MASK);
-            assert.equal(span._startTime, startTime);
-        }
-
-        assertByStartSpanParameters(childOfParams);
-        assertByStartSpanParameters(referenceParams);
-    });
-
-    it ('start a child span represented as same span (Zipkins one-span-per-rpc)', () => {
-        let traceId = Utils.encodeInt64(1);
-        let spanId = Utils.encodeInt64(2);
-        let parentId = Utils.encodeInt64(3);
-        let flags = 1;
-        let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
-        let startTime = Utils.getTimestampMicros();
-
-        let tags = {};
-        tags[`${opentracing_tags.SPAN_KIND}`] = opentracing_tags.SPAN_KIND_RPC_SERVER;
-
-        let childOfParams = {
-            operationName: 'test-name',
-            childOf: context,
-            startTime: startTime,
-            tags
-        }
-
-        let referenceParams = {
-            operationName: 'test-name',
-            references: [new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, context)],
-            startTime: startTime,
-            tags
-        }
-
-        let assertByStartSpanParameters = (params) => {
-            let span = tracer.startSpan('test-span', params);
-
-            assert.isOk(bufferEqual(span.context().traceId, traceId));
-            assert.isOk(bufferEqual(span.context().parentId, parentId));
-            assert.isOk(span.context().isSampled());
             assert.equal(span._startTime, startTime);
         }
 
@@ -254,12 +216,12 @@ describe('tracer should', () => {
     });
 
     describe('Metrics', () => {
-        it ('startInternalSpan', () => {
+        it ('startSpan', () => {
             let params = [
-                { 'hasParent': false, 'context': '1:2:0:1', 'sampled': true, 'metrics': ['spansStarted', 'spansSampled', 'tracesStartedSampled']},
-                { 'hasParent': true, 'context': '1:2:100:1', 'sampled': true, 'metrics': ['spansStarted', 'spansSampled', 'tracesJoinedSampled']},
-                { 'hasParent': false, 'context': '1:2:0:0', 'sampled': false, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesStartedNotSampled']},
-                { 'hasParent': true, 'context': '1:2:100:0', 'sampled': false, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesJoinedNotSampled']},
+                { 'rpcServer': false, 'context': null, 'sampled': true, 'metrics': ['spansStarted', 'spansSampled', 'tracesStartedSampled']},
+                { 'rpcServer': true, 'context': '1:2:100:1', 'sampled': true, 'metrics': ['spansStarted', 'spansSampled', 'tracesJoinedSampled']},
+                { 'rpcServer': false, 'context': null, 'sampled': false, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesStartedNotSampled']},
+                { 'rpcServer': true, 'context': '1:2:100:0', 'sampled': false, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesJoinedNotSampled']},
             ];
 
             _.each(params, (o) => {
@@ -267,16 +229,21 @@ describe('tracer should', () => {
                 tracer = new Tracer('fry', new InMemoryReporter(), new ConstSampler(o.sampled), {
                     metrics: metrics
                 });
-                let rpcServer = true;
-                tracer._startInternalSpan(
-                    SpanContext.fromString(o.context),
-                    'bender',
-                    Utils.getTimestampMicros(),
-                    undefined,
-                    undefined,
-                    o.hasParent,
-                    rpcServer
-                );
+
+                let context = null;
+                if (o.context) {
+                    context = SpanContext.fromString(o.context);
+                }
+
+                let tags = {};
+                if (o.rpcServer) {
+                    tags[opentracing.Tags.SPAN_KIND] = opentracing.Tags.SPAN_KIND_RPC_SERVER;
+                }
+
+                tracer.startSpan('bender', {
+                    childOf: context,
+                    tags: tags
+                });
 
                 _.each(o.metrics, (metricName) => {
                     assert.isOk(LocalBackend.counterEquals(metrics[metricName], 1));
