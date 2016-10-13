@@ -74,9 +74,9 @@ let jaegerSchema = {
 
 export default class Configuration {
 
-    static _getSampler(options) {
-        let type = options.sampler.type;
-        let param = options.sampler.param;
+    static _getSampler(config) {
+        let type = config.sampler.type;
+        let param = config.sampler.param;
 
         let sampler;
         if (type === 'probabilistic') {
@@ -92,7 +92,7 @@ export default class Configuration {
         }
 
         if (type === 'remote') {
-            sampler = new RemoteSampler(options.serviceName, {
+            sampler = new RemoteSampler(config.serviceName, {
                 sampler: new ProbabilisticSampler(param)
             });
         }
@@ -100,53 +100,57 @@ export default class Configuration {
         return sampler;
     }
 
-    static initTracer(options, logger) {
+    static initTracer(config, options) {
         let v = new Validator();
         v.addSchema(jaegerSchema);
-        v.validate(options, configSchema, {
+        v.validate(config, configSchema, {
             throwError: true
         });
 
-        options = options.jaeger;
+        config = config.jaeger;
 
         let reporters = [];
         let reporter;
         let sampler;
-        if (options.disable) {
+        if (config.disable) {
             return new opentracing.Tracer();
         } else {
-            let sender;
-            let reporterOptions = {};
-            let hostPort = '';
-            if (options.reporter) {
-                if (options.reporter.logSpans) {
-                    reporters.push(new LoggingReporter(logger));
+            if (!options.reporter) {
+                let sender;
+                let reporterconfig = {};
+                let hostPort = '';
+                if (config.reporter) {
+                    if (config.reporter.logSpans) {
+                        reporters.push(new LoggingReporter(options.logger));
+                    }
+
+                    if (config.reporter.flushIntervalMs) {
+                        reporterconfig['bufferFlushInterval'] = config.reporter.flushIntervalMs;
+                    }
+
+                    if (config.reporter.agentHost && config.reporter.agentPort) {
+                        hostPort = `${config.reporter.agentHost}:${config.reporter.agentPort}`;
+                    }
                 }
 
-                if (options.reporter.flushIntervalMs) {
-                    reporterOptions['bufferFlushInterval'] = options.reporter.flushIntervalMs;
+                sender = new UDPSender(hostPort);
+                reporters.push(new RemoteReporter(sender, reporterconfig));
+                reporter = new CompositeReporter(reporters);
+
+                if (config.sampler) {
+                    sampler = Configuration._getSampler(config);
+                } else {
+                    sampler = new RemoteSampler(config.serviceName);
                 }
-
-                if (options.reporter.agentHost && options.reporter.agentPort) {
-                    hostPort = `${options.reporter.agentHost}:${options.reporter.agentPort}`;
-                }
-            }
-
-            sender = new UDPSender(hostPort);
-            reporters.push(new RemoteReporter(sender, reporterOptions));
-            reporter = new CompositeReporter(reporters);
-
-            if (options.sampler) {
-                sampler = Configuration._getSampler(options);
             } else {
-                sampler = new RemoteSampler(options.serviceName);
+                reporter = options.reporter;
             }
         }
 
         console.log(`Using ${reporter.name()}`);
         console.log(`Using ${sampler.name()}`);
         return new Tracer(
-            options.serviceName,
+            config.serviceName,
             reporter,
             sampler
         );
