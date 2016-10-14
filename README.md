@@ -1,4 +1,4 @@
-[![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov]
+[![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![NPM Published Version][npm-img]][npm]
 
 # Jaeger Bindings for Javascript OpenTracing API
 
@@ -17,5 +17,7 @@ with Zipkin-compatible data model.
 
   [ci-img]: https://travis-ci.org/uber/jaeger-client-node.svg?branch=master
   [cov-img]: https://coveralls.io/repos/github/uber/jaeger-client-node/badge.svg?branch=master
+  [npm-img]: https://badge.fury.io/js/jaeger-client.svg
   [ci]: https://travis-ci.org/uber/jaeger-client-node
-  [cov]: https://coveralls.io/github/uber/jaeger-client-node?branch=master
+  [cov]: https://coveralls.io/github/uber/jaeger-client-$node?branch=master
+  [npm]: https://www.npmjs.com/package/jaeger-client
