@@ -10,7 +10,7 @@ with Zipkin-compatible data model.
 
 ## Contributing
 
-Please see (CONTRIBUTING.md)[./CONTRIBUTING.md].
+Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ### Debug Traces (Forced Sampling)
 
