@@ -19,18 +19,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import BinaryCodec from './propagators/binary_codec.js';
-import ConstSampler from './samplers/const_sampler.js';
-import * as constants from './constants.js';
+import BinaryCodec from './propagators/binary_codec';
+import ConstSampler from './samplers/const_sampler';
+import * as constants from './constants';
 import * as opentracing from 'opentracing';
-import {Tags as opentracing_tags} from 'opentracing';
-import NoopReporter from './reporters/noop_reporter.js';
 import pjson from '../package.json';
-import Span from './span.js';
-import SpanContext from './span_context.js';
-import TextMapCodec from './propagators/text_map_codec.js';
-import NullLogger from './logger.js';
-import Utils from './util.js';
+import {Tags as opentracing_tags} from 'opentracing';
+import NoopReporter from './reporters/noop_reporter';
+import Span from './span';
+import SpanContext from './span_context';
+import TextMapCodec from './propagators/text_map_codec';
+import NullLogger from './logger';
+import Utils from './util';
+import Metrics from './metrics/metrics';
+import NoopMetricFactory from './metrics/noop/metric_factory';
 
 export default class Tracer {
     _serviceName: string;
@@ -40,28 +42,36 @@ export default class Tracer {
     _tags: any;
     _injectors: any;
     _extractors: any;
+    _metrics: any;
 
     constructor(serviceName: string,
             reporter: Reporter = new NoopReporter(),
             sampler: Sampler = new ConstSampler(false),
-            logger: any,
-            tags: any = {}) {
-        this._tags = tags;
+            options: any = {}) {
+        this._tags = options.tags || {};
         this._tags[constants.JAEGER_CLIENT_VERSION_TAG_KEY] = `Node-${pjson.version}`;
         this._tags[constants.TRACER_HOSTNAME_TAG_KEY] = Utils.myIp();
+
+        this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
 
         this._serviceName = serviceName;
         this._reporter = reporter;
         this._sampler = sampler;
-        this._logger = logger || new NullLogger();
+        this._logger = options.logger || new NullLogger();
         this._injectors = {};
         this._extractors = {};
 
-        let textCodec = new TextMapCodec(false);
+        let textCodec = new TextMapCodec({
+            urlEncoding: false,
+            metrics: this._metrics
+        });
         this.registerInjector(opentracing.FORMAT_TEXT_MAP, textCodec);
         this.registerExtractor(opentracing.FORMAT_TEXT_MAP, textCodec);
 
-        let httpCodec = new TextMapCodec(true);
+        let httpCodec = new TextMapCodec({
+            urlEncoding: true,
+            metrics: this._metrics
+        });
         this.registerInjector(opentracing.FORMAT_HTTP_HEADERS, httpCodec);
         this.registerExtractor(opentracing.FORMAT_HTTP_HEADERS, httpCodec);
 
@@ -82,9 +92,12 @@ export default class Tracer {
             startTime: number,
             internalTags: any = {},
             tags: any = {},
+            parentContext: ?SpanContext,
             rpcServer: boolean): Span {
 
-        let firstInProcess = rpcServer || (spanContext.parentId == null);
+
+        let hadParent = parentContext && !parentContext.isDebugIDContainerOnly();
+        let firstInProcess: boolean = rpcServer || (spanContext.parentId == null);
         let span = new Span(
             this,
             operationName,
@@ -95,10 +108,30 @@ export default class Tracer {
 
         span.addTags(tags);
         span.addTags(internalTags);
+
+        // emit metrics
+        this._metrics.spansStarted.increment(1);
+        if (span.context().isSampled()) {
+            this._metrics.spansSampled.increment(1);
+            if (!hadParent) {
+                this._metrics.tracesStartedSampled.increment(1);
+            } else if (rpcServer) {
+                this._metrics.tracesJoinedSampled.increment(1);
+            }
+        } else {
+            this._metrics.spansNotSampled.increment(1);
+            if (!hadParent) {
+                this._metrics.tracesStartedNotSampled.increment(1);
+            } else if (rpcServer) {
+                this._metrics.tracesJoinedNotSampled.increment(1);
+            }
+        }
+
         return span;
     }
 
     _report(span: Span): void {
+        this._metrics.spansFinished.increment(1);
         if (span.firstInProcess) {
             span.addTags(this._tags);
         }
@@ -193,14 +226,8 @@ export default class Tracer {
             ctx.flags = flags;
         } else {
             ctx.traceId = parent.traceId;
-            if (rpcServer) {
-                // Support Zipkin's one-span-per-RPC model
-                ctx.spanId = parent.spanId;
-                ctx.parentId = parent.parentId;
-            } else {
-                ctx.spanId = Utils.getRandom64();
-                ctx.parentId = parent.spanId;
-            }
+            ctx.spanId = Utils.getRandom64();
+            ctx.parentId = parent.spanId;
             ctx.flags = parent.flags;
 
             // reuse parent's baggage as we'll never change it
@@ -213,6 +240,7 @@ export default class Tracer {
             startTime,
             samplerTags,
             tags,
+            parent,
             rpcServer
         );
     }

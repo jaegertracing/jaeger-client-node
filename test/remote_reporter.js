@@ -25,17 +25,25 @@ import MockLogger from './lib/mock_logger.js';
 import RemoteReporter from '../src/reporters/remote_reporter.js';
 import Tracer from '../src/tracer.js';
 import UDPSender from '../src/reporters/udp_sender.js';
+import Metrics from '../src/metrics/metrics.js';
+import LocalMetricFactory from './lib/metrics/local/metric_factory.js';
+import LocalBackend from './lib/metrics/local/backend.js';
 
 describe('Remote Reporter should', () => {
     let tracer;
     let reporter;
     let sender;
     let logger;
+    let metrics;
 
     beforeEach(() => {
+        metrics = new Metrics(new LocalMetricFactory());
         sender = new UDPSender();
         logger = new MockLogger();
-        reporter = new RemoteReporter(sender, {logger}),
+        reporter = new RemoteReporter(sender, {
+            logger: logger,
+            metrics: metrics
+        }),
         tracer = new Tracer(
             'test-service-name',
             reporter,
@@ -57,6 +65,7 @@ describe('Remote Reporter should', () => {
 
         reporter.flush()
         assert.equal(sender._batch.spans.length, 0);
+        assert.isOk(LocalBackend.counterEquals(metrics.reporterSuccess, 1));
     });
 
     it ('report and flush span that is causes an error to be logged', () => {
@@ -67,5 +76,26 @@ describe('Remote Reporter should', () => {
 
         span.finish();
         assert.equal(logger._errorMsgs[0], 'Failed to append spans in reporter.');
+
+        // metrics
+        assert.isOk(LocalBackend.counterEquals(metrics.reporterDropped, 1));
+    });
+
+    it ('failed to flush spans with reporter', () => {
+        let mockSender = {
+            flush: () => {
+                return {
+                    err: true,
+                    numSpans: 1
+                };
+            },
+            close: () => {}
+        };
+
+        reporter._sender = mockSender;
+        reporter.flush();
+
+        assert.equal(logger._errorMsgs[0], 'Failed to flush spans in reporter.');
+        assert.isOk(LocalBackend.counterEquals(metrics.reporterFailure, 1));
     });
 });

@@ -24,13 +24,38 @@ import ConstSampler from '../src/samplers/const_sampler.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import opentracing from 'opentracing';
 import Tracer from '../src/tracer.js';
+import Metrics from '../src/metrics/metrics.js';
+import LocalMetricFactory from './lib/metrics/local/metric_factory.js';
+import LocalBackend from './lib/metrics/local/backend.js';
 
 describe('Text Map Codec should', () => {
-    it('set debug flag when debug-id-header is received', () => {
+    it ('report metric when failing to decode tracer state', () => {
+        let metrics = new Metrics(new LocalMetricFactory());
         let tracer = new Tracer(
             'test-tracer',
             new InMemoryReporter(),
-            new ConstSampler(false)
+            new ConstSampler(false), {
+                metrics: metrics
+            }
+        );
+
+        let headers = {
+            'uber-trace-id': 'bad-value'
+        };
+        let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
+
+        assert.isOk(context);
+        assert.isOk(LocalBackend.counterEquals(metrics.decodingErrors, 1));
+    });
+
+    it ('set debug flag when debug-id-header is received', () => {
+        let metrics = new Metrics(new LocalMetricFactory());
+        let tracer = new Tracer(
+            'test-tracer',
+            new InMemoryReporter(),
+            new ConstSampler(false), {
+                metrics: metrics
+            }
         );
         let headers = {};
         headers[constants.JAEGER_DEBUG_HEADER] = encodeURIComponent('value1');
@@ -55,5 +80,8 @@ describe('Text Map Codec should', () => {
         }
 
         assert.isOk(tagFound);
+
+        // metrics
+        assert.isOk(LocalBackend.counterEquals(metrics.tracesStartedSampled, 1));
     });
 });

@@ -21,6 +21,8 @@
 
 import NullLogger from '../logger.js';
 import ThriftUtils from '../thrift.js';
+import Metrics from '../metrics/metrics.js';
+import NoopMetricFactory from '../metrics/noop/metric_factory';
 
 const DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS = 10000;
 
@@ -30,6 +32,7 @@ export default class RemoteReporter {
     _sender: Sender;
     _intervalHandle: any;
     _process: Process;
+    _metrics: any;
 
     constructor(sender: Sender,
                 options: any = {}) {
@@ -39,6 +42,7 @@ export default class RemoteReporter {
         this._intervalHandle = setInterval(() => {
             this.flush();
         }, this._bufferFlushInterval);
+        this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
     }
 
     name(): string {
@@ -49,6 +53,7 @@ export default class RemoteReporter {
         let response: SenderResponse = this._sender.append(ThriftUtils.spanToThrift(span));
         if (response.err) {
             this._logger.error('Failed to append spans in reporter.');
+            this._metrics.reporterDropped.increment(response.numSpans);
         }
     }
 
@@ -56,6 +61,9 @@ export default class RemoteReporter {
         let response: SenderResponse = this._sender.flush(callback);
         if (response.err) {
             this._logger.error('Failed to flush spans in reporter.');
+            this._metrics.reporterFailure.increment(response.numSpans);
+        } else {
+            this._metrics.reporterSuccess.increment(response.numSpans);
         }
     }
 
