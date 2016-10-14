@@ -29,6 +29,9 @@ import {Tags as opentracing_tags} from 'opentracing';
 import SpanContext from '../src/span_context.js';
 import Tracer from '../src/tracer.js';
 import Utils from '../src/util.js';
+import Metrics from '../src/metrics/metrics.js';
+import LocalMetricFactory from './lib/metrics/local/metric_factory.js';
+import LocalBackend from './lib/metrics/local/backend.js';
 
 describe('tracer should', () => {
     let tracer;
@@ -60,7 +63,7 @@ describe('tracer should', () => {
             'keyOne': 'leela',
             'keyTwo': 'bender'
         };
-        let span = tracer._startInternalSpan(context, 'op-name', start, internalTags, tags, rpcServer);
+        let span = tracer._startInternalSpan(context, 'op-name', start, internalTags, tags, null, rpcServer);
 
         assert.isOk(bufferEqual(span.context().traceId, traceId));
         assert.isOk(bufferEqual(span.context().spanId, spanId));
@@ -124,44 +127,6 @@ describe('tracer should', () => {
             assert.isOk(bufferEqual(span.context().traceId, traceId));
             assert.isOk(bufferEqual(span.context().parentId, spanId));
             assert.equal(span.context().flags, constants.SAMPLED_MASK);
-            assert.equal(span._startTime, startTime);
-        }
-
-        assertByStartSpanParameters(childOfParams);
-        assertByStartSpanParameters(referenceParams);
-    });
-
-    it ('start a child span represented as same span (Zipkins one-span-per-rpc)', () => {
-        let traceId = Utils.encodeInt64(1);
-        let spanId = Utils.encodeInt64(2);
-        let parentId = Utils.encodeInt64(3);
-        let flags = 1;
-        let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
-        let startTime = Utils.getTimestampMicros();
-
-        let tags = {};
-        tags[`${opentracing_tags.SPAN_KIND}`] = opentracing_tags.SPAN_KIND_RPC_SERVER;
-
-        let childOfParams = {
-            operationName: 'test-name',
-            childOf: context,
-            startTime: startTime,
-            tags
-        }
-
-        let referenceParams = {
-            operationName: 'test-name',
-            references: [new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, context)],
-            startTime: startTime,
-            tags
-        }
-
-        let assertByStartSpanParameters = (params) => {
-            let span = tracer.startSpan('test-span', params);
-
-            assert.isOk(bufferEqual(span.context().traceId, traceId));
-            assert.isOk(bufferEqual(span.context().parentId, parentId));
-            assert.isOk(span.context().isSampled());
             assert.equal(span._startTime, startTime);
         }
 
@@ -247,6 +212,54 @@ describe('tracer should', () => {
         tracer.flush(() => {
             assert.equal(tracer._reporter._flushed.length, 1);
             done();
+        });
+    });
+
+    describe('Metrics', () => {
+        it ('startSpan', () => {
+            let params = [
+                { 'rpcServer': false, 'context': null, 'sampled': true, 'metrics': ['spansStarted', 'spansSampled', 'tracesStartedSampled']},
+                { 'rpcServer': true, 'context': '1:2:100:1', 'sampled': true, 'metrics': ['spansStarted', 'spansSampled', 'tracesJoinedSampled']},
+                { 'rpcServer': false, 'context': null, 'sampled': false, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesStartedNotSampled']},
+                { 'rpcServer': true, 'context': '1:2:100:0', 'sampled': false, 'metrics': ['spansStarted', 'spansNotSampled', 'tracesJoinedNotSampled']},
+            ];
+
+            _.each(params, (o) => {
+                let metrics = new Metrics(new LocalMetricFactory());
+                tracer = new Tracer('fry', new InMemoryReporter(), new ConstSampler(o.sampled), {
+                    metrics: metrics
+                });
+
+                let context = null;
+                if (o.context) {
+                    context = SpanContext.fromString(o.context);
+                }
+
+                let tags = {};
+                if (o.rpcServer) {
+                    tags[opentracing.Tags.SPAN_KIND] = opentracing.Tags.SPAN_KIND_RPC_SERVER;
+                }
+
+                tracer.startSpan('bender', {
+                    childOf: context,
+                    tags: tags
+                });
+
+                _.each(o.metrics, (metricName) => {
+                    assert.isOk(LocalBackend.counterEquals(metrics[metricName], 1));
+                });
+            });
+        });
+
+        it ('emits counter when report called', () => {
+            let metrics = new Metrics(new LocalMetricFactory());
+            tracer = new Tracer('fry', new InMemoryReporter(), new ConstSampler(true), {
+                metrics: metrics
+            });
+            let span = tracer.startSpan('bender');
+            tracer._report(span);
+
+            assert.isOk(LocalBackend.counterEquals(metrics.spansFinished, 1));
         });
     });
 });

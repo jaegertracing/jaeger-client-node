@@ -22,7 +22,9 @@
 import request from 'request';
 import ProbabilisticSampler from './probabilistic_sampler.js';
 import RateLimitingSampler from './ratelimiting_sampler.js';
+import Metrics from '../metrics/metrics.js';
 import NullLogger from '../logger.js';
+import NoopMetricFactory from '../metrics/noop/metric_factory';
 
 const DEFAULT_INITIAL_SAMPLING_RATE = 0.001;
 const SAMPLING_REFRESH_INTERVAL = 60000;
@@ -42,6 +44,7 @@ export default class RemoteControlledSampler {
     _intervalHandle: any;
     _onSamplerUpdate: Function;
     _refreshInterval: number;
+    _metrics: any;
 
     constructor(callerName: string,
                 options: any = {}) {
@@ -55,6 +58,7 @@ export default class RemoteControlledSampler {
         this._onSamplerUpdate = options.onSamplerUpdate;
         this._host = options.host || DEFAULT_SAMPLING_HOST;
         this._port = options.port || DEFAULT_SAMPLING_PORT;
+        this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
 
         if (!options.stopPolling) {
             this._timeoutHandle = setTimeout(() => {
@@ -73,9 +77,13 @@ export default class RemoteControlledSampler {
 
     _getSamplingStrategy(callerName: string): ?SamplingStrategyResponse  {
         let encodedCaller: string = encodeURIComponent(callerName);
-        request.get(`http:\/\/${this._host}:${this._port}/?service=${encodedCaller}`, (err, response) => {
+        request.get(`http://${this._host}:${this._port}/?service=${encodedCaller}`, (err, response) => {
             if (err) {
                 this._logger.error('Error in fetching sampling strategy.');
+                this._metrics.samplerQueryFailure.increment(1);
+                if (this._onSamplerUpdate) {
+                    this._onSamplerUpdate();
+                }
                 return null;
             }
 
@@ -97,11 +105,14 @@ export default class RemoteControlledSampler {
             let maxTracesPerSecond = strategy.rateLimitingSampling.maxTracesPerSecond;
             newSampler = new RateLimitingSampler(maxTracesPerSecond);
         } else {
+            this._metrics.samplerParsingFailure.increment(1);
             this._logger.error('Unrecognized strategy type: ' + JSON.stringify({error: strategy}));
         }
+        this._metrics.samplerRetrieved.increment(1);
 
         if (newSampler && (!this._sampler.equal(newSampler))) {
             this._sampler = newSampler;
+            this._metrics.samplerUpdated.increment(1);
         }
 
         if (this._onSamplerUpdate) {

@@ -22,8 +22,8 @@
 import _ from 'lodash';
 import bufferEqual from 'buffer-equal';
 import opentracing from 'opentracing';
-import Span from './span.js';
-import Utils from './util.js';
+import Span from './span';
+import Utils from './util';
 
 export default class TestUtils {
     static traceIdEqual(span: Span, traceId: number): boolean {

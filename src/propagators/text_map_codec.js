@@ -20,6 +20,8 @@
 // THE SOFTWARE.
 
 import * as constants from '../constants.js';
+import Metrics from '../metrics/metrics.js';
+import NoopMetricFactory from '../metrics/noop/metric_factory';
 import SpanContext from '../span_context.js';
 import Utils from '../util.js';
 
@@ -30,14 +32,15 @@ export default class TextMapCodec {
     _urlEncoding: boolean;
     _contextKey: string;
     _baggagePrefix: string;
+    _metrics: any;
 
-    constructor(urlEncoding: boolean,
-            contextKey: string = TRACER_STATE_HEADER_NAME,
-            baggagePrefix: string = TRACER_BAGGAGE_HEADER_PREFIX
-    ) {
-        this._urlEncoding = urlEncoding;
-        this._contextKey = contextKey.toLowerCase();
-        this._baggagePrefix = baggagePrefix.toLowerCase();
+    constructor(options: any = {}) {
+        this._urlEncoding = !!options.urlEncoding;
+        this._contextKey = options.contextKey || TRACER_STATE_HEADER_NAME;
+        this._contextKey = this._contextKey.toLowerCase();
+        this._baggagePrefix = options.baggagePrefix || TRACER_BAGGAGE_HEADER_PREFIX;
+        this._baggagePrefix = this._baggagePrefix.toLowerCase();
+        this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
     }
 
     _encodedValue(value: string): string {
@@ -66,7 +69,12 @@ export default class TextMapCodec {
             if (carrier.hasOwnProperty(key)) {
                 let lowerKey = key.toLowerCase();
                 if (lowerKey === this._contextKey) {
-                    spanContext = SpanContext.fromString(this._decodedValue(carrier[key]));
+                    let decodedContext = SpanContext.fromString(this._decodedValue(carrier[key]));
+                    if (decodedContext === null) {
+                        this._metrics.decodingErrors.increment(1);
+                    } else {
+                        spanContext = decodedContext;
+                    }
                 }
 
                 if (lowerKey === constants.JAEGER_DEBUG_HEADER) {
