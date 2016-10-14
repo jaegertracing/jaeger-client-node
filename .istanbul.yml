@@ -1,0 +1,7 @@
+instrumentation:
+  root: src
+  include-all-sources: true
+  verbose: true
+  excludes: ["./dist"]
+reporting:
+  dir: "coverage"
