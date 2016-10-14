@@ -44,6 +44,7 @@
     "eslint-plugin-react": "^4.3.0",
     "express": "^4.14.0",
     "flow-bin": "^0.30.0",
+    "gulp-sourcemaps": "1.7.x",
     "lodash": "^4.15.0",
     "minimist": "1.2.0",
     "mocha": "^3.0.1",

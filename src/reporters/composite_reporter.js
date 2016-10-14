@@ -51,4 +51,6 @@ export default class CompositeReporter {
             callback();
         }
     }
+
+    setProcess(serviceName: string, tags: Array<Tag>): void {}
 }
