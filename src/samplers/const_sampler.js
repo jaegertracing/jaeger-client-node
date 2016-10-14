@@ -32,6 +32,10 @@ export default class ConstSampler {
         this._tags[constants.SAMPLER_PARAM_TAG_KEY] = this._decision;
     }
 
+    name(): string {
+        return 'ConstSampler';
+    }
+
     get decision(): boolean {
         return this._decision;
     }

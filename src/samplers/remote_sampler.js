@@ -63,6 +63,10 @@ export default class RemoteControlledSampler {
         }
     }
 
+    name(): string {
+        return 'RemoteSampler';
+    }
+
     _refreshSamplingStrategy() {
         this._getSamplingStrategy(this._callerName);
     }

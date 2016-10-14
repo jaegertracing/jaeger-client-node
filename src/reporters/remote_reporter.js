@@ -41,6 +41,10 @@ export default class RemoteReporter {
         }, this._bufferFlushInterval);
     }
 
+    name(): string {
+        return 'LoggingReporter';
+    }
+
     report(span: Span): void {
         let response: SenderResponse = this._sender.append(ThriftUtils.spanToThrift(span));
         if (response.err) {

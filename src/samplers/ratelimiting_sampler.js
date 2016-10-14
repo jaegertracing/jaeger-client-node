@@ -44,6 +44,10 @@ export default class RateLimitingSampler {
         this._tags[constants.SAMPLER_PARAM_TAG_KEY] = this._maxTracesPerSecond;
     }
 
+    name(): string {
+        return 'RateLimitingSampler';
+    }
+
     get maxTracesPerSecond(): number {
         return this._maxTracesPerSecond;
     }

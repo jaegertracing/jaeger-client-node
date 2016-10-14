@@ -20,54 +20,20 @@
 // THE SOFTWARE.
 
 import Span from '../span.js';
-import ThriftUtils from '../thrift.js';
+import NullLogger from '../logger.js';
 
-export default class InMemoryReporter {
-    _spans: Array<Span>;
-    _flushed: Array<Span>;
-    _process: Process;
+export default class LoggingReporter {
+    _logger: Logger;
 
-    constructor() {
-        this._spans = [];
-        this._flushed = [];
-    }
-
-    name(): string {
-        return 'InMemoryReporter';
+    constructor(logger: Logger) {
+        this._logger = logger || new NullLogger();
     }
 
     report(span: Span): void {
-        this._spans.push(span);
+        this._logger.info(`Reporting span ${JSON.stringify(span)}`);
     }
 
-    get spans(): Array<Span> {
-        return this._spans;
-    }
+    clear(): void {}
 
-    clear(): void {
-        this._spans = [];
-    }
-
-    flush(callback: ?Function): void {
-        for (let i = 0; i < this._spans.length; i++) {
-            this._flushed.push(this._spans[i]);
-        }
-
-        if (callback) {
-            callback();
-        }
-    }
-
-    close(callback: ?Function): void {
-        if(callback) {
-            callback();
-        }
-    }
-
-    setProcess(serviceName: string, tags: Array<Tag>): void {
-        this._process = {
-            'serviceName': serviceName,
-            'tags': ThriftUtils.getThriftTags(tags)
-        };
-    }
+    close(): void {}
 }
