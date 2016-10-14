@@ -64,7 +64,7 @@
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed'",
     "lint-ci": "npm run lint && echo '# TODO: ADD npm run check-license'",
-    "test": "npm run flow & npm run lint && ./node_modules/mocha/bin/mocha --compilers js:babel-core/register",
+    "test": "make build-node; npm run flow & npm run lint && ./node_modules/mocha/bin/mocha --compilers js:babel-core/register",
     "test-ci": "npm run test && npm run lint-ci && npm run cover",
     "show-cover": "open coverage/lcov-report/index.html"
   }
