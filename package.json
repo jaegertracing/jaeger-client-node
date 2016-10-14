@@ -5,7 +5,7 @@
   "licence": "MIT",
   "keywords": [],
   "author": "oibe <oibe@uber.com>",
-  "main": "./dist/src/index.js",
+  "main": "./entrypoint.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/uber/jaeger-client-node.git"
