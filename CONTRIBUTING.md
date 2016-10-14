@@ -11,6 +11,13 @@ Before you get started, here are some suggestions:
  - The pull requests gets reviewed and then merged assuming there are no problems.
  - A new release version gets cut.
 
+## Developing
+
+ 1. `git submodule update --init`
+ 2. `npm install`
+ 3. `npm test`
+ 4. `make build-node`
+
 ## Licencing
 
  - Every file must have a licence block at the top. This is enforced using `uber-licence`
