@@ -60,6 +60,6 @@ export default class TChannelServer {
     }
 }
 
-if (require.main === module) {
+if ((require:any).main === module) {
     let tchannel = new TChannelServer();
 }

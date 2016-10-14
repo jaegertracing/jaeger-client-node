@@ -36,6 +36,6 @@ export default class HealthcheckServer {
     }
 }
 
-if (require.main === module) {
+if ((require: any).main === module) {
     let healthcheck = new HealthcheckServer();
 }

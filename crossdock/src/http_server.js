@@ -192,6 +192,6 @@ export default class HttpServer {
     }
 }
 
-if (require.main === module) {
+if ((require: any).main === module) {
     let http = new HttpServer();
 }
