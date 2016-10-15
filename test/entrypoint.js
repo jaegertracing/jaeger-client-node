@@ -33,5 +33,7 @@ describe('entrypoint', () => {
         expect(entrypoint.LoggingReporter).to.be.a('function');
         expect(entrypoint.NoopReporter).to.be.a('function');
         expect(entrypoint.RemoteReporter).to.be.a('function');
+        expect(entrypoint.TestUtils).to.be.a('function');
+        expect(entrypoint.SpanContext).to.be.a('function');
     });
 });
