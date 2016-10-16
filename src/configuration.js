@@ -139,14 +139,14 @@ export default class Configuration {
         if (config.disable) {
             return new opentracing.Tracer();
         } else {
+            if (config.sampler) {
+                sampler = Configuration._getSampler(config);
+            } else {
+                sampler = new RemoteSampler(config.serviceName);
+            }
+
             if (!options.reporter) {
                 reporter = Configuration._getReporter(config, options);
-
-                if (config.sampler) {
-                    sampler = Configuration._getSampler(config);
-                } else {
-                    sampler = new RemoteSampler(config.serviceName);
-                }
             } else {
                 reporter = options.reporter;
             }
