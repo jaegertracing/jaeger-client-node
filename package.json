@@ -5,7 +5,7 @@
   "licence": "MIT",
   "keywords": [],
   "author": "oibe <oibe@uber.com>",
-  "main": "./dist/src/index.js",
+  "main": "./entrypoint.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/uber/jaeger-client-node.git"
@@ -48,7 +48,7 @@
     "lodash": "^4.15.0",
     "minimist": "1.2.0",
     "mocha": "^3.0.1",
-    "opentracing": "git://github.com/opentracing/opentracing-javascript.git#575e8149aadba97d27e9cadff3b8e47a15c2db09",
+    "opentracing": "^0.13.0",
     "rsvp": "^3.3.1",
     "sinon": "^1.17.5",
     "uber-licence": "^2.0.2",
@@ -64,7 +64,7 @@
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed'",
     "lint-ci": "npm run lint && echo '# TODO: ADD npm run check-license'",
-    "test": "npm run flow & npm run lint && ./node_modules/mocha/bin/mocha --compilers js:babel-core/register",
+    "test": "make build-node; npm run flow & npm run lint && ./node_modules/mocha/bin/mocha --compilers js:babel-core/register",
     "test-ci": "npm run test && npm run lint-ci && npm run cover",
     "show-cover": "open coverage/lcov-report/index.html"
   }
