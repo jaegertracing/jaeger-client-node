@@ -21,6 +21,7 @@
 
 import fs from 'fs';
 import Long from 'long';
+import opentracing from 'opentracing';
 import path from 'path';
 import {Thrift} from 'thriftrw';
 import Utils from './util.js';
@@ -90,6 +91,32 @@ export default class ThriftUtils {
         return thriftLogs;
     }
 
+    static spanRefsToThriftRefs(refs: Array<Reference>): Array<any> {
+        let thriftRefs = [];
+        for (let i = 0; i < refs.length; i++) {
+            let refEnum;
+            let ref = refs[i];
+            let context = refs[i].referencedContext();
+
+            if (ref.type() === opentracing.REFERENCE_CHILD_OF) {
+                refEnum = ThriftUtils._thrift.SpanRefType.CHILD_OF;
+            } else if (ref.type() === opentracing.REFERENCE_FOLLOWS_FROM) {
+                refEnum = ThriftUtils._thrift.SpanRefType.FOLLOWS_FROM
+            } else {
+                continue;
+            }
+
+            thriftRefs.push({
+                refType: refEnum,
+                traceIdLow: context.traceId,
+                traceIdHigh: ThriftUtils.emptyBuffer,
+                spanId: context.spanId
+            });
+        }
+
+        return thriftRefs;
+    }
+
     static spanToThrift(span: Span): any {
         let tags = ThriftUtils.getThriftTags(span._tags);
         let logs = ThriftUtils.getThriftLogs(span._logs);
@@ -101,7 +128,7 @@ export default class ThriftUtils {
             spanId: span._spanContext.spanId,
             parentSpanId: span._spanContext.parentId || ThriftUtils.emptyBuffer,
             operationName: span._operationName,
-            references: [], // TODO(oibe) revist correctness after a spanRef diff is landed.
+            references: ThriftUtils.spanRefsToThriftRefs(span._references),
             flags: span._spanContext.flags,
             startTime: Utils.encodeInt64(span._startTime),
             duration: Utils.encodeInt64(span._duration),

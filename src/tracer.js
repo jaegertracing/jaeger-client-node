@@ -87,14 +87,14 @@ export default class Tracer {
     }
 
     _startInternalSpan(
-            spanContext: SpanContext,
-            operationName: string,
-            startTime: number,
-            internalTags: any = {},
-            tags: any = {},
-            parentContext: ?SpanContext,
-            rpcServer: boolean): Span {
-
+        spanContext: SpanContext,
+        operationName: string,
+        startTime: number,
+        internalTags: any = {},
+        tags: any = {},
+        parentContext: ?SpanContext,
+        rpcServer: boolean,
+        references: Array<Reference>): Span {
 
         let hadParent = parentContext && !parentContext.isDebugIDContainerOnly();
         let firstInProcess: boolean = rpcServer || (spanContext.parentId == null);
@@ -103,7 +103,8 @@ export default class Tracer {
             operationName,
             spanContext,
             startTime,
-            firstInProcess
+            firstInProcess,
+            references
         );
 
         span.addTags(tags);
@@ -171,31 +172,32 @@ export default class Tracer {
     *        to represent time values with sub-millisecond accuracy.
     * @return {Span} - a new Span object.
     **/
-    startSpan(operationName: string, fields: startSpanArgs): Span {
-        // Convert fields.childOf to fields.references as needed.
-        fields = fields || {};
-        fields.operationName = operationName;
+    startSpan(operationName: string, options: startSpanArgs): Span {
+        // Convert options.childOf to options.references as needed.
+        options = options || {};
+        options.operationName = operationName;
+        options.references = options.references || [];
 
-        let tags = fields.tags || {};
-        let references = fields.references || [];
-        let startTime = fields.startTime;
+        let tags = options.tags || {};
+        let startTime = options.startTime;
         if (!startTime) {
             startTime = Utils.getTimestampMicros();
         }
 
-        // TODO(oibe) support use of references
-        let parent: ?SpanContext = fields.childOf instanceof Span ? fields.childOf.context(): fields.childOf;
-        if (!parent) {
-            // If there is no childOf in fields, then search list of references
-            for (let i = 0; i < references.length; i++) {
-                let ref: Reference = references[i];
-                let ref_type = ref.type();
-                if ((ref_type === opentracing.REFERENCE_CHILD_OF) ||
-                    (ref_type === opentracing.REFERENCE_FOLLOWS_FROM)) {
+        let followsFromIsParent = false;
+        let parent: ?SpanContext = options.childOf instanceof Span ? options.childOf.context(): options.childOf;
+        // If there is no childOf in options, then search list of references
+        for (let i = 0; i < options.references.length; i++) {
+            let ref: Reference = options.references[i];
+            if (ref.type() === opentracing.REFERENCE_CHILD_OF) {
+                if (!parent || followsFromIsParent) {
                     parent = ref.referencedContext();
                     break;
-                } else {
-                    // TODO(oibe) support other types of span references
+                }
+            } else if (ref.type() === opentracing.REFERENCE_FOLLOWS_FROM) {
+                if (!parent) {
+                    parent = ref.referencedContext();
+                    followsFromIsParent = true;
                 }
             }
         }
@@ -236,12 +238,13 @@ export default class Tracer {
 
         return this._startInternalSpan(
             ctx,
-            fields.operationName,
+            options.operationName,
             startTime,
             samplerTags,
             tags,
             parent,
-            rpcServer
+            rpcServer,
+            options.references
         );
     }
 

@@ -36,12 +36,14 @@ export default class Span {
     _logs: Array<LogData>;
     _tags: Array<Tag>;
     static _baggageHeaderCache: any;
+    _references: Array<Reference>
 
     constructor(tracer: any,
                 operationName: string,
                 spanContext: SpanContext,
                 startTime: number,
-                firstInProcess: boolean = false
+                firstInProcess: boolean = false,
+                references: Array<Reference>
     ) {
         this._tracer = tracer;
         this._operationName = operationName;
@@ -49,6 +51,7 @@ export default class Span {
         this._startTime = startTime;
         this._logger = tracer._logger;
         this._firstInProcess = firstInProcess;
+        this._references = references;
         this._logs = [];
         this._tags = [];
     }

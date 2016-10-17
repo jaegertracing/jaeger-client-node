@@ -18,14 +18,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import _ from 'lodash';
 import {assert} from 'chai';
+import bufferEqual from 'buffer-equal';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import * as constants from '../src/constants.js'
 import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
-import TestUtils from './lib/util.js';
+import opentracing from 'opentracing';
+import TestUtils from '../src/test_util.js';
 import Tracer from '../src/tracer.js';
 import {Thrift} from 'thriftrw';
 import ThriftUtils from '../src/thrift.js';
@@ -90,6 +93,66 @@ describe('udp sender should', () => {
         sender.append(spanOne);
         sender.append(spanTwo);
         sender.flush();
+    });
+
+    describe('span reference tests', () => {
+        let tracer = new Tracer(
+            'test-service-name',
+            new InMemoryReporter(),
+            new ConstSampler(true)
+        );
+        let parentContext = tracer.startSpan('just-used-for-context').context();
+        let childOfContext = tracer.startSpan('just-used-for-context').context();
+        let childOfRef = new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, childOfContext);
+        let followsFromContext = tracer.startSpan('just-used-for-context').context();
+        let followsFromRef = new opentracing.Reference(opentracing.REFERENCE_FOLLOWS_FROM, followsFromContext);
+
+        let options = [
+            { 'childOf': null, 'references': [], 'expectedTraceId': null, 'expectedParentId': null },
+            { 'childOf': parentContext, 'references': [], 'expectedTraceId': parentContext.traceId, 'expectedParentId': parentContext.parentId },
+            { 'childOf': parentContext, 'references': [followsFromRef], 'expectedTraceId': parentContext.traceId, 'expectedParentId': parentContext.parentId },
+            { 'childOf': parentContext, 'references': [childOfRef, followsFromRef], 'expectedTraceId': parentContext.traceId, 'expectedParentId': parentContext.parentId},
+            { 'childOf': null, 'references': [childOfRef], 'expectedTraceId': childOfContext.traceId, 'expectedParentId': childOfContext.parentId },
+            { 'childOf': null, 'references': [followsFromRef], 'expectedTraceId': followsFromContext.traceId, 'expectedParentId': followsFromContext.parentId },
+            { 'childOf': null, 'references': [childOfRef, followsFromRef], 'expectedTraceId': childOfContext.traceId, 'expectedParentId': childOfContext.parentId }
+        ];
+
+        _.each(options, (o) => {
+            it ('span references serialize', (done) => {
+
+                let span = tracer.startSpan('bender', {
+                    childOf: o.childOf,
+                    references: o.references
+                });
+                span.finish();
+                span = ThriftUtils.spanToThrift(span);
+
+                server.on('message', function(msg, remote) {
+                    let thriftObj = thrift.Agent.emitBatch.argumentsMessageRW.readFrom(msg, 0);
+                    let batch = thriftObj.value.body.batch;
+                    let span = batch.spans[0];
+                    let ref = span.references[0];
+
+                    assert.isOk(batch);
+                    assert.isOk(TestUtils.thriftSpanEqual(span, batch.spans[0]));
+                    if (o.expectedTraceId) {
+                        assert.isOk(bufferEqual(span.traceIdLow, o.expectedTraceId));
+                    }
+
+                    if (o.expectedParentId) {
+                        assert.isOk(bufferEqual(span.parentId, o.expectedParentId));
+                    } else {
+                        assert.isNotOk(span.parentId);
+                    }
+
+                    sender.close();
+                    done();
+                });
+
+                sender.append(span);
+                sender.flush();
+            });
+        });
     });
 
     it ('flush spans when capacity is reached', () => {
