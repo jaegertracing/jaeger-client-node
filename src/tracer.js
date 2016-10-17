@@ -87,14 +87,14 @@ export default class Tracer {
     }
 
     _startInternalSpan(
-            spanContext: SpanContext,
-            operationName: string,
-            startTime: number,
-            internalTags: any = {},
-            tags: any = {},
-            parentContext: ?SpanContext,
-            rpcServer: boolean): Span {
-
+        spanContext: SpanContext,
+        operationName: string,
+        startTime: number,
+        internalTags: any = {},
+        tags: any = {},
+        parentContext: ?SpanContext,
+        rpcServer: boolean,
+        references: Array<Reference>): Span {
 
         let hadParent = parentContext && !parentContext.isDebugIDContainerOnly();
         let firstInProcess: boolean = rpcServer || (spanContext.parentId == null);
@@ -103,7 +103,8 @@ export default class Tracer {
             operationName,
             spanContext,
             startTime,
-            firstInProcess
+            firstInProcess,
+            references
         );
 
         span.addTags(tags);
@@ -177,21 +178,21 @@ export default class Tracer {
         fields.operationName = operationName;
 
         let tags = fields.tags || {};
-        let references = fields.references || [];
         let startTime = fields.startTime;
         if (!startTime) {
             startTime = Utils.getTimestampMicros();
         }
 
-        // TODO(oibe) support use of references
         let parent: ?SpanContext = fields.childOf instanceof Span ? fields.childOf.context(): fields.childOf;
-        if (!parent) {
+        if (!parent && fields.references) {
             // If there is no childOf in fields, then search list of references
-            for (let i = 0; i < references.length; i++) {
-                let ref: Reference = references[i];
+            for (let i = 0; i < fields.references.length; i++) {
+                let ref: Reference = fields.references[i];
                 let ref_type = ref.type();
                 if ((ref_type === opentracing.REFERENCE_CHILD_OF) ||
                     (ref_type === opentracing.REFERENCE_FOLLOWS_FROM)) {
+                    // TODO(oibe) which refference to use as parent when we have a list of
+                    // references? Should a new parent be created as when we receive no 'childOf'?
                     parent = ref.referencedContext();
                     break;
                 } else {
@@ -241,7 +242,8 @@ export default class Tracer {
             samplerTags,
             tags,
             parent,
-            rpcServer
+            rpcServer,
+            fields.references || []
         );
     }
 

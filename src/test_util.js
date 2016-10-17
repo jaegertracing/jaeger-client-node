@@ -21,6 +21,7 @@
 
 import _ from 'lodash';
 import bufferEqual from 'buffer-equal';
+import deepEqual from 'deep-equal';
 import opentracing from 'opentracing';
 import Span from './span';
 import Utils from './util';
@@ -155,5 +156,17 @@ export default class TestUtils {
         }
 
         return true;
+    }
+
+    static thriftSpanEqual(spanOne, spanTwo) {
+        return  bufferEqual(spanOne.traceIdLow, spanTwo.traceIdLow) &&
+                bufferEqual(spanOne.traceIdHigh, spanTwo.traceIdHigh) &&
+                bufferEqual(spanOne.spanId, spanTwo.spanId) &&
+                bufferEqual(spanOne.parentSpanId, spanTwo.parentSpanId) &&
+                spanOne.operationName === spanTwo.operationName &&
+                deepEqual(spanOne.references, spanTwo.references) &&
+                spanOne.flags === spanTwo.flags &&
+                bufferEqual(spanOne.startTime, spanTwo.startTime) &&
+                bufferEqual(spanOne.duration, spanTwo.duration);
     }
 }

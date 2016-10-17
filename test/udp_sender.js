@@ -25,7 +25,8 @@ import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
-import TestUtils from './lib/util.js';
+import opentracing from 'opentracing';
+import TestUtils from '../src/test_util.js';
 import Tracer from '../src/tracer.js';
 import {Thrift} from 'thriftrw';
 import ThriftUtils from '../src/thrift.js';
@@ -89,6 +90,31 @@ describe('udp sender should', () => {
 
         sender.append(spanOne);
         sender.append(spanTwo);
+        sender.flush();
+    });
+
+    it ('span references serialize', (done) => {
+        let context = tracer.startSpan('just-used-for-context').context();
+        let context2 = tracer.startSpan('just-used-for-context').context();
+        let spanOne = tracer.startSpan('operation-one', {
+            references: [
+                new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, context),
+                new opentracing.Reference(opentracing.REFERENCE_FOLLOWS_FROM, context2)
+            ]
+        });
+        spanOne.finish(); // finish to set span duration
+        spanOne = ThriftUtils.spanToThrift(spanOne);
+
+        server.on('message', (msg, remote) => {
+            let thriftObj = thrift.Agent.emitBatch.argumentsMessageRW.readFrom(msg, 0);
+            let batch = thriftObj.value.body.batch;
+            assert.isOk(batch);
+            assert.isOk(TestUtils.thriftSpanEqual(spanOne, batch.spans[0]));
+            sender.close();
+            done();
+        });
+
+        sender.append(spanOne);
         sender.flush();
     });
 

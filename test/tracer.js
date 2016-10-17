@@ -59,11 +59,12 @@ describe('tracer should', () => {
         let start = Utils.getTimestampMicros();
         let rpcServer = false;
         let internalTags = [];
+        let references = [];
         let tags = {
             'keyOne': 'leela',
             'keyTwo': 'bender'
         };
-        let span = tracer._startInternalSpan(context, 'op-name', start, internalTags, tags, null, rpcServer);
+        let span = tracer._startInternalSpan(context, 'op-name', start, internalTags, tags, null, rpcServer, references);
 
         assert.isOk(bufferEqual(span.context().traceId, traceId));
         assert.isOk(bufferEqual(span.context().spanId, spanId));
