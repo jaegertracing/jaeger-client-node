@@ -172,31 +172,28 @@ export default class Tracer {
     *        to represent time values with sub-millisecond accuracy.
     * @return {Span} - a new Span object.
     **/
-    startSpan(operationName: string, fields: startSpanArgs): Span {
-        // Convert fields.childOf to fields.references as needed.
-        fields = fields || {};
-        fields.operationName = operationName;
+    startSpan(operationName: string, options: startSpanArgs): Span {
+        // Convert options.childOf to options.references as needed.
+        options = options || {};
+        options.operationName = operationName;
+        options.references = options.references || [];
 
-        let tags = fields.tags || {};
-        let startTime = fields.startTime;
+        let tags = options.tags || {};
+        let startTime = options.startTime;
         if (!startTime) {
             startTime = Utils.getTimestampMicros();
         }
 
-        let parent: ?SpanContext = fields.childOf instanceof Span ? fields.childOf.context(): fields.childOf;
-        if (!parent && fields.references) {
-            // If there is no childOf in fields, then search list of references
-            for (let i = 0; i < fields.references.length; i++) {
-                let ref: Reference = fields.references[i];
-                let ref_type = ref.type();
-                if ((ref_type === opentracing.REFERENCE_CHILD_OF) ||
-                    (ref_type === opentracing.REFERENCE_FOLLOWS_FROM)) {
-                    // TODO(oibe) which refference to use as parent when we have a list of
-                    // references? Should a new parent be created as when we receive no 'childOf'?
+        let parent: ?SpanContext = options.childOf instanceof Span ? options.childOf.context(): options.childOf;
+        // If there is no childOf in options, then search list of references
+        for (let i = 0; i < options.references.length; i++) {
+            let ref: Reference = options.references[i];
+            if (ref.type() === opentracing.REFERENCE_CHILD_OF) {
+                if (!parent) {
                     parent = ref.referencedContext();
+                    // $FlowIgnore - the delete will be valid
+                    delete options.references[i];
                     break;
-                } else {
-                    // TODO(oibe) support other types of span references
                 }
             }
         }
@@ -237,13 +234,13 @@ export default class Tracer {
 
         return this._startInternalSpan(
             ctx,
-            fields.operationName,
+            options.operationName,
             startTime,
             samplerTags,
             tags,
             parent,
             rpcServer,
-            fields.references || []
+            options.references
         );
     }
 

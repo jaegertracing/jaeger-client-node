@@ -94,14 +94,20 @@ export default class ThriftUtils {
     static spanRefsToThriftRefs(refs: Array<Reference>): Array<any> {
         let thriftRefs = [];
         for (let i = 0; i < refs.length; i++) {
-            let refEnum;
             let ref = refs[i];
+            if (!ref) {
+                continue;
+            }
+
+            let refEnum;
             let context = refs[i].referencedContext();
 
             if (ref.type() === opentracing.REFERENCE_CHILD_OF) {
                 refEnum = ThriftUtils._thrift.SpanRefType.CHILD_OF;
             } else if (ref.type() === opentracing.REFERENCE_FOLLOWS_FROM) {
                 refEnum = ThriftUtils._thrift.SpanRefType.FOLLOWS_FROM
+            } else {
+                continue;
             }
 
             thriftRefs.push({

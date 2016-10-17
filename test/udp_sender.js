@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 import {assert} from 'chai';
+import bufferEqual from 'buffer-equal';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import * as constants from '../src/constants.js'
 import dgram from 'dgram';
@@ -94,12 +95,13 @@ describe('udp sender should', () => {
     });
 
     it ('span references serialize', (done) => {
-        let context = tracer.startSpan('just-used-for-context').context();
-        let context2 = tracer.startSpan('just-used-for-context').context();
+        let childOfContext = tracer.startSpan('just-used-for-context').context();
+        let followsFromContext = tracer.startSpan('just-used-for-context').context();
+        followsFromContext.traceId = childOfContext.traceId;
         let spanOne = tracer.startSpan('operation-one', {
             references: [
-                new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, context),
-                new opentracing.Reference(opentracing.REFERENCE_FOLLOWS_FROM, context2)
+                new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, childOfContext),
+                new opentracing.Reference(opentracing.REFERENCE_FOLLOWS_FROM, followsFromContext)
             ]
         });
         spanOne.finish(); // finish to set span duration
@@ -108,6 +110,12 @@ describe('udp sender should', () => {
         server.on('message', (msg, remote) => {
             let thriftObj = thrift.Agent.emitBatch.argumentsMessageRW.readFrom(msg, 0);
             let batch = thriftObj.value.body.batch;
+            let span = batch.spans[0];
+            let ref = span.references[0];
+
+            assert.isOk(bufferEqual(span.traceIdLow, ref.traceIdLow));
+            assert.isOk(bufferEqual(ref.traceIdLow, followsFromContext.traceId));
+            assert.isOk(bufferEqual(ref.spanId, followsFromContext.spanId));
             assert.isOk(batch);
             assert.isOk(TestUtils.thriftSpanEqual(spanOne, batch.spans[0]));
             sender.close();
