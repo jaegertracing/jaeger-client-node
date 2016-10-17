@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import _ from 'lodash';
 import {assert} from 'chai';
 import bufferEqual from 'buffer-equal';
 import ConstSampler from '../src/samplers/const_sampler.js';
@@ -95,35 +96,51 @@ describe('udp sender should', () => {
     });
 
     it ('span references serialize', (done) => {
-        let childOfContext = tracer.startSpan('just-used-for-context').context();
-        let followsFromContext = tracer.startSpan('just-used-for-context').context();
-        followsFromContext.traceId = childOfContext.traceId;
-        let spanOne = tracer.startSpan('operation-one', {
-            references: [
-                new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, childOfContext),
-                new opentracing.Reference(opentracing.REFERENCE_FOLLOWS_FROM, followsFromContext)
-            ]
+        let parentContext = tracer.startSpan('just-used-for-context').context();
+        let childOfRef = new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, tracer.startSpan('just-used-for-context').context());
+        let followsFromRef = new opentracing.Reference(tracer.startSpan('just-used-for-context').context());
+
+        var options = [
+            { 'childOf': null, 'references': [], 'expectedTraceId': null, 'expectedParentId': null },
+            { 'childOf': parentContext, 'references': [], 'expectedTraceId': parentContext.traceId, 'expectedParentId': parentContext.parentId },
+            { 'childOf': parentContext, 'references': [followsFromRef], 'expectedTraceId': parentContext.traceId, 'expectedParentId': parentContext.parentId },
+            { 'childOf': parentContext, 'references': [childOfRef, followsFromRef], 'expectedTraceId': parentContext.traceId, 'expectedParentId': parentContext.parentId},
+            { 'childOf': null, 'references': [childOfRef], 'expectedTraceId': childOfRef.traceId, 'expectedParentId': childOfRef.parentId },
+            { 'childOf': null, 'references': [followsFromRef], 'expectedTraceId': followsFromRef.traceId, 'expectedParentId': followsFromRef.parentId },
+            { 'childOf': null, 'references': [childOfRef, followsFromRef], 'expectedTraceId': childOfRef.traceId, 'expectedParentId': childOfRef.parentId }
+        ];
+
+        _.each(options, (o) => {
+            let span = tracer.startSpan('bender', {
+                childOf: o.childOf,
+                references: o.references
+            });
+            span.finish();
+            span = ThriftUtils.spanToThrift(span);
+
+            server.on('message', (msg, remote) => {
+                let thriftObj = thrift.Agent.emitBatch.argumentsMessageRW.readFrom(msg, 0);
+                let batch = thriftObj.value.body.batch;
+                let span = batch.spans[0];
+                let ref = span.references[0];
+
+                assert.isOk(batch);
+                assert.isOk(TestUtils.thriftSpanEqual(span, batch.spans[0]));
+                if (o.expectedTraceId) {
+                    assert.isOk(bufferEqual(span.traceIdLow, o.expectedTraceId));
+                }
+
+                if (o.expectedparentId) {
+                    assert.isOk(bufferEqual(span.parentId, o.expectedParentId));
+                }
+
+                sender.close();
+                done();
+            });
+
+            sender.append(span);
+            sender.flush();
         });
-        spanOne.finish(); // finish to set span duration
-        spanOne = ThriftUtils.spanToThrift(spanOne);
-
-        server.on('message', (msg, remote) => {
-            let thriftObj = thrift.Agent.emitBatch.argumentsMessageRW.readFrom(msg, 0);
-            let batch = thriftObj.value.body.batch;
-            let span = batch.spans[0];
-            let ref = span.references[0];
-
-            assert.isOk(bufferEqual(span.traceIdLow, ref.traceIdLow));
-            assert.isOk(bufferEqual(ref.traceIdLow, followsFromContext.traceId));
-            assert.isOk(bufferEqual(ref.spanId, followsFromContext.spanId));
-            assert.isOk(batch);
-            assert.isOk(TestUtils.thriftSpanEqual(spanOne, batch.spans[0]));
-            sender.close();
-            done();
-        });
-
-        sender.append(spanOne);
-        sender.flush();
     });
 
     it ('flush spans when capacity is reached', () => {

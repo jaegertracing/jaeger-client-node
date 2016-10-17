@@ -191,8 +191,6 @@ export default class Tracer {
             if (ref.type() === opentracing.REFERENCE_CHILD_OF) {
                 if (!parent) {
                     parent = ref.referencedContext();
-                    // $FlowIgnore - the delete will be valid
-                    delete options.references[i];
                     break;
                 }
             }
