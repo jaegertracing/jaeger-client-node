@@ -185,6 +185,11 @@ export default class Tracer {
         }
 
         let parent: ?SpanContext = options.childOf instanceof Span ? options.childOf.context(): options.childOf;
+
+        if (!parent && options.references.length > 0) {
+            parent = options.references[0].referencedContext();
+        }
+
         // If there is no childOf in options, then search list of references
         for (let i = 0; i < options.references.length; i++) {
             let ref: Reference = options.references[i];

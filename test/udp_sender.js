@@ -95,51 +95,63 @@ describe('udp sender should', () => {
         sender.flush();
     });
 
-    it ('span references serialize', (done) => {
+    describe('span reference tests', () => {
+        let tracer = new Tracer(
+            'test-service-name',
+            new InMemoryReporter(),
+            new ConstSampler(true)
+        );
         let parentContext = tracer.startSpan('just-used-for-context').context();
-        let childOfRef = new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, tracer.startSpan('just-used-for-context').context());
-        let followsFromRef = new opentracing.Reference(tracer.startSpan('just-used-for-context').context());
+        let childOfContext = tracer.startSpan('just-used-for-context').context();
+        let childOfRef = new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, childOfContext);
+        let followsFromContext = tracer.startSpan('just-used-for-context').context();
+        let followsFromRef = new opentracing.Reference(opentracing.REFERENCE_FOLLOWS_FROM, followsFromContext);
 
-        var options = [
+        let options = [
             { 'childOf': null, 'references': [], 'expectedTraceId': null, 'expectedParentId': null },
             { 'childOf': parentContext, 'references': [], 'expectedTraceId': parentContext.traceId, 'expectedParentId': parentContext.parentId },
             { 'childOf': parentContext, 'references': [followsFromRef], 'expectedTraceId': parentContext.traceId, 'expectedParentId': parentContext.parentId },
             { 'childOf': parentContext, 'references': [childOfRef, followsFromRef], 'expectedTraceId': parentContext.traceId, 'expectedParentId': parentContext.parentId},
-            { 'childOf': null, 'references': [childOfRef], 'expectedTraceId': childOfRef.traceId, 'expectedParentId': childOfRef.parentId },
-            { 'childOf': null, 'references': [followsFromRef], 'expectedTraceId': followsFromRef.traceId, 'expectedParentId': followsFromRef.parentId },
-            { 'childOf': null, 'references': [childOfRef, followsFromRef], 'expectedTraceId': childOfRef.traceId, 'expectedParentId': childOfRef.parentId }
+            { 'childOf': null, 'references': [childOfRef], 'expectedTraceId': childOfContext.traceId, 'expectedParentId': childOfContext.parentId },
+            { 'childOf': null, 'references': [followsFromRef], 'expectedTraceId': followsFromContext.traceId, 'expectedParentId': followsFromContext.parentId },
+            { 'childOf': null, 'references': [childOfRef, followsFromRef], 'expectedTraceId': childOfContext.traceId, 'expectedParentId': childOfContext.parentId }
         ];
 
         _.each(options, (o) => {
-            let span = tracer.startSpan('bender', {
-                childOf: o.childOf,
-                references: o.references
+            it ('span references serialize', (done) => {
+
+                let span = tracer.startSpan('bender', {
+                    childOf: o.childOf,
+                    references: o.references
+                });
+                span.finish();
+                span = ThriftUtils.spanToThrift(span);
+
+                server.on('message', function(msg, remote) {
+                    let thriftObj = thrift.Agent.emitBatch.argumentsMessageRW.readFrom(msg, 0);
+                    let batch = thriftObj.value.body.batch;
+                    let span = batch.spans[0];
+                    let ref = span.references[0];
+
+                    assert.isOk(batch);
+                    assert.isOk(TestUtils.thriftSpanEqual(span, batch.spans[0]));
+                    if (o.expectedTraceId) {
+                        assert.isOk(bufferEqual(span.traceIdLow, o.expectedTraceId));
+                    }
+
+                    if (o.expectedParentId) {
+                        assert.isOk(bufferEqual(span.parentId, o.expectedParentId));
+                    } else {
+                        assert.isNotOk(span.parentId);
+                    }
+
+                    sender.close();
+                    done();
+                });
+
+                sender.append(span);
+                sender.flush();
             });
-            span.finish();
-            span = ThriftUtils.spanToThrift(span);
-
-            server.on('message', (msg, remote) => {
-                let thriftObj = thrift.Agent.emitBatch.argumentsMessageRW.readFrom(msg, 0);
-                let batch = thriftObj.value.body.batch;
-                let span = batch.spans[0];
-                let ref = span.references[0];
-
-                assert.isOk(batch);
-                assert.isOk(TestUtils.thriftSpanEqual(span, batch.spans[0]));
-                if (o.expectedTraceId) {
-                    assert.isOk(bufferEqual(span.traceIdLow, o.expectedTraceId));
-                }
-
-                if (o.expectedparentId) {
-                    assert.isOk(bufferEqual(span.parentId, o.expectedParentId));
-                }
-
-                sender.close();
-                done();
-            });
-
-            sender.append(span);
-            sender.flush();
         });
     });
 
