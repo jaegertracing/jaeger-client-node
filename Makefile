@@ -3,9 +3,8 @@
 .PHONY: publish
 publish: build-node
 	npm version $(shell ./scripts/version_prompt.sh)
-	git push  --set-upstream origin $(shell bash -c "git rev-parse --abbrev-ref HEAD")
-	git push origin --tags
-	# follow internal instructions to publish npm through uber account
+	# Make a pull request for this version.
+	# Follow internal instructions to publish npm through uber account.
 
 .PHONY: test
 test: build-node
