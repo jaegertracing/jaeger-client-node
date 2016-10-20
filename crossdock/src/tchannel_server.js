@@ -37,7 +37,7 @@ export default class TChannelServer {
             'entryPoint': crossdockSpecPath
         });
 
-        tchannelThrift.register(serverChannel, 'TracedService::startTrace', {}, this.handleTChannelRequest.bind(this));
+        //tchannelThrift.register(serverChannel, 'TracedService::startTrace', {}, this.handleTChannelRequest.bind(this));
         tchannelThrift.register(serverChannel, 'TracedService::joinTrace', {}, this.handleTChannelRequest.bind(this));
 
         serverChannel.listen(8082, Utils.myIp(), () => {

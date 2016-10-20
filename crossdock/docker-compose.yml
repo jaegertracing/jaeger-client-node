@@ -9,14 +9,14 @@ services:
             - python
             - node
         environment:
-            - WAIT_FOR=go,java,python,node
+            - WAIT_FOR=go,node
 
             - AXIS_CLIENT=go
-            - AXIS_S1NAME=go,java,node
+            - AXIS_S1NAME=go,node
             - AXIS_SAMPLED=true
-            - AXIS_S2NAME=go,java,node
+            - AXIS_S2NAME=go,node
             - AXIS_S2TRANSPORT=http,tchannel
-            - AXIS_S3NAME=go,java,node
+            - AXIS_S3NAME=go,node
             - AXIS_S3TRANSPORT=http,tchannel
 
             - BEHAVIOR_TRACE=client,s1name,sampled,s2name,s2transport,s3name,s3transport

@@ -1,0 +1,37 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+     {
+            "name": "Debug Mocha tests",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceRoot}/node_modules/.bin/_mocha",
+            "stopOnEntry": false,
+            "args": ["-t", "10000000", "--debug-brk", "./dist/crossdock/test/http_server.js"],
+            "cwd": "${workspaceRoot}",
+            "preLaunchTask": null,
+            "runtimeExecutable": "/Users/onwukikeibe/.nvm/v0.10.32/bin/node",
+            "runtimeArgs": [
+                "--nolazy"
+            ],
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "externalConsole": false,
+            "sourceMaps": true,
+            "outDir": "${workspaceRoot}/dist"
+    },
+    {
+      "name": "Attach",
+      "type": "node2",
+      "request": "attach",
+      "port": 5858,
+      "address": "0.0.0.0",
+      "restart": false,
+      "sourceMaps": false,
+      "outFiles": [],
+      "localRoot": "${workspaceRoot}",
+      "remoteRoot": null
+    }
+  ]
+}

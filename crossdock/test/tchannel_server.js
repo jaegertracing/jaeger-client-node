@@ -37,54 +37,6 @@ describe('crossdock tchannel server should', () => {
         ip = Utils.myIp();
     });
 
-    it ('return not implemented start_trace', (done) => {
-        let clientChannel = new TChannel();
-        var requestChannel = clientChannel.makeSubChannel({
-            serviceName: 'node',
-            peers: [Utils.myIp() + ':8082']
-        });
-        var tchannelAsThrift = TChannelAsThrift({
-            channel: requestChannel,
-            entryPoint: crossdockSpecPath
-        });
-
-        let startRequest = {
-            'serverRole': 'S1',
-            'sampled': true,
-            'baggage': '7e859ffef96e5da6',
-            'downstream': {
-                'serviceName': 'node',
-                'serverRole': 'S1',
-                'host': 'node',
-                'port': '8082',
-                'transport': 'TCHANNEL'
-            }
-        };
-
-        tchannelAsThrift.request({
-            serviceName: 'node',
-            headers: {
-                cn: 'node-tchannel'
-            },
-            hasNoParent: true
-        }).send('TracedService::startTrace', {
-            someHeader: 'headerValue'
-        }, {'request': startRequest}, (err, res) => {
-            if (err) {
-                console.log('got error', err);
-            } else {
-                let traceResponse = res.body;
-                assert.equal(traceResponse.span.traceId, 'no span found');
-                assert.equal(traceResponse.span.sampled, false);
-                assert.equal(traceResponse.span.baggage, 'no span found');
-                assert.equal(traceResponse.notImplementedError, 'TChannel crossdock not implemented for node.');
-            }
-            done();
-        });
-
-
-    }).timeout(7000);
-
     it ('return not implemented response for join_trace', (done) => {
         let clientChannel = new TChannel();
         var requestChannel = clientChannel.makeSubChannel({
