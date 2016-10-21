@@ -37,9 +37,17 @@ var _ratelimiting_sampler = require('./ratelimiting_sampler.js');
 
 var _ratelimiting_sampler2 = _interopRequireDefault(_ratelimiting_sampler);
 
+var _metrics = require('../metrics/metrics.js');
+
+var _metrics2 = _interopRequireDefault(_metrics);
+
 var _logger = require('../logger.js');
 
 var _logger2 = _interopRequireDefault(_logger);
+
+var _metric_factory = require('../metrics/noop/metric_factory');
+
+var _metric_factory2 = _interopRequireDefault(_metric_factory);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -69,6 +77,7 @@ var RemoteControlledSampler = function () {
         this._onSamplerUpdate = options.onSamplerUpdate;
         this._host = options.host || DEFAULT_SAMPLING_HOST;
         this._port = options.port || DEFAULT_SAMPLING_PORT;
+        this._metrics = options.metrics || new _metrics2.default(new _metric_factory2.default());
 
         if (!options.stopPolling) {
             this._timeoutHandle = setTimeout(function () {
@@ -78,6 +87,11 @@ var RemoteControlledSampler = function () {
     }
 
     _createClass(RemoteControlledSampler, [{
+        key: 'name',
+        value: function name() {
+            return 'RemoteSampler';
+        }
+    }, {
         key: '_refreshSamplingStrategy',
         value: function _refreshSamplingStrategy() {
             this._getSamplingStrategy(this._callerName);
@@ -91,6 +105,10 @@ var RemoteControlledSampler = function () {
             _request2.default.get('http://' + this._host + ':' + this._port + '/?service=' + encodedCaller, function (err, response) {
                 if (err) {
                     _this2._logger.error('Error in fetching sampling strategy.');
+                    _this2._metrics.samplerQueryFailure.increment(1);
+                    if (_this2._onSamplerUpdate) {
+                        _this2._onSamplerUpdate();
+                    }
                     return null;
                 }
 
@@ -113,11 +131,14 @@ var RemoteControlledSampler = function () {
                 var maxTracesPerSecond = strategy.rateLimitingSampling.maxTracesPerSecond;
                 newSampler = new _ratelimiting_sampler2.default(maxTracesPerSecond);
             } else {
+                this._metrics.samplerParsingFailure.increment(1);
                 this._logger.error('Unrecognized strategy type: ' + JSON.stringify({ error: strategy }));
             }
+            this._metrics.samplerRetrieved.increment(1);
 
             if (newSampler && !this._sampler.equal(newSampler)) {
                 this._sampler = newSampler;
+                this._metrics.samplerUpdated.increment(1);
             }
 
             if (this._onSamplerUpdate) {

@@ -1,4 +1,4 @@
-var initTracer = require('./dist/src/index.js').initTracer;
+var Configuration = require('./dist/src/configuration.js').default;
 var ConstSampler = require('./dist/src/samplers/const_sampler.js').default;
 var ProbabilisticSampler = require('./dist/src/samplers/probabilistic_sampler.js').default;
 var RateLimitingSampler = require('./dist/src/samplers/ratelimiting_sampler.js').default;
@@ -12,7 +12,7 @@ var SpanContext = require('./dist/src/span_context.js').default;
 var TestUtils = require('./dist/src/test_util.js').default
 
 module.exports = {
-    initTracer: initTracer,
+    initTracer: Configuration.initTracer,
     ConstSampler: ConstSampler,
     ProbabilisticSampler: ProbabilisticSampler,
     RateLimitingSampler: RateLimitingSampler,

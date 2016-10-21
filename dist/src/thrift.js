@@ -33,6 +33,10 @@ var _long = require('long');
 
 var _long2 = _interopRequireDefault(_long);
 
+var _opentracing = require('opentracing');
+
+var _opentracing2 = _interopRequireDefault(_opentracing);
+
 var _path = require('path');
 
 var _path2 = _interopRequireDefault(_path);
@@ -114,6 +118,33 @@ var ThriftUtils = function () {
             return thriftLogs;
         }
     }, {
+        key: 'spanRefsToThriftRefs',
+        value: function spanRefsToThriftRefs(refs) {
+            var thriftRefs = [];
+            for (var i = 0; i < refs.length; i++) {
+                var refEnum = void 0;
+                var ref = refs[i];
+                var context = refs[i].referencedContext();
+
+                if (ref.type() === _opentracing2.default.REFERENCE_CHILD_OF) {
+                    refEnum = ThriftUtils._thrift.SpanRefType.CHILD_OF;
+                } else if (ref.type() === _opentracing2.default.REFERENCE_FOLLOWS_FROM) {
+                    refEnum = ThriftUtils._thrift.SpanRefType.FOLLOWS_FROM;
+                } else {
+                    continue;
+                }
+
+                thriftRefs.push({
+                    refType: refEnum,
+                    traceIdLow: context.traceId,
+                    traceIdHigh: ThriftUtils.emptyBuffer,
+                    spanId: context.spanId
+                });
+            }
+
+            return thriftRefs;
+        }
+    }, {
         key: 'spanToThrift',
         value: function spanToThrift(span) {
             var tags = ThriftUtils.getThriftTags(span._tags);
@@ -126,7 +157,7 @@ var ThriftUtils = function () {
                 spanId: span._spanContext.spanId,
                 parentSpanId: span._spanContext.parentId || ThriftUtils.emptyBuffer,
                 operationName: span._operationName,
-                references: [], // TODO(oibe) revist correctness after a spanRef diff is landed.
+                references: ThriftUtils.spanRefsToThriftRefs(span._references),
                 flags: span._spanContext.flags,
                 startTime: _util2.default.encodeInt64(span._startTime),
                 duration: _util2.default.encodeInt64(span._duration),
