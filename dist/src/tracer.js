@@ -25,15 +25,15 @@ var _createClass = function () { function defineProperties(target, props) { for 
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-var _binary_codec = require('./propagators/binary_codec.js');
+var _binary_codec = require('./propagators/binary_codec');
 
 var _binary_codec2 = _interopRequireDefault(_binary_codec);
 
-var _const_sampler = require('./samplers/const_sampler.js');
+var _const_sampler = require('./samplers/const_sampler');
 
 var _const_sampler2 = _interopRequireDefault(_const_sampler);
 
-var _constants = require('./constants.js');
+var _constants = require('./constants');
 
 var constants = _interopRequireWildcard(_constants);
 
@@ -41,33 +41,41 @@ var _opentracing = require('opentracing');
 
 var opentracing = _interopRequireWildcard(_opentracing);
 
-var _noop_reporter = require('./reporters/noop_reporter.js');
-
-var _noop_reporter2 = _interopRequireDefault(_noop_reporter);
-
 var _package = require('../package.json');
 
 var _package2 = _interopRequireDefault(_package);
 
-var _span = require('./span.js');
+var _noop_reporter = require('./reporters/noop_reporter');
+
+var _noop_reporter2 = _interopRequireDefault(_noop_reporter);
+
+var _span = require('./span');
 
 var _span2 = _interopRequireDefault(_span);
 
-var _span_context = require('./span_context.js');
+var _span_context = require('./span_context');
 
 var _span_context2 = _interopRequireDefault(_span_context);
 
-var _text_map_codec = require('./propagators/text_map_codec.js');
+var _text_map_codec = require('./propagators/text_map_codec');
 
 var _text_map_codec2 = _interopRequireDefault(_text_map_codec);
 
-var _logger = require('./logger.js');
+var _logger = require('./logger');
 
 var _logger2 = _interopRequireDefault(_logger);
 
-var _util = require('./util.js');
+var _util = require('./util');
 
 var _util2 = _interopRequireDefault(_util);
+
+var _metrics = require('./metrics/metrics');
+
+var _metrics2 = _interopRequireDefault(_metrics);
+
+var _metric_factory = require('./metrics/noop/metric_factory');
+
+var _metric_factory2 = _interopRequireDefault(_metric_factory);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -79,27 +87,34 @@ var Tracer = function () {
     function Tracer(serviceName) {
         var reporter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new _noop_reporter2.default();
         var sampler = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new _const_sampler2.default(false);
-        var logger = arguments[3];
-        var tags = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+        var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
 
         _classCallCheck(this, Tracer);
 
-        this._tags = tags;
+        this._tags = options.tags || {};
         this._tags[constants.JAEGER_CLIENT_VERSION_TAG_KEY] = 'Node-' + _package2.default.version;
         this._tags[constants.TRACER_HOSTNAME_TAG_KEY] = _util2.default.myIp();
+
+        this._metrics = options.metrics || new _metrics2.default(new _metric_factory2.default());
 
         this._serviceName = serviceName;
         this._reporter = reporter;
         this._sampler = sampler;
-        this._logger = logger || new _logger2.default();
+        this._logger = options.logger || new _logger2.default();
         this._injectors = {};
         this._extractors = {};
 
-        var textCodec = new _text_map_codec2.default(false);
+        var textCodec = new _text_map_codec2.default({
+            urlEncoding: false,
+            metrics: this._metrics
+        });
         this.registerInjector(opentracing.FORMAT_TEXT_MAP, textCodec);
         this.registerExtractor(opentracing.FORMAT_TEXT_MAP, textCodec);
 
-        var httpCodec = new _text_map_codec2.default(true);
+        var httpCodec = new _text_map_codec2.default({
+            urlEncoding: true,
+            metrics: this._metrics
+        });
         this.registerInjector(opentracing.FORMAT_HTTP_HEADERS, httpCodec);
         this.registerExtractor(opentracing.FORMAT_HTTP_HEADERS, httpCodec);
 
@@ -120,19 +135,42 @@ var Tracer = function () {
         value: function _startInternalSpan(spanContext, operationName, startTime) {
             var internalTags = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
             var tags = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
-            var rpcServer = arguments[5];
+            var parentContext = arguments[5];
+            var rpcServer = arguments[6];
+            var references = arguments[7];
 
 
+            var hadParent = parentContext && !parentContext.isDebugIDContainerOnly();
             var firstInProcess = rpcServer || spanContext.parentId == null;
-            var span = new _span2.default(this, operationName, spanContext, startTime, firstInProcess);
+            var span = new _span2.default(this, operationName, spanContext, startTime, firstInProcess, references);
 
             span.addTags(tags);
             span.addTags(internalTags);
+
+            // emit metrics
+            this._metrics.spansStarted.increment(1);
+            if (span.context().isSampled()) {
+                this._metrics.spansSampled.increment(1);
+                if (!hadParent) {
+                    this._metrics.tracesStartedSampled.increment(1);
+                } else if (rpcServer) {
+                    this._metrics.tracesJoinedSampled.increment(1);
+                }
+            } else {
+                this._metrics.spansNotSampled.increment(1);
+                if (!hadParent) {
+                    this._metrics.tracesStartedNotSampled.increment(1);
+                } else if (rpcServer) {
+                    this._metrics.tracesJoinedNotSampled.increment(1);
+                }
+            }
+
             return span;
         }
     }, {
         key: '_report',
         value: function _report(span) {
+            this._metrics.spansFinished.increment(1);
             if (span.firstInProcess) {
                 span.addTags(this._tags);
             }
@@ -177,30 +215,32 @@ var Tracer = function () {
 
     }, {
         key: 'startSpan',
-        value: function startSpan(operationName, fields) {
-            // Convert fields.childOf to fields.references as needed.
-            fields = fields || {};
-            fields.operationName = operationName;
+        value: function startSpan(operationName, options) {
+            // Convert options.childOf to options.references as needed.
+            options = options || {};
+            options.operationName = operationName;
+            options.references = options.references || [];
 
-            var tags = fields.tags || {};
-            var references = fields.references || [];
-            var startTime = fields.startTime;
+            var tags = options.tags || {};
+            var startTime = options.startTime;
             if (!startTime) {
                 startTime = _util2.default.getTimestampMicros();
             }
 
-            // TODO(oibe) support use of references
-            var parent = fields.childOf instanceof _span2.default ? fields.childOf.context() : fields.childOf;
-            if (!parent) {
-                // If there is no childOf in fields, then search list of references
-                for (var i = 0; i < references.length; i++) {
-                    var ref = references[i];
-                    var ref_type = ref.type();
-                    if (ref_type === opentracing.REFERENCE_CHILD_OF || ref_type === opentracing.REFERENCE_FOLLOWS_FROM) {
+            var followsFromIsParent = false;
+            var parent = options.childOf instanceof _span2.default ? options.childOf.context() : options.childOf;
+            // If there is no childOf in options, then search list of references
+            for (var i = 0; i < options.references.length; i++) {
+                var ref = options.references[i];
+                if (ref.type() === opentracing.REFERENCE_CHILD_OF) {
+                    if (!parent || followsFromIsParent) {
                         parent = ref.referencedContext();
                         break;
-                    } else {
-                        // TODO(oibe) support other types of span references
+                    }
+                } else if (ref.type() === opentracing.REFERENCE_FOLLOWS_FROM) {
+                    if (!parent) {
+                        parent = ref.referencedContext();
+                        followsFromIsParent = true;
                     }
                 }
             }
@@ -230,21 +270,15 @@ var Tracer = function () {
                 ctx.flags = flags;
             } else {
                 ctx.traceId = parent.traceId;
-                if (rpcServer) {
-                    // Support Zipkin's one-span-per-RPC model
-                    ctx.spanId = parent.spanId;
-                    ctx.parentId = parent.parentId;
-                } else {
-                    ctx.spanId = _util2.default.getRandom64();
-                    ctx.parentId = parent.spanId;
-                }
+                ctx.spanId = _util2.default.getRandom64();
+                ctx.parentId = parent.spanId;
                 ctx.flags = parent.flags;
 
                 // reuse parent's baggage as we'll never change it
                 ctx.baggage = parent.baggage;
             }
 
-            return this._startInternalSpan(ctx, fields.operationName, startTime, samplerTags, tags, rpcServer);
+            return this._startInternalSpan(ctx, options.operationName, startTime, samplerTags, tags, parent, rpcServer, options.references);
         }
 
         /**
