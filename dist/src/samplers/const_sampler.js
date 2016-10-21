@@ -44,6 +44,11 @@ var ConstSampler = function () {
     }
 
     _createClass(ConstSampler, [{
+        key: 'name',
+        value: function name() {
+            return 'ConstSampler';
+        }
+    }, {
         key: 'isSampled',
         value: function isSampled() {
             return this._decision;

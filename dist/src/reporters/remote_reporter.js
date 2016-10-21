@@ -33,6 +33,14 @@ var _thrift = require('../thrift.js');
 
 var _thrift2 = _interopRequireDefault(_thrift);
 
+var _metrics = require('../metrics/metrics.js');
+
+var _metrics2 = _interopRequireDefault(_metrics);
+
+var _metric_factory = require('../metrics/noop/metric_factory');
+
+var _metric_factory2 = _interopRequireDefault(_metric_factory);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -53,14 +61,21 @@ var RemoteReporter = function () {
         this._intervalHandle = setInterval(function () {
             _this.flush();
         }, this._bufferFlushInterval);
+        this._metrics = options.metrics || new _metrics2.default(new _metric_factory2.default());
     }
 
     _createClass(RemoteReporter, [{
+        key: 'name',
+        value: function name() {
+            return 'LoggingReporter';
+        }
+    }, {
         key: 'report',
         value: function report(span) {
             var response = this._sender.append(_thrift2.default.spanToThrift(span));
             if (response.err) {
                 this._logger.error('Failed to append spans in reporter.');
+                this._metrics.reporterDropped.increment(response.numSpans);
             }
         }
     }, {
@@ -69,6 +84,9 @@ var RemoteReporter = function () {
             var response = this._sender.flush(callback);
             if (response.err) {
                 this._logger.error('Failed to flush spans in reporter.');
+                this._metrics.reporterFailure.increment(response.numSpans);
+            } else {
+                this._metrics.reporterSuccess.increment(response.numSpans);
             }
         }
     }, {

@@ -46,6 +46,11 @@ var InMemoryReporter = function () {
     }
 
     _createClass(InMemoryReporter, [{
+        key: 'name',
+        value: function name() {
+            return 'InMemoryReporter';
+        }
+    }, {
         key: 'report',
         value: function report(span) {
             this._spans.push(span);

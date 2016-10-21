@@ -33,15 +33,19 @@ var _bufferEqual = require('buffer-equal');
 
 var _bufferEqual2 = _interopRequireDefault(_bufferEqual);
 
+var _deepEqual = require('deep-equal');
+
+var _deepEqual2 = _interopRequireDefault(_deepEqual);
+
 var _opentracing = require('opentracing');
 
 var _opentracing2 = _interopRequireDefault(_opentracing);
 
-var _span = require('./span.js');
+var _span = require('./span');
 
 var _span2 = _interopRequireDefault(_span);
 
-var _util = require('./util.js');
+var _util = require('./util');
 
 var _util2 = _interopRequireDefault(_util);
 
@@ -201,6 +205,11 @@ var TestUtils = function () {
             }
 
             return true;
+        }
+    }, {
+        key: 'thriftSpanEqual',
+        value: function thriftSpanEqual(spanOne, spanTwo) {
+            return (0, _bufferEqual2.default)(spanOne.traceIdLow, spanTwo.traceIdLow) && (0, _bufferEqual2.default)(spanOne.traceIdHigh, spanTwo.traceIdHigh) && (0, _bufferEqual2.default)(spanOne.spanId, spanTwo.spanId) && (0, _bufferEqual2.default)(spanOne.parentSpanId, spanTwo.parentSpanId) && spanOne.operationName === spanTwo.operationName && (0, _deepEqual2.default)(spanOne.references, spanTwo.references) && spanOne.flags === spanTwo.flags && (0, _bufferEqual2.default)(spanOne.startTime, spanTwo.startTime) && (0, _bufferEqual2.default)(spanOne.duration, spanTwo.duration);
         }
     }]);
 
