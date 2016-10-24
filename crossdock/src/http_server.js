@@ -20,26 +20,33 @@
 // THE SOFTWARE.
 
 import bodyParser from 'body-parser';
+import ConstSampler from '../../src/samplers/const_sampler.js';
 import express from 'express';
 import Helpers from './helpers';
+import InMemoryReporter from '../../src/reporters/in_memory_reporter.js';
+import opentracing from 'opentracing';
+import Tracer from '../../src/tracer.js';
 
 export default class HttpServer {
+    _tracer: Tracer;
+
     constructor() {
         let app = express();
-        this._helpers = new Helpers();
+        this._tracer = new Tracer('node', new InMemoryReporter(), new ConstSampler(false));
+        this._helpers = new Helpers(this._tracer);
 
         // json responses need bodyParser when working with express
         app.use(bodyParser.json());
 
         app.post('/start_trace', (req, res) => {
             let startRequest: boolean = true;
+            let spanContext = this._tracer.extract(opentracing.FORMAT_HTTP_HEADERS, req.headers);
             let traceRequest = req.body;
-            let headers = req.headers;
             let promise = this._helpers.handleRequest(
                 startRequest,
                 'start_trace#',
                 traceRequest,
-                headers
+                spanContext
             );
             promise.then((response) => {
                 let traceResponse = JSON.stringify(response);
@@ -50,12 +57,13 @@ export default class HttpServer {
         app.post('/join_trace', (req, res) => {
             let startRequest: boolean = false;
             let traceRequest = req.body;
-            let headers = req.headers;
+            let spanContext = this._tracer.extract(opentracing.FORMAT_HTTP_HEADERS, req.headers);
+
             let promise = this._helpers.handleRequest(
                 startRequest,
                 'join_trace#',
                 traceRequest,
-                headers
+                spanContext
             );
             promise.then((response) => {
                 let traceResponse = JSON.stringify(response);

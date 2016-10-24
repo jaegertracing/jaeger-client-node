@@ -19,7 +19,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import * as constants from '../src/constants';
+import * as crossdock_constants from '../crossdock/src/constants';
+import * as constants from './constants';
 import Int64 from 'node-int64';
 import Span from './span';
 import SpanContext from './span_context';
@@ -63,26 +64,37 @@ export default class TChannelBridge {
     static getSpanFromTChannelRequest(tracer: Tracer, request: any, headers: any, options: any): Span {
         options = options || {};
 
-        let traceContext = new SpanContext();
-        if (Buffer.isBuffer(request.span.id)) {
-            traceContext.spanId = request.span.id;
-            traceContext.traceId = request.span.traceid;
-            traceContext.parentId = request.span.parentid;
-            traceContext.flags = request.span.flags;
-        } else {
-            traceContext.spanId = new Int64(request.span.id[0], request.span.id[1]).toBuffer();
-            traceContext.traceId = new Int64(request.span.traceid[0], request.span.traceid[1]).toBuffer();
-            traceContext.parentId = new Int64(request.span.parentid[0], request.span.parentid[1]).toBuffer();
-            traceContext.flags = request.span.flags;
+        let traceContext;
+        if (crossdock_constants.TCHANNEL_HEADER_TRACER_STATE_KEY in headers) {
+            traceContext = SpanContext.fromString(headers[`${crossdock_constants.TCHANNEL_HEADER_TRACER_STATE_KEY}`]);
+        } else if (request.span) {
+            traceContext = new SpanContext();
+            if (Buffer.isBuffer(request.span.id)) {
+                traceContext.spanId = request.span.id;
+                traceContext.traceId = request.span.traceid;
+                traceContext.parentId = request.span.parentid;
+                traceContext.flags = request.span.flags;
+            } else {
+                traceContext.spanId = new Int64(request.span.id[0], request.span.id[1]).toBuffer();
+                traceContext.traceId = new Int64(request.span.traceid[0], request.span.traceid[1]).toBuffer();
+                traceContext.parentId = new Int64(request.span.parentid[0], request.span.parentid[1]).toBuffer();
+                traceContext.flags = request.span.flags;
+            }
         }
 
         options.childOf = traceContext;
         let span = tracer.startSpan(String(request.arg1), options);
 
         for (let key in headers) {
-            if (Utils.startsWith(key, constants.TRACER_BAGGAGE_HEADER_PREFIX)) {
+            let modifiedKey = key;
+            if (Utils.startsWith(key, crossdock_constants.TCHANNEL_TRACING_PREFIX)) {
+                modifiedKey = key.substring(crossdock_constants.TCHANNEL_TRACING_PREFIX.length);
+                console.log('modified key', modifiedKey);
+            }
+
+            if (Utils.startsWith(modifiedKey, constants.TRACER_BAGGAGE_HEADER_PREFIX)) {
                 let baggageValue = headers[key];
-                let baggageKey = key.substring(constants.TRACER_BAGGAGE_HEADER_PREFIX.length);
+                let baggageKey = modifiedKey.substring(constants.TRACER_BAGGAGE_HEADER_PREFIX.length);
                 span.setBaggageItem(baggageKey, baggageValue);
             }
         }
@@ -90,7 +102,8 @@ export default class TChannelBridge {
         return span;
     }
 
-    static saveBaggageToHeaders(headers: any, carrier: any): any {
+    static saveBaggageToHeaders(span: Span, carrier: any): any {
+        let headers = span.context().baggage;
         for (let key in headers) {
             if (headers.hasOwnProperty(key)) {
                 let value = headers[key];
@@ -100,12 +113,4 @@ export default class TChannelBridge {
 
         return carrier;
     }
-
-
-
-
-
-
-
-
 }

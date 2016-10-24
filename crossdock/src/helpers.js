@@ -20,26 +20,37 @@
 // THE SOFTWARE.
 
 import * as constants from './constants.js';
-import ConstSampler from '../../src/samplers/const_sampler.js';
+import fs from 'fs';
+import path from 'path';
 import dns from 'dns';
-import InMemoryReporter from '../../src/reporters/in_memory_reporter.js';
 import opentracing from 'opentracing';
 import request from 'request';
 import RSVP from 'rsvp';
 import Span from '../../src/span.js';
 import SpanContext from '../../src/span_context.js';
-import Tracer from '../../src/tracer.js';
+import TChannel from 'tchannel/channel';
+import TChannelThrift from 'tchannel/as/thrift';
+import TChannelBridge from '../../src/tchannel_bridge';
 import Utils from '../../src/util.js';
 
 export default class Helpers {
     _tracer: Tracer;
+    _thriftChannel: TChannelThrift;
 
-    constructor() {
-        this._tracer = new Tracer('node', new InMemoryReporter(), new ConstSampler(false));
+    constructor(tracer: Tracer) {
+        this._tracer = tracer;
+        let crossdockSpec = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'jaeger-idl', 'thrift', 'crossdock', 'tracetest.thrift'), 'utf8');
+        var channel = TChannel().makeSubChannel({
+            serviceName: 'node',
+            peers: [Utils.myIp() + ':8082']
+        });
+        this._thriftChannel = TChannelThrift({
+            channel: channel,
+            source: crossdockSpec
+        });
     }
 
-    handleRequest(startRequest: boolean, endpointLabel: string, traceRequest: any, headers: any): void {
-        let spanContext = this._tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
+    handleRequest(startRequest: boolean, endpointLabel: string, traceRequest: any, spanContext: SpanContext): void {
         let serverSpan = this._tracer.startSpan(endpointLabel, { childOf: spanContext });
 
         if (startRequest) {
@@ -83,9 +94,7 @@ export default class Helpers {
         if (transport === constants.TRANSPORT_HTTP) {
             return this.callDownstreamHTTP(downstream, context);
         } else if (transport === constants.TRANSPORT_TCHANNEL) {
-            return new RSVP.Promise((resolve, reject) => {
-                resolve({ 'notImplementedError': 'TChannel has not been implemented' });
-            });
+            return this.callDownstreamTChannel(downstream, context);
         } else if (transport == constants.TRANSPORT_DUMMY) {
             return new RSVP.Promise((resolve, reject) => {
                 resolve({ 'notImplementedError': 'Dummy has not been implemented' });
@@ -135,6 +144,55 @@ export default class Helpers {
                     resolve(downstreamResponse);
                 });
 
+            });
+        });
+    }
+
+    callDownstreamTChannel(downstream: Downstream, context: any): any {
+        return new RSVP.Promise((resolve, reject) => {
+            dns.lookup(downstream.host, (err, address, family) => {
+                if (err) {
+                    console.log('dns_lookup_err', err);
+                    return;
+                }
+
+                let port = parseInt(downstream.port);
+                let downstreamUrl = `http:\/\/${address}:${port}/join_trace`;
+
+                let clientSpan = this._tracer.startSpan('client-span', { childOf: context.span.context() });
+                let headers = { 'Content-Type': 'application/json' };
+                this._tracer.inject(clientSpan.context(), opentracing.FORMAT_HTTP_HEADERS, headers);
+                let headersWithBaggage = TChannelBridge.saveBaggageToHeaders(clientSpan, {});
+                let request = this._thriftChannel.request({
+                    timeout: 2000,
+                    parent: { span: TChannelBridge.toTChannelSpan(clientSpan) },
+                    headers: {
+                        cn: 'tcollector-requestor'
+                    },
+                    trace: true,
+                    serviceName: 'node',
+                    retryFlags: {never: true}
+                });
+                let joinTraceRequest = {
+                    'serverRole': downstream.serverRole,
+                };
+
+                if (downstream.downstream) {
+                    joinTraceRequest.downstream = downstream.downstream;
+                }
+
+                request.send(
+                    'TracedService::joinTrace',
+                    headersWithBaggage,
+                    { request: joinTraceRequest },
+                    (err, response) => {
+                        if (err) {
+                            console.log('tchannel err', err);
+                            return;
+                        }
+                        clientSpan.finish();
+                        resolve(response.body);
+                    });
             });
         });
     }

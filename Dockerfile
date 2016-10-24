@@ -4,6 +4,7 @@ EXPOSE 8080-8082
 ADD node_modules/ /node_modules
 ADD package.json /
 ADD src/ /src
+ADD src/jaeger-idl/thrift/crossdock/tracetest.thrift /crossdock/tracetest.thrift
 ADD crossdock/src /crossdock/src
 ADD .babelrc /
 

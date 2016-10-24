@@ -171,5 +171,5 @@ describe ('test tchannel span bridge', () => {
 
                 done();
             }
-        });
+    });
 });

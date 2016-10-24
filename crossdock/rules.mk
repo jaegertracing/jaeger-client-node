@@ -2,10 +2,7 @@ PROJECT=crossdock
 XDOCK_YAML=$(PROJECT)/docker-compose.yml
 
 .PHONY: crossdock
-crossdock: install_node_modules
-	docker-compose -f $(XDOCK_YAML) kill node
-	docker-compose -f $(XDOCK_YAML) rm -f node
-	docker-compose -f $(XDOCK_YAML) build node
+crossdock:
 	docker-compose -f $(XDOCK_YAML) run crossdock
 
 .PHONY: crossdock-fresh

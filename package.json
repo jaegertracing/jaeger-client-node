@@ -21,7 +21,7 @@
     "long": "^3.2.0",
     "node-int64": "^0.4.0",
     "request": "^2.74.0",
-    "tchannel": "^3.9.0",
+    "tchannel": "git://github.com/oibe/tchannel-node#ef10fb2fb41bc9f437af6833f1af9c4a4d537458",
     "thriftrw": "^3.5.0",
     "xorshift": "^0.2.0"
   },

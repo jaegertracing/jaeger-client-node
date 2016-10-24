@@ -22,3 +22,5 @@ export const BAGGAGE_KEY = 'crossdock-baggage-key';
 export const TRANSPORT_HTTP = 'HTTP';
 export const TRANSPORT_TCHANNEL = 'TCHANNEL';
 export const TRANSPORT_DUMMY = 'DUMMY';
+export const TCHANNEL_HEADER_TRACER_STATE_KEY = '$tracing$uber-trace-id';
+export const TCHANNEL_TRACING_PREFIX = '$tracing$';

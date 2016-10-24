@@ -18,10 +18,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import _ from 'lodash';
 import {assert} from 'chai';
+import * as constants from '../../src/constants';
+import * as crossdock_constants from '../src/constants';
+import ConstSampler from '../../src/samplers/const_sampler.js';
+import InMemoryReporter from '../../src/reporters/in_memory_reporter.js';
+import TChannelBridge from '../../src/tchannel_bridge';
 import TChannelServer from '../src/tchannel_server.js';
 import TChannelAsThrift from 'tchannel/as/thrift';
 import TChannel from 'tchannel';
+import Tracer from '../../src/tracer.js';
 import fs from 'fs';
 import path from 'path';
 import Utils from '../../src/util.js';
@@ -32,53 +39,82 @@ describe('crossdock tchannel server should', () => {
     let ip;
     let server;
     let crossdockSpecPath = path.join(__dirname, '..', '..', 'src', 'jaeger-idl', 'thrift', 'crossdock', 'tracetest.thrift');
+
     before(() => {
-        server = new TChannelServer();
+        server = new TChannelServer(crossdockSpecPath);
         ip = Utils.myIp();
     });
 
-    it ('return not implemented response for join_trace', (done) => {
-        let clientChannel = new TChannel();
-        var requestChannel = clientChannel.makeSubChannel({
-            serviceName: 'node',
-            peers: [Utils.myIp() + ':8082']
+
+    describe('joinTrace with different options', () => {
+        let tracer = new Tracer('node', new InMemoryReporter(), new ConstSampler(false));
+        let span = tracer.startSpan('test-span');
+
+        let httpHeaders = {};
+        httpHeaders[`${constants.TRACER_BAGGAGE_HEADER_PREFIX}${crossdock_constants.BAGGAGE_KEY}`] = 'fry';
+
+
+        let tchannelHeaders = {};
+        tchannelHeaders[`${crossdock_constants.TCHANNEL_HEADER_TRACER_STATE_KEY}`] = span.context().toString();
+        tchannelHeaders[`${crossdock_constants.TCHANNEL_TRACING_PREFIX}uberctx-${crossdock_constants.BAGGAGE_KEY}`] = 'fry';
+
+        let options = [
+            { headers: httpHeaders },
+            { headers: tchannelHeaders }
+        ];
+
+        _.each(options, (o) => {
+            it ('propagates trace, and baggage on tchannel joinTrace', (done) => {
+                let clientChannel = new TChannel();
+
+                let baggageValue = 'fry';
+                span.setBaggageItem(crossdock_constants.BAGGAGE_KEY, baggageValue);
+
+                let thriftSpan = TChannelBridge.toTChannelSpan(span);
+                var requestChannel = clientChannel.makeSubChannel({
+                    serviceName: 'node',
+                    peers: [Utils.myIp() + ':8082']
+                });
+                var tchannelAsThrift = TChannelAsThrift({
+                    channel: requestChannel,
+                    entryPoint: crossdockSpecPath
+                });
+
+                let joinRequest = {
+                    'serverRole': 'S1',
+                    'downstream': {
+                        'serviceName': 'node',
+                        'serverRole': 'S1',
+                        'host': Utils.myIp(),
+                        'port': '8082',
+                        'transport': 'TCHANNEL'
+                    }
+                };
+
+                tchannelAsThrift.request({
+                    timeout: 100000,
+                    serviceName: 'node',
+                    headers: {
+                        cn: 'node-tchannel'
+                    },
+                    parent: { span: thriftSpan }
+                }).send('TracedService::joinTrace',
+                    o.headers,
+                    {'request': joinRequest},
+                    (err, res) => {
+                        if (err) {
+                            console.log('got error', err);
+                        } else {
+                            let traceResponse = res.body;
+                            assert.equal(traceResponse.span.traceId, span.context().traceIdStr);
+                            assert.equal(traceResponse.span.traceId, traceResponse.downstream.span.traceId);
+                            assert.equal(traceResponse.span.sampled, false);
+                            assert.equal(traceResponse.span.baggage, span.getBaggageItem(crossdock_constants.BAGGAGE_KEY));
+                        }
+                        done();
+                    }
+                );
+            }).timeout(100000);
         });
-        var tchannelAsThrift = TChannelAsThrift({
-            channel: requestChannel,
-            entryPoint: crossdockSpecPath
-        });
-
-        let joinRequest = {
-            'serverRole': 'S1',
-            'downstream': {
-                'serviceName': 'node',
-                'serverRole': 'S1',
-                'host': 'node',
-                'port': '8082',
-                'transport': 'TCHANNEL'
-            }
-        };
-
-        tchannelAsThrift.request({
-            serviceName: 'node',
-            headers: {
-                cn: 'node-tchannel'
-            },
-            hasNoParent: true
-        }).send('TracedService::joinTrace', null,
-            {'request': joinRequest}, (err, res) => {
-            if (err) {
-                console.log('got error', err);
-            } else {
-                let traceResponse = res.body;
-                assert.equal(traceResponse.span.traceId, 'no span found');
-                assert.equal(traceResponse.span.sampled, false);
-                assert.equal(traceResponse.span.baggage, 'no span found');
-                assert.equal(traceResponse.notImplementedError, 'TChannel crossdock not implemented for node.');
-            }
-            done();
-        });
-
-
     });
 });
