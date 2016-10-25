@@ -39,6 +39,11 @@ var NoopReporter = function () {
     }
 
     _createClass(NoopReporter, [{
+        key: 'name',
+        value: function name() {
+            return 'NoopReporter';
+        }
+    }, {
         key: 'report',
         value: function report(span) {}
     }, {

@@ -5,7 +5,7 @@
   "licence": "MIT",
   "keywords": [],
   "author": "oibe <oibe@uber.com>",
-  "main": "./dist/src/index.js",
+  "main": "./entrypoint.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/uber/jaeger-client-node.git"
@@ -18,8 +18,10 @@
   "dependencies": {
     "long": "^3.2.0",
     "node-int64": "^0.4.0",
-    "thriftrw": "^3.5.0",
+    "js-yaml": "^3.6.1",
+    "jsonschema": "^1.1.0",
     "request": "^2.74.0",
+    "thriftrw": "^3.5.0",
     "xorshift": "^0.2.0"
   },
   "devDependencies": {
@@ -36,16 +38,18 @@
     "buffer-equal": "^1.0.0",
     "chai": "^3.5.0",
     "coveralls": "^2.11.14",
+    "deep-equal": "^1.0.1",
     "eslint": "^2.4.0",
     "eslint-config-airbnb": "^6.2.0",
     "eslint-plugin-flowtype": "^2.4.0",
     "eslint-plugin-react": "^4.3.0",
     "express": "^4.14.0",
     "flow-bin": "^0.30.0",
+    "gulp-sourcemaps": "1.7.x",
     "lodash": "^4.15.0",
     "minimist": "1.2.0",
     "mocha": "^3.0.1",
-    "opentracing": "git://github.com/opentracing/opentracing-javascript.git#575e8149aadba97d27e9cadff3b8e47a15c2db09",
+    "opentracing": "^0.13.0",
     "rsvp": "^3.3.1",
     "sinon": "^1.17.5",
     "uber-licence": "^2.0.2",
@@ -61,7 +65,7 @@
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed'",
     "lint-ci": "npm run lint && echo '# TODO: ADD npm run check-license'",
-    "test": "npm run flow & npm run lint && ./node_modules/mocha/bin/mocha --compilers js:babel-core/register",
+    "test": "make build-node; npm run flow & npm run lint && ./node_modules/mocha/bin/mocha --compilers js:babel-core/register",
     "test-ci": "npm run test && npm run lint-ci && npm run cover",
     "show-cover": "open coverage/lcov-report/index.html"
   }

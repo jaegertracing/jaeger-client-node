@@ -29,6 +29,14 @@ var _constants = require('../constants.js');
 
 var constants = _interopRequireWildcard(_constants);
 
+var _metrics = require('../metrics/metrics.js');
+
+var _metrics2 = _interopRequireDefault(_metrics);
+
+var _metric_factory = require('../metrics/noop/metric_factory');
+
+var _metric_factory2 = _interopRequireDefault(_metric_factory);
+
 var _span_context = require('../span_context.js');
 
 var _span_context2 = _interopRequireDefault(_span_context);
@@ -47,15 +55,17 @@ var TRACER_STATE_HEADER_NAME = 'uber-trace-id';
 var TRACER_BAGGAGE_HEADER_PREFIX = 'uberctx-';
 
 var TextMapCodec = function () {
-    function TextMapCodec(urlEncoding) {
-        var contextKey = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : TRACER_STATE_HEADER_NAME;
-        var baggagePrefix = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : TRACER_BAGGAGE_HEADER_PREFIX;
+    function TextMapCodec() {
+        var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
         _classCallCheck(this, TextMapCodec);
 
-        this._urlEncoding = urlEncoding;
-        this._contextKey = contextKey.toLowerCase();
-        this._baggagePrefix = baggagePrefix.toLowerCase();
+        this._urlEncoding = !!options.urlEncoding;
+        this._contextKey = options.contextKey || TRACER_STATE_HEADER_NAME;
+        this._contextKey = this._contextKey.toLowerCase();
+        this._baggagePrefix = options.baggagePrefix || TRACER_BAGGAGE_HEADER_PREFIX;
+        this._baggagePrefix = this._baggagePrefix.toLowerCase();
+        this._metrics = options.metrics || new _metrics2.default(new _metric_factory2.default());
     }
 
     _createClass(TextMapCodec, [{
@@ -88,7 +98,12 @@ var TextMapCodec = function () {
                 if (carrier.hasOwnProperty(key)) {
                     var lowerKey = key.toLowerCase();
                     if (lowerKey === this._contextKey) {
-                        spanContext = _span_context2.default.fromString(this._decodedValue(carrier[key]));
+                        var decodedContext = _span_context2.default.fromString(this._decodedValue(carrier[key]));
+                        if (decodedContext === null) {
+                            this._metrics.decodingErrors.increment(1);
+                        } else {
+                            spanContext = decodedContext;
+                        }
                     }
 
                     if (lowerKey === constants.JAEGER_DEBUG_HEADER) {

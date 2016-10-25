@@ -38,7 +38,7 @@ var ProbabilisticSampler = function () {
         _classCallCheck(this, ProbabilisticSampler);
 
         if (samplingRate < 0.0 || samplingRate > 1.0) {
-            throw new Error('The sampling rate must be less than 0.0 and grater than 1.0. Received ' + samplingRate);
+            throw new Error('The sampling rate must be less than 0.0 and greater than 1.0. Received ' + samplingRate);
         }
 
         this._samplingRate = samplingRate;
@@ -48,6 +48,11 @@ var ProbabilisticSampler = function () {
     }
 
     _createClass(ProbabilisticSampler, [{
+        key: 'name',
+        value: function name() {
+            return 'ProbabilisticSampler';
+        }
+    }, {
         key: 'isSampled',
         value: function isSampled() {
             return Math.random() < this._samplingRate;

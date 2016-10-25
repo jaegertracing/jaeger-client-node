@@ -62,6 +62,11 @@ var RateLimitingSampler = function () {
     }
 
     _createClass(RateLimitingSampler, [{
+        key: 'name',
+        value: function name() {
+            return 'RateLimitingSampler';
+        }
+    }, {
         key: 'isSampled',
         value: function isSampled() {
             return this._rateLimiter.checkCredit(1.0);
