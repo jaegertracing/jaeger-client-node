@@ -21,6 +21,7 @@
     "js-yaml": "^3.6.1",
     "jsonschema": "^1.1.0",
     "request": "^2.74.0",
+    "tchannel": "^3.9.0",
     "thriftrw": "^3.5.0",
     "xorshift": "^0.2.0"
   },
@@ -38,6 +39,7 @@
     "buffer-equal": "^1.0.0",
     "chai": "^3.5.0",
     "coveralls": "^2.11.14",
+    "debug-logtron": "^5.2.0",
     "deep-equal": "^1.0.1",
     "eslint": "^2.4.0",
     "eslint-config-airbnb": "^6.2.0",
@@ -52,6 +54,7 @@
     "opentracing": "^0.13.0",
     "rsvp": "^3.3.1",
     "sinon": "^1.17.5",
+    "source-map-support": "^0.4.5",
     "uber-licence": "^2.0.2",
     "underscore": "^1.8.3"
   },
@@ -65,7 +68,7 @@
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed'",
     "lint-ci": "npm run lint && echo '# TODO: ADD npm run check-license'",
-    "test": "make build-node; npm run flow & npm run lint && ./node_modules/mocha/bin/mocha --compilers js:babel-core/register",
+    "test": "make test",
     "test-ci": "npm run test && npm run lint-ci && npm run cover",
     "show-cover": "open coverage/lcov-report/index.html"
   }
