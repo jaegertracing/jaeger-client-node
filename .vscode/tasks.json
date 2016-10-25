@@ -1,0 +1,17 @@
+{
+    "version": "0.1.0",
+    "command": "bash",
+    "isShellCommand": true,
+    "showOutput": "always",
+    "args": [
+        "-c"
+    ],
+    "tasks": [
+        {
+            "taskName": "build-node",
+            "suppressTaskName": true,
+            "isBuildCommand": true,
+            "args": ["make build-node"]
+        }
+    ]
+}
