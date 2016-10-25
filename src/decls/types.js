@@ -86,3 +86,11 @@ declare type SamplingStrategyResponse = {
     probabilisticSampling?: ProbabilisticSamplingStrategy,
     rateLimitingSampling?: RateLimitingSamplingStrategy
 };
+
+declare type TChannelSpan = {
+    id: Array<Number>,
+    traceid: Array<Number>,
+    name: string,
+    parentid: Array<Number>,
+    flags: Number
+};

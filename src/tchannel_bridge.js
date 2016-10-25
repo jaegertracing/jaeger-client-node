@@ -54,6 +54,7 @@ export default class TChannelBridge {
         if (crossdock_constants.TCHANNEL_HEADER_TRACER_STATE_KEY in headers) {
             traceContext = SpanContext.fromString(headers[`${crossdock_constants.TCHANNEL_HEADER_TRACER_STATE_KEY}`]);
         } else if (request.span) {
+            // $FlowIgnore - I just want an empty span context.
             traceContext = new SpanContext();
             if (Buffer.isBuffer(request.span.id)) {
                 traceContext.spanId = request.span.id;

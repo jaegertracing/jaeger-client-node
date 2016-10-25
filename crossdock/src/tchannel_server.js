@@ -22,10 +22,8 @@
 import * as constants from './constants.js';
 import path from 'path';
 
-// $FlowIgnore - tchannel is installed in docker container
 import TChannel from 'tchannel';
-// $FlowIgnore - tchannel is installed in docker container
-import TChannelThrift from 'tchannel/as/thrift';
+import TChannelThrift from '../../src/vendor/tchannel/span';
 import Utils from '../../src/util.js';
 
 export default class TChannelServer {
