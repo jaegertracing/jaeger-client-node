@@ -12,10 +12,6 @@
             "args": ["-t", "10000000", "--debug-brk", "./dist/crossdock/test/tchannel_server.js"],
             "cwd": "${workspaceRoot}",
             "preLaunchTask": null,
-            "runtimeExecutable": "/Users/onwukikeibe/.nvm/v0.10.32/bin/node",
-            "runtimeArgs": [
-                "--nolazy"
-            ],
             "env": {
                 "NODE_ENV": "development"
             },
