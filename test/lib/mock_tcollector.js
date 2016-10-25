@@ -3,7 +3,7 @@ import path from 'path';
 import TChannelThrift from 'tchannel/as/thrift';
 
 let zipkinCoreSpec = fs.readFileSync(
-    path.join(__dirname, '../../src', 'jaeger-idl', 'thrift', 'zipkinCore.thrift'), 'utf8'
+    path.join(__dirname, '../../src', 'vendor', 'thrift', 'zipkinCore.thrift'), 'utf8'
 );
 
 let samplingSpec = fs.readFileSync(

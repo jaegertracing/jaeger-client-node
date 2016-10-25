@@ -98,7 +98,7 @@ describe ('test tchannel span bridge', () => {
                         {serviceName: 'tcollector-static'},
                         (err, response) => {
                             assert.isOk(response.body, 'assert we submitted a thrift span');
-                            let continuedSpan = mockReporter.spans[0];
+                            let continuedSpan: TChannelSpan = mockReporter.spans[0];
                             assert.equal(span.id[0], continuedSpan.parentid[0]);
                             assert.equal(span.traceid[0], continuedSpan.traceid[0]);
                             assert.equal(span.id[1], continuedSpan.parentid[1]);

@@ -19,16 +19,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import Span from '../../src/span';
-
 export default class MockTChannelReporter {
-    _spans: Array<Span>;
+    _spans: Array<TChannelSpan>;
 
     constructor() {
         this._spans = [];
     }
 
-    get spans(): Array<Span> {
+    get spans(): Array<TChannelSpan> {
         return this._spans;
     }
 
