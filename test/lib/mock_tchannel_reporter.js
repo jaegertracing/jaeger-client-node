@@ -19,22 +19,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import {assert} from 'chai';
-import deepEqual from 'deep-equal';
-import Int64 from 'node-int64';
-import Utils from '../src/util.js';
+import Span from '../../src/span';
 
-describe('utils should', () => {
-    it('convert an ip less than 2^32 to an unsigned number', () => {
-        assert.equal(Utils.ipToInt('127.0.0.1'), (127 << 24) | 1);
-    });
+export default class MockTChannelReporter {
+    _spans: Array<Span>;
 
-    it ('tchannelBufferToIntId should work both ways', () => {
-        let randomBuffer = Utils.getRandom64();
+    constructor() {
+        this._spans = [];
+    }
 
-        let intBuffer = Utils.tchannelBufferToIntId(randomBuffer);
-        let origRandomBuffer = new Int64(intBuffer[0], intBuffer[1]).toBuffer();
+    get spans(): Array<Span> {
+        return this._spans;
+    }
 
-        assert.isOk(deepEqual(randomBuffer, origRandomBuffer));
-    });
-});
+    report(span: Span, callback: ?Function): void {
+        this._spans.push(span);
+
+        if (callback) {
+            callback();
+        }
+    }
+}
