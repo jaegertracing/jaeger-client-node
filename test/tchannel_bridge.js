@@ -51,7 +51,7 @@ describe ('test tchannel span bridge', () => {
         let server = new TChannel({
             serviceName: 'server',
             // We don't want tchannel to generate any spans.
-            trace: false,
+            trace: true,
             forceTrace: true
         });
         // Server calls client channel after it starts listening.
@@ -61,7 +61,7 @@ describe ('test tchannel span bridge', () => {
         // Create the toplevel client channel.
         let client = new TChannel({
             // We don't want tchannel to generate any spans.
-            trace: false,
+            trace: true,
             forceTrace: true
         });
 
@@ -91,12 +91,16 @@ describe ('test tchannel span bridge', () => {
         }
 
         function onServerListening() {
-
             let req = encodedChannel.request({
                 serviceName: 'server',
+                parent: {span: TChannelBridge.getTChannelParentSpan() },
                 headers: { cn: 'echo' },
                 timeout: 15000000
-        });
+            });
+            clientSubChannel.trace = false;
+            server.trace = false;
+            req.trace = false;
+
             req.send('Echo::echo', headers, { value: 'some-string' }, (err, res, arg2, arg3) => {
                 assert.isNotOk(err);
                 let receivedSpan = TChannelBridge.getSpanFromTChannelRequest(tracer, 'nibbler', res.head);

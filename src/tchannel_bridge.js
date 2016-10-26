@@ -27,6 +27,15 @@ import Tracer from '../src/tracer';
 
 let TCHANNEL_TRACER_STATE = constants.TCHANNEL_TRACING_PREFIX + constants.TRACER_STATE_HEADER_NAME;
 export default class TChannelBridge {
+    static getTChannelParentSpan() {
+        return {
+            id: [0, 0],
+            traceid: [0, 0],
+            parentid: [0, 0],
+            flags: 0
+        };
+    }
+
     static getSpanFromTChannelRequest(tracer: Tracer, operationName: string, headers: any = {}, options: any = {}): Span {
         let traceContext;
         if (headers.hasOwnProperty(TCHANNEL_TRACER_STATE)) {
