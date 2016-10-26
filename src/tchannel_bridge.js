@@ -19,63 +19,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import * as crossdock_constants from '../crossdock/src/constants';
 import * as constants from './constants';
-import Int64 from 'node-int64';
 import Span from './span';
 import SpanContext from './span_context';
 import Utils from './util';
-import tchannelSpan from './vendor/tchannel/span';
 import Tracer from '../src/tracer';
 
+let TCHANNEL_TRACER_STATE = constants.TCHANNEL_TRACING_PREFIX + constants.TRACER_STATE_HEADER_NAME;
 export default class TChannelBridge {
-    static toTChannelSpan(span: Span): TChannelSpan {
-        return new tchannelSpan({
-            id: Utils.tchannelBufferToIntId(span.context().spanId),
-            traceid: Utils.tchannelBufferToIntId(span.context().traceId),
-            name: span.name,
-            parentid: Utils.tchannelBufferToIntId(span.context().parentId),
-            flags: span.context().flags || 0
-        });
-    }
-
-    static toTChannelv2Span(span: Span): TChannelSpan {
-        return new tchannelSpan({
-            id: span.context().spanId,
-            traceid: span.context().traceId,
-            name: span.name,
-            parentid: span.context().parentId,
-            flags: span.context().flags || 0
-        });
-    }
-
-    static getSpanFromTChannelRequest(tracer: Tracer, request: any, headers: any = {}, options: any = {}): Span {
+    static getSpanFromTChannelRequest(tracer: Tracer, operationName: string, headers: any = {}, options: any = {}): Span {
         let traceContext;
-        if (crossdock_constants.TCHANNEL_HEADER_TRACER_STATE_KEY in headers) {
-            traceContext = SpanContext.fromString(headers[`${crossdock_constants.TCHANNEL_HEADER_TRACER_STATE_KEY}`]);
-        } else if (request.span) {
-            // $FlowIgnore - I just want an empty span context.
-            traceContext = new SpanContext();
-            if (Buffer.isBuffer(request.span.id)) {
-                traceContext.spanId = request.span.id;
-                traceContext.traceId = request.span.traceid;
-                traceContext.parentId = request.span.parentid;
-                traceContext.flags = request.span.flags;
-            } else {
-                traceContext.spanId = new Int64(request.span.id[0], request.span.id[1]).toBuffer();
-                traceContext.traceId = new Int64(request.span.traceid[0], request.span.traceid[1]).toBuffer();
-                traceContext.parentId = new Int64(request.span.parentid[0], request.span.parentid[1]).toBuffer();
-                traceContext.flags = request.span.flags;
-            }
+        if (headers.hasOwnProperty(TCHANNEL_TRACER_STATE)) {
+            traceContext = SpanContext.fromString(headers[constants.TCHANNEL_TRACING_PREFIX + constants.TRACER_STATE_HEADER_NAME]);
         }
 
         options.childOf = traceContext;
-        let span = tracer.startSpan(String(request.arg1), options);
+        let span = tracer.startSpan(operationName, options);
 
         for (let key in headers) {
             let keyWithoutTChannelPrefix = key;
-            if (Utils.startsWith(key, crossdock_constants.TCHANNEL_TRACING_PREFIX)) {
-                keyWithoutTChannelPrefix = key.substring(crossdock_constants.TCHANNEL_TRACING_PREFIX.length);
+            if (Utils.startsWith(key, constants.TCHANNEL_TRACING_PREFIX)) {
+                keyWithoutTChannelPrefix = key.substring(constants.TCHANNEL_TRACING_PREFIX.length);
             }
 
             if (Utils.startsWith(keyWithoutTChannelPrefix, constants.TRACER_BAGGAGE_HEADER_PREFIX)) {
@@ -88,11 +52,17 @@ export default class TChannelBridge {
         return span;
     }
 
+    static saveTracerStateToCarrier(span: Span, carrier: any = {}) {
+        carrier[TCHANNEL_TRACER_STATE] = span.context().toString();
+        return carrier;
+    }
+
     static saveBaggageToCarrier(span: Span, carrier: any = {}): any {
         let baggage = span.context().baggage;
+
         for (let key in baggage) {
             if (baggage.hasOwnProperty(key)) {
-                let baggageKey = `${constants.TRACER_BAGGAGE_HEADER_PREFIX}${key}`;
+                let baggageKey = constants.TRACER_BAGGAGE_HEADER_PREFIX + key;
                 let baggageValue = baggage[key];
                 carrier[baggageKey] = baggageValue;
             }

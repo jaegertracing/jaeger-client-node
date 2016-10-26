@@ -23,7 +23,7 @@ import * as constants from './constants.js';
 import path from 'path';
 
 import TChannel from 'tchannel';
-import TChannelThrift from '../../src/vendor/tchannel/span';
+import TChannelThrift from 'tchannel/as/thrift';
 import Utils from '../../src/util.js';
 
 export default class TChannelServer {

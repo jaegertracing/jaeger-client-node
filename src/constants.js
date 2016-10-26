@@ -58,3 +58,10 @@ export const JAEGER_DEBUG_HEADER = 'jaeger-debug-id';
 
 // TRACER_BAGGAGE_HEADER_PREFIX is the default prefix used for saving baggage to a carrier.
 export const TRACER_BAGGAGE_HEADER_PREFIX = 'uberctx-';
+
+// TRACER_STATE_HEADER_NAME is the header key used for a span's serialized context.
+export const TRACER_STATE_HEADER_NAME = 'uber-trace-id';
+
+// TCHANNEL_TRACING_PREFIX is the tracing header prefix that we give to all
+// tracing related tchannel headers.
+export const TCHANNEL_TRACING_PREFIX = '$tracing$';

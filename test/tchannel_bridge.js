@@ -24,20 +24,16 @@ import {assert, expect} from 'chai';
 import * as constants from '../src/constants';
 import ConstSampler from '../src/samplers/const_sampler';
 import deepEqual from 'deep-equal';
-import DebugLogtron from 'debug-logtron';
 import fs from 'fs';
 import path from 'path';
 import InMemoryReporter from '../src/reporters/in_memory_reporter';
-import MockTChannelReporter from './lib/mock_tchannel_reporter.js';
 import opentracing from 'opentracing';
-import process from 'process';
 import TestUtils from '../src/test_util';
 import Tracer from '../src/tracer';
-import { getMockCollector } from './lib/util.js';
-import { getTCollectorChannel } from './lib/util.js';
 import TChannel from 'tchannel';
 import TChannelThrift from 'tchannel/as/thrift';
 import TChannelBridge from '../src/tchannel_bridge.js';
+import TChannelAsThrift from 'tchannel/as/thrift';
 import Utils from '../src/util.js';
 
 describe ('test tchannel span bridge', () => {
@@ -46,71 +42,80 @@ describe ('test tchannel span bridge', () => {
         new InMemoryReporter(),
         new ConstSampler(true)
     );
-    let spans = [
-        TChannelBridge.toTChannelSpan(tracer.startSpan('operation')),
-        TChannelBridge.toTChannelv2Span(tracer.startSpan('operation'))
-    ];
 
-    _.each(spans, (span) => {
-        it ('continuation span is reported to tchannel reporter with proper trace id and parent id', (endTest) => {
-            let mockTCollectorHost = process.env.MOCK_COLLECTOR_HOST || '127.0.0.1';
-            let mockTCollectorPort = parseInt(process.env.MOCK_COLLECTOR_PORT) || 30000;
-            let mockReporter = new MockTChannelReporter();
-            let logger = new DebugLogtron('logger');
-            let samplingSpec = fs.readFileSync(path.join(__dirname, '..', 'src', 'jaeger-idl', 'thrift', 'sampling.thrift'), 'utf8');
-
-            getMockCollector({
-                reporter: mockReporter,
-                reportTracing: true,
-                hyperbahnClientName: 'tcollector',
-                channelName: 'tcollector',
-                logger: logger,
-                host: mockTCollectorHost,
-                port: mockTCollectorPort
-            }, (mockTCollector, doneWithMockCollector) => {
-                getTCollectorChannel({
-                    channelName: 'tcollector-requestor',
-                    hyperbahnClientName: 'tcollector-requestor',
-                    reportTracing: true,
-                    logger: logger,
-                    host: mockTCollectorHost,
-                    port: mockTCollectorPort
-                }, (tcollectorChannel, done) => {
-                    let channel = TChannelThrift({
-                        channel: tcollectorChannel,
-                        source: samplingSpec
-                    });
-
-                    let request = channel.request({
-                        timeout: 100,
-                        parent: {span: span},
-                        headers: {
-                            cn: 'tcollector-requestor'
-                        },
-                        trace: true,
-                        serviceName: 'tcollector',
-                        retryFlags: {never: true}
-                    });
-
-                    request.send(
-                        'SamplingManager::getSamplingStrategy',
-                        { other: 'string' },
-                        {serviceName: 'tcollector-static'},
-                        (err, response) => {
-                            assert.isOk(response.body, 'assert we submitted a thrift span');
-                            let continuedSpan: TChannelSpan = mockReporter.spans[0];
-                            assert.equal(span.id[0], continuedSpan.parentid[0]);
-                            assert.equal(span.traceid[0], continuedSpan.traceid[0]);
-                            assert.equal(span.id[1], continuedSpan.parentid[1]);
-                            assert.equal(span.traceid[1], continuedSpan.traceid[1]);
-                            doneWithMockCollector();
-                            done();
-                            endTest();
-                    });
-                });
-            });
+    it ('spans propagate through tchannel and preserve parent span properties', function tchTest1(done) {
+        let span = tracer.startSpan('futurama');
+        span.setBaggageItem('leela', 'fry');
+        let headers = TChannelBridge.saveTracerStateToCarrier(span);
+        TChannelBridge.saveBaggageToCarrier(span, headers);
+        let server = new TChannel({
+            serviceName: 'server',
+            // We don't want tchannel to generate any spans.
+            trace: false,
+            forceTrace: true
         });
-    });
+        // Server calls client channel after it starts listening.
+        server.listen(4040, '127.0.0.1', onServerListening);
+
+
+        // Create the toplevel client channel.
+        let client = new TChannel({
+            // We don't want tchannel to generate any spans.
+            trace: false,
+            forceTrace: true
+        });
+
+
+        // Create the client subchannel that makes requests.
+        let clientSubChannel = client.makeSubChannel({
+            serviceName: 'server',
+            peers: ['127.0.0.1:4040']
+        });
+
+        // Wrap the subchannel in an encoding
+        let encodedChannel = TChannelAsThrift({
+            channel: clientSubChannel,
+            entryPoint: path.join(__dirname, 'thrift', 'echo.thrift')
+        });
+
+        // register the server request function.
+        let context = {};
+        encodedChannel.register(server, 'Echo::echo', context, handleServerReq);
+        function handleServerReq(context, req, head, body, callback) {
+
+            callback(null, {
+                ok: true,
+                head: head,
+                body: body
+            });
+        }
+
+        function onServerListening() {
+
+            let req = encodedChannel.request({
+                serviceName: 'server',
+                headers: { cn: 'echo' },
+                timeout: 15000000
+        });
+            req.send('Echo::echo', headers, { value: 'some-string' }, (err, res, arg2, arg3) => {
+                assert.isNotOk(err);
+                let receivedSpan = TChannelBridge.getSpanFromTChannelRequest(tracer, 'nibbler', res.head);
+                assert.equal(receivedSpan.name, 'nibbler');
+                assert.equal(span.context().traceIdStr, receivedSpan.context().traceIdStr);
+
+                let headers = res.head[constants.TCHANNEL_TRACING_PREFIX + constants.TRACER_STATE_HEADER_NAME].split(':');
+                let traceId = headers[0];
+                let spanId = headers[1];
+                let flags = parseInt(headers[3]);
+                assert.equal(span.context().traceIdStr, traceId);
+                assert.equal(span.context().spanIdStr, spanId);
+                assert.equal(span.context().parentId, null);
+                assert.equal(span.context().flags, flags);
+
+                done();
+            });
+        }
+    }).timeout(1500000);
 
     it ('saveBaggageToCarrier', () => {
         let headers = {
@@ -126,49 +131,9 @@ describe ('test tchannel span bridge', () => {
         assert.equal(carrier[`${constants.TRACER_BAGGAGE_HEADER_PREFIX}bender`], 'zoidberg');
     });
 
-    it ('getSpanFromTChannelRequest', function tchTest1(done) {
-            let server = new TChannel();
-            let client = new TChannel();
-
-            let serverChan = server.makeSubChannel({serviceName: 'server'});
-            serverChan.register('func', handleServerReq);
-            server.listen(0, '127.0.0.1', onServerListening);
-            let tchannelSpan = TChannelBridge.toTChannelSpan(tracer.startSpan('bender'));
-            function onServerListening() {
-                let clientChan = client.makeSubChannel({
-                    serviceName: 'server',
-                    peers: [server.hostPort],
-                    requestDefaults: {
-                        hasNoParent: true,
-                        headers: {as: 'raw', cn: 'test-client'}
-                    }
-                });
-
-                let req = clientChan.request({
-                    serviceName: 'server',
-                    timeout: 1500,
-                    parent: tchannelSpan
-                });
-                req.send('func', 'head', 'body', onResponse);
-            }
-
-            function handleServerReq(req, res, arg2, arg3) {
-                let span = TChannelBridge.getSpanFromTChannelRequest(tracer, req);
-                let traceid = Utils.tchannelBufferToIntId(span.context().traceId);
-
-                assert.isOk(deepEqual(traceid, req.span.traceid));
-                assert.equal('func', span.name);
-
-                res.headers.as = 'raw';
-                res.sendOk('result', 'done');
-            }
-
-            function onResponse(err, res, arg2, arg3) {
-                assert.isNotOk(err);
-                server.close();
-                client.close();
-
-                done();
-            }
+    it ('saveTracerStateToCarrier', () => {
+        let span = tracer.startSpan('futurama');
+        let carrier = TChannelBridge.saveTracerStateToCarrier(span);
+        assert.equal(carrier[constants.TCHANNEL_TRACING_PREFIX + constants.TRACER_STATE_HEADER_NAME], span.context().toString());
     });
 });
