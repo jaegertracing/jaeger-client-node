@@ -20,32 +20,27 @@
 // THE SOFTWARE.
 
 import _ from 'lodash';
-import {assert, expect} from 'chai';
+import {assert} from 'chai';
 import * as constants from '../src/constants';
 import ConstSampler from '../src/samplers/const_sampler';
-import deepEqual from 'deep-equal';
-import fs from 'fs';
 import path from 'path';
 import InMemoryReporter from '../src/reporters/in_memory_reporter';
 import opentracing from 'opentracing';
-import TestUtils from '../src/test_util';
 import Tracer from '../src/tracer';
 import TChannel from 'tchannel';
-import TChannelThrift from 'tchannel/as/thrift';
 import TChannelBridge from '../src/tchannel_bridge.js';
 import TChannelAsThrift from 'tchannel/as/thrift';
 import TChannelAsJSON from 'tchannel/as/json';
-import Utils from '../src/util.js';
 
 describe ('test tchannel span bridge', () => {
-    // BIG_TIMEOUT is useful for debugging purposes
+    // BIG_TIMEOUT is useful for debugging purposes.
     let BIG_TIMEOUT = 15000000;
-
     let tracer = new Tracer(
         'test-service',
         new InMemoryReporter(),
         new ConstSampler(true)
     );
+    let bridge = new TChannelBridge(tracer);
 
     let options = [
         { description: 'tchannelAsJson', channelEncoding: TChannelAsJSON },
@@ -54,26 +49,26 @@ describe ('test tchannel span bridge', () => {
 
     _.each(options, (o) => {
 
-        it (o.description + ' spans propagate through tchannel and preserve parent span properties', function tchTest1(done) {
-            let span = tracer.startSpan('futurama');
-            span.setBaggageItem('leela', 'fry');
-            let headers = TChannelBridge.saveTracerStateToCarrier(span);
-            TChannelBridge.saveBaggageToCarrier(span, headers);
+        it (o.description + ' spans propagate through tchannel and preserve parent span properties', (done) => {
+            let originalSpan = tracer.startSpan('futurama');
+            originalSpan.setBaggageItem('leela', 'fry');
+            let contextForOutgoingCall = { span: originalSpan };
+
             let server = new TChannel({
                 serviceName: 'server',
+                // force tracing on  in order to prove that overriding works
                 trace: true,
                 forceTrace: true
             });
             // Server calls client channel after it starts listening.
             server.listen(4040, '127.0.0.1', onServerListening);
 
-
             // Create the toplevel client channel.
             let client = new TChannel({
+                // force tracing on  in order to prove that overriding works
                 trace: true,
                 forceTrace: true
             });
-
 
             // Create the client subchannel that makes requests.
             let clientSubChannel = client.makeSubChannel({
@@ -89,69 +84,39 @@ describe ('test tchannel span bridge', () => {
 
             // register the server request function.
             let context = {};
-            encodedChannel.register(server, 'Echo::echo', context, handleServerReq);
+            encodedChannel.register(server, 'Echo::echo', context, bridge.tracedHandler(handleServerReq));
             function handleServerReq(context, req, head, body, callback) {
+                // assert that context is populated with new server span
+                assert.equal(originalSpan.context().traceIdStr, context.span.context().traceIdStr);
 
-                callback(null, {
-                    ok: true,
-                    head: head,
-                    body: body
-                });
+                // assert that headers match the original span
+                let headers = head[constants.TCHANNEL_TRACING_PREFIX + constants.TRACER_STATE_HEADER_NAME].split(':');
+                let traceId = headers[0];
+                let spanId = headers[1];
+                let flags = parseInt(headers[3]);
+
+                assert.equal(originalSpan.context().traceIdStr, traceId);
+                assert.equal(originalSpan.context().spanIdStr, spanId);
+                assert.equal(originalSpan.context().parentId, null);
+                assert.equal(originalSpan.context().flags, flags);
+                server.close();
+                client.close();
+                done();
             }
 
             function onServerListening() {
-                let req = encodedChannel.request({
+                // Outgoing tchannel call is traced
+                let tracedChannel = bridge.tracedChannel(encodedChannel, contextForOutgoingCall);
+                let req = tracedChannel.request({
                     serviceName: 'server',
-                    // We don't want tchannel to generate any spans.
-                    parent: {span: TChannelBridge.getTChannelParentSpan() },
                     headers: { cn: 'echo' },
                     timeout: BIG_TIMEOUT
                 });
-                clientSubChannel.trace = false;
-                server.trace = false;
-                req.trace = false;
 
-                req.send('Echo::echo', headers, { value: 'some-string' }, (err, res, arg2, arg3) => {
-                    assert.isNotOk(err);
-                    let receivedSpan = TChannelBridge.getSpanFromTChannelRequest(tracer, 'nibbler', res.head);
-                    assert.equal(receivedSpan.name, 'nibbler');
-                    assert.equal(span.context().traceIdStr, receivedSpan.context().traceIdStr);
-
-                    let headers = res.head[constants.TCHANNEL_TRACING_PREFIX + constants.TRACER_STATE_HEADER_NAME].split(':');
-                    let traceId = headers[0];
-                    let spanId = headers[1];
-                    let flags = parseInt(headers[3]);
-
-                    assert.equal(span.context().traceIdStr, traceId);
-                    assert.equal(span.context().spanIdStr, spanId);
-                    assert.equal(span.context().parentId, null);
-                    assert.equal(span.context().flags, flags);
-                    server.close();
-                    client.close();
-
-                    done();
-                });
+                // headers are left empty in order to prove that tracedChannel populates them
+                let emptyHeaders = {};
+                req.send('Echo::echo', emptyHeaders, { value: 'some-string' });
             }
         }).timeout(BIG_TIMEOUT);
-    });
-
-    it ('saveBaggageToCarrier', () => {
-        let headers = {
-            'leela': 'fry',
-            'bender': 'zoidberg'
-        };
-        let span = tracer.startSpan('futurama');
-        span.setBaggageItem('leela', 'fry');
-        span.setBaggageItem('bender', 'zoidberg');
-        let carrier = TChannelBridge.saveBaggageToCarrier(span);
-
-        assert.equal(carrier[`${constants.TRACER_BAGGAGE_HEADER_PREFIX}leela`], 'fry');
-        assert.equal(carrier[`${constants.TRACER_BAGGAGE_HEADER_PREFIX}bender`], 'zoidberg');
-    });
-
-    it ('saveTracerStateToCarrier', () => {
-        let span = tracer.startSpan('futurama');
-        let carrier = TChannelBridge.saveTracerStateToCarrier(span);
-        assert.equal(carrier[constants.TCHANNEL_TRACING_PREFIX + constants.TRACER_STATE_HEADER_NAME], span.context().toString());
     });
 });

@@ -88,9 +88,8 @@ declare type SamplingStrategyResponse = {
 };
 
 declare type TChannelSpan = {
-    id: Array<Number>,
-    traceid: Array<Number>,
-    name: string,
-    parentid: Array<Number>,
-    flags: Number
+    id: Array<number>,
+    traceid: Array<number>,
+    parentid: Array<number>,
+    flags: number
 };

@@ -28,13 +28,4 @@ describe('utils should', () => {
     it('convert an ip less than 2^32 to an unsigned number', () => {
         assert.equal(Utils.ipToInt('127.0.0.1'), (127 << 24) | 1);
     });
-
-    it ('tchannelBufferToIntId should work both ways', () => {
-        let randomBuffer = Utils.getRandom64();
-
-        let intBuffer = Utils.tchannelBufferToIntId(randomBuffer);
-        let origRandomBuffer = new Int64(intBuffer[0], intBuffer[1]).toBuffer();
-
-        assert.isOk(deepEqual(randomBuffer, origRandomBuffer));
-    });
 });

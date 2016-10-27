@@ -12,6 +12,57 @@ with Zipkin-compatible data model.
 
 Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
+### TChannel Span Bridging
+
+Because [tchannel-node](https://github.com/uber/tchannel-node) does not have instrumentation for opentracing Jaeger-Client exposes methods wrapping tchannel handlers, and encoded channels.
+An encoded channel is a channel wrapped in either a thrift encoder `TChannelAsThrift`, or json encoder `TChannelAsJson`.  To wrap a server handler for thrift one can initialize a tchannel bridge, and wrap there encoded handler function with `tracedHandler`.
+
+```javascript
+    let bridge = new TChannelBridge(tracer);
+    let server = new TChannel({ serviceName: 'server' });
+    server.listen(4040, '127.0.0.1');
+    let serverThriftChannel = TChannelAsThrift({
+        channel: server,
+        entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // file path to a thrift file
+    });
+
+    serverThriftChannel.register(server, 'Echo::echo', context, bridge.tracedHandler(
+        (context, req, head, body, callback) => {
+            //context will be populated witha span field represents the server side span
+        }
+    ));
+```
+
+
+In the case of making an outgoing request you can wrap an encoded channel in a call to `tracedChannel`.
+
+```javascript
+    let bridge = new TChannelBridge(tracer);
+    // Create the toplevel client channel.
+    let client = new TChannel();
+
+    // Create the client subchannel that makes requests.
+    let clientSubChannel = client.makeSubChannel({
+        serviceName: 'server',
+        peers: ['127.0.0.1:4040']
+    });
+
+    let clientThriftChannel = TChannelAsThrift({
+        channel: clientSubChannel,
+        entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // file path to a thrift file
+    });
+
+    let tracedChannel = bridge.tracedChannel(encodedChannel, contextForOutgoingCall);
+    let req = tracedChannel.request({
+        serviceName: 'server',
+        headers: { cn: 'echo' }
+    });
+
+    // Your app should have a context that holds the incoming span, or a new span will be created.
+    let context = {};
+    req.send('Echo::echo', context, { value: 'some-string' });
+```
+
 ### Debug Traces (Forced Sampling)
 
 #### Programmatically

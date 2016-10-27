@@ -24,10 +24,69 @@ import Span from './span';
 import SpanContext from './span_context';
 import Utils from './util';
 import Tracer from '../src/tracer';
+import TextMapCodec from '../src/propagators/text_map_codec';
 
-let TCHANNEL_TRACER_STATE = constants.TCHANNEL_TRACING_PREFIX + constants.TRACER_STATE_HEADER_NAME;
 export default class TChannelBridge {
-    static getTChannelParentSpan() {
+    _tracer: Tracer;
+    _codec: TextMapCodec;
+
+    constructor(tracer: Tracer) {
+        this._tracer = tracer;
+        this._codec = new TextMapCodec({
+            urlEncoding: false,
+            contextKey: constants.TCHANNEL_TRACING_PREFIX + constants.TRACER_STATE_HEADER_NAME,
+            baggagePrefix: constants.TCHANNEL_TRACING_PREFIX + constants.TRACER_BAGGAGE_HEADER_PREFIX
+        });
+    }
+
+    /**
+     * Wraps a tchannel handler, and takes a context in order to populate the incoming context
+     * with a span.
+     *
+     * @param {Function} [handlerFunc] - a tchannel handler function that responds to an incoming request.
+     * @param {Object} [options] - options to be passed to a span on creation.
+     * @returns {Function} - a function that wrapps the handler in order to automatically populate
+     * a the handler's context with a span.
+     **/
+    tracedHandler(handlerFunc: any, options: startSpanArgs = {}): Function {
+        return (context, request, headers, body, callback) => {
+            let operationName = request.arg1 || options.operationName;
+            let span = this._getSpanFromTChannelRequest(operationName, headers);
+            // In theory may overwrite tchannel span, but thats what we want anyway.
+            context.span = span;
+            handlerFunc(context, request, headers, body, callback);
+        };
+    }
+
+    /**
+     * A function that wraps a json, or thrift encoded channel, in order to populate
+     * the outgoing headers with trace context, and baggage information.
+     *
+     * @param {Object} channel - the encoded channel to be wrapped for tracing.
+     * @param {Object} context - A context that contains the outgoing span to be seralized.  If the context does not contain a span then a new root span is created.
+     * @returns {Object} channel - the trace wrapped channel.
+     * */
+    tracedChannel(channel: any, context: any = {}): any {
+        let wrappedRequestFunc = channel.request.bind(channel);
+        channel.request = (requestOptions) => {
+            requestOptions.parent = { span: this._getTChannelParentSpan() };
+            let channelRequest = wrappedRequestFunc(requestOptions);
+            let wrappedSend = channelRequest.send.bind(channelRequest);
+            channelRequest.send = (endpoint, headers = {}, body, callback) => {
+                if (!context.span) {
+                    context.span = this._tracer.startSpan(endpoint);
+                }
+                this._saveSpanStateToCarrier(context.span, headers);
+                return wrappedSend(endpoint, headers, body, callback);
+            };
+
+            return channelRequest;
+        };
+
+        return channel;
+    }
+
+    _getTChannelParentSpan(): TChannelSpan {
         return {
             id: [0, 0],
             traceid: [0, 0],
@@ -36,47 +95,15 @@ export default class TChannelBridge {
         };
     }
 
-    static getSpanFromTChannelRequest(tracer: Tracer, operationName: string, headers: any = {}, options: any = {}): Span {
-        let traceContext;
-        if (headers.hasOwnProperty(TCHANNEL_TRACER_STATE)) {
-            traceContext = SpanContext.fromString(headers[constants.TCHANNEL_TRACING_PREFIX + constants.TRACER_STATE_HEADER_NAME]);
-        }
-
+    _getSpanFromTChannelRequest(operationName: string, headers: any = {}, options: any = {}): Span {
+        let traceContext: ?SpanContext = this._codec.extract(headers);
         options.childOf = traceContext;
-        let span = tracer.startSpan(operationName, options);
-
-        for (let key in headers) {
-            let keyWithoutTChannelPrefix = key;
-            if (Utils.startsWith(key, constants.TCHANNEL_TRACING_PREFIX)) {
-                keyWithoutTChannelPrefix = key.substring(constants.TCHANNEL_TRACING_PREFIX.length);
-            }
-
-            if (Utils.startsWith(keyWithoutTChannelPrefix, constants.TRACER_BAGGAGE_HEADER_PREFIX)) {
-                let baggageKey = keyWithoutTChannelPrefix.substring(constants.TRACER_BAGGAGE_HEADER_PREFIX.length);
-                let baggageValue = headers[key];
-                span.setBaggageItem(baggageKey, baggageValue);
-            }
-        }
-
+        let span = this._tracer.startSpan(operationName, options);
         return span;
     }
 
-    static saveTracerStateToCarrier(span: Span, carrier: any = {}) {
-        carrier[TCHANNEL_TRACER_STATE] = span.context().toString();
-        return carrier;
-    }
-
-    static saveBaggageToCarrier(span: Span, carrier: any = {}): any {
-        let baggage = span.context().baggage;
-
-        for (let key in baggage) {
-            if (baggage.hasOwnProperty(key)) {
-                let baggageKey = constants.TRACER_BAGGAGE_HEADER_PREFIX + key;
-                let baggageValue = baggage[key];
-                carrier[baggageKey] = baggageValue;
-            }
-        }
-
+    _saveSpanStateToCarrier(span: Span, carrier: any = {}): any {
+        this._codec.inject(span.context(), carrier);
         return carrier;
     }
 }

@@ -169,18 +169,4 @@ export default class Utils {
 
         return tags;
     }
-
-    /* *
-     * This takes an 8-bit buffer and converts it to a format that tchannel expects for its ids.
-     */
-    static tchannelBufferToIntId(buffer) {
-        if (!buffer) {
-            return [0, 0];
-        }
-
-        let lowerBits = buffer.readUInt32BE(0);
-        let upperBits = buffer.readUInt32BE(4);
-        return [lowerBits, upperBits];
-    }
-
 }
