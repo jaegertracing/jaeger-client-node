@@ -60,7 +60,7 @@ export default class TextMapCodec {
         // $FlowIgnore - I just want an empty span context.
         let spanContext = new SpanContext();
         let baggage = {};
-        let debugId;
+        let debugId = '';
 
         for (let key in carrier) {
             if (carrier.hasOwnProperty(key)) {

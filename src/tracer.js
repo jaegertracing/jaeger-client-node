@@ -185,7 +185,7 @@ export default class Tracer {
         }
 
         let followsFromIsParent = false;
-        let parent: ?SpanContext = options.childOf instanceof Span ? options.childOf.context(): options.childOf;
+        let parent: ?SpanContext = options.childOf instanceof Span ? options.childOf.context() : options.childOf;
         // If there is no childOf in options, then search list of references
         for (let i = 0; i < options.references.length; i++) {
             let ref: Reference = options.references[i];
@@ -210,7 +210,7 @@ export default class Tracer {
         let ctx: SpanContext = new SpanContext();
         let samplerTags: any = {};
         let debugRequest = (parent && parent.isDebugIDContainerOnly());
-        if (!parent || debugRequest) {
+        if (!parent || debugRequest || parent.isEmptyContext) {
             let randomId = Utils.getRandom64();
             let flags = 0;
             if (debugRequest) {

@@ -9,7 +9,8 @@ publish: build-node
 .PHONY: test
 test: build-node
 	npm run flow & npm run lint
-	./node_modules/mocha/bin/mocha --compilers js:babel-core/register
+	./node_modules/.bin/mocha --compilers js:babel-core/register test
+	./node_modules/.bin/mocha --compilers js:babel-register crossdock/test
 
 .PHONY: build-node
 build-node: node_modules

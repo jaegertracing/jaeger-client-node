@@ -38,7 +38,6 @@
     "buffer-equal": "^1.0.0",
     "chai": "^3.5.0",
     "coveralls": "^2.11.14",
-    "debug-logtron": "^5.2.0",
     "deep-equal": "^1.0.1",
     "eslint": "^2.4.0",
     "eslint-config-airbnb": "^6.2.0",
@@ -54,7 +53,7 @@
     "rsvp": "^3.3.1",
     "sinon": "^1.17.5",
     "source-map-support": "^0.4.5",
-    "tchannel": "^3.9.0",
+    "tchannel": "git://github.com/oibe/tchannel-node.git#ef10fb2fb41bc9f437af6833f1af9c4a4d537458",
     "uber-licence": "^2.0.2",
     "underscore": "^1.8.3"
   },

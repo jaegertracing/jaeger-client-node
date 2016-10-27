@@ -23,4 +23,4 @@ crossdock-logs:
 .PHONY: install_node_modules
 install_node_modules:
 	npm install
-	rm -rf ./node_modules/tchannel/
+	npm uninstall tchannel
