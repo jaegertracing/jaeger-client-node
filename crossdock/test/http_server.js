@@ -63,16 +63,25 @@ describe('crossdock http server should', () => {
                 if (err) {
                     console.log('err', err);
                 }
+
+                // top level span
                 assert.isNotOk(err);
                 let traceResponse = JSON.parse(response.body);
+                assert.isOk(traceResponse.span.traceId);
                 assert.equal(traceResponse.span.sampled, true);
                 assert.equal(traceResponse.span.baggage, '7e859ffef96e5da6');
+
+                // downstream level 1
                 assert.isOk(traceResponse.downstream);
                 assert.equal(traceResponse.notImplementedError, '');
+                assert.equal(traceResponse.span.traceId, traceResponse.downstream.span.traceId);
                 assert.equal(traceResponse.downstream.span.sampled, true);
                 assert.equal(traceResponse.downstream.span.baggage, '7e859ffef96e5da6');
                 assert.equal(traceResponse.downstream.notImplementedError, '');
+
+                // downstream level 2
                 assert.isOk(traceResponse.downstream.downstream);
+                assert.equal(traceResponse.downstream.span.traceId, traceResponse.downstream.downstream.span.traceId);
                 assert.equal(traceResponse.downstream.downstream.notImplementedError, '');
                 assert.isOk(traceResponse.downstream.downstream.span.sampled, true);
                 assert.isOk(traceResponse.downstream.downstream.span.baggage, '7e859ffef96e5da6');

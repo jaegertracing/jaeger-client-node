@@ -60,6 +60,10 @@ export default class Span {
         return this._firstInProcess;
     }
 
+    get name(): string {
+        return this._operationName;
+    }
+
     static _getBaggageHeaderCache() {
         if (!Span._baggageHeaderCache) {
             Span._baggageHeaderCache = {};
@@ -189,7 +193,7 @@ export default class Span {
      * Adds a single tag to a span
      *
      * @param {string} key - The key for the tag added to this span.
-     * @param {string} value - The value corresponding with the key 
+     * @param {string} value - The value corresponding with the key
      * for the tag added to this span.
      * @return {Span} - returns this span.
      * */

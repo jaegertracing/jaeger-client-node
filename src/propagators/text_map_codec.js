@@ -25,9 +25,6 @@ import NoopMetricFactory from '../metrics/noop/metric_factory';
 import SpanContext from '../span_context.js';
 import Utils from '../util.js';
 
-let TRACER_STATE_HEADER_NAME = 'uber-trace-id';
-let TRACER_BAGGAGE_HEADER_PREFIX = 'uberctx-';
-
 export default class TextMapCodec {
     _urlEncoding: boolean;
     _contextKey: string;
@@ -36,9 +33,9 @@ export default class TextMapCodec {
 
     constructor(options: any = {}) {
         this._urlEncoding = !!options.urlEncoding;
-        this._contextKey = options.contextKey || TRACER_STATE_HEADER_NAME;
+        this._contextKey = options.contextKey || constants.TRACER_STATE_HEADER_NAME;
         this._contextKey = this._contextKey.toLowerCase();
-        this._baggagePrefix = options.baggagePrefix || TRACER_BAGGAGE_HEADER_PREFIX;
+        this._baggagePrefix = options.baggagePrefix || constants.TRACER_BAGGAGE_HEADER_PREFIX;
         this._baggagePrefix = this._baggagePrefix.toLowerCase();
         this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
     }
@@ -63,7 +60,7 @@ export default class TextMapCodec {
         // $FlowIgnore - I just want an empty span context.
         let spanContext = new SpanContext();
         let baggage = {};
-        let debugId;
+        let debugId = '';
 
         for (let key in carrier) {
             if (carrier.hasOwnProperty(key)) {
