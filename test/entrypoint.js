@@ -35,5 +35,6 @@ describe('entrypoint', () => {
         expect(entrypoint.RemoteReporter).to.be.a('function');
         expect(entrypoint.TestUtils).to.be.a('function');
         expect(entrypoint.SpanContext).to.be.a('function');
+        expect(entrypoint.TChannelBridge).to.be.a('function');
     });
 });

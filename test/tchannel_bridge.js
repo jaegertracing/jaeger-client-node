@@ -26,6 +26,7 @@ import ConstSampler from '../src/samplers/const_sampler';
 import path from 'path';
 import InMemoryReporter from '../src/reporters/in_memory_reporter';
 import opentracing from 'opentracing';
+import TestUtils from '../src/test_util.js';
 import Tracer from '../src/tracer';
 import TChannel from 'tchannel';
 import TChannelBridge from '../src/tchannel_bridge.js';
@@ -35,16 +36,19 @@ import TChannelAsJSON from 'tchannel/as/json';
 describe ('test tchannel span bridge', () => {
     // BIG_TIMEOUT is useful for debugging purposes.
     let BIG_TIMEOUT = 15000000;
+    let reporter = new InMemoryReporter();
     let tracer = new Tracer(
         'test-service',
-        new InMemoryReporter(),
+        reporter,
         new ConstSampler(true)
     );
     let bridge = new TChannelBridge(tracer);
 
     let options = [
-        { description: 'tchannelAsJson', channelEncoding: TChannelAsJSON },
-        { description: 'tchannelAsThrift', channelEncoding: TChannelAsThrift }
+        { description: 'tchannelAsJson', channelEncoding: TChannelAsJSON, mode: 'req.send', as: 'json' },
+        { description: 'tchannelAsJson', channelEncoding: TChannelAsJSON, mode: 'channel.send', as: 'json' },
+        { description: 'tchannelAsThrift', channelEncoding: TChannelAsThrift, mode: 'req.send', as: 'thrift' },
+        { description: 'tchannelAsThrift', channelEncoding: TChannelAsThrift, mode: 'channel.send', as: 'thrift' }
     ];
 
     _.each(options, (o) => {
@@ -52,10 +56,11 @@ describe ('test tchannel span bridge', () => {
         it (o.description + ' spans propagate through tchannel and preserve parent span properties', (done) => {
             let originalSpan = tracer.startSpan('futurama');
             originalSpan.setBaggageItem('leela', 'fry');
-            let contextForOutgoingCall = { span: originalSpan };
+            let contextForOutgoingCall = { openTracingSpan: originalSpan };
 
             let server = new TChannel({
                 serviceName: 'server',
+                timeout: BIG_TIMEOUT,
                 // force tracing on  in order to prove that overriding works
                 trace: true,
                 forceTrace: true
@@ -63,7 +68,7 @@ describe ('test tchannel span bridge', () => {
             // Server calls client channel after it starts listening.
             server.listen(4040, '127.0.0.1', onServerListening);
 
-            // Create the toplevel client channel.
+            // Create the top level client channel.
             let client = new TChannel({
                 // force tracing on  in order to prove that overriding works
                 trace: true,
@@ -86,36 +91,72 @@ describe ('test tchannel span bridge', () => {
             let context = {};
             encodedChannel.register(server, 'Echo::echo', context, bridge.tracedHandler(handleServerReq));
             function handleServerReq(context, req, head, body, callback) {
-                // assert that context is populated with new server span
-                assert.equal(originalSpan.context().traceIdStr, context.span.context().traceIdStr);
+                // headers should not contain $tracing$ prefixed keys, which should be the
+                // only headers used for this test.
+                assert.equal(Object.keys(head).length, 0);
 
-                // assert that headers match the original span
-                let headers = head[constants.TCHANNEL_TRACING_PREFIX + constants.TRACER_STATE_HEADER_NAME].split(':');
-                let traceId = headers[0];
-                let spanId = headers[1];
-                let flags = parseInt(headers[3]);
-
-                assert.equal(originalSpan.context().traceIdStr, traceId);
-                assert.equal(originalSpan.context().spanIdStr, spanId);
-                assert.equal(originalSpan.context().parentId, null);
-                assert.equal(originalSpan.context().flags, flags);
-                server.close();
-                client.close();
-                done();
+                // assert that the serverSpan is a child of the original span
+                assert.equal(originalSpan.context().traceIdStr, context.openTracingSpan.context().traceIdStr);
+                callback(null, { ok: true, body: { value: 'some-string' }});
             }
 
-            function onServerListening() {
+            function onServerListening(err, res, arg2, arg3) {
                 // Outgoing tchannel call is traced
-                let tracedChannel = bridge.tracedChannel(encodedChannel, contextForOutgoingCall);
-                let req = tracedChannel.request({
-                    serviceName: 'server',
-                    headers: { cn: 'echo' },
-                    timeout: BIG_TIMEOUT
-                });
+                let tracedChannel = bridge.tracedChannel(encodedChannel);
 
                 // headers are left empty in order to prove that tracedChannel populates them
                 let emptyHeaders = {};
-                req.send('Echo::echo', emptyHeaders, { value: 'some-string' });
+
+                let clientCallback = (err, res, headers, body) => {
+                    assert.isNotOk(err);
+                    assert.equal(reporter.spans.length, 2);
+
+                    // the first span to be reported is the server span
+                    let serverSpan = reporter.spans[0];
+                    // the second span to be reported is the client span
+                    let clientSpan = reporter.spans[1];
+
+                    let serverSpanTags = {};
+                    serverSpanTags[opentracing.Tags.PEER_SERVICE] = 'echo';
+                    serverSpanTags[opentracing.Tags.SPAN_KIND] = opentracing.Tags.SPAN_KIND_RPC_SERVER;
+                    serverSpanTags[opentracing.Tags.PEER_HOST_IPV4] = ((127 << 24) | 1);
+                    serverSpanTags['as'] = o.as;
+                    // TODO(oibe) the port for the client request ephemeral, and I don't know how to get it, or if I can.
+
+                    let clientSpanTags = {};
+                    clientSpanTags[opentracing.Tags.PEER_SERVICE] = 'server';
+                    clientSpanTags[opentracing.Tags.SPAN_KIND] = opentracing.Tags.SPAN_KIND_RPC_CLIENT;
+
+                    assert.isOk(TestUtils.hasTags(serverSpan, serverSpanTags));
+                    assert.isOk(TestUtils.hasTags(clientSpan, clientSpanTags));
+
+                    assert.equal(serverSpan.context().parentIdStr, clientSpan.context().spanIdStr);
+                    assert.equal(serverSpan.context().traceIdStr, originalSpan.context().traceIdStr);
+                    assert.equal(clientSpan.context().traceIdStr, originalSpan.context().traceIdStr);
+
+                    reporter.clear();
+                    server.close();
+                    client.close();
+                    done();
+                }
+
+                if (o.mode === 'req.send') {
+                    let req = tracedChannel.request({
+                        serviceName: 'server',
+                        headers: { cn: 'echo' },
+                        openTracingContext: contextForOutgoingCall,
+                        timeout: BIG_TIMEOUT
+                    });
+                    req.send('Echo::echo', emptyHeaders, { value: 'some-string' }, clientCallback);
+                } else if (o.mode === 'channel.send') {
+                    let req = tracedChannel.channel.request({
+                        serviceName: 'server',
+                        headers: { cn: 'echo' },
+                        openTracingContext: contextForOutgoingCall,
+                        timeout: BIG_TIMEOUT
+                    });
+                    tracedChannel.send(req, 'Echo::echo', emptyHeaders, { value: 'some-string' }, clientCallback);
+                }
             }
         }).timeout(BIG_TIMEOUT);
     });

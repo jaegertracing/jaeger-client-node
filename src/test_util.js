@@ -81,7 +81,13 @@ export default class TestUtils {
         }
 
         for (let tag in tags) {
-            if (tags.hasOwnProperty(tag) && (!(tag in expectedTags))) {
+            if (tags.hasOwnProperty(tag) && expectedTags.hasOwnProperty(tag)) {
+                if (expectedTags[tag] !== tags[tag]) {
+                    console.log('expected tag:', expectedTags[tag], ', actual tag: ', tags[tag]);
+                    return false;
+                }
+            } else {
+                // mismatch in tag keys
                 return false;
             }
         }

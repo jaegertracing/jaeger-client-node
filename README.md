@@ -14,10 +14,12 @@ Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ### TChannel Span Bridging
 
-Because [tchannel-node](https://github.com/uber/tchannel-node) does not have instrumentation for opentracing Jaeger-Client exposes methods wrapping tchannel handlers, and encoded channels.
+Because [tchannel-node](https://github.com/uber/tchannel-node) does not have instrumentation for OpenTracing Jaeger-Client exposes methods wrapping tchannel handlers, and encoded channels.
 An encoded channel is a channel wrapped in either a thrift encoder `TChannelAsThrift`, or json encoder `TChannelAsJson`.  To wrap a server handler for thrift one can initialize a tchannel bridge, and wrap there encoded handler function with `tracedHandler`.
 
 ```javascript
+    import { TChannelBridge } from 'jaeger-client';
+
     let bridge = new TChannelBridge(tracer);
     let server = new TChannel({ serviceName: 'server' });
     server.listen(4040, '127.0.0.1');
@@ -28,7 +30,7 @@ An encoded channel is a channel wrapped in either a thrift encoder `TChannelAsTh
 
     serverThriftChannel.register(server, 'Echo::echo', context, bridge.tracedHandler(
         (context, req, head, body, callback) => {
-            //context will be populated witha span field represents the server side span
+            // context will contain an 'openTracingSpan' field that stores the tracing span for the inbound request.
         }
     ));
 ```
@@ -37,6 +39,8 @@ An encoded channel is a channel wrapped in either a thrift encoder `TChannelAsTh
 In the case of making an outgoing request you can wrap an encoded channel in a call to `tracedChannel`.
 
 ```javascript
+    import { TChannelBridge } from 'jaeger-client';
+
     let bridge = new TChannelBridge(tracer);
     // Create the toplevel client channel.
     let client = new TChannel();
@@ -52,15 +56,18 @@ In the case of making an outgoing request you can wrap an encoded channel in a c
         entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // file path to a thrift file
     });
 
-    let tracedChannel = bridge.tracedChannel(encodedChannel, contextForOutgoingCall);
+    // The 'context' object must be passed through from the request method with the field name 'openTracingContext' to ensure an uninterrupted trace.
+    // If the context is empty, a new trace will be started for the outbound call.
+    // The 'openTracingContext' object must also have an 'openTracingSpan' field that represents the current span.
+    let tracedChannel = bridge.tracedChannel(encodedChannel);
     let req = tracedChannel.request({
         serviceName: 'server',
+        openTracingContext: { openTracingSpan: span }, // where span is the current context's span
         headers: { cn: 'echo' }
     });
 
-    // Your app should have a context that holds the incoming span, or a new span will be created.
-    let context = {};
-    req.send('Echo::echo', context, { value: 'some-string' });
+    // headers should contain your outgoing tchannel headers if any.
+    req.send('Echo::echo', headers, { value: 'some-string' });
 ```
 
 ### Debug Traces (Forced Sampling)
@@ -86,7 +93,7 @@ curl -H "jaeger-debug-id: some-correlation-id" http://myhost.com
 When Jaeger sees this header in the request that otherwise has no
 tracing context, it ensures that the new trace started for this
 request will be sampled in the "debug" mode (meaning it should survive
-all downsampling that might happen in the collection pipeline), and the 
+all downsampling that might happen in the collection pipeline), and the
 root span will have a tag as if this statement was executed:
 
 ```javascript

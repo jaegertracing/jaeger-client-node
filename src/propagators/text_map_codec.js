@@ -90,7 +90,7 @@ export default class TextMapCodec {
         return spanContext;
     }
 
-    inject(spanContext: SpanContext, carrier: any): void {
+    inject(spanContext: SpanContext, carrier: any = {}): void {
         let stringSpanContext = spanContext.toString();
         carrier[this._contextKey] = this._encodedValue(stringSpanContext);
 
