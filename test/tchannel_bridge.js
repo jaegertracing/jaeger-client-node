@@ -47,14 +47,12 @@ describe ('test tchannel span bridge', () => {
     let originalSpan = tracer.startSpan('futurama');
     originalSpan.setBaggageItem('leela', 'fry');
 
-    let options = Utils.combinations(
-            ['as', 'mode', 'context', 'headers'],
-            {
-                as: ['json', 'thrift'],
-                mode: ['req.send', 'channel.send'],
-                context: [{ openTracingSpan: originalSpan }, null],
-                headers: [{}, null]
-            });
+    let options = Utils.combinations({
+            as: ['json', 'thrift'],
+            mode: ['req.send', 'channel.send'],
+            context: [{ openTracingSpan: originalSpan }, null],
+            headers: [{}, null]
+    });
 
     _.each(options, (o) => {
         o.description = `${o.as}#${o.mode}:context:${!!o.context}headers:${o.headers}`;
@@ -147,7 +145,7 @@ describe ('test tchannel span bridge', () => {
                     let req = tracedChannel.request({
                         serviceName: 'server',
                         headers: { cn: 'echo' },
-                        openTracingContext: o.context,
+                        context: o.context,
                         timeout: BIG_TIMEOUT
                     });
                     req.send('Echo::echo', o.headers, { value: 'some-string' }, clientCallback);
@@ -155,7 +153,7 @@ describe ('test tchannel span bridge', () => {
                     let req = tracedChannel.channel.request({
                         serviceName: 'server',
                         headers: { cn: 'echo' },
-                        openTracingContext: o.context,
+                        context: o.context,
                         timeout: BIG_TIMEOUT
                     });
                     tracedChannel.send(req, 'Echo::echo', o.headers, { value: 'some-string' }, clientCallback);

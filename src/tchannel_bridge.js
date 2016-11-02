@@ -41,13 +41,14 @@ export default class TChannelBridge {
         });
     }
 
-    _tchannelCallbackWrapper(span, wrappedCallback, err, res) {
+    _tchannelCallbackWrapper(span, callback, err, res) {
         if (err) {
             span.setTag(opentracing.Tags.ERROR, true);
+            span.log('error_msg', err);
         }
 
         span.finish();
-        return wrappedCallback(err, res);
+        return callback(err, res);
     }
 
     /**
@@ -60,59 +61,65 @@ export default class TChannelBridge {
      * a the handler's context with a span.
      **/
     tracedHandler(handlerFunc: any, options: startSpanArgs = {}): Function {
-        return (context, request, headers, body, wrappedCallback) => {
+        return (context, request, headers, body, callback) => {
             let operationName = options.operationName || request.arg1;
             let span = this._extractSpan(operationName, headers);
-            span.setTag(opentracing.Tags.SPAN_KIND, opentracing.Tags.SPAN_KIND_RPC_SERVER);
+
+            // set tags
             span.setTag(opentracing.Tags.PEER_SERVICE, request.callerName);
             let hostPort = request.remoteAddr.split(':');
-            span.setTag(opentracing.Tags.PEER_HOST_IPV4, Utils.ipToInt(hostPort[0]));
-            span.setTag(opentracing.Tags.PEER_PORT, parseInt(hostPort[1]));
+            if (hostPort.length == 2) {
+                span.setTag(opentracing.Tags.PEER_HOST_IPV4, Utils.ipToInt(hostPort[0]));
+                span.setTag(opentracing.Tags.PEER_PORT, parseInt(hostPort[1]));
+            }
             if (request.headers && request.headers.as) {
                 span.setTag('as', request.headers.as);
             }
+
             // In theory may overwrite tchannel span, but thats what we want anyway.
             context.openTracingSpan = span;
 
             // remove headers prefixed with $tracing$
-            for (let key in headers) {
+            let headerKeys = Object.keys(headers);
+            for (let i = 0; i < headerKeys.length; i++) {
+                let key = headerKeys[i];
                 if (headers.hasOwnProperty(key) && Utils.startsWith(key, TCHANNEL_TRACING_PREFIX)) {
                     delete headers[key];
                 }
             }
 
-            let callback = this._tchannelCallbackWrapper.bind(null, span, wrappedCallback);
-            handlerFunc(context, request, headers, body, callback);
+            let wrappingCallback = this._tchannelCallbackWrapper.bind(null, span, callback);
+            handlerFunc(context, request, headers, body, wrappingCallback);
         };
     }
 
-    _wrapTChannelSend(wrappedSend, channel, req, endpoint, headers, body, wrappedCallback) {
+    _wrapTChannelSend(wrappedSend, channel, req, endpoint, headers, body, callback) {
         headers = headers || {};
-        let context = req.openTracingContext || {};
+        let context = req.context || {};
         // if opentracingContext.openTracingSpan is null, then start a new root span
         // else start a span that is the child of the context span.
         let childOf = context.openTracingSpan;
-        context.openTracingSpan = this._tracer.startSpan(endpoint, {
+        let clientSpan = this._tracer.startSpan(endpoint, {
             childOf: childOf
         });
-        context.openTracingSpan.setTag(opentracing.Tags.PEER_SERVICE, req.serviceName);
-        context.openTracingSpan.setTag(opentracing.Tags.SPAN_KIND, opentracing.Tags.SPAN_KIND_RPC_CLIENT);
-        headers = this._injectSpan(context.openTracingSpan, headers);
+        clientSpan.setTag(opentracing.Tags.PEER_SERVICE, req.serviceName);
+        clientSpan.setTag(opentracing.Tags.SPAN_KIND, opentracing.Tags.SPAN_KIND_RPC_CLIENT);
+        this._codec.inject(clientSpan.context(), headers);
 
         // wrap callback so that span can be finished as soon as the response is received
-        let callback = this._tchannelCallbackWrapper.bind(null, context.openTracingSpan, wrappedCallback);
+        let wrappingCallback = this._tchannelCallbackWrapper.bind(null, clientSpan, callback);
 
-        return wrappedSend.call(channel, req, endpoint, headers, body, callback);
+        return wrappedSend.call(channel, req, endpoint, headers, body, wrappingCallback);
     }
 
-    _wrapTChannelRequest(channel, wrappedRequest, requestOptions) {
+    _wrapTChannelRequest(channel, wrappedRequestMethod, requestOptions) {
         // We set the parent to a span with trace_id zero, so that tchannel's
         // outgoing tracing frame also has a trace id of zero.
         // This forces other tchannel implementations to rely on the headers for the trace context.
         requestOptions.parent = { span: this._getTChannelParentSpan() };
 
-        let tchannelRequest = wrappedRequest.call(channel, requestOptions);
-        tchannelRequest.openTracingContext = requestOptions.openTracingContext;
+        let tchannelRequest = wrappedRequestMethod.call(channel, requestOptions);
+        tchannelRequest.context = requestOptions.context;
         return tchannelRequest;
     }
 
@@ -121,15 +128,14 @@ export default class TChannelBridge {
      * the outgoing headers with trace context, and baggage information.
      *
      * @param {Object} channel - the encoded channel to be wrapped for tracing.
-     * @param {Object} context - A context that contains the outgoing span to be seralized.  If the context does not contain a span then a new root span is created.
      * @returns {Object} channel - the trace wrapped channel.
      * */
     tracedChannel(channel: any): any {
         let wrappedSend = channel.send;
-        let wrappedRequest = channel.channel.request;
+        let wrappedRequestMethod = channel.channel.request;
 
         // We are patching the top level channel request method, not the encoded request method.
-        channel.channel.request = this._wrapTChannelRequest.bind(this, channel.channel, wrappedRequest);
+        channel.channel.request = this._wrapTChannelRequest.bind(this, channel.channel, wrappedRequestMethod);
 
         channel.send = this._wrapTChannelSend.bind(this, wrappedSend, channel);
         return channel;
@@ -146,15 +152,13 @@ export default class TChannelBridge {
 
     _extractSpan(operationName: string, headers: any): Span {
         let traceContext: ?SpanContext = this._codec.extract(headers);
+        let tags = {};
+        tags[opentracing.Tags.SPAN_KIND] = opentracing.Tags.SPAN_KIND_RPC_SERVER;
         let options = {
-            childOf: traceContext
+            childOf: traceContext,
+            tags: tags
         }
         let span = this._tracer.startSpan(operationName, options);
         return span;
-    }
-
-    _injectSpan(span: Span, carrier: any): any {
-        this._codec.inject(span.context(), carrier);
-        return carrier;
     }
 }

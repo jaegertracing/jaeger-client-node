@@ -190,8 +190,16 @@ export default class Utils {
      *  { encoding: 'thrift', mode: 'channel' },
      *  { encoding: 'thrift', mode: 'request' }]
      * */
-    static combinations(keys, paramLists, combination = {}, results = []) {
+    static combinations(paramLists, keysParam, combination = {}, results = []) {
+        let keys = keysParam || Object.keys(paramLists);
         if (keys.length === 0) {
+            let descriptionArray = [];
+            let keys = Object.keys(paramLists);
+            for (let i = 0; i < keys.length; i++) {
+                let key = keys[i];
+                descriptionArray.push(`${key}=${combination[key]}`);
+            }
+            combination.description = descriptionArray.join(',');
             results.push(Utils.shallowClone(combination));
             return results;
         }
@@ -202,7 +210,7 @@ export default class Utils {
             let param = paramList[j];
 
             combination[key] = param;
-            results = Utils.combinations(keys.slice(1), paramLists,  combination, results);
+            results = Utils.combinations(paramLists, keys.slice(1),  combination, results);
         }
 
         return results;
