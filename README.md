@@ -51,7 +51,7 @@ In the case of making an outgoing request you can wrap an encoded channel in a c
         peers: ['127.0.0.1:4040']
     });
 
-    let clientThriftChannel = TChannelAsThrift({
+    let encodedThriftChannel = TChannelAsThrift({
         channel: clientSubChannel,
         entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // file path to a thrift file
     });
@@ -59,7 +59,9 @@ In the case of making an outgoing request you can wrap an encoded channel in a c
     // The 'context' object must be passed through from the request method with the field name 'openTracingContext' to ensure an uninterrupted trace.
     // If the context is empty, a new trace will be started for the outbound call.
     // The 'openTracingContext' object must also have an 'openTracingSpan' field that represents the current span.
-    let tracedChannel = bridge.tracedChannel(encodedChannel);
+    let tracedChannel = bridge.tracedChannel(encodedThriftChannel);
+
+    // The encodedThriftChannel's (also true for json encoded channels) request object can call 'send' directly.
     let req = tracedChannel.request({
         serviceName: 'server',
         openTracingContext: { openTracingSpan: span }, // where span is the current context's span
@@ -67,7 +69,26 @@ In the case of making an outgoing request you can wrap an encoded channel in a c
     });
 
     // headers should contain your outgoing tchannel headers if any.
+    // In this instance 'send' is being called on the request object, and not the channel.
     req.send('Echo::echo', headers, { value: 'some-string' });
+```
+
+It should be noted that if you intend to call tchannel's `send` method with the alternate style
+of calling 'send', then you need to create the request object using the top level channel's request method.
+
+```javascript
+    let tracedChannel = bridge.tracedChannel(encodedThriftChannel);
+
+    // tracedChannel.channel refers to encodedThriftChannel's inner channel which
+    // is clientSubChannel in this instance.
+    let req = tracedChannel.channel.request({
+        serviceName: 'server',
+        headers: { cn: 'echo' },
+        openTracingContext: { openTracingContext: span },
+        timeout: BIG_TIMEOUT
+    });
+    // In this instance 'send' is being called directly on the encoded channel and the request object is passed to 'send'.
+    tracedChannel.send(req, 'Echo::echo', o.headers, { value: 'some-string' }, clientCallback);
 ```
 
 ### Debug Traces (Forced Sampling)
