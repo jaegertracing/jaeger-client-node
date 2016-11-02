@@ -32,6 +32,7 @@ import TChannel from 'tchannel';
 import TChannelBridge from '../src/tchannel_bridge.js';
 import TChannelAsThrift from 'tchannel/as/thrift';
 import TChannelAsJSON from 'tchannel/as/json';
+import Utils from '../src/util.js';
 
 describe ('test tchannel span bridge', () => {
     // BIG_TIMEOUT is useful for debugging purposes.
@@ -43,25 +44,27 @@ describe ('test tchannel span bridge', () => {
         new ConstSampler(true)
     );
     let bridge = new TChannelBridge(tracer);
+    let originalSpan = tracer.startSpan('futurama');
+    originalSpan.setBaggageItem('leela', 'fry');
 
-    let options = [
-        { description: 'tchannelAsJson', channelEncoding: TChannelAsJSON, mode: 'req.send', as: 'json' },
-        { description: 'tchannelAsJson', channelEncoding: TChannelAsJSON, mode: 'channel.send', as: 'json' },
-        { description: 'tchannelAsThrift', channelEncoding: TChannelAsThrift, mode: 'req.send', as: 'thrift' },
-        { description: 'tchannelAsThrift', channelEncoding: TChannelAsThrift, mode: 'channel.send', as: 'thrift' }
-    ];
+    let options = Utils.combinations(
+            ['as', 'mode', 'context', 'headers'],
+            {
+                as: ['json', 'thrift'],
+                mode: ['req.send', 'channel.send'],
+                context: [{ openTracingSpan: originalSpan }, null],
+                headers: [{}, null]
+            });
 
     _.each(options, (o) => {
+        o.description = `${o.as}#${o.mode}:context:${!!o.context}headers:${o.headers}`;
+        o.channelEncoding = o.as === 'json' ? TChannelAsJSON: TChannelAsThrift; 
 
         it (o.description + ' spans propagate through tchannel and preserve parent span properties', (done) => {
-            let originalSpan = tracer.startSpan('futurama');
-            originalSpan.setBaggageItem('leela', 'fry');
-            let contextForOutgoingCall = { openTracingSpan: originalSpan };
-
             let server = new TChannel({
                 serviceName: 'server',
                 timeout: BIG_TIMEOUT,
-                // force tracing on  in order to prove that overriding works
+                // force tracing on in order to prove that overriding works
                 trace: true,
                 forceTrace: true
             });
@@ -70,7 +73,7 @@ describe ('test tchannel span bridge', () => {
 
             // Create the top level client channel.
             let client = new TChannel({
-                // force tracing on  in order to prove that overriding works
+                // force tracing on in order to prove that overriding works
                 trace: true,
                 forceTrace: true
             });
@@ -95,17 +98,15 @@ describe ('test tchannel span bridge', () => {
                 // only headers used for this test.
                 assert.equal(Object.keys(head).length, 0);
 
-                // assert that the serverSpan is a child of the original span
-                assert.equal(originalSpan.context().traceIdStr, context.openTracingSpan.context().traceIdStr);
+                // assert that the serverSpan is a child of the original span, if context exists
+                // assert that the serverSpan is NOT a child of the original span, if contexts is null
+                assert.equal(originalSpan.context().traceIdStr === context.openTracingSpan.context().traceIdStr, !!o.context);
                 callback(null, { ok: true, body: { value: 'some-string' }});
             }
 
             function onServerListening(err, res, arg2, arg3) {
                 // Outgoing tchannel call is traced
                 let tracedChannel = bridge.tracedChannel(encodedChannel);
-
-                // headers are left empty in order to prove that tracedChannel populates them
-                let emptyHeaders = {};
 
                 let clientCallback = (err, res, headers, body) => {
                     assert.isNotOk(err);
@@ -131,8 +132,10 @@ describe ('test tchannel span bridge', () => {
                     assert.isOk(TestUtils.hasTags(clientSpan, clientSpanTags));
 
                     assert.equal(serverSpan.context().parentIdStr, clientSpan.context().spanIdStr);
-                    assert.equal(serverSpan.context().traceIdStr, originalSpan.context().traceIdStr);
-                    assert.equal(clientSpan.context().traceIdStr, originalSpan.context().traceIdStr);
+                    // If context exists then the following conditions are true
+                    // else the following conditons are false
+                    assert.equal(serverSpan.context().traceIdStr === originalSpan.context().traceIdStr, !!o.context);
+                    assert.equal(clientSpan.context().traceIdStr === originalSpan.context().traceIdStr, !!o.context);
 
                     reporter.clear();
                     server.close();
@@ -144,18 +147,18 @@ describe ('test tchannel span bridge', () => {
                     let req = tracedChannel.request({
                         serviceName: 'server',
                         headers: { cn: 'echo' },
-                        openTracingContext: contextForOutgoingCall,
+                        openTracingContext: o.context,
                         timeout: BIG_TIMEOUT
                     });
-                    req.send('Echo::echo', emptyHeaders, { value: 'some-string' }, clientCallback);
+                    req.send('Echo::echo', o.headers, { value: 'some-string' }, clientCallback);
                 } else if (o.mode === 'channel.send') {
                     let req = tracedChannel.channel.request({
                         serviceName: 'server',
                         headers: { cn: 'echo' },
-                        openTracingContext: contextForOutgoingCall,
+                        openTracingContext: o.context,
                         timeout: BIG_TIMEOUT
                     });
-                    tracedChannel.send(req, 'Echo::echo', emptyHeaders, { value: 'some-string' }, clientCallback);
+                    tracedChannel.send(req, 'Echo::echo', o.headers, { value: 'some-string' }, clientCallback);
                 }
             }
         }).timeout(BIG_TIMEOUT);

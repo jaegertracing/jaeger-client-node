@@ -1,4 +1,3 @@
-// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,20 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import {assert} from 'chai';
-import deepEqual from 'deep-equal';
-import Utils from '../src/util.js';
+export default class TestLibUtils {
+    static combinations(keys, paramLists, combination = {}, results = []) {
+        if (keys.length === 0) {
+            results.push(combination);
+            return results;
+        }
 
-describe('utils', () => {
-    it('convert an ip less than 2^32 to an unsigned number', () => {
-        assert.equal(Utils.ipToInt('127.0.0.1'), (127 << 24) | 1);
-    });
+        for (let i = 0; i < keys.length; i++) {
+            let key = keys[i];
+            let paramList = paramLists[key];
+            for (let j = 0; j < paramList.length; j++) {
+                let param = paramList[j];
 
-    it ('combinations should generate all combinations given valid parameters', () => {
-        let results = Utils.combinations(['encoding', 'mode'], { encoding: ['json', 'thrift'], mode: ['channel', 'request']});
-        assert.isOk(deepEqual(results, [{ encoding: 'json', mode: 'channel' },
-                                         { encoding: 'json', mode: 'request' },
-                                         { encoding: 'thrift', mode: 'channel' },
-                                         { encoding: 'thrift', mode: 'request' }]));
-    });
-});
+                combination[key] = param;
+                results = combinations(keys.slice(1), paramLists,  combination, results);
+            }
+        }
+
+        return results;
+    }
+}

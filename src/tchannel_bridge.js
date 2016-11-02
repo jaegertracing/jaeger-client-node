@@ -103,7 +103,7 @@ export default class TChannelBridge {
         let callback = this._tchannelCallbackWrapper.bind(null, context.openTracingSpan, wrappedCallback);
 
         return wrappedSend.call(channel, req, endpoint, headers, body, callback);
-    };
+    }
 
     _wrapTChannelRequest(channel, wrappedRequest, requestOptions) {
         // We set the parent to a span with trace_id zero, so that tchannel's
