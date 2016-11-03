@@ -46,7 +46,7 @@ export default class RemoteReporter {
     }
 
     name(): string {
-        return 'LoggingReporter';
+        return 'RemoteReporter';
     }
 
     report(span: Span): void {

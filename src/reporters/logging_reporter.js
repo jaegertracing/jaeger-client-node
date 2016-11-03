@@ -33,6 +33,12 @@ export default class LoggingReporter {
         this._logger.info(`Reporting span ${JSON.stringify(span)}`);
     }
 
+    name(): string {
+        return 'LoggingReporter';
+    }
+
+    flush(): void {}
+
     clear(): void {}
 
     close(): void {}

@@ -19,6 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import RSVP from 'rsvp';
 import Span from '../span.js';
 
 export default class CompositeReporter {
@@ -33,24 +34,49 @@ export default class CompositeReporter {
     }
 
     report(span: Span): void {
-        for (let i = 0; i < this._reporters.length; i++) {
-            let reporter = this._reporters[i];
-            reporter.report(span);
-        }
+        this._reporters.map((r) => {
+            r.report(span);
+        });
+    }
+
+    flush(callback: ?Function): void {
+        let promises = this._reporters.map((r) => {
+            return new RSVP.Promise((resolve, reject) => {
+
+               r.flush();
+                resolve();
+            });
+        });
+
+        RSVP.all(promises).then(() => {
+            if (callback) {
+                callback();
+            }
+        });
     }
 
     clear(): void {}
 
     close(callback: ?Function): void {
-        for (let i = 0; i < this._reporters.length; i++) {
-            let reporter = this._reporters[i];
-            reporter.close();
-        }
+        let promises = this._reporters.map((r) => {
+            return new RSVP.Promise((resolve, reject) => {
+                r.close();
+                resolve();
+            });
+        });
 
-        if (callback) {
-            callback();
-        }
+        RSVP.all(promises).then(() => {
+            if (callback) {
+                callback();
+            }
+        });
     }
 
-    setProcess(serviceName: string, tags: Array<Tag>): void {}
+    setProcess(serviceName: string, tags: Array<Tag>): void {
+        this._reporters.map((r) => {
+            if (r.setProcess) {
+                r.setProcess(serviceName, tags);
+            }
+        });
+    }
 }
