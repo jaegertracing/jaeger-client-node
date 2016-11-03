@@ -55,3 +55,9 @@ export const SAMPLER_TYPE_REMOTE = 'remote';
 // The value of the header is recorded as the tag on the root span, so that the
 // trace can be found in the UI using this value as a correlation ID.
 export const JAEGER_DEBUG_HEADER = 'jaeger-debug-id';
+
+// TRACER_BAGGAGE_HEADER_PREFIX is the default prefix used for saving baggage to a carrier.
+export const TRACER_BAGGAGE_HEADER_PREFIX = 'uberctx-';
+
+// TRACER_STATE_HEADER_NAME is the header key used for a span's serialized context.
+export const TRACER_STATE_HEADER_NAME = 'uber-trace-id';

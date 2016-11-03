@@ -20,10 +20,22 @@
 // THE SOFTWARE.
 
 import {assert} from 'chai';
+import deepEqual from 'deep-equal';
 import Utils from '../src/util.js';
 
-describe('utils should', () => {
+describe('utils', () => {
     it('convert an ip less than 2^32 to an unsigned number', () => {
         assert.equal(Utils.ipToInt('127.0.0.1'), (127 << 24) | 1);
+    });
+
+    it ('combinations should generate all combinations given valid parameters', () => {
+        let results = Utils.combinations({ encoding: ['json', 'thrift'], mode: ['channel', 'request']});
+        let expectedTags = [
+            { encoding: 'json', mode: 'channel', description: 'encoding=json,mode=channel' },
+            { encoding: 'json', mode: 'request', description: 'encoding=json,mode=request' },
+            { encoding: 'thrift', mode: 'channel', description: 'encoding=thrift,mode=channel' },
+            { encoding: 'thrift', mode: 'request', description: 'encoding=thrift,mode=request' }
+        ];
+        assert.isOk(deepEqual(results, expectedTags));
     });
 });

@@ -172,7 +172,7 @@ export default class Tracer {
     *        to represent time values with sub-millisecond accuracy.
     * @return {Span} - a new Span object.
     **/
-    startSpan(operationName: string, options: startSpanArgs): Span {
+    startSpan(operationName: string, options: ?startSpanArgs): Span {
         // Convert options.childOf to options.references as needed.
         options = options || {};
         options.operationName = operationName;

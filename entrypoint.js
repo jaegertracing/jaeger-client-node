@@ -10,6 +10,7 @@ var NoopReporter = require('./dist/src/reporters/noop_reporter.js').default;
 var RemoteReporter = require('./dist/src/reporters/remote_reporter.js').default;
 var SpanContext = require('./dist/src/span_context.js').default;
 var TestUtils = require('./dist/src/test_util.js').default
+var TChannelBridge = require('./dist/src/tchannel_bridge.js').default;
 
 module.exports = {
     initTracer: Configuration.initTracer,
@@ -23,5 +24,6 @@ module.exports = {
     NoopReporter: NoopReporter,
     RemoteReporter: RemoteReporter,
     TestUtils: TestUtils,
-    SpanContext: SpanContext
+    SpanContext: SpanContext,
+    TChannelBridge: TChannelBridge
 };

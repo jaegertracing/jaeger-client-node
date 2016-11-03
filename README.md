@@ -12,6 +12,85 @@ with Zipkin-compatible data model.
 
 Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
+### TChannel Span Bridging
+
+Because [tchannel-node](https://github.com/uber/tchannel-node) does not have instrumentation for OpenTracing Jaeger-Client exposes methods wrapping tchannel handlers, and encoded channels.
+An encoded channel is a channel wrapped in either a thrift encoder `TChannelAsThrift`, or json encoder `TChannelAsJson`.  To wrap a server handler for thrift one can initialize a tchannel bridge, and wrap there encoded handler function with `tracedHandler`.
+
+```javascript
+    import { TChannelBridge } from 'jaeger-client';
+
+    let bridge = new TChannelBridge(tracer);
+    let server = new TChannel({ serviceName: 'server' });
+    server.listen(4040, '127.0.0.1');
+    let serverThriftChannel = TChannelAsThrift({
+        channel: server,
+        entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // file path to a thrift file
+    });
+
+    serverThriftChannel.register(server, 'Echo::echo', context, bridge.tracedHandler(
+        (context, req, head, body, callback) => {
+            // context will contain an 'openTracingSpan' field that stores the tracing span for the inbound request.
+        }
+    ));
+```
+
+
+In the case of making an outgoing request you can wrap an encoded channel in a call to `tracedChannel`.
+
+```javascript
+    import { TChannelBridge } from 'jaeger-client';
+
+    let bridge = new TChannelBridge(tracer);
+    // Create the toplevel client channel.
+    let client = new TChannel();
+
+    // Create the client subchannel that makes requests.
+    let clientSubChannel = client.makeSubChannel({
+        serviceName: 'server',
+        peers: ['127.0.0.1:4040']
+    });
+
+    let encodedThriftChannel = TChannelAsThrift({
+        channel: clientSubChannel,
+        entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // file path to a thrift file
+    });
+
+    // The 'context' object must be passed through from the request method with the field name 'openTracingContext' to ensure an uninterrupted trace.
+    // If the context is empty, a new trace will be started for the outbound call.
+    // The 'openTracingContext' object must also have an 'openTracingSpan' field that represents the current span.
+    let tracedChannel = bridge.tracedChannel(encodedThriftChannel);
+
+    // The encodedThriftChannel's (also true for json encoded channels) request object can call 'send' directly.
+    let req = tracedChannel.request({
+        serviceName: 'server',
+        openTracingContext: { openTracingSpan: span }, // where span is the current context's span
+        headers: { cn: 'echo' }
+    });
+
+    // headers should contain your outgoing tchannel headers if any.
+    // In this instance 'send' is being called on the request object, and not the channel.
+    req.send('Echo::echo', headers, { value: 'some-string' });
+```
+
+It should be noted that if you intend to call tchannel's `send` method with the alternate style
+of calling 'send', then you need to create the request object using the top level channel's request method.
+
+```javascript
+    let tracedChannel = bridge.tracedChannel(encodedThriftChannel);
+
+    // tracedChannel.channel refers to encodedThriftChannel's inner channel which
+    // is clientSubChannel in this instance.
+    let req = tracedChannel.channel.request({
+        serviceName: 'server',
+        headers: { cn: 'echo' },
+        openTracingContext: { openTracingContext: span },
+        timeout: BIG_TIMEOUT
+    });
+    // In this instance 'send' is being called directly on the encoded channel and the request object is passed to 'send'.
+    tracedChannel.send(req, 'Echo::echo', o.headers, { value: 'some-string' }, clientCallback);
+```
+
 ### Debug Traces (Forced Sampling)
 
 #### Programmatically
@@ -35,7 +114,7 @@ curl -H "jaeger-debug-id: some-correlation-id" http://myhost.com
 When Jaeger sees this header in the request that otherwise has no
 tracing context, it ensures that the new trace started for this
 request will be sampled in the "debug" mode (meaning it should survive
-all downsampling that might happen in the collection pipeline), and the 
+all downsampling that might happen in the collection pipeline), and the
 root span will have a tag as if this statement was executed:
 
 ```javascript
