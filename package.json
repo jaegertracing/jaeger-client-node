@@ -22,6 +22,7 @@
     "js-yaml": "^3.6.1",
     "jsonschema": "^1.1.0",
     "request": "^2.74.0",
+    "rsvp": "^3.3.1",
     "thriftrw": "^3.5.0",
     "xorshift": "^0.2.0",
     "opentracing": "^0.13.0"
@@ -49,7 +50,6 @@
     "lodash": "^4.15.0",
     "minimist": "1.2.0",
     "mocha": "^3.0.1",
-    "rsvp": "^3.3.1",
     "sinon": "^1.17.5",
     "source-map-support": "^0.4.5",
     "tchannel": "^3.9.0",
