@@ -1,3 +1,0 @@
-jaeger:
-    serviceName: 'test-service'
-    disable: true

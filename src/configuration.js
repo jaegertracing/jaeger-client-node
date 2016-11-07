@@ -31,46 +31,7 @@ import LoggingReporter from './reporters/logging_reporter';
 import RemoteSampler from './samplers/remote_sampler';
 import Tracer from './tracer';
 import UDPSender from './reporters/udp_sender';
-import {Validator} from 'jsonschema';
 import opentracing from 'opentracing';
-
-let configSchema = {
-    'type': 'object',
-    'required': ['jaeger'],
-    'properties': {
-        'jaeger': {
-            'type': 'object',
-            '$ref': '/jaeger'
-        }
-    },
-};
-
-let jaegerSchema = {
-    'id': '/jaeger',
-    'type': 'object',
-    'required': ['serviceName'],
-    'properties': {
-        'serviceName': {'type': 'string'},
-        'disable': {'type': 'boolean'},
-        'sampler': {
-            'properties': {
-                'type': {'type': 'string' },
-                'param': {'type': 'number' }
-            },
-            'required': ['type', 'param'],
-            'additionalProperties': false
-        },
-        'reporter': {
-            'properties': {
-                'logSpans': {'type': 'boolean'},
-                'agentHost': {'type': 'string'},
-                'agentPort': {'type': 'number'},
-                'flushIntervalMs': {'type': 'number'}
-            },
-            'additionalProperties': false
-        }
-    }
-};
 
 export default class Configuration {
 
@@ -125,14 +86,6 @@ export default class Configuration {
     }
 
     static initTracer(config, options = {}) {
-        let v = new Validator();
-        v.addSchema(jaegerSchema);
-        v.validate(config, configSchema, {
-            throwError: true
-        });
-
-        config = config.jaeger;
-
         let reporters = [];
         let reporter;
         let sampler;
