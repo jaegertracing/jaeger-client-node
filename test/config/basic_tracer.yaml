@@ -1,2 +1,1 @@
-jaeger:
-    serviceName: 'test-service'
+serviceName: 'test-service'

@@ -36,5 +36,6 @@ describe('entrypoint', () => {
         expect(entrypoint.TestUtils).to.be.a('function');
         expect(entrypoint.SpanContext).to.be.a('function');
         expect(entrypoint.TChannelBridge).to.be.a('function');
+        expect(entrypoint.opentracing).to.be.a('object');
     });
 });
