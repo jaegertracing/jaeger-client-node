@@ -34,21 +34,9 @@ import UDPSender from './reporters/udp_sender';
 import {Validator} from 'jsonschema';
 import opentracing from 'opentracing';
 
-let configSchema = {
-    'type': 'object',
-    'required': ['jaeger'],
-    'properties': {
-        'jaeger': {
-            'type': 'object',
-            '$ref': '/jaeger'
-        }
-    },
-};
-
 let jaegerSchema = {
     'id': '/jaeger',
     'type': 'object',
-    'required': ['serviceName'],
     'properties': {
         'serviceName': {'type': 'string'},
         'disable': {'type': 'boolean'},
@@ -126,12 +114,9 @@ export default class Configuration {
 
     static initTracer(config, options = {}) {
         let v = new Validator();
-        v.addSchema(jaegerSchema);
-        v.validate(config, configSchema, {
+        v.validate(config, jaegerSchema, {
             throwError: true
         });
-
-        config = config.jaeger;
 
         let reporters = [];
         let reporter;

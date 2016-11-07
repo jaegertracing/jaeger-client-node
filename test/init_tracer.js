@@ -53,9 +53,7 @@ describe('initTracer', () => {
 
     it ('should initialize proper samplers', () => {
         var config = {
-            jaeger: {
-                serviceName: 'test-service'
-            }
+            serviceName: 'test-service'
         };
         var options = [
             { type: 'const', param: 1, expectedType: ConstSampler, expectedParam: 1 },
@@ -70,7 +68,7 @@ describe('initTracer', () => {
             delete samplerConfig.expectedType;
             delete samplerConfig.expectedParam;
 
-            config.jaeger.sampler = samplerConfig;
+            config.sampler = samplerConfig;
             let tracer = initTracer(config);
 
             expect(tracer._sampler).to.be.an.instanceof(expectedType);
@@ -80,9 +78,7 @@ describe('initTracer', () => {
 
     it ('should throw error on sampler incorrect type', () => {
         var config = {
-            jaeger: {
-                serviceName: 'test-service'
-            }
+            serviceName: 'test-service'
         };
         var options = [
             { type: 'const', param: 'bad-value' },
@@ -93,7 +89,7 @@ describe('initTracer', () => {
 
         let count = 0;
         _.each(options, (samplerConfig) => {
-            config.jaeger.sampler = samplerConfig;
+            config.sampler = samplerConfig;
 
             // Since its an error from a third party framework, its hard to assert on
             // using expect.

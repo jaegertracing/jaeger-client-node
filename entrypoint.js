@@ -11,6 +11,7 @@ var RemoteReporter = require('./dist/src/reporters/remote_reporter.js').default;
 var SpanContext = require('./dist/src/span_context.js').default;
 var TestUtils = require('./dist/src/test_util.js').default
 var TChannelBridge = require('./dist/src/tchannel_bridge.js').default;
+var opentracing = require('opentracing');
 
 module.exports = {
     initTracer: Configuration.initTracer,
@@ -25,5 +26,6 @@ module.exports = {
     RemoteReporter: RemoteReporter,
     TestUtils: TestUtils,
     SpanContext: SpanContext,
-    TChannelBridge: TChannelBridge
+    TChannelBridge: TChannelBridge,
+    opentracing: opentracing
 };
