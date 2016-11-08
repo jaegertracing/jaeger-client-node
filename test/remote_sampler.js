@@ -79,7 +79,16 @@ describe('remote sampler should', () => {
         let sampler = new RemoteSampler('ratelimiting-service', {
             stopPolling: true,
             onSamplerUpdate: (sampler) => {
-                assert.equal(sampler._maxTracesPerSecond, 10);
+                let expectedMaxTracesPerSecond = 10;
+                assert.equal(sampler._maxTracesPerSecond, expectedMaxTracesPerSecond);
+
+                let count = 0;
+                for (let i = 0; i < expectedMaxTracesPerSecond; i++) {
+                    sampler.isSampled();
+                    count++;
+                }
+
+                assert.equal(count, expectedMaxTracesPerSecond);
                 sampler.close();
                 done();
             }
