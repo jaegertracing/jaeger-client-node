@@ -19,7 +19,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import RSVP from 'rsvp';
 import Span from '../span.js';
 
 export default class CompositeReporter {
@@ -40,35 +39,36 @@ export default class CompositeReporter {
     }
 
     flush(callback: ?Function): void {
-        let promises = this._reporters.map((r) => {
-            return new RSVP.Promise((resolve, reject) => {
-
-               r.flush();
-                resolve();
-            });
-        });
-
-        RSVP.all(promises).then(() => {
-            if (callback) {
-                callback();
+        let count = 0;
+        let cb = () => {
+            count++;
+            if (count >= this._reporters.length) {
+                if (callback) {
+                    callback();
+                }
             }
+        };
+
+        this._reporters.map((r) => {
+            r.flush(cb);
         });
     }
 
     clear(): void {}
 
     close(callback: ?Function): void {
-        let promises = this._reporters.map((r) => {
-            return new RSVP.Promise((resolve, reject) => {
-                r.close();
-                resolve();
-            });
-        });
-
-        RSVP.all(promises).then(() => {
-            if (callback) {
-                callback();
+        let count = 0;
+        let cb = () => {
+            count++;
+            if (count >= this._reporters.length) {
+                if (callback) {
+                    callback();
+                }
             }
+        };
+
+        this._reporters.map((r) => {
+            r.close(cb);
         });
     }
 

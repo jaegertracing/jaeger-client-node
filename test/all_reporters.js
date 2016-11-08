@@ -68,6 +68,11 @@ describe('All Reporters should', () => {
         reporter.flush(flushCallback);
         reporter.close(closeCallback);
 
+
+        sender = new UDPSender();
+        sender.setProcess(inMemoryReporter._process);
+        remoteReporter._sender = sender;
+
         // covered without callbacks
         reporter.flush();
         reporter.close(() => {
