@@ -96,11 +96,9 @@ export default class TChannelBridge {
     _wrapTChannelSend(wrappedSend, channel, req, endpoint, headers, body, callback) {
         headers = headers || {};
         let context = req.context || {};
-        // if opentracingContext.openTracingSpan is null, then start a new root span
-        // else start a span that is the child of the context span.
         let childOf = context.openTracingSpan;
         let clientSpan = this._tracer.startSpan(endpoint, {
-            childOf: childOf
+            childOf: childOf // ok if null, will start a new trace
         });
         clientSpan.setTag(opentracing.Tags.PEER_SERVICE, req.serviceName);
         clientSpan.setTag(opentracing.Tags.SPAN_KIND, opentracing.Tags.SPAN_KIND_RPC_CLIENT);

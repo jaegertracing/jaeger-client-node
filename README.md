@@ -14,8 +14,11 @@ Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ### TChannel Span Bridging
 
-Because [tchannel-node](https://github.com/uber/tchannel-node) does not have instrumentation for OpenTracing Jaeger-Client exposes methods wrapping tchannel handlers, and encoded channels.
-An encoded channel is a channel wrapped in either a thrift encoder `TChannelAsThrift`, or json encoder `TChannelAsJson`.  To wrap a server handler for thrift one can initialize a tchannel bridge, and wrap there encoded handler function with `tracedHandler`.
+Because [tchannel-node](https://github.com/uber/tchannel-node) does not have instrumentation
+for OpenTracing, Jaeger-Client exposes methods wrapping tchannel handlers, and encoded channels.
+An encoded channel is a channel wrapped in either a thrift encoder `TChannelAsThrift`, 
+or json encoder `TChannelAsJson`.  To wrap a server handler for thrift one can initialize
+a tchannel bridge, and wrap there encoded handler function with `tracedHandler` decorator.
 
 ```javascript
     import { TChannelBridge } from 'jaeger-client';
@@ -31,12 +34,15 @@ An encoded channel is a channel wrapped in either a thrift encoder `TChannelAsTh
     serverThriftChannel.register(server, 'Echo::echo', context, bridge.tracedHandler(
         (context, req, head, body, callback) => {
             // context will contain an 'openTracingSpan' field that stores the tracing span for the inbound request.
+            // Your handler code goes here.
         }
     ));
 ```
 
 
-In the case of making an outgoing request you can wrap an encoded channel in a call to `tracedChannel`.
+Outbound calls can be made in two ways, shown below.
+
+#### Using encoded channel to create a request and calling `request.send()`
 
 ```javascript
     import { TChannelBridge } from 'jaeger-client';
@@ -56,15 +62,13 @@ In the case of making an outgoing request you can wrap an encoded channel in a c
         entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // file path to a thrift file
     });
 
-    // The 'context' object must be passed through from the request method with the field name 'openTracingContext' to ensure an uninterrupted trace.
-    // If the context is empty, a new trace will be started for the outbound call.
-    // The 'openTracingContext' object must also have an 'openTracingSpan' field that represents the current span.
+    // wrap encodedThriftChannel in a tracing decorator
     let tracedChannel = bridge.tracedChannel(encodedThriftChannel);
 
     // The encodedThriftChannel's (also true for json encoded channels) request object can call 'send' directly.
     let req = tracedChannel.request({
         serviceName: 'server',
-        openTracingContext: { openTracingSpan: span }, // where span is the current context's span
+        context: context, // must be passed through from the service handler shown above
         headers: { cn: 'echo' }
     });
 
@@ -73,8 +77,7 @@ In the case of making an outgoing request you can wrap an encoded channel in a c
     req.send('Echo::echo', headers, { value: 'some-string' });
 ```
 
-It should be noted that if you intend to call tchannel's `send` method with the alternate style
-of calling 'send', then you need to create the request object using the top level channel's request method.
+#### Using top level channel to create a request and calling `encodedChannel.send(request)`
 
 ```javascript
     let tracedChannel = bridge.tracedChannel(encodedThriftChannel);
@@ -84,10 +87,10 @@ of calling 'send', then you need to create the request object using the top leve
     let req = tracedChannel.channel.request({
         serviceName: 'server',
         headers: { cn: 'echo' },
-        openTracingContext: { openTracingContext: span },
-        timeout: BIG_TIMEOUT
+        context: context, // must be passed through from the service handler shown above
+        timeout: someTimeout,
     });
-    // In this instance 'send' is being called directly on the encoded channel and the request object is passed to 'send'.
+    // send() can be called directly on the tracing decorator
     tracedChannel.send(req, 'Echo::echo', o.headers, { value: 'some-string' }, clientCallback);
 ```
 
