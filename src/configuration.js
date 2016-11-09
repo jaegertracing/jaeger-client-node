@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,40 +32,13 @@ import LoggingReporter from './reporters/logging_reporter';
 import RemoteSampler from './samplers/remote_sampler';
 import Tracer from './tracer';
 import UDPSender from './reporters/udp_sender';
-import {Validator} from 'jsonschema';
 import opentracing from 'opentracing';
-
-let jaegerSchema = {
-    'id': '/jaeger',
-    'type': 'object',
-    'properties': {
-        'serviceName': {'type': 'string'},
-        'disable': {'type': 'boolean'},
-        'sampler': {
-            'properties': {
-                'type': {'type': 'string' },
-                'param': {'type': 'number' }
-            },
-            'required': ['type', 'param'],
-            'additionalProperties': false
-        },
-        'reporter': {
-            'properties': {
-                'logSpans': {'type': 'boolean'},
-                'agentHost': {'type': 'string'},
-                'agentPort': {'type': 'number'},
-                'flushIntervalMs': {'type': 'number'}
-            },
-            'additionalProperties': false
-        }
-    }
-};
 
 export default class Configuration {
 
-    static _getSampler(config) {
-        let type = config.sampler.type;
-        let param = config.sampler.param;
+    static _getSampler(serviceName: string, config: SamplerConfig): Sampler {
+        let type: string = config.type;
+        let param: number = config.param;
 
         let sampler;
         if (type === 'probabilistic') {
@@ -80,58 +54,58 @@ export default class Configuration {
         }
 
         if (type === 'remote') {
-            sampler = new RemoteSampler(config.serviceName, {
+            sampler = new RemoteSampler(serviceName, {
                 sampler: new ProbabilisticSampler(param)
             });
+        }
+
+        if (!sampler) {
+            sampler = new ProbabilisticSampler(0.001);
         }
 
         return sampler;
     }
 
-    static _getReporter(config, options) {
-        let sender;
-        let reporterConfig = {};
-        let reporters = [];
-        let hostPort = '';
-        if (config.reporter) {
-            if (config.reporter.logSpans) {
+    static _getReporter(config: ReporterConfig, options: any): Reporter {
+        let sender: Sender;
+        let reporterConfig: any = {};
+        let reporters: Array<Reporter> = [];
+        let hostPort: string = '';
+        if (config) {
+            if (config.logSpans) {
                 reporters.push(new LoggingReporter(options.logger));
             }
 
-            if (config.reporter.flushIntervalMs) {
-                reporterConfig['bufferFlushInterval'] = config.reporter.flushIntervalMs;
+            if (config.flushIntervalMs) {
+                reporterConfig['flushIntervalMs'] = config.flushIntervalMs;
             }
 
-            if (config.reporter.agentHost && config.reporter.agentPort) {
-                hostPort = `${config.reporter.agentHost}:${config.reporter.agentPort}`;
+            if (config.agentHost && config.agentPort) {
+                hostPort = `${config.agentHost}:${config.agentPort}`;
             }
         }
 
+        // $FlowIgnore - disable type inference for udpsender.
         sender = new UDPSender(hostPort);
         reporters.push(new RemoteReporter(sender, reporterConfig));
         return new CompositeReporter(reporters);
     }
 
-    static initTracer(config, options = {}) {
-        let v = new Validator();
-        v.validate(config, jaegerSchema, {
-            throwError: true
-        });
-
-        let reporters = [];
-        let reporter;
-        let sampler;
+    static initTracer(config: TracerConfig, options: any = {}): Tracer {
+        let reporters: Array<Reporter> = [];
+        let reporter: Reporter;
+        let sampler: Sampler;
         if (config.disable) {
             return new opentracing.Tracer();
         } else {
-            if (config.sampler) {
-                sampler = Configuration._getSampler(config);
+            if (config.sampler && config.sampler.type && config.sampler.param) {
+                sampler = Configuration._getSampler(config.serviceName, config.sampler);
             } else {
                 sampler = new RemoteSampler(config.serviceName);
             }
 
             if (!options.reporter) {
-                reporter = Configuration._getReporter(config, options);
+                reporter = Configuration._getReporter(config.reporter, options);
             } else {
                 reporter = options.reporter;
             }

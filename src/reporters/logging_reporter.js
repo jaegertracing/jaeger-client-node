@@ -37,6 +37,8 @@ export default class LoggingReporter {
         return 'LoggingReporter';
     }
 
+    setProcess(): void {}
+
     flush(): void {}
 
     clear(): void {}
