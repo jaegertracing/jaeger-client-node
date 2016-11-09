@@ -25,25 +25,33 @@ import ConstSampler from '../src/samplers/const_sampler.js';
 import ProbabilisticSampler from '../src/samplers/probabilistic_sampler.js';
 import RateLimitingSampler from '../src/samplers/ratelimiting_sampler.js';
 import RemoteSampler from '../src/samplers/remote_sampler.js';
+import Utils from '../src/util';
 
 describe('samplers should', () => {
 
     describe('All Samplers', () => {
-        let samplers = [
-            { description: 'const sampler', sampler: new ConstSampler(true) },
-            { description: 'probabilistic sampler', sampler: new ProbabilisticSampler(0.5) },
-            { description: 'ratelimiting sampler', sampler: new RateLimitingSampler(2)},
-            { description: 'remote sampler', sampler: new RemoteSampler('some-service-name') }
-        ];
+        let samplers = Utils.combinations({
+            useCallback: [true, false],
+            sampler: [
+                new ConstSampler(true),
+                new ProbabilisticSampler(0.5),
+                new RateLimitingSampler(2),
+                new RemoteSampler('some-service-name')
+            ]
+        });
 
         _.each(samplers, (o) => {
             it (o.description + 'close calls callback', () => {
-                let callbackCalled = false;
-                let closeCallback = () => { callbackCalled = true; };
+                if (o.useCallback) {
+                    let callbackCalled = false;
+                    let closeCallback = () => { callbackCalled = true; };
 
-                o.sampler.close(closeCallback);
+                    o.sampler.close(closeCallback);
 
-                assert.isOk(callbackCalled);
+                    assert.isOk(callbackCalled);
+                } else {
+                    o.sampler.close();
+                }
             });
         });
     });
@@ -64,7 +72,7 @@ describe('samplers should', () => {
             assert.isNotOk(equals);
         });
 
-        it ('does equal another type of sampler', () => {
+        it ('does equal the same type of sampler', () => {
             let otherSampler = new ConstSampler(true);
             let equals = sampler.equal(otherSampler);
             assert.isOk(equals);
@@ -79,20 +87,6 @@ describe('samplers should', () => {
         it ('calls is Sampled, and returns false', () => {
             let sampler = new ProbabilisticSampler(0.0);
             assert.isNotOk(sampler.isSampled());
-        });
-
-        it ('callback is called on close', () => {
-            let sampler = new ProbabilisticSampler(1.0);
-            let callbackCalled = false;
-            let closeCallback = () => {callbackCalled = true; };
-            sampler.close(closeCallback);
-
-            assert.isOk(callbackCalled);
-        });
-
-        it ('close called without callback', () => {
-            let sampler = new ProbabilisticSampler(1.0);
-            sampler.close();
         });
     });
 
