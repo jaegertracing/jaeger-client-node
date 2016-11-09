@@ -60,7 +60,7 @@ export default class Span {
         return this._firstInProcess;
     }
 
-    get name(): string {
+    get operationName(): string {
         return this._operationName;
     }
 

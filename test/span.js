@@ -66,7 +66,7 @@ describe('span should', () => {
 
     it('set operation name correctly', () => {
         span.setOperationName('operation-name');
-        assert.equal(span._operationName, 'operation-name');
+        assert.equal(span.operationName, 'operation-name');
     });
 
     it('finish span with custom duration', () => {
