@@ -114,7 +114,7 @@ export default class TChannelBridge {
         // We set the parent to a span with trace_id zero, so that tchannel's
         // outgoing tracing frame also has a trace id of zero.
         // This forces other tchannel implementations to rely on the headers for the trace context.
-        requestOptions.parent = { span: this._getTChannelParentSpan() };
+        requestOptions.parent = { span: TChannelBridge.getTChannelParentSpan() };
 
         let tchannelRequest = wrappedRequestMethod.call(channel, requestOptions);
         tchannelRequest.context = requestOptions.context;
@@ -139,7 +139,7 @@ export default class TChannelBridge {
         return channel;
     }
 
-    _getTChannelParentSpan(): TChannelSpan {
+    static getTChannelParentSpan(): TChannelSpan {
         return {
             id: [0, 0],
             traceid: [0, 0],

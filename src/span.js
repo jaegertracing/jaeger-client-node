@@ -60,11 +60,11 @@ export default class Span {
         return this._firstInProcess;
     }
 
-    get name(): string {
+    get operationName(): string {
         return this._operationName;
     }
 
-    set name(operationName): void {
+    set operationName(operationName): void {
         this._operationName = operationName;
     }
 

@@ -82,10 +82,6 @@ export default class Tracer {
         this._setProcess();
     }
 
-    get reporter(): Reporter {
-        return this._reporter;
-    }
-
     _setProcess(): void {
         this._reporter.setProcess(this._serviceName, Utils.convertObjectToTags(this._tags));
     }
