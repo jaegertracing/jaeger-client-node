@@ -39,7 +39,6 @@
     "body-parser": "^1.15.2",
     "chai": "^3.5.0",
     "coveralls": "^2.11.14",
-    "debug-logtron": "^5.2.0",
     "deep-equal": "^1.0.1",
     "eslint": "^2.4.0",
     "eslint-config-airbnb": "^6.2.0",

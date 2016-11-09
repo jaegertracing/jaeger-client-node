@@ -20,10 +20,196 @@
 // THE SOFTWARE.
 
 import * as constants from './constants.js';
+import fs from 'fs';
+import path from 'path';
+import dns from 'dns';
+import opentracing from 'opentracing';
+import request from 'request';
+import RSVP from 'rsvp';
+import Span from '../../src/span.js';
+import SpanContext from '../../src/span_context.js';
+import TChannel from 'tchannel/channel';
+import TChannelThrift from 'tchannel/as/thrift';
+import TChannelBridge from '../../src/tchannel_bridge';
 import Utils from '../../src/util.js';
 
 export default class Helpers {
-    static observeSpan(context: any): ObservedSpan {
+    _tracer: Tracer;
+    _bridge: TChannelBridge;
+    _thriftChannel: Channel;
+
+    constructor(tracer: Tracer) {
+        this._tracer = tracer;
+
+        var channel = TChannel().makeSubChannel({
+            serviceName: 'node',
+            peers: [Utils.myIp() + ':8082']
+        });
+
+        let crossdockSpec = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'jaeger-idl', 'thrift', 'crossdock', 'tracetest.thrift'), 'utf8');
+        this._thriftChannel = TChannelThrift({
+            channel: channel,
+            source: crossdockSpec
+        });
+
+        let bridge = new TChannelBridge(this._tracer);
+        this._tracedChannel= bridge.tracedChannel(this._thriftChannel);
+    }
+
+    handleRequest(isStartRequest: boolean, traceRequest: any, spanOrContext: any, operationName: string): void {
+        let serverSpan;
+        if (spanOrContext instanceof Span) {
+            serverSpan = spanOrContext;
+        }
+
+        if (spanOrContext instanceof SpanContext) {
+            serverSpan = this._tracer.startSpan(operationName, { childOf: spanOrContext });
+        }
+
+        if (isStartRequest) {
+            serverSpan.setBaggageItem(constants.BAGGAGE_KEY, traceRequest.baggage);
+            if (traceRequest.sampled) {
+                serverSpan.setTag(opentracing.Tags.SAMPLING_PRIORITY, 1);
+            }
+        }
+
+        // do async call to prepareResponse
+        return new RSVP.Promise((resolve, reject) => {
+            this.prepareResponse(traceRequest.downstream, {span: serverSpan}).then((response) => {
+                serverSpan.finish();
+                resolve(response);
+            });
+        });
+    }
+
+    prepareResponse(downstream: Downstream, context: any): any {
+        return new RSVP.Promise((resolve, reject) => {
+            let observedSpan = this.observeSpan(context);
+            let response: TraceResponse = {
+                span: observedSpan,
+                notImplementedError: ''
+            };
+
+            if (downstream) {
+                this.callDownstream(downstream, context).then((downstreamResponse) => {
+                    response.downstream = downstreamResponse;
+                    resolve(response);
+                });
+            } else {
+                resolve(response);
+            }
+
+        });
+    }
+
+    callDownstream(downstream: Downstream, context: any): any {
+        let transport = downstream.transport;
+        if (transport === constants.TRANSPORT_HTTP) {
+            return this.callDownstreamHTTP(downstream, context);
+        } else if (transport === constants.TRANSPORT_TCHANNEL) {
+            return this.callDownstreamTChannel(downstream, context);
+        } else if (transport == constants.TRANSPORT_DUMMY) {
+            return new RSVP.Promise((resolve, reject) => {
+                resolve({ 'notImplementedError': 'Dummy has not been implemented' });
+            });
+        } else {
+            return new RSVP.Promise((resolve, reject) => {
+                resolve({ 'notImplementedError': `Unrecognized transport received: ${transport}` })
+            });
+        }
+    }
+
+    callDownstreamHTTP(downstream: Downstream, context: any): any {
+        return new RSVP.Promise((resolve, reject) => {
+
+            // $FlowIgnore - Honestly don't know why flow compalins about family.
+            dns.lookup(downstream.host, (err, address, family) => {
+                if (err) {
+                    console.log('dns_lookup_err', err);
+                    return;
+                }
+
+                let port = parseInt(downstream.port);
+                let downstreamUrl = `http:\/\/${address}:${port}/join_trace`;
+
+                let clientSpan = this._tracer.startSpan('client-span', { childOf: context.span.context() });
+                let headers = { 'Content-Type': 'application/json' };
+                this._tracer.inject(clientSpan.context(), opentracing.FORMAT_HTTP_HEADERS, headers);
+
+                request.post({
+                    'url': downstreamUrl,
+                    'forever': true,
+                    'headers': headers,
+                    'body': JSON.stringify({
+                        'serverRole': downstream.serverRole,
+                        'downstream': downstream.downstream
+                    })
+                }, (err, response) => {
+                    if (err) {
+                        console.log('error in downstream call:', err);
+                        reject(err);
+                        clientSpan.finish();
+                        return;
+                    }
+
+                    clientSpan.finish();
+                    let downstreamResponse = JSON.parse(response.body);
+                    resolve(downstreamResponse);
+                });
+
+            });
+        });
+    }
+
+    callDownstreamTChannel(downstream: Downstream, context: any): any {
+        return new RSVP.Promise((resolve, reject) => {
+            dns.lookup(downstream.host, (err, address, family) => {
+                if (err) {
+                    console.log('dns_lookup_err', err);
+                    return;
+                }
+
+                let port = parseInt(downstream.port);
+                let downstreamUrl = `http:\/\/${address}:${port}/join_trace`;
+
+                let clientSpan = this._tracer.startSpan('client-span', { childOf: context.span.context() });
+
+                let request = this._tracedChannel.request({
+                    timeout: 5000,
+                    context: { openTracingSpan: clientSpan },
+                    headers: {
+                        cn: 'tcollector-requestor'
+                    },
+                    trace: true,
+                    serviceName: 'node',
+                    retryFlags: {never: true}
+                });
+                let joinTraceRequest = {
+                    'serverRole': downstream.serverRole,
+                };
+
+                if (downstream.downstream) {
+                    joinTraceRequest.downstream = downstream.downstream;
+                }
+
+                request.send(
+                    'TracedService::joinTrace',
+                    null,
+                    { request: joinTraceRequest },
+                    (err, response) => {
+                        if (err) {
+                            console.log('tchannel err', err);
+                            clientSpan.finish();
+                            return;
+                        }
+                        clientSpan.finish();
+                        resolve(response.body);
+                });
+            });
+        });
+    }
+
+    observeSpan(context: any): ObservedSpan {
         let span = context.span;
         if (!span) {
             return {
@@ -34,7 +220,7 @@ export default class Helpers {
         }
 
         return {
-            traceId: Utils.removeLeadingZeros(span.context().traceId.toString('hex')),
+            traceId: span.context().traceIdStr,
             sampled: context.span.context().isSampled(),
             baggage: span.getBaggageItem(constants.BAGGAGE_KEY)
         };
