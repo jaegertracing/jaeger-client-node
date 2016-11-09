@@ -64,6 +64,10 @@ export default class Span {
         return this._operationName;
     }
 
+    set name(operationName): void {
+        this._operationName = operationName;
+    }
+
     static _getBaggageHeaderCache() {
         if (!Span._baggageHeaderCache) {
             Span._baggageHeaderCache = {};
