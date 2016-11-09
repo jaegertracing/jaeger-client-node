@@ -19,8 +19,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import _ from 'lodash';
-import bufferEqual from 'buffer-equal';
 import deepEqual from 'deep-equal';
 import opentracing from 'opentracing';
 import Span from './span';
@@ -33,7 +31,7 @@ export default class TestUtils {
             return true;
         }
 
-        return bufferEqual(spanTraceId, Utils.encodeInt64(traceId));
+        return deepEqual(spanTraceId, Utils.encodeInt64(traceId));
     }
 
     static spanIdEqual(span: Span, spanId: number): boolean {
@@ -42,7 +40,7 @@ export default class TestUtils {
             return true;
         }
 
-        return bufferEqual(spanContextId, Utils.encodeInt64(spanId));
+        return deepEqual(spanContextId, Utils.encodeInt64(spanId));
     }
 
     static parentIdEqual(span: Span, parentId: number): boolean {
@@ -51,7 +49,7 @@ export default class TestUtils {
             return true;
         }
 
-        return bufferEqual(spanParentId, Utils.encodeInt64(parentId));
+        return deepEqual(spanParentId, Utils.encodeInt64(parentId));
     }
 
     static flagsEqual(span: Span, flags: number): boolean {
@@ -107,7 +105,7 @@ export default class TestUtils {
             let found = false;
             for (let j = 0; j < span._logs.length; j++) {
                 let spanLog = span._logs[j];
-                if (_.isEqual(spanLog, expectedLog)) {
+                if (deepEqual(spanLog, expectedLog)) {
                     found = true
                 }
             }
@@ -165,14 +163,14 @@ export default class TestUtils {
     }
 
     static thriftSpanEqual(spanOne, spanTwo) {
-        return  bufferEqual(spanOne.traceIdLow, spanTwo.traceIdLow) &&
-                bufferEqual(spanOne.traceIdHigh, spanTwo.traceIdHigh) &&
-                bufferEqual(spanOne.spanId, spanTwo.spanId) &&
-                bufferEqual(spanOne.parentSpanId, spanTwo.parentSpanId) &&
+        return  deepEqual(spanOne.traceIdLow, spanTwo.traceIdLow) &&
+                deepEqual(spanOne.traceIdHigh, spanTwo.traceIdHigh) &&
+                deepEqual(spanOne.spanId, spanTwo.spanId) &&
+                deepEqual(spanOne.parentSpanId, spanTwo.parentSpanId) &&
                 spanOne.operationName === spanTwo.operationName &&
                 deepEqual(spanOne.references, spanTwo.references) &&
                 spanOne.flags === spanTwo.flags &&
-                bufferEqual(spanOne.startTime, spanTwo.startTime) &&
-                bufferEqual(spanOne.duration, spanTwo.duration);
+                deepEqual(spanOne.startTime, spanTwo.startTime) &&
+                deepEqual(spanOne.duration, spanTwo.duration);
     }
 }

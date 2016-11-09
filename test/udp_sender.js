@@ -20,7 +20,7 @@
 
 import _ from 'lodash';
 import {assert} from 'chai';
-import bufferEqual from 'buffer-equal';
+import deepEqual from 'deep-equal';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import * as constants from '../src/constants.js'
 import dgram from 'dgram';
@@ -136,11 +136,11 @@ describe('udp sender should', () => {
                     assert.isOk(batch);
                     assert.isOk(TestUtils.thriftSpanEqual(span, batch.spans[0]));
                     if (o.expectedTraceId) {
-                        assert.isOk(bufferEqual(span.traceIdLow, o.expectedTraceId));
+                        assert.isOk(deepEqual(span.traceIdLow, o.expectedTraceId));
                     }
 
                     if (o.expectedParentId) {
-                        assert.isOk(bufferEqual(span.parentId, o.expectedParentId));
+                        assert.isOk(deepEqual(span.parentId, o.expectedParentId));
                     } else {
                         assert.isNotOk(span.parentId);
                     }
