@@ -65,6 +65,10 @@ export default class RemoteReporter {
         } else {
             this._metrics.reporterSuccess.increment(response.numSpans);
         }
+
+        if (callback) {
+            callback();
+        }
     }
 
     close(callback: ?Function): void {

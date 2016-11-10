@@ -37,9 +37,17 @@ export default class LoggingReporter {
         return 'LoggingReporter';
     }
 
-    flush(): void {}
+    flush(callback: ?Function): void {
+        if (callback) {
+            callback();
+        }
+    }
 
     clear(): void {}
 
-    close(): void {}
+    close(callback: ?Function): void {
+        if (callback) {
+            callback();
+        }
+    }
 }

@@ -38,37 +38,31 @@ export default class CompositeReporter {
         });
     }
 
-    flush(callback: ?Function): void {
-        let count = 0;
-        let cb = () => {
-            count++;
-            if (count >= this._reporters.length) {
-                if (callback) {
-                    callback();
+    _executeCallbackLast(callback: ?Function, counter: any): Function {
+        return () => {
+            if (counter)  {
+                counter.count++;
+                if (counter.count >= this._reporters.length) {
+                    if (callback) {
+                        callback();
+                    }
                 }
             }
         };
+    }
 
+    flush(callback: ?Function, counter: any): void {
         this._reporters.map((r) => {
-            r.flush(cb);
+            r.flush(this._executeCallbackLast(callback, counter));
         });
     }
 
     clear(): void {}
 
-    close(callback: ?Function): void {
-        let count = 0;
-        let cb = () => {
-            count++;
-            if (count >= this._reporters.length) {
-                if (callback) {
-                    callback();
-                }
-            }
-        };
+    close(callback: ?Function, counter: any): void {
 
         this._reporters.map((r) => {
-            r.close(cb);
+            r.close(this._executeCallbackLast(callback, counter));
         });
     }
 

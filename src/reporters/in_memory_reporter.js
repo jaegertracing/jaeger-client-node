@@ -59,7 +59,7 @@ export default class InMemoryReporter {
     }
 
     close(callback: ?Function): void {
-        if(callback) {
+        if (callback) {
             callback();
         }
     }

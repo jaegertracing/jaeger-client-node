@@ -132,10 +132,6 @@ export default class UDPSender {
         this._client.send(thriftBuffer, 0, thriftBuffer.length, PORT, HOST);
         this._reset();
 
-        if (testCallback) {
-            testCallback();
-        }
-
         return {err: false, numSpans: numSpans};
     }
 

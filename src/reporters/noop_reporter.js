@@ -35,7 +35,7 @@ export default class NoopReporter {
         }
     }
 
-    close(callback: ?Function) {
+    close(callback: ?Function): void {
         if (callback) {
             callback();
         }

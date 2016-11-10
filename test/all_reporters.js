@@ -43,7 +43,7 @@ describe('All Reporters should', () => {
         assert.equal(compositeReporter.name(), 'CompositeReporter');
     });
 
-    it ('flush, clear, and close are covered', () => {
+    it ('flush, clear, and close are covered', (done) => {
         let loggingReporter = new LoggingReporter();
         let inMemoryReporter = new InMemoryReporter();
         inMemoryReporter.setProcess('service-name', []);
@@ -59,14 +59,12 @@ describe('All Reporters should', () => {
         ];
 
         let reporter = new CompositeReporter(reporters);
-        let closeCalled = false;
-        let flushCalled = false;
-        let closeCallback = () => { closeCalled = true; };
-        let flushCallback = () => { flushCalled = true; };
+        let closeCalled = { count: 0 };
+        let flushCalled = { count: 0 };
 
         reporter.clear();
-        reporter.flush(flushCallback);
-        reporter.close(closeCallback);
+        reporter.flush(()=>{}, flushCalled);
+        reporter.close(()=>{}, closeCalled);
 
 
         sender = new UDPSender();
@@ -75,10 +73,13 @@ describe('All Reporters should', () => {
 
         // covered without callbacks
         reporter.flush();
-        reporter.close(() => {
-            assert.isOk(closeCalled);
-            assert.isOk(flushCalled);
-        });
+        reporter.close();
+
+        setTimeout(() => {
+            assert.equal(flushCalled.count, reporters.length);
+            assert.equal(closeCalled.count, reporters.length);
+            done();
+        }, 200);
     });
 
     describe('Logging reporter', () => {
