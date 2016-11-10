@@ -38,9 +38,9 @@ export default class CompositeReporter {
         });
     }
 
-    flush(callback: ?Function): void {
+    _executeCallbackLast(callback: Function): Function {
         let count = 0;
-        let cb = () => {
+        return () => {
             count++;
             if (count >= this._reporters.length) {
                 if (callback) {
@@ -48,27 +48,20 @@ export default class CompositeReporter {
                 }
             }
         };
+    }
 
+    flush(callback: ?Function): void {
         this._reporters.map((r) => {
-            r.flush(cb);
+            r.flush(this._executeCallbackLast(callback));
         });
     }
 
     clear(): void {}
 
     close(callback: ?Function): void {
-        let count = 0;
-        let cb = () => {
-            count++;
-            if (count >= this._reporters.length) {
-                if (callback) {
-                    callback();
-                }
-            }
-        };
 
         this._reporters.map((r) => {
-            r.close(cb);
+            r.close(this._executeCallbackLast(callback));
         });
     }
 
