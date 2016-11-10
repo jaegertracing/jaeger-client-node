@@ -66,18 +66,14 @@ export default class Configuration {
         return sampler;
     }
 
-    static _getReporter(config: ReporterConfig, options: any): Reporter {
+    static _getReporter(config: ReporterConfig, options: ReporterOptions): Reporter {
         let sender: Sender;
-        let reporterConfig: any = {};
-        let reporters: Array<Reporter> = [];
+        let reporterOptions: any = {};
+        let reporter: Reporter;
         let hostPort: string = '';
         if (config) {
-            if (config.logSpans) {
-                reporters.push(new LoggingReporter(options.logger));
-            }
-
             if (config.flushIntervalMs) {
-                reporterConfig['flushIntervalMs'] = config.flushIntervalMs;
+                reporterOptions['flushIntervalMs'] = config.flushIntervalMs;
             }
 
             if (config.agentHost && config.agentPort) {
@@ -87,12 +83,16 @@ export default class Configuration {
 
         // $FlowIgnore - disable type inference for udpsender.
         sender = new UDPSender(hostPort);
-        reporters.push(new RemoteReporter(sender, reporterConfig));
-        return new CompositeReporter(reporters);
+        reporter = new RemoteReporter(sender, reporterOptions);
+
+        if (config && config.logSpans) {
+            reporter = new CompositeReporter([reporter, new LoggingReporter(options.logger)]);
+        }
+        return reporter;
     }
 
+    // see ./decls/types.js for TracerConfig
     static initTracer(config: TracerConfig, options: any = {}): Tracer {
-        let reporters: Array<Reporter> = [];
         let reporter: Reporter;
         let sampler: Sampler;
         if (config.disable) {

@@ -26,12 +26,12 @@ import RemoteReporter from '../src/reporters/remote_reporter';
 import UDPSender from '../src/reporters/udp_sender';
 import MockLogger from './lib/mock_logger';
 import LoggingReporter from '../src/reporters/logging_reporter';
+import RSVP from 'rsvp';
 
 describe('All Reporters should', () => {
     it ('have proper names', () => {
         let loggingReporter = new LoggingReporter();
         let inMemoryReporter = new InMemoryReporter();
-        inMemoryReporter.setProcess('service-name', []);
         let noopReporter = new NoopReporter();
         let remoteReporter = new RemoteReporter();
         let compositeReporter = new CompositeReporter();

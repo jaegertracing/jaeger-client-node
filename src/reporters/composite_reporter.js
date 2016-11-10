@@ -38,7 +38,7 @@ export default class CompositeReporter {
         });
     }
 
-    _executeCallbackLast(callback: Function): Function {
+    _executeCallbackLast(callback: ?Function): Function {
         let count = 0;
         return () => {
             count++;

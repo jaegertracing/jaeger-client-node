@@ -101,6 +101,11 @@ declare type ReporterConfig = {
     agentPort: ?number
 };
 
+declare type ReporterOptions = {
+    reporter: Reporter,
+    logger: Logger
+};
+
 declare type SamplerConfig = {
     type: string,
     param: number

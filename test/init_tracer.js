@@ -45,7 +45,7 @@ describe('initTracer', () => {
         let tracer = initTracer(config);
 
         expect(tracer._sampler).to.be.an.instanceof(RemoteSampler);
-        expect(tracer._reporter).to.be.an.instanceof(CompositeReporter);
+        expect(tracer._reporter).to.be.an.instanceof(RemoteReporter);
     });
 
     it ('should initialize proper samplers', () => {

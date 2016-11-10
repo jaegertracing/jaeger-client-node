@@ -24,7 +24,7 @@ import ThriftUtils from '../thrift.js';
 import Metrics from '../metrics/metrics.js';
 import NoopMetricFactory from '../metrics/noop/metric_factory';
 
-const DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS = 10000;
+const DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS = 1000;
 
 export default class RemoteReporter {
     _flushIntervalMs: number;
