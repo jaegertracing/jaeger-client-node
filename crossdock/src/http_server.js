@@ -40,8 +40,8 @@ export default class HttpServer {
 
         app.post('/start_trace', (req, res) => {
             let startRequest: boolean = true;
-            let spanContext = this._tracer.extract(opentracing.FORMAT_HTTP_HEADERS, req.headers);
-            let serverSpan = this._tracer.startSpan('start_trace#http', { childOf: spanContext });
+            let parentContext = this._tracer.extract(opentracing.FORMAT_HTTP_HEADERS, req.headers);
+            let serverSpan = this._tracer.startSpan('start_trace#http', { childOf: parentContext });
 
             let traceRequest = req.body;
             let promise = this._helpers.handleRequest(
@@ -58,8 +58,8 @@ export default class HttpServer {
         app.post('/join_trace', (req, res) => {
             let startRequest: boolean = false;
             let traceRequest = req.body;
-            let spanContext = this._tracer.extract(opentracing.FORMAT_HTTP_HEADERS, req.headers);
-            let serverSpan = this._tracer.startSpan('join_trace#http', { childOf: spanContext });
+            let parentContext = this._tracer.extract(opentracing.FORMAT_HTTP_HEADERS, req.headers);
+            let serverSpan = this._tracer.startSpan('join_trace#http', { childOf: parentContext });
 
 
             let promise = this._helpers.handleRequest(

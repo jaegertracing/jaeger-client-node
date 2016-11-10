@@ -64,8 +64,7 @@ export default class TChannelServer {
         let promise = this._helpers.handleRequest(
             isStartRequest,
             traceRequest,
-            context.openTracingSpan.context(),
-            'join_trace#tchannel'
+            context.openTracingSpan,
         );
 
         promise.then((tchannelResp) => {

@@ -56,16 +56,7 @@ export default class Helpers {
         this._tracedChannel= bridge.tracedChannel(this._thriftChannel);
     }
 
-    handleRequest(isStartRequest: boolean, traceRequest: any, spanOrContext: any, operationName: string): void {
-        let serverSpan;
-        if (spanOrContext instanceof Span) {
-            serverSpan = spanOrContext;
-        }
-
-        if (spanOrContext instanceof SpanContext) {
-            serverSpan = this._tracer.startSpan(operationName, { childOf: spanOrContext });
-        }
-
+    handleRequest(isStartRequest: boolean, traceRequest: any, serverSpan: Span): void {
         if (isStartRequest) {
             serverSpan.setBaggageItem(constants.BAGGAGE_KEY, traceRequest.baggage);
             if (traceRequest.sampled) {
@@ -123,88 +114,70 @@ export default class Helpers {
         return new RSVP.Promise((resolve, reject) => {
 
             // $FlowIgnore - Honestly don't know why flow compalins about family.
-            dns.lookup(downstream.host, (err, address, family) => {
+
+            let port = parseInt(downstream.port);
+            let downstreamUrl = `http://${downstream.host}:${port}/join_trace`;
+
+            let clientSpan = this._tracer.startSpan('client-span', { childOf: context.span.context() });
+            let headers = { 'Content-Type': 'application/json' };
+            this._tracer.inject(clientSpan.context(), opentracing.FORMAT_HTTP_HEADERS, headers);
+
+            request.post({
+                'url': downstreamUrl,
+                'forever': true,
+                'headers': headers,
+                'body': JSON.stringify({
+                    'serverRole': downstream.serverRole,
+                    'downstream': downstream.downstream
+                })
+            }, (err, response) => {
                 if (err) {
-                    console.log('dns_lookup_err', err);
+                    console.log('error in downstream call:', err);
+                    clientSpan.finish();
+                    reject(err);
                     return;
                 }
 
-                let port = parseInt(downstream.port);
-                let downstreamUrl = `http:\/\/${address}:${port}/join_trace`;
-
-                let clientSpan = this._tracer.startSpan('client-span', { childOf: context.span.context() });
-                let headers = { 'Content-Type': 'application/json' };
-                this._tracer.inject(clientSpan.context(), opentracing.FORMAT_HTTP_HEADERS, headers);
-
-                request.post({
-                    'url': downstreamUrl,
-                    'forever': true,
-                    'headers': headers,
-                    'body': JSON.stringify({
-                        'serverRole': downstream.serverRole,
-                        'downstream': downstream.downstream
-                    })
-                }, (err, response) => {
-                    if (err) {
-                        console.log('error in downstream call:', err);
-                        reject(err);
-                        clientSpan.finish();
-                        return;
-                    }
-
-                    clientSpan.finish();
-                    let downstreamResponse = JSON.parse(response.body);
-                    resolve(downstreamResponse);
-                });
-
+                clientSpan.finish();
+                let downstreamResponse = JSON.parse(response.body);
+                resolve(downstreamResponse);
             });
         });
     }
 
     callDownstreamTChannel(downstream: Downstream, context: any): any {
         return new RSVP.Promise((resolve, reject) => {
-            dns.lookup(downstream.host, (err, address, family) => {
-                if (err) {
-                    console.log('dns_lookup_err', err);
-                    return;
-                }
+            let port = parseInt(downstream.port);
+            let downstreamUrl = `http://${downstream.host}:${port}/join_trace`;
 
-                let port = parseInt(downstream.port);
-                let downstreamUrl = `http:\/\/${address}:${port}/join_trace`;
+            let request = this._tracedChannel.request({
+                timeout: 5000,
+                context: { openTracingSpan: context.span },
+                headers: {
+                    cn: 'tcollector-requestor'
+                },
+                trace: true,
+                serviceName: 'node',
+                retryFlags: {never: true}
+            });
+            let joinTraceRequest = {
+                'serverRole': downstream.serverRole,
+            };
 
-                let clientSpan = this._tracer.startSpan('client-span', { childOf: context.span.context() });
+            if (downstream.downstream) {
+                joinTraceRequest.downstream = downstream.downstream;
+            }
 
-                let request = this._tracedChannel.request({
-                    timeout: 5000,
-                    context: { openTracingSpan: clientSpan },
-                    headers: {
-                        cn: 'tcollector-requestor'
-                    },
-                    trace: true,
-                    serviceName: 'node',
-                    retryFlags: {never: true}
-                });
-                let joinTraceRequest = {
-                    'serverRole': downstream.serverRole,
-                };
-
-                if (downstream.downstream) {
-                    joinTraceRequest.downstream = downstream.downstream;
-                }
-
-                request.send(
-                    'TracedService::joinTrace',
-                    null,
-                    { request: joinTraceRequest },
-                    (err, response) => {
-                        if (err) {
-                            console.log('tchannel err', err);
-                            clientSpan.finish();
-                            return;
-                        }
-                        clientSpan.finish();
-                        resolve(response.body);
-                });
+            request.send(
+                'TracedService::joinTrace',
+                null,
+                { request: joinTraceRequest },
+                (err, response) => {
+                    if (err) {
+                        console.log('tchannel err', err);
+                        return;
+                    }
+                    resolve(response.body);
             });
         });
     }
