@@ -43,12 +43,12 @@ describe('samplers should', () => {
         _.each(samplers, (o) => {
             it (o.description + 'close calls callback', () => {
                 if (o.useCallback) {
-                    let callbackCalled = false;
-                    let closeCallback = () => { callbackCalled = true; };
+                    let callbackCalled = 0;
+                    let closeCallback = () => { callbackCalled = 1; };
 
                     o.sampler.close(closeCallback);
 
-                    assert.isOk(callbackCalled);
+                    assert.equal(callbackCalled, 1);
                 } else {
                     o.sampler.close();
                 }
