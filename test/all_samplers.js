@@ -18,15 +18,78 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import _  from 'lodash';
-import {assert} from 'chai';
+import _ from 'lodash';
+import {assert, expect} from 'chai';
 import * as constants from '../src/constants.js';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import ProbabilisticSampler from '../src/samplers/probabilistic_sampler.js';
 import RateLimitingSampler from '../src/samplers/ratelimiting_sampler.js';
 import RemoteSampler from '../src/samplers/remote_sampler.js';
+import Utils from '../src/util';
 
 describe('samplers should', () => {
+
+    describe('All Samplers', () => {
+        let samplers = Utils.combinations({
+            useCallback: [true, false],
+            sampler: [
+                new ConstSampler(true),
+                new ProbabilisticSampler(0.5),
+                new RateLimitingSampler(2),
+                new RemoteSampler('some-service-name')
+            ]
+        });
+
+        _.each(samplers, (o) => {
+            it (o.description + 'close calls callback', () => {
+                if (o.useCallback) {
+                    let callbackCalled = 0;
+                    let closeCallback = () => { callbackCalled = 1; };
+
+                    o.sampler.close(closeCallback);
+
+                    assert.equal(callbackCalled, 1);
+                } else {
+                    o.sampler.close();
+                }
+            });
+        });
+    });
+
+    describe('ConstSampler', () => {
+        let sampler;
+        before(() => {
+            sampler = new ConstSampler(true);
+        });
+
+        it('decision reflects given parameter', () => {
+            assert.isOk(sampler.decision);
+        });
+
+        it ('does NOT equal another type of sampler', () => {
+            let otherSampler = new ProbabilisticSampler(0.5);
+            let equals = sampler.equal(otherSampler);
+            assert.isNotOk(equals);
+        });
+
+        it ('does equal the same type of sampler', () => {
+            let otherSampler = new ConstSampler(true);
+            let equals = sampler.equal(otherSampler);
+            assert.isOk(equals);
+        });
+    });
+
+    describe('ProbabilisticSampler', () => {
+        it ('throws error on out of range sampling rate', () => {
+            expect(() => { new ProbabilisticSampler(2.0); }).to.throw('The sampling rate must be less than 0.0 and greater than 1.0. Received 2');
+        });
+
+        it ('calls is Sampled, and returns false', () => {
+            let sampler = new ProbabilisticSampler(0.0);
+            assert.isNotOk(sampler.isSampled());
+        });
+    });
+
     it('return correct tags', () => {
         var samplers = [
             {'sampler': new ConstSampler(true), 'type': constants.SAMPLER_TYPE_CONST, 'param': true},
