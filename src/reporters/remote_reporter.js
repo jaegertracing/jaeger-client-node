@@ -72,8 +72,13 @@ export default class RemoteReporter {
     }
 
     close(callback: ?Function): void {
-        this._sender.close(callback);
+        this._sender.flush();
+        this._sender.close();
         clearInterval(this._intervalHandle);
+
+        if (callback) {
+            callback();
+        }
     }
 
     setProcess(serviceName: string, tags: Array<Tag>): void {

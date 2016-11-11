@@ -129,6 +129,7 @@ export default class UDPSender {
             return {err: true, numSpans: numSpans};
         }
 
+        // TODO(oibe) use callback in send
         this._client.send(thriftBuffer, 0, thriftBuffer.length, PORT, HOST);
         this._reset();
 
@@ -157,11 +158,7 @@ export default class UDPSender {
         this._byteBufferSize = 0;
     }
 
-    close(callback: ?Function): void {
+    close(): void {
         this._client.close();
-
-        if (callback) {
-            callback();
-        }
     }
 }
