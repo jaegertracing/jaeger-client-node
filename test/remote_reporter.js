@@ -66,7 +66,7 @@ describe('Composite and Remote Reporter should', () => {
         span.finish();
         assert.equal(sender._batch.spans.length, 1);
 
-        reporter.flush();
+        reporter._reporters[0].flush();
         assert.equal(sender._batch.spans.length, 0);
         assert.isOk(LocalBackend.counterEquals(metrics.reporterSuccess, 1));
     });
@@ -111,7 +111,7 @@ describe('Composite and Remote Reporter should', () => {
         };
 
         reporter._reporters[0]._sender = mockSender;
-        reporter.flush();
+        reporter._reporters[0].flush();
 
         assert.equal(logger._errorMsgs[0], 'Failed to flush spans in reporter.');
         assert.isOk(LocalBackend.counterEquals(metrics.reporterFailure, 1));

@@ -52,13 +52,6 @@ export default class CompositeReporter {
         }
     }
 
-    flush(callback: ?Function): void {
-        let modifiedCallback: ?Function  = this.compositeCallback(callback);
-        this._reporters.forEach((r) => {
-            r.flush(modifiedCallback);
-        });
-    }
-
     clear(): void {}
 
     close(callback: ?Function): void {

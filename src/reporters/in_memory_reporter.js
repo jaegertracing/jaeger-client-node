@@ -24,12 +24,10 @@ import ThriftUtils from '../thrift.js';
 
 export default class InMemoryReporter {
     _spans: Array<Span>;
-    _flushed: Array<Span>;
     _process: Process;
 
     constructor() {
         this._spans = [];
-        this._flushed = [];
     }
 
     name(): string {
@@ -46,16 +44,6 @@ export default class InMemoryReporter {
 
     clear(): void {
         this._spans = [];
-    }
-
-    flush(callback: ?Function): void {
-        for (let i = 0; i < this._spans.length; i++) {
-            this._flushed.push(this._spans[i]);
-        }
-
-        if (callback) {
-            callback();
-        }
     }
 
     close(callback: ?Function): void {
