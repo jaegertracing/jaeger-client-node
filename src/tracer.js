@@ -184,20 +184,18 @@ export default class Tracer {
             startTime = Utils.getTimestampMicros();
         }
 
-        let followsFromIsParent = false;
         let parent: ?SpanContext = options.childOf instanceof Span ? options.childOf.context(): options.childOf;
         // If there is no childOf in options, then search list of references
         for (let i = 0; i < options.references.length; i++) {
             let ref: Reference = options.references[i];
             if (ref.type() === opentracing.REFERENCE_CHILD_OF) {
-                if (!parent || followsFromIsParent) {
+                if (!parent) {
                     parent = ref.referencedContext();
                     break;
                 }
             } else if (ref.type() === opentracing.REFERENCE_FOLLOWS_FROM) {
                 if (!parent) {
                     parent = ref.referencedContext();
-                    followsFromIsParent = true;
                 }
             }
         }
@@ -208,13 +206,11 @@ export default class Tracer {
 
         let ctx: SpanContext = new SpanContext();
         let samplerTags: any = {};
-        let debugRequest = (parent && parent.isDebugIDContainerOnly());
-        if (!parent || debugRequest || parent.isEmptyContext) {
+        if (!parent || !parent.isValid) {
             let randomId = Utils.getRandom64();
             let flags = 0;
-            if (debugRequest) {
+            if (parent && parent.isDebugIDContainerOnly()) {
                 flags |= (constants.SAMPLED_MASK | constants.DEBUG_MASK);
-                // $FlowIgnore - parent can't be null, if debugRequest is true. Flow doesn't realize this.
                 samplerTags[constants.JAEGER_DEBUG_HEADER] = parent.debugId;
             } else if (this._sampler.isSampled()) {
                 flags |= constants.SAMPLED_MASK;
