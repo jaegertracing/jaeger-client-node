@@ -3,17 +3,22 @@ sudo: required
 language: node_js
 
 node_js:
-- "6"
-- "5"
-- "4"
-- "iojs"
-- "0.12"
+#- "6"
+#- "5"
+#- "4"
+#- "iojs"
+#- "0.12"
 - "0.10"
 
 matrix:
   include:
   - node_js: "0.10"
     env: COVER=1
+    sudo: required
+    services:
+    - docker
+  - node_js: "0.10"
+    env: CROSSDOCK=1
     sudo: required
     services:
     - docker
@@ -28,7 +33,7 @@ services:
 env:
   global:
   - DOCKER_VERSION=1.12.0-0~trusty
-  - DOCKER_COMPOSE_VERSION=1.7.0
+  - DOCKER_COMPOSE_VERSION=1.8.0
   - COMMIT=${TRAVIS_COMMIT::8}
 
 before_install:
@@ -44,4 +49,20 @@ before_install:
 script:
 - npm run test-ci
 - if [ "$COVER" = "1" ]; then npm run coveralls ; fi
+- if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh ; fi
+
+after_failure:
+- timeout 5 if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh ; fi
+
+after_success:
+- export REPO=jaegertracing/xdock-node
+- export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+- export TAG=`if [ "$BRANCH" == "master" ]; then echo "latest"; else echo $BRANCH; fi`
+- echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, REPO=$REPO, PR=$PR, BRANCH=$BRANCH, TAG=$TAG"
+- export DOCKER=$(if [ "$CROSSDOCK" == "true" ]; then echo docker; else echo true; fi)
+- echo ===TODO=== $DOCKER login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+- $DOCKER build -f crossdock/Dockerfile -t $REPO:$COMMIT .
+- $DOCKER tag $REPO:$COMMIT $REPO:$TAG
+- $DOCKER tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
+- echo ===TODO=== $DOCKER push $REPO
 
