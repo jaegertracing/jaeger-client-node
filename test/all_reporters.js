@@ -26,7 +26,7 @@ import RemoteReporter from '../src/reporters/remote_reporter';
 import UDPSender from '../src/reporters/udp_sender';
 import MockLogger from './lib/mock_logger';
 import LoggingReporter from '../src/reporters/logging_reporter';
-import RSVP from 'rsvp';
+import sinon from 'sinon';
 
 describe('All Reporters should', () => {
     it ('have proper names', () => {
@@ -44,7 +44,7 @@ describe('All Reporters should', () => {
         assert.equal(compositeReporter.name(), 'CompositeReporter');
     });
 
-    it ('flush, clear, and close are covered', (done) => {
+    it ('flush, clear, and close are covered', () => {
         let loggingReporter = new LoggingReporter();
         let inMemoryReporter = new InMemoryReporter();
         inMemoryReporter.setProcess('service-name', []);
@@ -60,26 +60,12 @@ describe('All Reporters should', () => {
         ];
 
         let reporter = new CompositeReporter(reporters);
-        let closeCalled = 0;
-        let flushCalled = 0;
-        let promises = [];
-        let executeCallbackLast = (callback, threshold) => {
-            let count = 0;
-            return () => {
-                count++;
-                if (count >= threshold) {
-                    if (callback) {
-                        promises.push(new RSVP.Promise((resolve, reject) => {
-                            resolve(callback);
-                        }));
-                    }
-                }
-            }
-        };
+        let flushCallback = sinon.spy();
+        let closeCallback = sinon.spy();
 
         reporter.clear();
-        reporter.flush(executeCallbackLast(() => { flushCalled = 1; }, reporters.length));
-        reporter.close(executeCallbackLast(() => { closeCalled = 1; }, reporters.length));
+        reporter.flush(flushCallback);
+        reporter.close(closeCallback);
 
         sender = new UDPSender();
         sender.setProcess(inMemoryReporter._process);
@@ -89,12 +75,8 @@ describe('All Reporters should', () => {
         reporter.flush();
         reporter.close();
 
-        RSVP.all(promises).then((callbacks) => {
-            callbacks.forEach((c) => { c(); });
-            assert.equal(flushCalled, 1);
-            assert.equal(closeCalled, 1);
-            done();
-        });
+        assert.isOk(flushCallback.called);
+        assert.isOk(closeCallback.called);
     });
 
     describe('Logging reporter', () => {
