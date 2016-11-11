@@ -34,6 +34,8 @@ import fs from 'fs';
 import path from 'path';
 import Utils from '../../src/util.js';
 
+process.env.NODE_ENV = 'test';
+
 // WARNING THESE TESTS DO NOT WORK WHEN THE VPN IS RUNNING.
 
 describe('crossdock tchannel server should', () => {
@@ -73,7 +75,7 @@ describe('crossdock tchannel server should', () => {
                 'serverRole': 'S1',
                 'downstream': {
                     'serviceName': 'node',
-                    'serverRole': 'S1',
+                    'serverRole': 'S2',
                     'host': Utils.myIp(),
                     'port': '8082',
                     'transport': 'TCHANNEL'

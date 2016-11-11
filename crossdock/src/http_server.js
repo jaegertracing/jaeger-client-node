@@ -44,6 +44,7 @@ export default class HttpServer {
             let serverSpan = this._tracer.startSpan('start_trace#http', { childOf: parentContext });
 
             let traceRequest = req.body;
+            Helpers.log('HTTP', traceRequest.serverRole, 'received request', Helpers.json2str(traceRequest));
             let promise = this._helpers.handleRequest(
                 startRequest,
                 traceRequest,
@@ -59,9 +60,10 @@ export default class HttpServer {
         app.post('/join_trace', (req, res) => {
             let startRequest: boolean = false;
             let traceRequest = req.body;
+            Helpers.log('HTTP', traceRequest.serverRole, 'received request', Helpers.json2str(traceRequest));
+
             let parentContext = this._tracer.extract(opentracing.FORMAT_HTTP_HEADERS, req.headers);
             let serverSpan = this._tracer.startSpan('join_trace#http', { childOf: parentContext });
-
 
             let promise = this._helpers.handleRequest(
                 startRequest,
@@ -75,7 +77,7 @@ export default class HttpServer {
         });
 
         app.listen(8081, () => {
-            console.log('HTTP server listening on port 8081...');
+            Helpers.log('HTTP server listening on port 8081...');
         });
     }
 }

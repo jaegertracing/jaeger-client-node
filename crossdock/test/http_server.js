@@ -22,6 +22,8 @@ import {assert} from 'chai';
 import HttpServer from '../src/http_server.js';
 import request from 'request';
 
+process.env.NODE_ENV = 'test';
+
 describe('crossdock http server should', () => {
     let server;
     before(() => {

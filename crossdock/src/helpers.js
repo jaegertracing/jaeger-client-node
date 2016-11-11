@@ -65,30 +65,34 @@ export default class Helpers {
         }
 
         // do async call to prepareResponse
-        return this.prepareResponse(traceRequest.downstream, serverSpan);
+        return this.prepareResponse(traceRequest.serverRole, traceRequest.downstream, serverSpan);
     }
 
-    prepareResponse(downstream: Downstream, serverSpan: Span): any {
+    prepareResponse(serverRole: string, downstream: Downstream, serverSpan: Span): any {
         return new RSVP.Promise((resolve, reject) => {
             let observedSpan = this.observeSpan(serverSpan);
             let response: TraceResponse = {
                 span: observedSpan,
                 notImplementedError: ''
             };
+            Helpers.log(serverRole, 'observed span', Helpers.json2str(observedSpan));
 
             if (downstream) {
-                this.callDownstream(downstream, serverSpan).then((downstreamResponse) => {
+                this.callDownstream(serverRole, downstream, serverSpan).then((downstreamResponse) => {
                     response.downstream = downstreamResponse;
+                    Helpers.log(serverRole, 'returning response', Helpers.json2str(response));
                     resolve(response);
                 });
             } else {
+                Helpers.log(serverRole, 'returning response', Helpers.json2str(response));
                 resolve(response);
             }
 
         });
     }
 
-    callDownstream(downstream: Downstream, serverSpan: Span): any {
+    callDownstream(serverRole: string, downstream: Downstream, serverSpan: Span): any {
+        Helpers.log(serverRole, 'calling downstream', Helpers.json2str(downstream));
         let transport = downstream.transport;
         if (transport === constants.TRANSPORT_HTTP) {
             return this.callDownstreamHTTP(downstream, serverSpan);
@@ -127,7 +131,7 @@ export default class Helpers {
                 })
             }, (err, response) => {
                 if (err) {
-                    console.log('error in downstream call:', err);
+                    Helpers.log('error in downstream call:', err);
                     clientSpan.finish();
                     reject(err);
                     return;
@@ -169,7 +173,7 @@ export default class Helpers {
                 { request: joinTraceRequest },
                 (err, response) => {
                     if (err) {
-                        console.log('tchannel err', err);
+                        Helpers.log('tchannel err', err);
                         return;
                     }
                     resolve(response.body);
@@ -191,7 +195,16 @@ export default class Helpers {
                 baggage: span.getBaggageItem(constants.BAGGAGE_KEY)
             };
         }
-        console.log('Observed span', JSON.stringify(observed));
         return observed;
+    }
+
+    static log(...args: any[]): void {
+        if (process.env.NODE_ENV !== 'test') {
+            console.log.apply(null, args);
+        }
+    }
+
+    static json2str(json: any): string {
+        return JSON.stringify(json);
     }
 }
