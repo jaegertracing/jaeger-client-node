@@ -62,21 +62,10 @@ describe('All Reporters should', () => {
 
         let flushCallback = sinon.spy();
         let closeCallback = sinon.spy();
-        let executeCallbackLast = (callback, threshold) => {
-            let count = 0;
-            return () => {
-                count++;
-                if (count >= threshold) {
-                    if (callback) {
-                        callback();
-                    }
-                }
-            }
-        };
 
         reporter.clear();
-        reporter.flush(executeCallbackLast(flushCallback, reporters.length));
-        reporter.close(executeCallbackLast(closeCallback, reporters.length));
+        reporter.flush(flushCallback, reporters.length);
+        reporter.close(closeCallback, reporters.length);
 
         sender = new UDPSender();
         sender.setProcess(inMemoryReporter._process);
