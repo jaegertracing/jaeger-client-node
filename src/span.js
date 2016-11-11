@@ -36,8 +36,7 @@ export default class Span {
     _logs: Array<LogData>;
     _tags: Array<Tag>;
     static _baggageHeaderCache: any;
-    _references: Array<Reference>
-    _finished: boolean;
+    _references: Array<Reference>;
 
     constructor(tracer: any,
                 operationName: string,
@@ -55,7 +54,6 @@ export default class Span {
         this._references = references;
         this._logs = [];
         this._tags = [];
-        this._finished = false;
     }
 
     get firstInProcess(): boolean {
@@ -64,10 +62,6 @@ export default class Span {
 
     get operationName(): string {
         return this._operationName;
-    }
-
-    get finished(): boolean {
-        return this._finished;
     }
 
     static _getBaggageHeaderCache() {
@@ -160,12 +154,13 @@ export default class Span {
      * @param {number} finishTime - The time on which this span finished.
      **/
     finish(finishTime: ?number): void {
-        if (this.finished) {
-            throw new Error('You can only call finish() on a span once.');
+        if (this._duration !== undefined) {
+            let spanInfo = `operation=${this.operationName},context=${this.context().toString()}`;
+            this.tracer()._logger.error(`${spanInfo}#You can only call finish() on a span once.`);
+            return;
         }
 
         if (this._spanContext.isSampled()) {
-            this._finished = true;
             let endTime = finishTime || Utils.getTimestampMicros();
             this._duration = endTime - this._startTime;
             this._tracer._report(this);
