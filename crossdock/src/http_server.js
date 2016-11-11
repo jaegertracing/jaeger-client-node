@@ -50,6 +50,7 @@ export default class HttpServer {
                 serverSpan
             );
             promise.then((response) => {
+                serverSpan.finish();
                 let traceResponse = JSON.stringify(response);
                 res.send(traceResponse);
             });
