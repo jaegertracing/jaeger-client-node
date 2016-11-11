@@ -54,9 +54,9 @@ export default class SpanContext {
         this._debugId = debugId;
     }
 
-    // An empty context can be created in crossdock tests
     get isValid(): boolean {
-        return !!this.traceId && !!this.spanId;
+        return !!(this._traceId || this._traceIdStr) &&
+               !!(this._spanId || this._spanIdStr);
     }
 
     get traceId(): any {
