@@ -63,7 +63,7 @@ after_success:
 - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
 - export TAG=`if [ "$BRANCH" == "master" ]; then echo "latest"; else echo $BRANCH; fi`
 - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, REPO=$REPO, PR=$PR, BRANCH=$BRANCH, TAG=$TAG"
-- export DOCKER=$(if [ "$CROSSDOCK" == "true" ]; then echo docker; else echo true; fi)
+- export DOCKER=$(if [ "$CROSSDOCK" == "1" ]; then echo docker; else echo true; fi)
 - $DOCKER login -u $DOCKER_USER -p $DOCKER_PASS
 - $DOCKER build -f crossdock/Dockerfile -t $REPO:$COMMIT .
 - $DOCKER tag $REPO:$COMMIT $REPO:$TAG
