@@ -60,6 +60,8 @@ export default class TChannelServer {
     handleTChannelRequest(context: any, req: any, head: any, body: any, callback: Function) {
         let isStartRequest: boolean = false;
         let traceRequest = body.request;
+        console.log('Received TChannel joinTrace request');
+        console.dir(traceRequest);
 
         let promise = this._helpers.handleRequest(
             isStartRequest,

@@ -65,24 +65,19 @@ export default class Helpers {
         }
 
         // do async call to prepareResponse
-        return new RSVP.Promise((resolve, reject) => {
-            this.prepareResponse(traceRequest.downstream, {span: serverSpan}).then((response) => {
-                serverSpan.finish();
-                resolve(response);
-            });
-        });
+        return this.prepareResponse(traceRequest.downstream, serverSpan);
     }
 
-    prepareResponse(downstream: Downstream, context: any): any {
+    prepareResponse(downstream: Downstream, serverSpan: Span): any {
         return new RSVP.Promise((resolve, reject) => {
-            let observedSpan = this.observeSpan(context);
+            let observedSpan = this.observeSpan(serverSpan);
             let response: TraceResponse = {
                 span: observedSpan,
                 notImplementedError: ''
             };
 
             if (downstream) {
-                this.callDownstream(downstream, context).then((downstreamResponse) => {
+                this.callDownstream(downstream, serverSpan).then((downstreamResponse) => {
                     response.downstream = downstreamResponse;
                     resolve(response);
                 });
@@ -93,12 +88,12 @@ export default class Helpers {
         });
     }
 
-    callDownstream(downstream: Downstream, context: any): any {
+    callDownstream(downstream: Downstream, serverSpan: Span): any {
         let transport = downstream.transport;
         if (transport === constants.TRANSPORT_HTTP) {
-            return this.callDownstreamHTTP(downstream, context);
+            return this.callDownstreamHTTP(downstream, serverSpan);
         } else if (transport === constants.TRANSPORT_TCHANNEL) {
-            return this.callDownstreamTChannel(downstream, context);
+            return this.callDownstreamTChannel(downstream, serverSpan);
         } else if (transport == constants.TRANSPORT_DUMMY) {
             return new RSVP.Promise((resolve, reject) => {
                 resolve({ 'notImplementedError': 'Dummy has not been implemented' });
@@ -110,7 +105,7 @@ export default class Helpers {
         }
     }
 
-    callDownstreamHTTP(downstream: Downstream, context: any): any {
+    callDownstreamHTTP(downstream: Downstream, serverSpan: Span): any {
         return new RSVP.Promise((resolve, reject) => {
 
             // $FlowIgnore - Honestly don't know why flow compalins about family.
@@ -118,7 +113,7 @@ export default class Helpers {
             let port = parseInt(downstream.port);
             let downstreamUrl = `http://${downstream.host}:${port}/join_trace`;
 
-            let clientSpan = this._tracer.startSpan('client-span', { childOf: context.span.context() });
+            let clientSpan = this._tracer.startSpan('client-span', { childOf: serverSpan.context() });
             let headers = { 'Content-Type': 'application/json' };
             this._tracer.inject(clientSpan.context(), opentracing.FORMAT_HTTP_HEADERS, headers);
 
@@ -145,14 +140,14 @@ export default class Helpers {
         });
     }
 
-    callDownstreamTChannel(downstream: Downstream, context: any): any {
+    callDownstreamTChannel(downstream: Downstream, serverSpan: Span): any {
         return new RSVP.Promise((resolve, reject) => {
             let port = parseInt(downstream.port);
             let downstreamUrl = `http://${downstream.host}:${port}/join_trace`;
 
             let request = this._tracedChannel.request({
                 timeout: 5000,
-                context: { openTracingSpan: context.span },
+                context: { openTracingSpan: serverSpan },
                 headers: {
                     cn: 'tcollector-requestor'
                 },
@@ -182,20 +177,21 @@ export default class Helpers {
         });
     }
 
-    observeSpan(context: any): ObservedSpan {
-        let span = context.span;
-        if (!span) {
-            return {
-                traceId: 'no span found',
-                sampled: false,
-                baggage: 'no span found'
+    observeSpan(span: Span): ObservedSpan {
+        let observed: ObservedSpan = {
+            traceId: 'no span found',
+            sampled: false,
+            baggage: 'no span found'
+        };
+ 
+        if (span) {
+            observed = {
+                traceId: span.context().traceIdStr,
+                sampled: span.context().isSampled(),
+                baggage: span.getBaggageItem(constants.BAGGAGE_KEY)
             };
         }
-
-        return {
-            traceId: span.context().traceIdStr,
-            sampled: context.span.context().isSampled(),
-            baggage: span.getBaggageItem(constants.BAGGAGE_KEY)
-        };
+        console.log('Observed span', JSON.stringify(observed));
+        return observed;
     }
 }
