@@ -23,6 +23,7 @@ import {assert, expect} from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import * as constants from '../src/constants.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
+import MockLogger from './lib/mock_logger';
 import Span from '../src/span.js';
 import SpanContext from '../src/span_context.js';
 import sinon from 'sinon';
@@ -38,7 +39,8 @@ describe('span should', () => {
         tracer = new Tracer(
             'test-service-name',
             reporter,
-            new ConstSampler(true)
+            new ConstSampler(true),
+            { logger: new MockLogger() }
         );
 
         spanContext = SpanContext.withBinaryIds(
@@ -82,8 +84,11 @@ describe('span should', () => {
         assert.equal(reporter.spans[0], span);
     });
 
-    it('finish span twice throws exception', () => {
-        expect(() => {span.finish(); span.finish();}).to.throw('You can only call finish() on a span once.');
+    it('finish span twice logs error', () => {
+        span.finish();
+        span.finish();
+        let spanInfo = `operation=${span.operationName},context=${span.context().toString()}`;
+        assert.equal(tracer._logger._errorMsgs[0], `${spanInfo}#You can only call finish() on a span once.`);
     });
 
     it('set debug and sampling version through sampling priority', () => {

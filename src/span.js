@@ -36,7 +36,7 @@ export default class Span {
     _logs: Array<LogData>;
     _tags: Array<Tag>;
     static _baggageHeaderCache: any;
-    _references: Array<Reference>
+    _references: Array<Reference>;
 
     constructor(tracer: any,
                 operationName: string,
@@ -155,7 +155,9 @@ export default class Span {
      **/
     finish(finishTime: ?number): void {
         if (this._duration !== undefined) {
-            throw new Error('You can only call finish() on a span once.');
+            let spanInfo = `operation=${this.operationName},context=${this.context().toString()}`;
+            this.tracer()._logger.error(`${spanInfo}#You can only call finish() on a span once.`);
+            return;
         }
 
         if (this._spanContext.isSampled()) {
