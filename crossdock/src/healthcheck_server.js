@@ -21,6 +21,7 @@
 
 import express from 'express';
 import bodyParser from 'body-parser';
+import Helpers from './helpers';
 
 export default class HealthcheckServer {
     constructor() {
@@ -31,7 +32,7 @@ export default class HealthcheckServer {
         });
 
         app.listen(8080, () => {
-            console.log('Healthcheck server on port 8080...');
+            Helpers.log('Healthcheck server on port 8080...');
         });
     }
 }

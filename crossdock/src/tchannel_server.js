@@ -53,15 +53,14 @@ export default class TChannelServer {
         tchannelThrift.register(serverChannel, 'TracedService::joinTrace', context, tracedHandler);
 
         serverChannel.listen(8082, Utils.myIp(), () => {
-            console.log('TChannel server listening on port 8082...');
+            Helpers.log('TChannel server listening on port 8082...');
         });
     }
 
     handleTChannelRequest(context: any, req: any, head: any, body: any, callback: Function) {
         let isStartRequest: boolean = false;
         let traceRequest = body.request;
-        console.log('Received TChannel joinTrace request');
-        console.dir(traceRequest);
+        Helpers.log('TChannel', traceRequest.serverRole, 'received joinTrace request', Helpers.json2str(traceRequest));
 
         let promise = this._helpers.handleRequest(
             isStartRequest,
