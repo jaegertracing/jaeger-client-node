@@ -24,10 +24,10 @@ import ThriftUtils from '../thrift.js';
 import Metrics from '../metrics/metrics.js';
 import NoopMetricFactory from '../metrics/noop/metric_factory';
 
-const DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS = 10000;
+const DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS = 1000;
 
 export default class RemoteReporter {
-    _bufferFlushInterval: number;
+    _flushIntervalMs: number;
     _logger: Logger;
     _sender: Sender;
     _intervalHandle: any;
@@ -36,17 +36,17 @@ export default class RemoteReporter {
 
     constructor(sender: Sender,
                 options: any = {}) {
-        this._bufferFlushInterval = options.bufferFlushInterval || DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS;
+        this._flushIntervalMs = options.flushIntervalMs || DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS;
         this._logger = options.logger || new NullLogger();
         this._sender = sender;
         this._intervalHandle = setInterval(() => {
             this.flush();
-        }, this._bufferFlushInterval);
+        }, this._flushIntervalMs);
         this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
     }
 
     name(): string {
-        return 'LoggingReporter';
+        return 'RemoteReporter';
     }
 
     report(span: Span): void {

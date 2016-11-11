@@ -176,6 +176,39 @@ describe('udp sender should', () => {
         assert.equal(sender._byteBufferSize, 0);
     });
 
+    it ('flush spans when just over capacity', () => {
+        let spanOne = tracer.startSpan('operation-one');
+        spanOne.finish(); // finish to set span duration
+        spanOne = ThriftUtils.spanToThrift(spanOne);
+        sender._maxSpanBytes = 1;
+        let spanSize = sender._calcSpanSize(spanOne);
+        sender._maxSpanBytes = spanSize * 2;
+
+        let spanThatExceedsCapacity = tracer.startSpan('bigger-span');
+        spanThatExceedsCapacity.finish(); // finish to set span duration
+        spanThatExceedsCapacity.setTag('some-key', 'some-value');
+        spanThatExceedsCapacity = ThriftUtils.spanToThrift(spanThatExceedsCapacity);
+
+        let responseOne = sender.append(spanOne);
+        let responseTwo = sender.append(spanThatExceedsCapacity);
+        let expectedBufferSize = sender._calcSpanSize(spanThatExceedsCapacity);
+
+        // sender state reset
+        assert.equal(sender._batch.spans.length, 1);
+        assert.equal(sender._byteBufferSize, expectedBufferSize);
+    });
+
+    it('flush returns error, on failed buffer conversion', () => {
+        let span = tracer.startSpan('leela');
+        span.finish(); // finish to set span duration
+        span = ThriftUtils.spanToThrift(span);
+        span.flags = 'string'; // malform the span to create a serialization error
+        sender.append(span);
+        let response = sender.flush();
+        assert.isOk(response.err);
+        assert.equal(response.numSpans, 1);
+    });
+
     it ('return error response on span too large', () => {
         let span = tracer.startSpan('op-name');
         span.finish(); // otherwise duration will be undefined

@@ -54,11 +54,11 @@ export default class LocalFactory {
 
     createTimer(name: string, tags: any = {}): Timer {
         let uniqueMetricName = this._uniqueNameWithTags(name, tags);
-        return new LocalTimer(uniqueMetricName, tags, this._backend)
+        return new LocalTimer(uniqueMetricName, tags, this._backend);
     }
 
     createGauge(name: string, tags: any = {}): Gauge {
         let uniqueMetricName = this._uniqueNameWithTags(name, tags);
-        return new LocalGauge(uniqueMetricName, tags, this._backend)
+        return new LocalGauge(uniqueMetricName, tags, this._backend);
     }
 }
