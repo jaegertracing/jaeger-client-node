@@ -206,11 +206,10 @@ export default class Tracer {
         let rpcServer = (spanKindValue === opentracing_tags.SPAN_KIND_RPC_SERVER);
 
 
-        // $FlowIgnore - I just want a span context up front.
         let ctx: SpanContext = new SpanContext();
         let samplerTags: any = {};
         let debugRequest = (parent && parent.isDebugIDContainerOnly());
-        if (!parent || debugRequest) {
+        if (!parent || debugRequest || parent.isEmptyContext) {
             let randomId = Utils.getRandom64();
             let flags = 0;
             if (debugRequest) {

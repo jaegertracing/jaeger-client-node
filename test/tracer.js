@@ -50,6 +50,20 @@ describe('tracer should', () => {
         tracer.close();
     });
 
+    it ('begin a new span given an empty context', () => {
+        // Users want to sometimes pass baggage even if there is no span, so we allow for
+        // an empty context to be created.  In this case we must ensure a new span is created.
+        let headers = {};
+        headers[constants.TRACER_BAGGAGE_HEADER_PREFIX + 'keyOne'] = 'leela';
+        let spanContext = tracer.extract(opentracing.FORMAT_TEXT_MAP, headers);
+        let rootSpan = tracer.startSpan('fry', { childOf: spanContext });
+
+        assert.isOk(rootSpan.context().traceId);
+        assert.isOk(rootSpan.context().spanId);
+        assert.isOk(deepEqual(rootSpan.context().traceId, rootSpan.context().spanId));
+        assert.equal(rootSpan.parentId, null);
+    });
+
     it('create a span correctly through _startInternalSpan', () => {
         let traceId = Utils.encodeInt64(1);
         let spanId = Utils.encodeInt64(2);

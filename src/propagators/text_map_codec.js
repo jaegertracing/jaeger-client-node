@@ -57,7 +57,6 @@ export default class TextMapCodec {
     }
 
     extract(carrier: any): ?SpanContext {
-        // $FlowIgnore - I just want an empty span context.
         let spanContext = new SpanContext();
         let baggage = {};
         let debugId = '';
