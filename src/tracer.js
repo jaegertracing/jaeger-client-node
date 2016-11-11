@@ -184,18 +184,22 @@ export default class Tracer {
             startTime = Utils.getTimestampMicros();
         }
 
+        // This boolean ensures that a parent with reference type 'follows_from'
+        // is selected when no childOf is passed in.
+        let followsFromIsParent = false;
         let parent: ?SpanContext = options.childOf instanceof Span ? options.childOf.context(): options.childOf;
         // If there is no childOf in options, then search list of references
         for (let i = 0; i < options.references.length; i++) {
             let ref: Reference = options.references[i];
             if (ref.type() === opentracing.REFERENCE_CHILD_OF) {
-                if (!parent) {
+                if (!parent || followsFromIsParent) {
                     parent = ref.referencedContext();
                     break;
                 }
             } else if (ref.type() === opentracing.REFERENCE_FOLLOWS_FROM) {
                 if (!parent) {
                     parent = ref.referencedContext();
+                    followsFromIsParent = true;
                 }
             }
         }

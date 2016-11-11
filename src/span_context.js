@@ -55,8 +55,8 @@ export default class SpanContext {
     }
 
     get isValid(): boolean {
-        return !!(this._traceId || this._traceIdStr) &&
-               !!(this._spanId || this._spanIdStr);
+        return (this._traceId || this._traceIdStr) &&
+               (this._spanId || this._spanIdStr);
     }
 
     get traceId(): any {
