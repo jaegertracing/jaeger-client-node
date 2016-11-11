@@ -26,6 +26,7 @@ import RemoteReporter from '../src/reporters/remote_reporter';
 import UDPSender from '../src/reporters/udp_sender';
 import MockLogger from './lib/mock_logger';
 import LoggingReporter from '../src/reporters/logging_reporter';
+import RSVP from 'rsvp';
 
 describe('All Reporters should', () => {
     it ('have proper names', () => {
@@ -59,13 +60,26 @@ describe('All Reporters should', () => {
         ];
 
         let reporter = new CompositeReporter(reporters);
-        let closeCalled = { count: 0 };
-        let flushCalled = { count: 0 };
+        let closeCalled = 0;
+        let flushCalled = 0;
+        let promises = [];
+        let executeCallbackLast = (callback, threshold) => {
+            let count = 0;
+            return () => {
+                count++;
+                if (count >= threshold) {
+                    if (callback) {
+                        promises.push(new RSVP.Promise((resolve, reject) => {
+                            resolve(callback);
+                        }));
+                    }
+                }
+            }
+        };
 
         reporter.clear();
-        reporter.flush(()=>{}, flushCalled);
-        reporter.close(()=>{}, closeCalled);
-
+        reporter.flush(executeCallbackLast(() => { flushCalled = 1; }, reporters.length));
+        reporter.close(executeCallbackLast(() => { closeCalled = 1; }, reporters.length));
 
         sender = new UDPSender();
         sender.setProcess(inMemoryReporter._process);
@@ -75,11 +89,12 @@ describe('All Reporters should', () => {
         reporter.flush();
         reporter.close();
 
-        setTimeout(() => {
-            assert.equal(flushCalled.count, reporters.length);
-            assert.equal(closeCalled.count, reporters.length);
+        RSVP.all(promises).then((callbacks) => {
+            callbacks.forEach((c) => { c(); });
+            assert.equal(flushCalled, 1);
+            assert.equal(closeCalled, 1);
             done();
-        }, 200);
+        });
     });
 
     describe('Logging reporter', () => {

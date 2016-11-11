@@ -33,41 +33,27 @@ export default class CompositeReporter {
     }
 
     report(span: Span): void {
-        this._reporters.map((r) => {
+        this._reporters.forEach((r) => {
             r.report(span);
         });
     }
 
-    _executeCallbackLast(callback: ?Function, counter: any): Function {
-        return () => {
-            if (counter)  {
-                counter.count++;
-                if (counter.count >= this._reporters.length) {
-                    if (callback) {
-                        callback();
-                    }
-                }
-            }
-        };
-    }
-
-    flush(callback: ?Function, counter: any): void {
-        this._reporters.map((r) => {
-            r.flush(this._executeCallbackLast(callback, counter));
+    flush(callback: ?Function): void {
+        this._reporters.forEach((r) => {
+            r.flush(callback);
         });
     }
 
     clear(): void {}
 
-    close(callback: ?Function, counter: any): void {
-
-        this._reporters.map((r) => {
-            r.close(this._executeCallbackLast(callback, counter));
+    close(callback: ?Function): void {
+        this._reporters.forEach((r) => {
+            r.close(callback);
         });
     }
 
     setProcess(serviceName: string, tags: Array<Tag>): void {
-        this._reporters.map((r) => {
+        this._reporters.forEach((r) => {
             if (r.setProcess) {
                 r.setProcess(serviceName, tags);
             }
