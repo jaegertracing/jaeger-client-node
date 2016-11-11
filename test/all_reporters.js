@@ -58,14 +58,25 @@ describe('All Reporters should', () => {
             noopReporter,
             remoteReporter
         ];
-
         let reporter = new CompositeReporter(reporters);
+
         let flushCallback = sinon.spy();
         let closeCallback = sinon.spy();
+        let executeCallbackLast = (callback, threshold) => {
+            let count = 0;
+            return () => {
+                count++;
+                if (count >= threshold) {
+                    if (callback) {
+                        callback();
+                    }
+                }
+            }
+        };
 
         reporter.clear();
-        reporter.flush(flushCallback);
-        reporter.close(closeCallback);
+        reporter.flush(executeCallbackLast(flushCallback, reporters.length));
+        reporter.close(executeCallbackLast(closeCallback, reporters.length));
 
         sender = new UDPSender();
         sender.setProcess(inMemoryReporter._process);
@@ -75,8 +86,8 @@ describe('All Reporters should', () => {
         reporter.flush();
         reporter.close();
 
-        assert.isOk(flushCallback.called);
-        assert.isOk(closeCallback.called);
+        assert.isOk(flushCallback.calledOnce);
+        assert.isOk(closeCallback.calledOnce);
     });
 
     describe('Logging reporter', () => {
