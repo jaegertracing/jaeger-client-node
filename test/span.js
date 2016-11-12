@@ -165,6 +165,15 @@ describe('span should', () => {
         assert.equal(value, span.getBaggageItem(key));
     });
 
+    it ('inherit baggage from parent', () => {
+        let key = 'some-key';
+        let value = 'some-value';
+
+        span.setBaggageItem(key, value);
+        let child = tracer.startSpan('child', { childOf: span.context() });
+        assert.equal(value, child.getBaggageItem(key));
+    });
+
     it ('normalized key correctly', () => {
         let unnormalizedKey = 'SOME_KEY';
         let key = span._normalizeBaggageKey(unnormalizedKey);

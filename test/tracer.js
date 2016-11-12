@@ -50,6 +50,24 @@ describe('tracer should', () => {
         tracer.close();
     });
 
+    it ('begin a new span given only baggage headers', () => {
+        // Users sometimes want to pass baggage even if there is no span.
+        // In this case we must ensure a new root span is created.
+        let headers = {};
+        // combine normal baggage encoding
+        headers[constants.TRACER_BAGGAGE_HEADER_PREFIX + 'robot'] = 'Bender';
+        // with custom encoding via `jaeger-baggage` header
+        headers[constants.JAEGER_BAGGAGE_HEADER] = 'male=Fry, female=Leela, Lord Nibbler';
+        let spanContext = tracer.extract(opentracing.FORMAT_TEXT_MAP, headers);
+        let rootSpan = tracer.startSpan('fry', { childOf: spanContext });
+
+        assert.isOk(rootSpan.context().traceId);
+        assert.isNotOk(rootSpan.context().parentId);
+        assert.equal('Bender', rootSpan.getBaggageItem('robot'));
+        assert.equal('Leela', rootSpan.getBaggageItem('female'));
+        assert.equal('Fry', rootSpan.getBaggageItem('male'));
+    });
+
     it('create a span correctly through _startInternalSpan', () => {
         let traceId = Utils.encodeInt64(1);
         let spanId = Utils.encodeInt64(2);

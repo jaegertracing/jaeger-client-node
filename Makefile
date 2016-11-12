@@ -8,7 +8,8 @@ publish: build-node
 
 .PHONY: test
 test: build-node
-	npm run flow & npm run lint
+	npm run flow
+	npm run lint
 	./node_modules/.bin/mocha --compilers js:babel-core/register test
 	./node_modules/.bin/mocha --compilers js:babel-register crossdock/test
 

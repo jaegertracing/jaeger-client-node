@@ -35,14 +35,14 @@ export default class SpanContext {
     _debugId: ?string;
 
     constructor(traceId: any,
-                    spanId: any,
-                    parentId: any,
-                    traceIdStr: ?string,
-                    spanIdStr: ?string,
-                    parentIdStr: ?string,
-                    flags: number = 0,
-                    baggage: any = {},
-                    debugId: ?string = '') {
+                spanId: any,
+                parentId: any,
+                traceIdStr: ?string,
+                spanIdStr: ?string,
+                parentIdStr: ?string,
+                flags: number = 0,
+                baggage: any = {},
+                debugId: ?string = '') {
         this._traceId = traceId;
         this._spanId = spanId;
         this._parentId = parentId;
@@ -140,10 +140,12 @@ export default class SpanContext {
         this._debugId = debugId;
     }
 
+    get isValid(): boolean {
+        return !!((this._traceId || this._traceIdStr) && (this._spanId || this._spanIdStr));
+    }
+
     isDebugIDContainerOnly(): boolean {
-        return  !this._traceId &&
-                !this._traceIdStr &&
-                this._debugId !== '';
+        return !this.isValid && this._debugId !== '';
     }
 
     /**
