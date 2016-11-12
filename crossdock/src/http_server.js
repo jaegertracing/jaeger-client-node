@@ -39,41 +39,29 @@ export default class HttpServer {
         // json responses need bodyParser when working with express
         app.use(bodyParser.json());
 
-        app.post('/start_trace', (req, res) => {
-            let startRequest: boolean = true;
-            let parentContext = this._tracer.extract(opentracing.FORMAT_HTTP_HEADERS, req.headers);
-            let serverSpan = this._tracer.startSpan('start_trace#http', { childOf: parentContext });
+        let endpoints: Array<any> = [
+            {url: '/start_trace', startRequest: true},
+            {url: '/join_trace', startRequest: false}
+        ];
 
-            let traceRequest = req.body;
-            Helpers.log('HTTP', traceRequest.serverRole, 'received request', Helpers.json2str(traceRequest));
-            let promise: any = this._helpers.handleRequest(
-                startRequest,
-                traceRequest,
-                serverSpan
-            );
-            promise.then((response) => {
-                serverSpan.finish();
-                let traceResponse = JSON.stringify(response);
-                res.send(traceResponse);
-            });
-        });
+        endpoints.forEach((endpoint) => {
+            app.post(endpoint.url, (req, res) => {
+                let parentContext = this._tracer.extract(opentracing.FORMAT_HTTP_HEADERS, req.headers);
+                let serverSpan = this._tracer.startSpan(endpoint.url, { childOf: parentContext });
+                let traceRequest = req.body;
 
-        app.post('/join_trace', (req, res) => {
-            let startRequest: boolean = false;
-            let traceRequest = req.body;
-            Helpers.log('HTTP', traceRequest.serverRole, 'received request', Helpers.json2str(traceRequest));
+                Helpers.log('HTTP', traceRequest.serverRole, 'received request', Helpers.json2str(traceRequest));
 
-            let parentContext = this._tracer.extract(opentracing.FORMAT_HTTP_HEADERS, req.headers);
-            let serverSpan = this._tracer.startSpan('join_trace#http', { childOf: parentContext });
-
-            let promise: any = this._helpers.handleRequest(
-                startRequest,
-                traceRequest,
-                serverSpan
-            );
-            promise.then((response) => {
-                let traceResponse = JSON.stringify(response);
-                res.send(traceResponse);
+                let promise: any = this._helpers.handleRequest(
+                    endpoint.startRequest,
+                    traceRequest,
+                    serverSpan
+                );
+                promise.then((response) => {
+                    serverSpan.finish();
+                    let traceResponse = JSON.stringify(response);
+                    res.send(traceResponse);
+                });
             });
         });
 
