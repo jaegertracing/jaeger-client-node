@@ -63,7 +63,7 @@
     "check-ls": "npm ls --loglevel=http --parseable 1>/dev/null && echo '# npm is in a good state'",
     "cover": "./node_modules/.bin/babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
-    "flow": "flow; test $? -eq 0 -o $? -eq 2",
+    "flow": "flow",
     "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed'",
     "lint-ci": "npm run lint && echo '# TODO: ADD npm run check-license'",
     "test": "make test",
