@@ -33,8 +33,7 @@ export default class RateLimitingSampler {
         this._logger = logger || new NullLogger();
 
         if (maxTracesPerSecond < 0) {
-            this._logger._error(`maxTracesPerSecond must be greater than 0.0.  Received ${maxTracesPerSecond}`);
-            return;
+            throw new Error(`maxTracesPerSecond must be greater than 0.0.  Received ${maxTracesPerSecond}`);
         }
 
         this._maxTracesPerSecond = maxTracesPerSecond;

@@ -18,16 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import {assert} from 'chai';
+import {assert, expect} from 'chai';
 import ProbabilisticSampler from '../src/samplers/probabilistic_sampler.js';
-import RateLimiter from '../src/samplers/ratelimiting_sampler.js';
+import RateLimitingSampler from '../src/samplers/ratelimiting_sampler.js';
 import sinon from 'sinon';
 
 describe ('ratelimiting sampler should', () => {
     it('block after threshold is met', () => {
         let initialDate = new Date(2011,9,1).getTime();
         let clock = sinon.useFakeTimers(initialDate);
-        let sampler = new RateLimiter(10);
+        let sampler = new RateLimitingSampler(10);
         for (let i = 0; i < 10; i++) {
             sampler.isSampled(1);
         }
@@ -40,4 +40,14 @@ describe ('ratelimiting sampler should', () => {
         clock.restore();
     });
 
+    it ('should throw error when initialized with an incorrect value', () => {
+        expect(() => { new RateLimitingSampler(-2.0); }).to.throw('maxTracesPerSecond must be greater than 0.0.  Received -2');
+    });
+
+    it ('should equal another rate limiting sampler', () => {
+        let sampler = new RateLimitingSampler(1.0);
+        let otherSampler = new RateLimitingSampler(1.0);
+
+        assert.isOk(sampler.equal(otherSampler));
+    });
 });

@@ -96,11 +96,9 @@ export default class TChannelBridge {
     _wrapTChannelSend(wrappedSend, channel, req, endpoint, headers, body, callback) {
         headers = headers || {};
         let context = req.context || {};
-        // if opentracingContext.openTracingSpan is null, then start a new root span
-        // else start a span that is the child of the context span.
         let childOf = context.openTracingSpan;
         let clientSpan = this._tracer.startSpan(endpoint, {
-            childOf: childOf
+            childOf: childOf // ok if null, will start a new trace
         });
         clientSpan.setTag(opentracing.Tags.PEER_SERVICE, req.serviceName);
         clientSpan.setTag(opentracing.Tags.SPAN_KIND, opentracing.Tags.SPAN_KIND_RPC_CLIENT);
@@ -116,7 +114,7 @@ export default class TChannelBridge {
         // We set the parent to a span with trace_id zero, so that tchannel's
         // outgoing tracing frame also has a trace id of zero.
         // This forces other tchannel implementations to rely on the headers for the trace context.
-        requestOptions.parent = { span: this._getTChannelParentSpan() };
+        requestOptions.parent = { span: TChannelBridge.makeFakeTChannelParentSpan() };
 
         let tchannelRequest = wrappedRequestMethod.call(channel, requestOptions);
         tchannelRequest.context = requestOptions.context;
@@ -141,7 +139,7 @@ export default class TChannelBridge {
         return channel;
     }
 
-    _getTChannelParentSpan(): TChannelSpan {
+    static makeFakeTChannelParentSpan(): TChannelSpan {
         return {
             id: [0, 0],
             traceid: [0, 0],

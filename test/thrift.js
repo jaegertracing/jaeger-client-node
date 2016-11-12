@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 
 import {assert} from 'chai';
-import bufferEqual from 'buffer-equal';
+import deepEqual from 'deep-equal';
 import Long from 'long';
 import ThriftUtils from '../src/thrift.js';
 
@@ -44,6 +44,6 @@ describe ('ThriftUtils should', () => {
         let buf = new Buffer(8);
         buf.fill(0);
 
-        assert.isOk(bufferEqual(ThriftUtils.emptyBuffer, buf));
+        assert.isOk(deepEqual(ThriftUtils.emptyBuffer, buf));
     });
 });
