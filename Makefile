@@ -8,7 +8,8 @@ publish: build-node
 
 .PHONY: test
 test: build-node
-	npm run flow & npm run lint
+	npm run flow
+	npm run lint
 	./node_modules/mocha/bin/mocha --compilers js:babel-core/register
 
 .PHONY: build-node

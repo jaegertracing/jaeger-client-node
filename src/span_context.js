@@ -54,11 +54,6 @@ export default class SpanContext {
         this._debugId = debugId;
     }
 
-    get isValid(): boolean {
-        return (this._traceId || this._traceIdStr) &&
-               (this._spanId || this._spanIdStr);
-    }
-
     get traceId(): any {
         if (this._traceId == null && this._traceIdStr != null) {
             this._traceId = Utils.encodeInt64(this._traceIdStr);
@@ -138,6 +133,10 @@ export default class SpanContext {
 
     set debugId(debugId: ?string): void {
         this._debugId = debugId;
+    }
+
+    get isValid(): boolean {
+        return !!((this._traceId || this._traceIdStr) && (this._spanId || this._spanIdStr));
     }
 
     isDebugIDContainerOnly(): boolean {
