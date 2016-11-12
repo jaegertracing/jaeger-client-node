@@ -54,11 +54,6 @@ export default class SpanContext {
         this._debugId = debugId;
     }
 
-    // An empty context can be created in crossdock tests
-    get isEmptyContext(): any {
-        return !this._traceId && !this._traceIdStr;
-    }
-
     get traceId(): any {
         if (this._traceId == null && this._traceIdStr != null) {
             this._traceId = Utils.encodeInt64(this._traceIdStr);
