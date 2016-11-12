@@ -37,7 +37,7 @@ export default class TChannelServer {
     _tracer: Tracer;
     _helpers: any;
 
-    constructor(crossdockSpecPath=DEFAULT_THRIFT_PATH) {
+    constructor(crossdockSpecPath: string = DEFAULT_THRIFT_PATH) {
         this._tracer = new Tracer('node', new InMemoryReporter(), new ConstSampler(false));
         this._helpers = new Helpers(this._tracer);
 

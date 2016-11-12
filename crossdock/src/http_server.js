@@ -29,6 +29,7 @@ import Tracer from '../../src/tracer.js';
 
 export default class HttpServer {
     _tracer: Tracer;
+    _helpers: Helpers;
 
     constructor() {
         let app = express();
@@ -45,7 +46,7 @@ export default class HttpServer {
 
             let traceRequest = req.body;
             Helpers.log('HTTP', traceRequest.serverRole, 'received request', Helpers.json2str(traceRequest));
-            let promise = this._helpers.handleRequest(
+            let promise: any = this._helpers.handleRequest(
                 startRequest,
                 traceRequest,
                 serverSpan
@@ -65,7 +66,7 @@ export default class HttpServer {
             let parentContext = this._tracer.extract(opentracing.FORMAT_HTTP_HEADERS, req.headers);
             let serverSpan = this._tracer.startSpan('join_trace#http', { childOf: parentContext });
 
-            let promise = this._helpers.handleRequest(
+            let promise: any = this._helpers.handleRequest(
                 startRequest,
                 traceRequest,
                 serverSpan

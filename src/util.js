@@ -134,7 +134,7 @@ export default class Utils {
         return Date.now() * 1000;
     }
 
-    static myIp(): ?string {
+    static myIp(): string {
         let ifaces = os.networkInterfaces();
         let keys = Object.keys(ifaces);
         for (let i = 0; i < keys.length; i++) {
@@ -145,6 +145,7 @@ export default class Utils {
                 }
             }
         }
+        return '';
     }
 
     static clone(obj: any): any {

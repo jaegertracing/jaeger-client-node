@@ -28,6 +28,7 @@ import request from 'request';
 import RSVP from 'rsvp';
 import Span from '../../src/span.js';
 import SpanContext from '../../src/span_context.js';
+import Tracer from '../../src/tracer.js';
 import TChannel from 'tchannel/channel';
 import TChannelThrift from 'tchannel/as/thrift';
 import TChannelBridge from '../../src/tchannel_bridge';
@@ -36,7 +37,7 @@ import Utils from '../../src/util.js';
 export default class Helpers {
     _tracer: Tracer;
     _bridge: TChannelBridge;
-    _thriftChannel: Channel;
+    _tracedChannel: any;
 
     constructor(tracer: Tracer) {
         this._tracer = tracer;
@@ -47,13 +48,13 @@ export default class Helpers {
         });
 
         let crossdockSpec = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'jaeger-idl', 'thrift', 'crossdock', 'tracetest.thrift'), 'utf8');
-        this._thriftChannel = TChannelThrift({
+        let thriftChannel = TChannelThrift({
             channel: channel,
             source: crossdockSpec
         });
 
         let bridge = new TChannelBridge(this._tracer);
-        this._tracedChannel= bridge.tracedChannel(this._thriftChannel);
+        this._tracedChannel= bridge.tracedChannel(thriftChannel);
     }
 
     handleRequest(isStartRequest: boolean, traceRequest: any, serverSpan: Span): void {
@@ -112,8 +113,6 @@ export default class Helpers {
     callDownstreamHTTP(downstream: Downstream, serverSpan: Span): any {
         return new RSVP.Promise((resolve, reject) => {
 
-            // $FlowIgnore - Honestly don't know why flow compalins about family.
-
             let port = parseInt(downstream.port);
             let downstreamUrl = `http://${downstream.host}:${port}/join_trace`;
 
@@ -159,7 +158,7 @@ export default class Helpers {
                 serviceName: 'node',
                 retryFlags: {never: true}
             });
-            let joinTraceRequest = {
+            let joinTraceRequest: JoinTraceRequest = {
                 'serverRole': downstream.serverRole,
             };
 
@@ -190,7 +189,7 @@ export default class Helpers {
  
         if (span) {
             observed = {
-                traceId: span.context().traceIdStr,
+                traceId: span.context().traceIdStr || '',
                 sampled: span.context().isSampled(),
                 baggage: span.getBaggageItem(constants.BAGGAGE_KEY)
             };
@@ -199,6 +198,7 @@ export default class Helpers {
     }
 
     static log(...args: any[]): void {
+        // $FlowIgnore - stop complaining about property `env` not found
         if (process.env.NODE_ENV !== 'test') {
             console.log.apply(null, args);
         }
