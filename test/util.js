@@ -24,8 +24,36 @@ import deepEqual from 'deep-equal';
 import Utils from '../src/util.js';
 
 describe('utils', () => {
-    it('convert an ip less than 2^32 to an unsigned number', () => {
-        assert.equal(Utils.ipToInt('127.0.0.1'), (127 << 24) | 1);
+    describe('ipToInt', () => {
+        it('should convert malformed IP to null', () => {
+            assert.isNotOk(Utils.ipToInt('127.0'));
+        });
+
+        it('should convert an ip less than 2^32 to an unsigned number', () => {
+            assert.equal((127 << 24) | 1, Utils.ipToInt('127.0.0.1'));
+        });
+
+        it('should convert an ip greater than 2^32 to a negative number', () => {
+            assert.equal(-1, Utils.ipToInt('255.255.255.255'));
+        });
+    });
+
+    describe('removeLeadingZeros', () => {
+        it('should leave single 0 digit intact', () => {
+            assert.equal('0', Utils.removeLeadingZeros('0'));
+        });
+
+        it('should leave single non-0 digit intact', () => {
+            assert.equal('1', Utils.removeLeadingZeros('1'));
+        });
+
+        it('should strip leading zeros', () => {
+            assert.equal('1', Utils.removeLeadingZeros('0001'));
+        });
+
+        it('should convert all zeros to a single 0', () => {
+            assert.equal('0', Utils.removeLeadingZeros('0000'));
+        });
     });
 
     it ('combinations should generate all combinations given valid parameters', () => {
@@ -36,6 +64,6 @@ describe('utils', () => {
             { encoding: 'thrift', mode: 'channel', description: 'encoding=thrift,mode=channel' },
             { encoding: 'thrift', mode: 'request', description: 'encoding=thrift,mode=request' }
         ];
-        assert.isOk(deepEqual(results, expectedTags));
+        assert.isOk(deepEqual(expectedTags, results));
     });
 });
