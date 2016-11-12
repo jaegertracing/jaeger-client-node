@@ -42,13 +42,8 @@ env:
 
 before_install:
 - docker version
-- sudo rm -rf /usr/local/bin/docker-compose
-- curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname
-  -s`-`uname -m` > docker-compose
-- chmod +x docker-compose
-- sudo mv docker-compose /usr/local/bin
-- docker-compose version
 - npm install babel-cli
+- if [ "$CROSSDOCK" = "1" ]; then make install_docker_ci ; fi
 
 script:
 - npm run test-ci
