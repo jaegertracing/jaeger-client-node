@@ -71,13 +71,11 @@ export default class TextMapCodec {
                     } else {
                         spanContext = decodedContext;
                     }
-                }
-
-                if (lowerKey === constants.JAEGER_DEBUG_HEADER) {
+                } else if (lowerKey === constants.JAEGER_DEBUG_HEADER) {
                     debugId = this._decodedValue(carrier[key]);
-                }
-
-                if (Utils.startsWith(lowerKey, this._baggagePrefix)) {
+                } else if (lowerKey === constants.JAEGER_BAGGAGE_HEADER) {
+                    this._parseCommaSeparatedBaggage(baggage, this._decodedValue(carrier[key]));
+                } else if (Utils.startsWith(lowerKey, this._baggagePrefix)) {
                     let keyWithoutPrefix = key.substring(this._baggagePrefix.length);
                     baggage[keyWithoutPrefix] = this._decodedValue(carrier[key]);
                 }
@@ -100,5 +98,19 @@ export default class TextMapCodec {
                 carrier[`${this._baggagePrefix}${key}`] = value;
             }
         }
+    }
+
+    // Parse comma separated key=value pair list and add to baggage.
+    // E.g. "key1=value1, key2=value2, key3 = value3"
+    // is converted to map[string]string { "key1" : "value1",
+    //                                     "key2" : "value2",
+    //                                     "key3" : "value3" }
+    _parseCommaSeparatedBaggage(baggage: any, values: string): void {
+        values.split(',').forEach((keyVal) => {
+            let splitKeyVal: Array<string> = keyVal.trim().split('=');
+            if (splitKeyVal.length == 2) {
+                baggage[splitKeyVal[0]] = splitKeyVal[1];
+            }
+        });
     }
 }

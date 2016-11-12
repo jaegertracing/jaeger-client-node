@@ -184,8 +184,8 @@ export default class Tracer {
             startTime = Utils.getTimestampMicros();
         }
 
-        // This boolean ensures that a parent with reference type 'follows_from'
-        // is selected when no childOf is passed in.
+        // This flag is used to ensure that CHILD_OF reference is preferred 
+        // as a parent even if it comes after FOLLOWS_FROM reference.
         let followsFromIsParent = false;
         let parent: ?SpanContext = options.childOf instanceof Span ? options.childOf.context(): options.childOf;
         // If there is no childOf in options, then search list of references
@@ -213,9 +213,13 @@ export default class Tracer {
         if (!parent || !parent.isValid) {
             let randomId = Utils.getRandom64();
             let flags = 0;
-            if (parent && parent.isDebugIDContainerOnly()) {
-                flags |= (constants.SAMPLED_MASK | constants.DEBUG_MASK);
-                samplerTags[constants.JAEGER_DEBUG_HEADER] = parent.debugId;
+            if (parent) {
+                if (parent.isDebugIDContainerOnly()) {
+                    flags |= (constants.SAMPLED_MASK | constants.DEBUG_MASK);
+                    samplerTags[constants.JAEGER_DEBUG_HEADER] = parent.debugId;
+                }
+                // baggage that could have been passed via `jaeger-baggage` header
+                ctx.baggage = parent.baggage;
             } else if (this._sampler.isSampled()) {
                 flags |= constants.SAMPLED_MASK;
                 samplerTags = this._sampler.getTags();

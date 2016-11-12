@@ -56,6 +56,11 @@ export const SAMPLER_TYPE_REMOTE = 'remote';
 // trace can be found in the UI using this value as a correlation ID.
 export const JAEGER_DEBUG_HEADER = 'jaeger-debug-id';
 
+// JaegerBaggageHeader is the name of the HTTP header that is used to submit baggage.
+// It differs from TraceBaggageHeaderPrefix in that it can be used only in cases where
+// a root span does not exist.
+export const JAEGER_BAGGAGE_HEADER = "jaeger-baggage"
+
 // TRACER_BAGGAGE_HEADER_PREFIX is the default prefix used for saving baggage to a carrier.
 export const TRACER_BAGGAGE_HEADER_PREFIX = 'uberctx-';
 
