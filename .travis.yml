@@ -8,12 +8,11 @@ node_js:
 - "4"
 - "iojs"
 - "0.12"
-- "0.10"
 
 matrix:
   include:
   - node_js: "0.10"
-    env: COVER=1
+    env: COVER=1 CROSSDOCK=1
     sudo: required
     services:
     - docker
@@ -28,20 +27,36 @@ services:
 env:
   global:
   - DOCKER_VERSION=1.12.0-0~trusty
-  - DOCKER_COMPOSE_VERSION=1.7.0
+  - DOCKER_COMPOSE_VERSION=1.8.0
   - COMMIT=${TRAVIS_COMMIT::8}
+  # DOCKER_USER=<docker username>
+  - secure: 6/od5gAo86vT3Tc61y9XmvrjwAi+HHgqlAqJqS+5l71RhuJHsJd4mLpQVIvZXoZXECnHEeZzyAj7Y5XbeSdJGBxxACpqiseXfTgjOAM6+gOMKifggEZFbKIlhyWeetyQ0+Xy5PGMepgSFhxYTMEc/3Xxr7tEqhQiuK+ivsMmTJWxhv/aIGH4J614wT07uK+irUbMoWSFoMupNSRnq0M73K98dnd98g4q4zKxJM81D71a01szGR8o/mR7Ig3ENJ+FDSYeeGGn6gKN9AigM++jiohfBVSVNBlrnGpZYme5Fm0TXEIrgi0QmxdU/NJ1uSXBtYlOfn1r7gbE6oAYqYvueoq3aZgmb1ODXloMs1dZKwXSlsCzwxBolTEv50/HrPqyXJ9NftuTXVLdfQfQg7hq508JPvidwnZiTyi1kO11QTC7utoJaCD8+3cwzh1r2jiN0IeLyKkx3lwOx/CUp4JAYTddpE9pKg7pl5i5QBd5uM7k5zqmtybKQRvY8ZlJGjFabVbyd3aQwUaLxmLYTfOQXYrEW+9IHRtk1htMI79Cf0q38wOwa0OUGwjYGDQ5SYhGDra7XMHfw4Sd3OO5c6MrPT7Esu+fr3pE360NSLA5poKGC6ObRMEzYmWNI4AYZfWoUdyx4V5yD/NTfE/HPFQ2ZWBY4EnvaQ87o21r2ullaE0=
+  # DOCKER_PASS=<docker password>
+  - secure: 4ocXtHiGfCcI7TxQBN/dkAMBLUjtDAeFSMtmwVrW76j2V4uPJWPZULAFlgvpW4qPOwb2DnFxoX+svDHyXOtaGskixWTaYPbSvX9HTWOYnMt7m7CJXENej1lab9E+DmUA9VlruQ+5XinrvHW/CgZT2d5zHNteEnTUYmaYMZ10yNGtzB4/YLcb26k1PM4iiA/jDjHH6+8dvjU0CZ4i0Y9feO7eBRObGzrjpa2+5qN/F9ybMHv8mpJrX+Z6EqAlsbYojOqCTTI1C+DiWs2ew54UCW/svfbzjKZ6IxgLaUkDJuYY9IzMuypqay/oF/vbQDeahDQ+dU7uEssqroNwv8I3LDxahznaitEU8+r8p+E3FbMbu2EITPMFYpz9SDPWJqNkEh0T24v+h5Zpf+bp1FWOrMJ8e0L5z2dTJveI+X3tucywsuhpbEE6tC5CXcTQW4jepHmBql9/6hWgS0tPtrSM7A9NGJet7L8tfuSxvY0XrEGEIYPmkbTgSPSPobCF77BkVU/uz0xbwIPr7jFbaU4PNKsiH2FXtj3pA+Ht5yHvJJ36EveGbUupJxpD3RKo1/BCRSrl7vTYvbtMhogV2rxTh3XiVNn4TRdAgAyOhCcrCHO2hpJQ7atyTuicGywQ6a+9znM31QTL7qEjBtBoggWfTPQEAAfKu7jthNUjl0d9Zkw=
+
 
 before_install:
 - docker version
-- sudo rm -rf /usr/local/bin/docker-compose
-- curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname
-  -s`-`uname -m` > docker-compose
-- chmod +x docker-compose
-- sudo mv docker-compose /usr/local/bin
-- docker-compose version
 - npm install babel-cli
+- if [ "$CROSSDOCK" = "1" ]; then make install_docker_ci ; fi
 
 script:
 - npm run test-ci
 - if [ "$COVER" = "1" ]; then npm run coveralls ; fi
+- if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh ; fi
+
+after_failure:
+- timeout 5 if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh ; fi
+
+after_success:
+- export REPO=jaegertracing/xdock-node
+- export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+- export TAG=`if [ "$BRANCH" == "master" ]; then echo "latest"; else echo $BRANCH; fi`
+- echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, REPO=$REPO, PR=$PR, BRANCH=$BRANCH, TAG=$TAG"
+- export DOCKER=$(if [ "$CROSSDOCK" == "1" ]; then echo docker; else echo true; fi)
+- $DOCKER login -u $DOCKER_USER -p $DOCKER_PASS
+- $DOCKER build -f crossdock/Dockerfile -t $REPO:$COMMIT .
+- $DOCKER tag $REPO:$COMMIT $REPO:$TAG
+- $DOCKER tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
+- $DOCKER push $REPO
 

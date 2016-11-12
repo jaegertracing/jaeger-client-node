@@ -79,7 +79,7 @@ export default class Utils {
 
         let signedLimit = 0x7fffffff;
         if (ipl > signedLimit) {
-            return (1 << 31) - ipl;
+            return (1 << 32) - ipl;
         }
         return ipl;
     }
@@ -89,12 +89,9 @@ export default class Utils {
      * @return {string} - returns the input string without leading zeros.
      **/
     static removeLeadingZeros(input: string): string {
-        if (input.length == 1) {
-            return input;
-        }
-
         let counter = 0;
-        for (let i = 0; i < input.length; i++) {
+        let length = input.length - 1;
+        for (let i = 0; i < length; i++) {
             if(input.charAt(i) === '0') {
                 counter++;
             } else {
@@ -103,25 +100,6 @@ export default class Utils {
         }
 
         return input.substring(counter);
-    }
-
-    /**
-     * @param {string} serviceName - the service name of the endpoint
-     * @param {string} ipv4 - the ip address of the endpoint
-     * @param {number} port - the port of the endpoint
-     * @return {Endpoint} - an endpoint object representing the 3 parameters
-     * received.
-     **/
-    static createEndpoint(serviceName: string , ipv4: any, port: number): Endpoint {
-        if (ipv4 === 'localhost') {
-            ipv4 = '127.0.0.1';
-        }
-
-        return {
-            ipv4: Utils.ipToInt(ipv4) || 0,
-            port: port || 0,
-            serviceName: serviceName
-        };
     }
 
     /**
@@ -134,17 +112,21 @@ export default class Utils {
         return Date.now() * 1000;
     }
 
-    static myIp(): ?string {
+    static myIp(): string {
+        let myIp = '0.0.0.0';
         let ifaces = os.networkInterfaces();
         let keys = Object.keys(ifaces);
+        loop1:
         for (let i = 0; i < keys.length; i++) {
             let iface = ifaces[keys[i]];
             for (let j = 0; j < iface.length; j++) {
                 if (iface[j].family === 'IPv4' && !iface[j].internal) {
-                    return iface[j].address;
+                    myIp = iface[j].address;
+                    break loop1;
                 }
             }
         }
+        return myIp;
     }
 
     static clone(obj: any): any {

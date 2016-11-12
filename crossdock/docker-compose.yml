@@ -16,12 +16,20 @@ services:
             - AXIS_SAMPLED=true
             - AXIS_S2NAME=go,java,node
             - AXIS_S2TRANSPORT=http,tchannel
-            - AXIS_S3NAME=go,java,node
+            - AXIS_S3NAME=go,java,node,python
             - AXIS_S3TRANSPORT=http,tchannel
 
             - BEHAVIOR_TRACE=client,s1name,sampled,s2name,s2transport,s3name,s3transport
 
             - REPORT=compact
+
+    node:
+        build:
+            context: ../.
+            dockerfile: crossdock/Dockerfile
+        ports:
+            - "8080-8082"
+
     go:
         image: jaegertracing/xdock-go
         ports:
@@ -34,11 +42,5 @@ services:
 
     java:
         image: jaegertracing/xdock-java
-        ports:
-            - "8080-8082"
-
-    node:
-        build:
-            context: ..
         ports:
             - "8080-8082"

@@ -187,7 +187,7 @@ export default class Tracer {
         // This flag is used to ensure that CHILD_OF reference is preferred 
         // as a parent even if it comes after FOLLOWS_FROM reference.
         let followsFromIsParent = false;
-        let parent: ?SpanContext = options.childOf instanceof Span ? options.childOf.context(): options.childOf;
+        let parent: ?SpanContext = options.childOf instanceof Span ? options.childOf.context() : options.childOf;
         // If there is no childOf in options, then search list of references
         for (let i = 0; i < options.references.length; i++) {
             let ref: Reference = options.references[i];
