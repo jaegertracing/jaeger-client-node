@@ -37,8 +37,6 @@ export default class LoggingReporter {
         return 'LoggingReporter';
     }
 
-    clear(): void {}
-
     close(callback: ?Function): void {
         if (callback) {
             callback();

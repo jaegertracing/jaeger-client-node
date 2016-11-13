@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import _ from 'lodash';
 import { assert } from 'chai';
 import CompositeReporter from '../src/reporters/composite_reporter';
 import InMemoryReporter from '../src/reporters/in_memory_reporter';
@@ -34,7 +35,7 @@ describe('All Reporters should', () => {
         let inMemoryReporter = new InMemoryReporter();
         inMemoryReporter.setProcess('service-name', []);
         let noopReporter = new NoopReporter();
-        let remoteReporter = new RemoteReporter();
+        let remoteReporter = new RemoteReporter(new UDPSender());
         let compositeReporter = new CompositeReporter();
 
         assert.equal(loggingReporter.name(), 'LoggingReporter');
@@ -44,43 +45,40 @@ describe('All Reporters should', () => {
         assert.equal(compositeReporter.name(), 'CompositeReporter');
     });
 
-    it ('clear, and close are covered', () => {
-        let loggingReporter = new LoggingReporter();
-        let inMemoryReporter = new InMemoryReporter();
-        inMemoryReporter.setProcess('service-name', []);
-        let noopReporter = new NoopReporter();
-        let sender = new UDPSender();
-        sender.setProcess(inMemoryReporter._process);
-        let remoteReporter = new RemoteReporter(sender);
-        let reporters = [
-            loggingReporter,
-            inMemoryReporter,
-            noopReporter,
-            remoteReporter
-        ];
-        let reporter = new CompositeReporter(reporters);
+    let closeOptions = [
+        { callback: sinon.spy(), predicate: (spy) => { return spy.calledOnce === true; }},
+        { callback: null, predicate: (spy) => { return true; }}
+    ];
 
-        let closeCallback = sinon.spy();
+    _.each(closeOptions, (o) => {
+        it ('calls to close execute callback correctly', () => {
+            let loggingReporter = new LoggingReporter();
+            let inMemoryReporter = new InMemoryReporter();
+            inMemoryReporter.setProcess('service-name', []);
+            let noopReporter = new NoopReporter();
+            let sender = new UDPSender();
+            sender.setProcess(inMemoryReporter._process);
+            let remoteReporter = new RemoteReporter(sender);
+            let reporters = [
+                loggingReporter,
+                inMemoryReporter,
+                noopReporter,
+                remoteReporter
+            ];
+            let reporter = new CompositeReporter(reporters);
 
-        reporter.clear();
-        reporter.close(closeCallback, reporters.length);
+            reporter.close(o.callback);
 
-        sender = new UDPSender();
-        sender.setProcess(inMemoryReporter._process);
-        remoteReporter._sender = sender;
-
-        // covered without callbacks
-        reporter.close();
-
-        assert.isOk(closeCallback.calledOnce);
+            assert.isOk(o.predicate(o.callback));
+        });
     });
 
     describe('Logging reporter', () => {
-        it('report span, and do nothing on clear and close', () => {
+        it('report span logs span as a stringified object', () => {
             let logger = new MockLogger();
             let reporter = new LoggingReporter(logger);
-
             let spanMock = { key: 'some-span' };
+
             reporter.report(spanMock);
 
             assert.equal(logger._infoMsgs[0], 'Reporting span {"key":"some-span"}');

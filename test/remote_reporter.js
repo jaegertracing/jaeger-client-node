@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 
 import _ from 'lodash';
-import {assert} from 'chai';
+import {assert, expect} from 'chai';
 import ConstSampler from '../src/samplers/const_sampler';
 import CompositeReporter from '../src/reporters/composite_reporter';
 import InMemoryReporter from '../src/reporters/in_memory_reporter';
@@ -86,17 +86,19 @@ describe('Composite and Remote Reporter should', () => {
 
     it ('should have coverage for simple code paths', () => {
         let sender = new UDPSender();
+        sender.setProcess({
+            serviceName: 'service-name',
+            tags: []
+        });
         let reporter = new RemoteReporter(sender);
+
         assert.equal(reporter.name(), 'RemoteReporter');
+
+        reporter.close();
     });
 
-    it ('should set process without a sender', () => {
-        let sender = new UDPSender();
-        delete sender.setProcess;
-        let reporter = new RemoteReporter(sender);
-        let tags = [];
-        reporter.setProcess('service-name', tags);
-        // no assertion exists for coverage purposes;
+    it ('should throw exception when initialized without a sender', () => {
+        expect(() => { new RemoteReporter(); }).to.throw('RemoteReporter must be given a Sender.');
     });
 
     it ('failed to flush spans with reporter', () => {

@@ -36,6 +36,10 @@ export default class RemoteReporter {
 
     constructor(sender: Sender,
                 options: any = {}) {
+        if (!sender) {
+            throw new Error('RemoteReporter must be given a Sender.');
+        }
+
         this._bufferFlushInterval = options.bufferFlushInterval || DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS;
         this._logger = options.logger || new NullLogger();
         this._sender = sender;
@@ -58,7 +62,7 @@ export default class RemoteReporter {
     }
 
     flush(callback: ?Function): void {
-        let response: SenderResponse = this._sender.flush(callback);
+        let response: SenderResponse = this._sender.flush();
         if (response.err) {
             this._logger.error('Failed to flush spans in reporter.');
             this._metrics.reporterFailure.increment(response.numSpans);
@@ -87,8 +91,6 @@ export default class RemoteReporter {
             'tags': ThriftUtils.getThriftTags(tags)
         };
 
-        if (this._sender) {
-            this._sender.setProcess(this._process);
-        }
+        this._sender.setProcess(this._process);
     }
 }

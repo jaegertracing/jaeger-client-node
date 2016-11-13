@@ -50,8 +50,6 @@ export default class CompositeReporter {
         }
     }
 
-    clear(): void {}
-
     close(callback: ?Function): void {
         let modifiedCallback: ?Function  = this.compositeCallback(callback);
         this._reporters.forEach((r) => {
