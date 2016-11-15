@@ -23,7 +23,6 @@ import Span from '../span.js';
 
 declare interface Reporter {
     report(span: Span): void;
-    flush(callback: ?Function): void;
     close(callback: ?Function): void;
     setProcess(serviceName: string, tags: Array<Tag>): void;
 };

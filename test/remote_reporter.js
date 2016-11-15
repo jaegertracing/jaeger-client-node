@@ -18,18 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import {assert} from 'chai';
-import ConstSampler from '../src/samplers/const_sampler.js';
-import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
-import MockLogger from './lib/mock_logger.js';
-import RemoteReporter from '../src/reporters/remote_reporter.js';
-import Tracer from '../src/tracer.js';
-import UDPSender from '../src/reporters/udp_sender.js';
-import Metrics from '../src/metrics/metrics.js';
-import LocalMetricFactory from './lib/metrics/local/metric_factory.js';
-import LocalBackend from './lib/metrics/local/backend.js';
+import _ from 'lodash';
+import {assert, expect} from 'chai';
+import ConstSampler from '../src/samplers/const_sampler';
+import InMemoryReporter from '../src/reporters/in_memory_reporter';
+import MockLogger from './lib/mock_logger';
+import RemoteReporter from '../src/reporters/remote_reporter';
+import Tracer from '../src/tracer';
+import UDPSender from '../src/reporters/udp_sender';
+import Metrics from '../src/metrics/metrics';
+import LocalMetricFactory from './lib/metrics/local/metric_factory';
+import LocalBackend from './lib/metrics/local/backend';
 
-describe('Remote Reporter should', () => {
+describe('Composite and Remote Reporter should', () => {
     let tracer;
     let reporter;
     let sender;
@@ -43,7 +44,7 @@ describe('Remote Reporter should', () => {
         reporter = new RemoteReporter(sender, {
             logger: logger,
             metrics: metrics
-        }),
+        });
         tracer = new Tracer(
             'test-service-name',
             reporter,
@@ -53,7 +54,8 @@ describe('Remote Reporter should', () => {
 
     afterEach(() => {
         logger.clear();
-        reporter.close();
+        let callback = () => {} // added for coverage reasons
+        reporter.close(callback);
     });
 
     it ('report span, and flush', () => {
@@ -63,7 +65,7 @@ describe('Remote Reporter should', () => {
         span.finish();
         assert.equal(sender._batch.spans.length, 1);
 
-        reporter.flush()
+        reporter.flush();
         assert.equal(sender._batch.spans.length, 0);
         assert.isOk(LocalBackend.counterEquals(metrics.reporterSuccess, 1));
     });
@@ -79,6 +81,23 @@ describe('Remote Reporter should', () => {
 
         // metrics
         assert.isOk(LocalBackend.counterEquals(metrics.reporterDropped, 1));
+    });
+
+    it ('should have coverage for simple code paths', () => {
+        let sender = new UDPSender();
+        sender.setProcess({
+            serviceName: 'service-name',
+            tags: []
+        });
+        let reporter = new RemoteReporter(sender);
+
+        assert.equal(reporter.name(), 'RemoteReporter');
+
+        reporter.close();
+    });
+
+    it ('should throw exception when initialized without a sender', () => {
+        expect(() => { new RemoteReporter(); }).to.throw('RemoteReporter must be given a Sender.');
     });
 
     it ('failed to flush spans with reporter', () => {

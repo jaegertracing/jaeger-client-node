@@ -33,7 +33,13 @@ export default class LoggingReporter {
         this._logger.info(`Reporting span ${JSON.stringify(span)}`);
     }
 
-    clear(): void {}
+    name(): string {
+        return 'LoggingReporter';
+    }
 
-    close(): void {}
+    close(callback: ?Function): void {
+        if (callback) {
+            callback();
+        }
+    }
 }

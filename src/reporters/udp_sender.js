@@ -112,7 +112,7 @@ export default class UDPSender {
         return flushResponse;
     }
 
-    flush(testCallback: ?Function): SenderResponse {
+    flush(): SenderResponse {
         let numSpans: number = this._batch.spans.length;
         if (numSpans == 0) {
             return {err: false, numSpans: 0}
@@ -129,12 +129,9 @@ export default class UDPSender {
             return {err: true, numSpans: numSpans};
         }
 
+        // TODO(oibe) use callback in send
         this._client.send(thriftBuffer, 0, thriftBuffer.length, PORT, HOST);
         this._reset();
-
-        if (testCallback) {
-            testCallback();
-        }
 
         return {err: false, numSpans: numSpans};
     }
@@ -161,11 +158,7 @@ export default class UDPSender {
         this._byteBufferSize = 0;
     }
 
-    close(callback: ?Function): void {
+    close(): void {
         this._client.close();
-
-        if (callback) {
-            callback();
-        }
     }
 }
