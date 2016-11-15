@@ -30,6 +30,23 @@ import LoggingReporter from '../src/reporters/logging_reporter';
 import sinon from 'sinon';
 
 describe('All Reporters should', () => {
+    let reporters;
+    beforeEach(() => {
+        let loggingReporter = new LoggingReporter();
+        let inMemoryReporter = new InMemoryReporter();
+        inMemoryReporter.setProcess('service-name', []);
+        let noopReporter = new NoopReporter();
+        let sender = new UDPSender();
+        sender.setProcess(inMemoryReporter._process);
+        let remoteReporter = new RemoteReporter(sender);
+        reporters = [
+            loggingReporter,
+            inMemoryReporter,
+            noopReporter,
+            remoteReporter
+        ];
+    });
+
     it ('have proper names', () => {
         let loggingReporter = new LoggingReporter();
         let inMemoryReporter = new InMemoryReporter();
@@ -52,19 +69,6 @@ describe('All Reporters should', () => {
 
     _.each(closeOptions, (o) => {
         it ('calls to close execute callback correctly', () => {
-            let loggingReporter = new LoggingReporter();
-            let inMemoryReporter = new InMemoryReporter();
-            inMemoryReporter.setProcess('service-name', []);
-            let noopReporter = new NoopReporter();
-            let sender = new UDPSender();
-            sender.setProcess(inMemoryReporter._process);
-            let remoteReporter = new RemoteReporter(sender);
-            let reporters = [
-                loggingReporter,
-                inMemoryReporter,
-                noopReporter,
-                remoteReporter
-            ];
             let reporter = new CompositeReporter(reporters);
 
             reporter.close(o.callback);
@@ -82,6 +86,18 @@ describe('All Reporters should', () => {
             reporter.report(spanMock);
 
             assert.equal(logger._infoMsgs[0], 'Reporting span {"key":"some-span"}');
+        });
+    });
+
+    describe('Composite reporter', () => {
+        it ('should report spans', () => {
+            let mockReporter = {
+                report: sinon.spy()
+            };
+            let reporter = new CompositeReporter([mockReporter]);
+            reporter.report();
+
+            assert.isOk(mockReporter.report.calledOnce);
         });
     });
 });

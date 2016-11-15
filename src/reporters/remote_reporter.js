@@ -76,9 +76,9 @@ export default class RemoteReporter {
     }
 
     close(callback: ?Function): void {
+        clearInterval(this._intervalHandle);
         this._sender.flush();
         this._sender.close();
-        clearInterval(this._intervalHandle);
 
         if (callback) {
             callback();

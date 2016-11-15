@@ -21,7 +21,6 @@
 import _ from 'lodash';
 import {assert, expect} from 'chai';
 import ConstSampler from '../src/samplers/const_sampler';
-import CompositeReporter from '../src/reporters/composite_reporter';
 import InMemoryReporter from '../src/reporters/in_memory_reporter';
 import MockLogger from './lib/mock_logger';
 import RemoteReporter from '../src/reporters/remote_reporter';
@@ -42,10 +41,10 @@ describe('Composite and Remote Reporter should', () => {
         metrics = new Metrics(new LocalMetricFactory());
         sender = new UDPSender();
         logger = new MockLogger();
-        reporter = new CompositeReporter([new RemoteReporter(sender, {
+        reporter = new RemoteReporter(sender, {
             logger: logger,
             metrics: metrics
-        })]);
+        });
         tracer = new Tracer(
             'test-service-name',
             reporter,
@@ -66,7 +65,7 @@ describe('Composite and Remote Reporter should', () => {
         span.finish();
         assert.equal(sender._batch.spans.length, 1);
 
-        reporter._reporters[0].flush();
+        reporter.flush();
         assert.equal(sender._batch.spans.length, 0);
         assert.isOk(LocalBackend.counterEquals(metrics.reporterSuccess, 1));
     });
@@ -112,8 +111,8 @@ describe('Composite and Remote Reporter should', () => {
             close: () => {}
         };
 
-        reporter._reporters[0]._sender = mockSender;
-        reporter._reporters[0].flush();
+        reporter._sender = mockSender;
+        reporter.flush();
 
         assert.equal(logger._errorMsgs[0], 'Failed to flush spans in reporter.');
         assert.isOk(LocalBackend.counterEquals(metrics.reporterFailure, 1));
