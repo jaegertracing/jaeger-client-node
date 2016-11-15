@@ -93,3 +93,27 @@ declare type TChannelSpan = {
     parentid: Array<number>,
     flags: number
 };
+
+declare type ReporterConfig = {
+    flushIntervalSeconds: ?number,
+    logSpans: ?boolean,
+    agentHost: ?string,
+    agentPort: ?number
+};
+
+declare type SamplerConfig = {
+    type: string,
+    param: number
+};
+
+declare type TracerConfig = {
+    serviceName: string,
+    disable: ?boolean,
+    sampler: SamplerConfig,
+    reporter: ReporterConfig
+};
+
+declare type TracerOptions = {
+    reporter: ?Reporter,
+    logger: ?Logger
+};

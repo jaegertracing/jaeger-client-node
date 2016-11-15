@@ -29,26 +29,23 @@ import ConstSampler from '../src/samplers/const_sampler';
 import ProbabilisticSampler from '../src/samplers/probabilistic_sampler';
 import RemoteSampler from '../src/samplers/remote_sampler';
 import RateLimitingSampler from '../src/samplers/ratelimiting_sampler';
-import yaml from 'js-yaml';
 import {initTracer} from '../src/index.js';
 import opentracing from 'opentracing';
 
 describe('initTracer', () => {
     it ('should initialize noop tracer when disable is set', () => {
-        let configFile = fs.readFileSync(path.join(__dirname, 'config' , 'disable_tracer.yaml'), 'utf8');
-        let config = yaml.safeLoad(configFile);
+        let config = { serviceName: 'test-service', disable: true };
         let tracer = initTracer(config);
 
         expect(tracer).to.be.an.instanceof(opentracing.Tracer);
     });
 
     it ('should initialize normal tracer when only service name given', () => {
-        let configFile = fs.readFileSync(path.join(__dirname, 'config' , 'basic_tracer.yaml'), 'utf8');
-        let config = yaml.load(configFile);
+        let config = { serviceName: 'test-service' };
         let tracer = initTracer(config);
 
         expect(tracer._sampler).to.be.an.instanceof(RemoteSampler);
-        expect(tracer._reporter).to.be.an.instanceof(CompositeReporter);
+        expect(tracer._reporter).to.be.an.instanceof(RemoteReporter);
     });
 
     it ('should initialize proper samplers', () => {
@@ -76,36 +73,17 @@ describe('initTracer', () => {
         });
     });
 
-    it ('should throw error on sampler incorrect type', () => {
-        var config = {
-            serviceName: 'test-service'
-        };
-        var options = [
-            { type: 'const', param: 'bad-value' },
-            { type: 'ratelimiting', param: 'bad-value' },
-            { type: 'probabilistic', param: 'bad-value' },
-            { type: 'remote', param: 'bad-value' },
-        ];
-
-        let count = 0;
-        _.each(options, (samplerConfig) => {
-            config.sampler = samplerConfig;
-
-            // Since its an error from a third party framework, its hard to assert on
-            // using expect.
-            try {
-                initTracer(config);
-            } catch(err) {
-                count +=1;
-            }
-        });
-
-        assert.equal(count, 4);
-    });
-
     it ('should respect reporter options', () => {
-        let configFile = fs.readFileSync(path.join(__dirname, 'config' , 'tracer_with_reporter_options.yaml'), 'utf8');
-        let config = yaml.load(configFile);
+        let config = {
+            serviceName: 'test-service',
+            sampler: { type: 'const', param: 0 },
+            reporter: {
+                logSpans: true,
+                agentHost: '127.0.0.1',
+                agentPort: 4939,
+                flushIntervalSeconds: 2
+            }
+        };
         let tracer = initTracer(config);
 
         let remoteReporter;

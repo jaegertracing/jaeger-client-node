@@ -40,7 +40,7 @@ export default class RemoteReporter {
             throw new Error('RemoteReporter must be given a Sender.');
         }
 
-        this._bufferFlushInterval = options.bufferFlushInterval || DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS;
+        this._bufferFlushInterval = options.flushIntervalMs || DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS;
         this._logger = options.logger || new NullLogger();
         this._sender = sender;
         this._intervalHandle = setInterval(() => {

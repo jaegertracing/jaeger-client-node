@@ -24,7 +24,7 @@ import Span from '../span.js';
 declare interface Reporter {
     report(span: Span): void;
     close(callback: ?Function): void;
-    setProcess(serviceName: string, tags: Array<Tag>): void;
+    name(): string;
 };
 
 declare class Sender {
