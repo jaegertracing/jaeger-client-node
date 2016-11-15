@@ -213,6 +213,11 @@ export default class Tracer {
         if (!parent || !parent.isValid) {
             let randomId = Utils.getRandom64();
             let flags = 0;
+            if (this._sampler.isSampled()) {
+                flags |= constants.SAMPLED_MASK;
+                samplerTags = this._sampler.getTags();
+            }
+
             if (parent) {
                 if (parent.isDebugIDContainerOnly()) {
                     flags |= (constants.SAMPLED_MASK | constants.DEBUG_MASK);
@@ -220,9 +225,6 @@ export default class Tracer {
                 }
                 // baggage that could have been passed via `jaeger-baggage` header
                 ctx.baggage = parent.baggage;
-            } else if (this._sampler.isSampled()) {
-                flags |= constants.SAMPLED_MASK;
-                samplerTags = this._sampler.getTags();
             }
 
             ctx.traceId = randomId;
