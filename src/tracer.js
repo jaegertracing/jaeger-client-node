@@ -302,13 +302,4 @@ export default class Tracer {
             this._sampler.close(callback);
         });
     }
-
-    /**
-     * Writes spans to the local agent, and executes a callback if necessary.
-     *
-     * @param {Function} [callback] - a callback that runs after spans have been flushed.
-     **/
-    flush(callback: Function): void {
-        this._reporter.flush(callback);
-    }
 }

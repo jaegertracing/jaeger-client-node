@@ -223,17 +223,6 @@ describe('tracer should', () => {
         assert.equal(reporter.spans.length, 1);
     });
 
-    it ('flush spans', (done) => {
-        let span = tracer.startSpan('operation');
-        span.finish();
-
-        // test callback for flush as well
-        tracer.flush(() => {
-            assert.equal(tracer._reporter._flushed.length, 1);
-            done();
-        });
-    });
-
     describe('Metrics', () => {
         it ('startSpan', () => {
             let params = [
