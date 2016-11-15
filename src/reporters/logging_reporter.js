@@ -25,7 +25,8 @@ import NullLogger from '../logger.js';
 export default class LoggingReporter {
     _logger: Logger;
 
-    constructor(logger: Logger) {
+    constructor(logger: ?Logger) {
+         // $FlowIgnore - For some reason NullLogger doesn't implement Logger even though they are identical.
         this._logger = logger || new NullLogger();
     }
 

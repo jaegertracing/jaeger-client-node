@@ -110,7 +110,7 @@ export default class RemoteControlledSampler {
         }
         this._metrics.samplerRetrieved.increment(1);
 
-        if (newSampler && (!this._sampler.equal(newSampler))) {
+        if (newSampler && (!this.equal(newSampler))) {
             this._sampler = newSampler;
             this._metrics.samplerUpdated.increment(1);
         }
@@ -120,6 +120,9 @@ export default class RemoteControlledSampler {
         }
     }
 
+    equal(otherSampler: Sampler) {
+        return this._sampler.equal(otherSampler);
+    }
 
     isSampled(): boolean {
         return this._sampler.isSampled();

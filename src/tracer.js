@@ -83,6 +83,7 @@ export default class Tracer {
     }
 
     _setProcess(): void {
+         // $FlowIgnore - setProcess exists on composite and remote reporter.
         this._reporter.setProcess(this._serviceName, Utils.convertObjectToTags(this._tags));
     }
 
