@@ -40,7 +40,7 @@ export default class ConstSampler {
         return this._decision;
     }
 
-    isSampled(): boolean {
+    isSampled(operation: string): boolean {
         return this._decision;
     }
 

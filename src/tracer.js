@@ -207,13 +207,12 @@ export default class Tracer {
         let spanKindValue = tags[opentracing_tags.SPAN_KIND];
         let rpcServer = (spanKindValue === opentracing_tags.SPAN_KIND_RPC_SERVER);
 
-
         let ctx: SpanContext = new SpanContext();
         let samplerTags: any = {};
         if (!parent || !parent.isValid) {
             let randomId = Utils.getRandom64();
             let flags = 0;
-            if (this._sampler.isSampled()) {
+            if (this._sampler.isSampled(operationName)) {
                 flags |= constants.SAMPLED_MASK;
                 samplerTags = this._sampler.getTags();
             }

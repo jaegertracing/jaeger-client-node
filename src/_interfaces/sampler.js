@@ -20,7 +20,7 @@
 // THE SOFTWARE.
 
 declare interface Sampler {
-    isSampled(): boolean;
+    isSampled(operation: string): boolean;
     equal(other: Sampler): boolean;
     getTags(): Array<Tag>;
     close(callback: Function): void;
