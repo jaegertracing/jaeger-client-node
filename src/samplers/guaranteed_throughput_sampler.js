@@ -30,58 +30,53 @@ import RateLimitingSampler from './ratelimiting_sampler.js';
 //
 // The probabilisticSampler is given higher priority when tags are emitted, ie. if IsSampled() for both
 // samplers return true, the tags for probabilisticSampler will be used.
-type GuaranteedThroughputProbabilisticSampler struct {
-        probabilisticSampler Sampler
-        lowerBoundSampler    Sampler
-        operation            string
-        tags                 []Tag
-        samplingRate         float64
-        lowerBound           float64
-}
 export default class GuaranteedThroughputSampler {
-    _probabilisticSampler Sampler
-    _lowerBoundSampler    Sampler
-    _operation            string
-    _tags                 Array<Tag>
-    _samplingRate         number
-    _lowerBound           nunmber
+    _operation:            string;
+    _samplingRate:         number;
+    _lowerBound:           number;
+    _probabilisticSampler: Sampler;
+    _lowerBoundSampler:    Sampler;
+    _tagsPlaceholder:      any;
 
     constructor(operation: string, lowerBound: number, samplingRate: number) {
         this._operation = operation;
         this._samplingRate = samplingRate;
         this._lowerBound = lowerBound;
-        this._tags = {};
-        this._tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_LOWER_BOUND;
-        this._tags[constants.SAMPLER_PARAM_TAG_KEY] = samplingRate;
         this._probabilisticSampler =  new ProbabilisticSampler(samplingRate);
+        this._lowerBoundSampler = new RateLimitingSampler(lowerBound);
+        // we never let the lowerBoundSampler return its real tags, so avoid allocations
+        // by reusing the same placeholder object
+        this._tagsPlaceholder = {};
     }
 
     name(): string {
         return 'GuaranteedThroughputSampler';
     }
 
-    isSampled(operation: string): boolean {
-        return false; // TODO
+    isSampled(operation: string, tags: any): boolean {
+        if (this._probabilisticSampler.isSampled(operation, tags)) {
+            // make rate limiting sampler update its budget
+            this._lowerBoundSampler.isSampled(operation, this._tagsPlaceholder);
+            return true;
+        }
+        let decision = this._lowerBoundSampler.isSampled(operation, this._tagsPlaceholder);
+        if (decision) {
+            tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_LOWER_BOUND;
+            tags[constants.SAMPLER_PARAM_TAG_KEY] = this._samplingRate;
+        }
+        return decision;
     }
 
     equal(other: Sampler): boolean {
-        if (!(other instanceof GuaranteedThroughputSampler)) {
-            return false;
-        }
-
         return false; // TODO equal should be removed
     }
 
-    getTags(): any {
-        return this._tags;
-    }
-
     close(callback: Function): void {
-        // neither probabilistic nor rate limiting samplers allocate resources
-        // so their close methods are effectively no-op, so we do not need to 
-        // pass the callback to them (if we did we'd need to wrap it)
-        this._probabilisticSampler.close();
-        this._lowerBoundSampler.close();
+        // neither probabilistic nor rate limiting samplers allocate resources,
+        // so their close methods are effectively no-op. We do not need to
+        // pass the callback to them (if we did we'd need to wrap it).
+        this._probabilisticSampler.close(() => {});
+        this._lowerBoundSampler.close(() => {});
         if (callback) {
             callback();
         }
