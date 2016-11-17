@@ -59,7 +59,6 @@
   "scripts": {
     "add-license": "./node_modules/.bin/uber-licence",
     "check-license": "./node_modules/.bin/uber-licence --dry",
-    "copy-submodule": "git submodule init -- ./src/jaeger-idl && cp -R ./src/jaeger-idl ./dist/src/ && rm -rf ./dist/src/jaeger-idl/.git",
     "check-ls": "npm ls --loglevel=http --parseable 1>/dev/null && echo '# npm is in a good state'",
     "cover": "./node_modules/.bin/babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
