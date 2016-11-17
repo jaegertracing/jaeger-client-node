@@ -90,8 +90,8 @@ export default class Tracer {
         spanContext: SpanContext,
         operationName: string,
         startTime: number,
-        internalTags: any = {},
-        tags: any = {},
+        userTags: any,
+        internalTags: any,
         parentContext: ?SpanContext,
         rpcServer: boolean,
         references: Array<Reference>): Span {
@@ -107,7 +107,7 @@ export default class Tracer {
             references
         );
 
-        span.addTags(tags);
+        span.addTags(userTags);
         span.addTags(internalTags);
 
         // emit metrics
@@ -175,10 +175,9 @@ export default class Tracer {
     startSpan(operationName: string, options: ?startSpanArgs): Span {
         // Convert options.childOf to options.references as needed.
         options = options || {};
-        options.operationName = operationName;
-        options.references = options.references || [];
+        let references = options.references || [];
 
-        let tags = options.tags || {};
+        let userTags = options.tags || {};
         let startTime = options.startTime;
         if (!startTime) {
             startTime = Utils.getTimestampMicros();
@@ -189,8 +188,8 @@ export default class Tracer {
         let followsFromIsParent = false;
         let parent: ?SpanContext = options.childOf instanceof Span ? options.childOf.context() : options.childOf;
         // If there is no childOf in options, then search list of references
-        for (let i = 0; i < options.references.length; i++) {
-            let ref: Reference = options.references[i];
+        for (let i = 0; i < references.length; i++) {
+            let ref: Reference = references[i];
             if (ref.type() === opentracing.REFERENCE_CHILD_OF) {
                 if (!parent || followsFromIsParent) {
                     parent = ref.referencedContext();
@@ -204,23 +203,22 @@ export default class Tracer {
             }
         }
 
-        let spanKindValue = tags[opentracing_tags.SPAN_KIND];
+        let spanKindValue = userTags[opentracing_tags.SPAN_KIND];
         let rpcServer = (spanKindValue === opentracing_tags.SPAN_KIND_RPC_SERVER);
 
         let ctx: SpanContext = new SpanContext();
-        let samplerTags: any = {};
+        let internalTags: any = {};
         if (!parent || !parent.isValid) {
             let randomId = Utils.getRandom64();
             let flags = 0;
-            if (this._sampler.isSampled(operationName)) {
+            if (this._sampler.isSampled(operationName, internalTags)) {
                 flags |= constants.SAMPLED_MASK;
-                samplerTags = this._sampler.getTags();
             }
 
             if (parent) {
                 if (parent.isDebugIDContainerOnly()) {
                     flags |= (constants.SAMPLED_MASK | constants.DEBUG_MASK);
-                    samplerTags[constants.JAEGER_DEBUG_HEADER] = parent.debugId;
+                    internalTags[constants.JAEGER_DEBUG_HEADER] = parent.debugId;
                 }
                 // baggage that could have been passed via `jaeger-baggage` header
                 ctx.baggage = parent.baggage;
@@ -242,13 +240,13 @@ export default class Tracer {
 
         return this._startInternalSpan(
             ctx,
-            options.operationName,
+            operationName,
             startTime,
-            samplerTags,
-            tags,
+            userTags,
+            internalTags,
             parent,
             rpcServer,
-            options.references
+            references
         );
     }
 

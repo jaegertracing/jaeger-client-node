@@ -20,8 +20,22 @@
 // THE SOFTWARE.
 
 declare interface Sampler {
-    isSampled(operation: string): boolean;
+    name(): string;
+    
+    /**
+     * Decides if a new trace starting with given operation name
+     * should be sampled or not. If the method returns true, it
+     * must populate the tags dictionary with tags that identify
+     * the sampler, namely sampler.type and sampler.param.
+     *
+     * @param {string} operation - Operation name of the root span.
+     * @param {Object} tags - output dictionary to store sampler tags.
+     * @return {booleab} - returns whether the trace should be sampled.
+     * 
+     */
+    isSampled(operation: string, tags: any): boolean;
+
     equal(other: Sampler): boolean;
-    getTags(): Array<Tag>;
+
     close(callback: Function): void;
 }

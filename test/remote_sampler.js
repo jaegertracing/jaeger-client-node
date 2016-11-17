@@ -84,8 +84,9 @@ describe('remote sampler should', () => {
 
                 let count = 0;
                 for (let i = 0; i < expectedMaxTracesPerSecond; i++) {
-                    sampler.isSampled();
-                    count++;
+                    if (sampler.isSampled('operation', {})) {
+                        count++;
+                    }
                 }
 
                 assert.equal(count, expectedMaxTracesPerSecond);
