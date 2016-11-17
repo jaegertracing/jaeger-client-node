@@ -20,18 +20,14 @@
 // THE SOFTWARE.
 
 import * as constants from '../constants.js';
-import RateLimiter from '../leaky_bucket_rate_limiter.js';
-import NullLogger from '../logger.js';
+import RateLimiter from '../rate_limiter.js';
 
 export default class RateLimitingSampler {
     _rateLimiter: RateLimiter;
     _maxTracesPerSecond: number;
-    _logger: any;
     _tags: any;
 
-    constructor(maxTracesPerSecond: number, logger: any) {
-        this._logger = logger || new NullLogger();
-
+    constructor(maxTracesPerSecond: number) {
         if (maxTracesPerSecond < 0) {
             throw new Error(`maxTracesPerSecond must be greater than 0.0.  Received ${maxTracesPerSecond}`);
         }
