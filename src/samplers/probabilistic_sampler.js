@@ -40,7 +40,7 @@ export default class ProbabilisticSampler {
         return 'ProbabilisticSampler';
     }
 
-    isSampled(): boolean {
+    isSampled(operation: string): boolean {
         return Math.random() < this._samplingRate;
     }
 

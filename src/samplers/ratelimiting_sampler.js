@@ -51,7 +51,7 @@ export default class RateLimitingSampler {
         return this._maxTracesPerSecond;
     }
 
-    isSampled(): boolean {
+    isSampled(operation: string): boolean {
         return this._rateLimiter.checkCredit(1.0);
     }
 
