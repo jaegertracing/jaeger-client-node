@@ -10,8 +10,7 @@ publish: build-node
 test: build-node
 	npm run flow
 	npm run lint
-	./node_modules/.bin/mocha --compilers js:babel-core/register test
-	./node_modules/.bin/mocha --compilers js:babel-register crossdock/test
+	npm run test-all
 
 .PHONY: build-node
 build-node: node_modules
@@ -21,7 +20,11 @@ build-node: node_modules
 	node_modules/.bin/babel --presets es2015 --plugins transform-class-properties --source-maps -d dist/crossdock/ crossdock/
 	cp -R ./test/thrift ./dist/test/thrift/
 	cp package.json ./dist/
-	npm run copy-submodule
+	cp -R ./src/jaeger-idl ./dist/src/
+	rm -rf ./dist/src/jaeger-idl/.git
 
+.PHONY: node_modules
 node_modules:
+	git submodule init -- ./src/jaeger-idl
+	git submodule update
 	npm install

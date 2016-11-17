@@ -41,12 +41,16 @@ export default class ProbabilisticSampler {
     }
 
     isSampled(operation: string, tags: any): boolean {
-        let decision = Math.random() < this._samplingRate;
+        let decision = this.random() < this._samplingRate;
         if (decision) {
             tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_PROBABILISTIC;
             tags[constants.SAMPLER_PARAM_TAG_KEY] = this._samplingRate;
         }
         return decision;
+    }
+
+    random(): number {
+        return Math.random();
     }
 
     equal(other: Sampler): boolean {

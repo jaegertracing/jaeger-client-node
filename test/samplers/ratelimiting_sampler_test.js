@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 import {assert, expect} from 'chai';
-import ProbabilisticSampler from '../src/samplers/probabilistic_sampler.js';
-import RateLimitingSampler from '../src/samplers/ratelimiting_sampler.js';
+import ProbabilisticSampler from '../../src/samplers/probabilistic_sampler.js';
+import RateLimitingSampler from '../../src/samplers/ratelimiting_sampler.js';
 import sinon from 'sinon';
 
 describe ('ratelimiting sampler should', () => {
