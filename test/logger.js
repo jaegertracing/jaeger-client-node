@@ -1,4 +1,3 @@
-// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,7 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-declare class Logger {
-    info(msg: string): void;
-    error(msg: string): void;
-};
+import NullLogger from '../src/logger';
+
+describe ('NullLogger', () => {
+    it('should do nothing', () => {
+        let logger = new NullLogger();
+        logger.info('nothing');
+        logger.error('nothing');
+    });
+});
