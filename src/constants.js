@@ -47,10 +47,6 @@ export const SAMPLER_TYPE_PROBABILISTIC = 'probabilistic';
 // only up to a fixed number of traces per second.
 export const SAMPLER_TYPE_RATE_LIMITING = 'ratelimiting';
 
-// SAMPLER_TYPE_LOWER_BOUND is the type of sampler that samples
-// only up to a fixed number of traces per second.
-export const SAMPLER_TYPE_LOWER_BOUND = "lowerbound"
-
 // SAMPLER_TYPE_REMOTE is the type of sampler that polls Jaeger agent for sampling strategy.
 export const SAMPLER_TYPE_REMOTE = 'remote';
 
