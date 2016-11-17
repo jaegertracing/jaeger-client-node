@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 
 import {assert} from 'chai';
-import RateLimiter from '../src/leaky_bucket_rate_limiter';
+import RateLimiter from '../src/rate_limiter';
 import sinon from 'sinon';
 
 describe ('leaky bucket ratelimiter should', () => {

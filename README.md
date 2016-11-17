@@ -128,8 +128,8 @@ This allows using Jaeger UI to find the trace by this tag.
 
 
   [ci-img]: https://travis-ci.org/uber/jaeger-client-node.svg?branch=master
-  [cov-img]: https://coveralls.io/repos/github/uber/jaeger-client-node/badge.svg?branch=master
-  [npm-img]: https://badge.fury.io/js/jaeger-client.svg
   [ci]: https://travis-ci.org/uber/jaeger-client-node
-  [cov]: https://coveralls.io/github/uber/jaeger-client-$node?branch=master
+  [cov-img]: https://coveralls.io/repos/github/uber/jaeger-client-node/badge.svg?branch=master
+  [cov]: https://coveralls.io/github/uber/jaeger-client-node?branch=master
+  [npm-img]: https://badge.fury.io/js/jaeger-client.svg
   [npm]: https://www.npmjs.com/package/jaeger-client

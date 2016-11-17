@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 import {assert, expect} from 'chai';
-import ProbabilisticSampler from '../src/samplers/probabilistic_sampler.js';
-import RateLimitingSampler from '../src/samplers/ratelimiting_sampler.js';
+import ProbabilisticSampler from '../../src/samplers/probabilistic_sampler.js';
+import RateLimitingSampler from '../../src/samplers/ratelimiting_sampler.js';
 import sinon from 'sinon';
 
 describe ('ratelimiting sampler should', () => {
@@ -29,14 +29,22 @@ describe ('ratelimiting sampler should', () => {
         let clock = sinon.useFakeTimers(initialDate);
         let sampler = new RateLimitingSampler(10);
         for (let i = 0; i < 10; i++) {
-            sampler.isSampled(1);
+            sampler.isSampled('operation', {});
         }
 
         assert.equal(sampler.maxTracesPerSecond, 10);
         assert.isNotOk(sampler.equal(new ProbabilisticSampler(0.5)));
-        assert.equal(sampler.isSampled(), false, 'expected checkCredit to be false');
+
+        let tags = {};
+        let decision = sampler.isSampled('operation', tags);
+        assert.equal(decision, false, 'expected decision to be false');
+        assert.deepEqual(tags, {}, 'expected tags to be empty');
+
         clock = sinon.useFakeTimers(initialDate + 1000);
-        assert.equal(sampler.isSampled(), true, 'expected checkCredit to be true');
+        tags = {};
+        decision = sampler.isSampled('operation', tags);
+        assert.equal(decision, true, 'expected decision to be true');
+        assert.deepEqual(tags, {'sampler.type': 'ratelimiting', 'sampler.param': 10});
         clock.restore();
     });
 

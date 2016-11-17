@@ -121,12 +121,8 @@ export default class RemoteControlledSampler {
     }
 
 
-    isSampled(): boolean {
-        return this._sampler.isSampled();
-    }
-
-    getTags(): Array<Tag> {
-        return this._sampler.getTags();
+    isSampled(operation: string, tags: any): boolean {
+        return this._sampler.isSampled(operation, tags);
     }
 
     close(callback: Function): void {

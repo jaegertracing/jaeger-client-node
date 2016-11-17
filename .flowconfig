@@ -3,8 +3,7 @@
 
 [libs]
 ./src/_interfaces/
-./src/decls/
-./test/decls/
+./test/_interfaces/
 
 [options]
 unsafe.enable_getters_and_setters=true

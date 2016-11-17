@@ -59,15 +59,18 @@
   "scripts": {
     "add-license": "./node_modules/.bin/uber-licence",
     "check-license": "./node_modules/.bin/uber-licence --dry",
-    "copy-submodule": "git submodule init -- ./src/jaeger-idl && cp -R ./src/jaeger-idl ./dist/src/ && rm -rf ./dist/src/jaeger-idl/.git",
     "check-ls": "npm ls --loglevel=http --parseable 1>/dev/null && echo '# npm is in a good state'",
-    "cover": "./node_modules/.bin/babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/",
+    "cover": "babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/ test/samplers/",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
     "flow": "flow",
     "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed'",
     "lint-ci": "npm run lint && echo '# TODO: ADD npm run check-license'",
     "test": "make test",
     "test-ci": "npm run test && npm run lint-ci && npm run cover",
+    "test-all": "npm run test-core && npm run test-samplers && npm run test-crossdock",
+    "test-core": "mocha --compilers js:babel-core/register test",
+    "test-samplers": "mocha --compilers js:babel-core/register test/samplers",
+    "test-crossdock": "mocha --compilers js:babel-register crossdock/test",
     "show-cover": "open coverage/lcov-report/index.html"
   }
 }

@@ -20,27 +20,19 @@
 // THE SOFTWARE.
 
 import * as constants from '../constants.js';
-import RateLimiter from '../leaky_bucket_rate_limiter.js';
-import NullLogger from '../logger.js';
+import RateLimiter from '../rate_limiter.js';
 
 export default class RateLimitingSampler {
     _rateLimiter: RateLimiter;
     _maxTracesPerSecond: number;
-    _logger: any;
-    _tags: any;
 
-    constructor(maxTracesPerSecond: number, logger: any) {
-        this._logger = logger || new NullLogger();
-
+    constructor(maxTracesPerSecond: number) {
         if (maxTracesPerSecond < 0) {
             throw new Error(`maxTracesPerSecond must be greater than 0.0.  Received ${maxTracesPerSecond}`);
         }
 
         this._maxTracesPerSecond = maxTracesPerSecond;
         this._rateLimiter = new RateLimiter(maxTracesPerSecond);
-        this._tags = {};
-        this._tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_RATE_LIMITING;
-        this._tags[constants.SAMPLER_PARAM_TAG_KEY] = this._maxTracesPerSecond;
     }
 
     name(): string {
@@ -51,8 +43,13 @@ export default class RateLimitingSampler {
         return this._maxTracesPerSecond;
     }
 
-    isSampled(): boolean {
-        return this._rateLimiter.checkCredit(1.0);
+    isSampled(operation: string, tags: any): boolean {
+        let decision = this._rateLimiter.checkCredit(1.0);
+        if (decision) {
+            tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_RATE_LIMITING;
+            tags[constants.SAMPLER_PARAM_TAG_KEY] = this._maxTracesPerSecond;
+        }
+        return decision;
     }
 
     equal(other: Sampler): boolean {
@@ -61,10 +58,6 @@ export default class RateLimitingSampler {
         }
 
         return this.maxTracesPerSecond === other.maxTracesPerSecond;
-    }
-
-    getTags(): any {
-        return this._tags;
     }
 
     close(callback: Function): void {

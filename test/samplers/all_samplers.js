@@ -20,12 +20,13 @@
 
 import _ from 'lodash';
 import {assert, expect} from 'chai';
-import * as constants from '../src/constants.js';
-import ConstSampler from '../src/samplers/const_sampler.js';
-import ProbabilisticSampler from '../src/samplers/probabilistic_sampler.js';
-import RateLimitingSampler from '../src/samplers/ratelimiting_sampler.js';
-import RemoteSampler from '../src/samplers/remote_sampler.js';
-import Utils from '../src/util';
+import sinon from 'sinon';
+import * as constants from '../../src/constants.js';
+import ConstSampler from '../../src/samplers/const_sampler.js';
+import ProbabilisticSampler from '../../src/samplers/probabilistic_sampler.js';
+import RateLimitingSampler from '../../src/samplers/ratelimiting_sampler.js';
+import RemoteSampler from '../../src/samplers/remote_sampler.js';
+import Utils from '../../src/util';
 
 describe('samplers should', () => {
 
@@ -86,27 +87,40 @@ describe('samplers should', () => {
 
         it ('calls is Sampled, and returns false', () => {
             let sampler = new ProbabilisticSampler(0.0);
-            assert.isNotOk(sampler.isSampled());
+            let tags = {};
+            assert.isNotOk(sampler.isSampled('operation', tags));
+            assert.deepEqual(tags, {});
         });
     });
 
     it('return correct tags', () => {
         var samplers = [
-            {'sampler': new ConstSampler(true), 'type': constants.SAMPLER_TYPE_CONST, 'param': true},
-            {'sampler': new ConstSampler(false), 'type': constants.SAMPLER_TYPE_CONST, 'param': false},
-            {'sampler': new ProbabilisticSampler(0.1), 'type': constants.SAMPLER_TYPE_PROBABILISTIC, 'param': 0.1},
-            {'sampler': new RateLimitingSampler(2), 'type': constants.SAMPLER_TYPE_RATE_LIMITING, 'param': 2},
-            {'sampler': new RemoteSampler('some-caller-name'), 'type': constants.SAMPLER_TYPE_PROBABILISTIC, 'param': 0.001},
+            {sampler: new ConstSampler(true), 'type': constants.SAMPLER_TYPE_CONST, param: true, decision: true},
+            {sampler: new ConstSampler(false), 'type': constants.SAMPLER_TYPE_CONST, param: false, decision: false},
+            {sampler: new ProbabilisticSampler(1.0), 'type': constants.SAMPLER_TYPE_PROBABILISTIC, param: 1.0, decision: true},
+            {sampler: new RateLimitingSampler(2), 'type': constants.SAMPLER_TYPE_RATE_LIMITING, param: 2, decision: true},
+            {
+                sampler: new RemoteSampler('some-caller-name', {sampler: new ProbabilisticSampler(1.0)}),
+                'type': constants.SAMPLER_TYPE_PROBABILISTIC,
+                param: 1.0,
+                decision: true
+            },
         ];
 
         _.each(samplers, (samplerSetup) => {
             let sampler = samplerSetup['sampler'];
             let expectedTags = {};
-            expectedTags[constants.SAMPLER_TYPE_TAG_KEY] = samplerSetup['type'];
-            expectedTags[constants.SAMPLER_PARAM_TAG_KEY] = samplerSetup['param'];
-            let actualTags = sampler.getTags();
+            let expectedDecision = !!samplerSetup['decision'];
+            let description = `sampler ${sampler.name()}:${samplerSetup['param']} expectation`;
 
-            assert.isOk(_.isEqual(expectedTags, actualTags));
+            if (expectedDecision) {
+                expectedTags[constants.SAMPLER_TYPE_TAG_KEY] = samplerSetup['type'];
+                expectedTags[constants.SAMPLER_PARAM_TAG_KEY] = samplerSetup['param'];
+            }
+            let actualTags = {};
+            let decision = !!sampler.isSampled('operation', actualTags);
+            assert.equal(decision, expectedDecision, description);
+            assert.deepEqual(actualTags, expectedTags, description);
         });
     });
 });
