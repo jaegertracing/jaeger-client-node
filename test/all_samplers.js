@@ -99,7 +99,12 @@ describe('samplers should', () => {
             {sampler: new ConstSampler(false), 'type': constants.SAMPLER_TYPE_CONST, param: false, decision: false},
             {sampler: new ProbabilisticSampler(1.0), 'type': constants.SAMPLER_TYPE_PROBABILISTIC, param: 1.0, decision: true},
             {sampler: new RateLimitingSampler(2), 'type': constants.SAMPLER_TYPE_RATE_LIMITING, param: 2, decision: true},
-            // {sampler: new RemoteSampler('some-caller-name'), 'type': constants.SAMPLER_TYPE_PROBABILISTIC, param: 1.0, decision: true},
+            {
+                sampler: new RemoteSampler('some-caller-name', {sampler: new ProbabilisticSampler(1.0)}),
+                'type': constants.SAMPLER_TYPE_PROBABILISTIC,
+                param: 1.0,
+                decision: true
+            },
         ];
 
         _.each(samplers, (samplerSetup) => {
