@@ -21,12 +21,12 @@
 import _ from 'lodash';
 import {assert, expect} from 'chai';
 import sinon from 'sinon';
-import * as constants from '../src/constants.js';
-import ConstSampler from '../src/samplers/const_sampler.js';
-import ProbabilisticSampler from '../src/samplers/probabilistic_sampler.js';
-import RateLimitingSampler from '../src/samplers/ratelimiting_sampler.js';
-import RemoteSampler from '../src/samplers/remote_sampler.js';
-import Utils from '../src/util';
+import * as constants from '../../src/constants.js';
+import ConstSampler from '../../src/samplers/const_sampler.js';
+import ProbabilisticSampler from '../../src/samplers/probabilistic_sampler.js';
+import RateLimitingSampler from '../../src/samplers/ratelimiting_sampler.js';
+import RemoteSampler from '../../src/samplers/remote_sampler.js';
+import Utils from '../../src/util';
 
 describe('samplers should', () => {
 

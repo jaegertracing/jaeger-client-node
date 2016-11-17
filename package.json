@@ -68,6 +68,10 @@
     "lint-ci": "npm run lint && echo '# TODO: ADD npm run check-license'",
     "test": "make test",
     "test-ci": "npm run test && npm run lint-ci && npm run cover",
+    "test-all": "npm run test-core && npm run test-samplers && npm run test-crossdock",
+    "test-core": "mocha --compilers js:babel-core/register test",
+    "test-samplers": "mocha --compilers js:babel-core/register test/samplers",
+    "test-crossdock": "mocha --compilers js:babel-register crossdock/test",
     "show-cover": "open coverage/lcov-report/index.html"
   }
 }
