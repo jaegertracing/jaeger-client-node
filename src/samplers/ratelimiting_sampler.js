@@ -25,7 +25,6 @@ import RateLimiter from '../rate_limiter.js';
 export default class RateLimitingSampler {
     _rateLimiter: RateLimiter;
     _maxTracesPerSecond: number;
-    _tags: any;
 
     constructor(maxTracesPerSecond: number) {
         if (maxTracesPerSecond < 0) {
@@ -34,9 +33,6 @@ export default class RateLimitingSampler {
 
         this._maxTracesPerSecond = maxTracesPerSecond;
         this._rateLimiter = new RateLimiter(maxTracesPerSecond);
-        this._tags = {};
-        this._tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_RATE_LIMITING;
-        this._tags[constants.SAMPLER_PARAM_TAG_KEY] = this._maxTracesPerSecond;
     }
 
     name(): string {
@@ -47,8 +43,13 @@ export default class RateLimitingSampler {
         return this._maxTracesPerSecond;
     }
 
-    isSampled(operation: string): boolean {
-        return this._rateLimiter.checkCredit(1.0);
+    isSampled(operation: string, tags: any): boolean {
+        let decision = this._rateLimiter.checkCredit(1.0);
+        if (decision) {
+            tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_RATE_LIMITING;
+            tags[constants.SAMPLER_PARAM_TAG_KEY] = this._maxTracesPerSecond;
+        }
+        return decision;
     }
 
     equal(other: Sampler): boolean {
@@ -57,10 +58,6 @@ export default class RateLimitingSampler {
         }
 
         return this.maxTracesPerSecond === other.maxTracesPerSecond;
-    }
-
-    getTags(): any {
-        return this._tags;
     }
 
     close(callback: Function): void {

@@ -23,7 +23,6 @@ import * as constants from '../constants.js';
 
 export default class ProbabilisticSampler {
     _samplingRate: number;
-    _tags: any;
 
     constructor(samplingRate: number) {
         if (samplingRate < 0.0 || samplingRate > 1.0) {
@@ -31,21 +30,23 @@ export default class ProbabilisticSampler {
         }
 
         this._samplingRate = samplingRate;
-        this._tags = {};
-        this._tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_PROBABILISTIC;
-        this._tags[constants.SAMPLER_PARAM_TAG_KEY] = this._samplingRate;
     }
 
     name(): string {
         return 'ProbabilisticSampler';
     }
 
-    isSampled(operation: string): boolean {
-        return Math.random() < this._samplingRate;
-    }
-
     get samplingRate(): number {
         return this._samplingRate;
+    }
+
+    isSampled(operation: string, tags: any): boolean {
+        let decision = Math.random() < this._samplingRate;
+        if (decision) {
+            tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_PROBABILISTIC;
+            tags[constants.SAMPLER_PARAM_TAG_KEY] = this._samplingRate;
+        }
+        return decision;
     }
 
     equal(other: Sampler): boolean {
@@ -54,10 +55,6 @@ export default class ProbabilisticSampler {
         }
 
         return this.samplingRate === other.samplingRate;
-    }
-
-    getTags(): any {
-        return this._tags;
     }
 
     close(callback: Function): void {
