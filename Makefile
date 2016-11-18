@@ -5,6 +5,7 @@ publish: build-node
 	npm version $(shell ./scripts/version_prompt.sh)
 	# Make a pull request for this version.
 	# Follow internal instructions to publish npm through uber account.
+	# Update Changelog.md to relfect the newest version changes.
 
 .PHONY: test
 test: build-node
