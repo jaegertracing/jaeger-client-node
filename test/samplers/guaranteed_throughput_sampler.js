@@ -24,7 +24,7 @@ import GuaranteedThroughputSampler from '../../src/samplers/guaranteed_throughpu
 
 describe('GuaranteedThroughput sampler', () => {
     it('should have a name and be closable', () => {
-        let sampler = new GuaranteedThroughputSampler('testOperationName', 2, 0);
+        let sampler = new GuaranteedThroughputSampler(2, 0);
         assert.equal(sampler.name(), 'GuaranteedThroughputSampler');
 
         let callback = sinon.spy();
@@ -33,14 +33,14 @@ describe('GuaranteedThroughput sampler', () => {
     });
 
     it('should equal nothing', () => {
-        let sampler = new GuaranteedThroughputSampler('testOperationName', 2, 0);
+        let sampler = new GuaranteedThroughputSampler(2, 0);
         assert.isNotOk(sampler.equal({}));
         assert.isNotOk(sampler.equal(sampler));
         sampler.close();
     });
 
     it('should provide minimum throughput', () => {
-        let sampler = new GuaranteedThroughputSampler('testOperationName', 2, 0);
+        let sampler = new GuaranteedThroughputSampler(2, 0);
 
         let expectedTags = {'sampler.type': 'lowerbound', 'sampler.param': 0};
         [true, true, false].forEach((expectedDecision) => {
@@ -62,7 +62,7 @@ describe('GuaranteedThroughput sampler', () => {
     });
 
     it('should become probabilistic after minimum throughput', () => {
-        let sampler = new GuaranteedThroughputSampler('testOperationName', 2, 1.0);
+        let sampler = new GuaranteedThroughputSampler(2, 1.0);
 
         let expectedTagsLB = {'sampler.type': 'lowerbound', 'sampler.param': 1.0};
         let expectedTagsProb = {'sampler.type': 'probabilistic', 'sampler.param': 1.0};
