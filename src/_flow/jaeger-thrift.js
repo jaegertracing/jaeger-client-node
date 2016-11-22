@@ -19,8 +19,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// Counter tracks the number of times an event has occurred
-declare interface Counter {
-    // Add adds the given value to the counter.
-    increment(delta: number): void;
-}
+declare type Tag = {
+    key: string,
+    value: any
+};
+
+declare type LogData = {
+    timestamp: number,
+    fields: Array<Tag>
+};
+
+declare type Process = {
+    serviceName: string,
+    tags: Array<Tag>
+};
+
+declare type Batch = {
+    process: Process,
+    spans: Array<any>
+};
+
+declare type Reference = {
+    type(): string;
+    referencedContext(): SpanContext;
+};

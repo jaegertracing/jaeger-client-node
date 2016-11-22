@@ -19,6 +19,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+// Counter tracks the number of times an event has occurred
+declare interface Counter {
+    // Adds the given value to the counter.
+    increment(delta: number): void;
+}
+
+// Timer tracks how long an operation took and also computes percentiles.
+declare interface Timer {
+    // Records the time passed in.
+    // TODO what are the units of measurement for the value?
+    // TODO consider replacing this with Histogram
+    record(value: number): void;
+}
+
+// Gauge returns instantaneous measurements of something as an int64 value
+declare interface Gauge {
+    // Update the gauge to the value passed in.
+    update(value: number): void;
+}
+
 declare interface MetricFactory {
     createCounter(name: string, tags: any): Counter;
     createTimer(name: string, tags: any): Timer;

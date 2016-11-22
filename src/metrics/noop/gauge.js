@@ -20,5 +20,5 @@
 // THE SOFTWARE.
 
 export default class NoopGauge {
-    gauge(value: number): void {}
+    update(value: number): void {}
 }

@@ -30,7 +30,7 @@ export default class LocalGauge {
         this._backend = backend;
     }
 
-    gauge(value: number): void {
+    update(value: number): void {
         this._backend.gauge(this._name, value, this._tags);
     }
 }
