@@ -19,8 +19,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// Gauge returns instantaneous measurements of something as an int64 value
-declare interface Gauge {
-    // Update the gauge to the value passed in.
-    gauge(value: number): void;
-}
+import SpanContext from '../span_context.js';
+
+// startSpanOptions is used to type-check Trace.startSpan() options.
+declare type startSpanOptions = {
+    operationName?: string,
+    childOf?: SpanContext,
+    references?: Array<Reference>,
+    tags?: any,
+    startTime?: number,
+};

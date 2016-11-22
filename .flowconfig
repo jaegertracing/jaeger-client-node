@@ -2,8 +2,8 @@
 ./node_modules/
 
 [libs]
-./src/_interfaces/
-./test/_interfaces/
+./src/_flow/
+./test/_flow/
 
 [options]
 unsafe.enable_getters_and_setters=true

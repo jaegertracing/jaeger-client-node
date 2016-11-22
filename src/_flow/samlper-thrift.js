@@ -19,8 +19,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// Counter tracks the number of times an event has occurred
-declare interface Counter {
-    // Add adds the given value to the counter.
-    increment(delta: number): void;
+declare type ProbabilisticSamplingStrategy = {
+    samplingRate: number
+};
+
+declare type RateLimitingSamplingStrategy = {
+    maxTracesPerSecond: number
+};
+
+// OperationSamplingStrategy defines a sampling strategy for a given operation
+// that randomly samples a fixed percentage of traces.
+declare type OperationSamplingStrategy = {
+    operation: string,
+    probabilisticSampling: ProbabilisticSamplingStrategy
+};
+
+// PerOperationSamplingStrategies defines a collection of sampling strategies
+// per operation name, and a pair of parameters for the default sampling strategy
+// applicable to unknown operation names.
+declare type PerOperationSamplingStrategies = {
+    defaultSamplingProbability: number,
+    defaultLowerBoundTracesPerSecond: number,
+    perOperationStrategies: Array<OperationSamplingStrategy>
 }
+
+declare type SamplingStrategyResponse = {
+    strategyType: number,
+    probabilisticSampling?: ProbabilisticSamplingStrategy,
+    rateLimitingSampling?: RateLimitingSamplingStrategy
+};

@@ -19,8 +19,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import SpanContext from '../span_context.js';
-
 declare type Tag = {
     key: string,
     value: any
@@ -41,55 +39,7 @@ declare type Batch = {
     spans: Array<any>
 };
 
-declare type Endpoint = {
-    ipv4: number,
-    port: number,
-    serviceName: string
-};
-
-declare type Annotation = {
-    timestamp: number,
-    value: string,
-    host: ?Endpoint
-};
-
-declare type BinaryAnnotation = {
-    key: string,
-    value: any,
-    annotationType: string,
-    host: ?Endpoint
-};
-
 declare type Reference = {
     type(): string;
     referencedContext(): SpanContext;
-};
-
-declare type startSpanArgs = {
-    operationName?: string,
-    childOf?: SpanContext,
-    references?: Array<Reference>,
-    tags?: any,
-    startTime?: number,
-};
-
-declare type ProbabilisticSamplingStrategy = {
-    samplingRate: number
-};
-
-declare type RateLimitingSamplingStrategy = {
-    maxTracesPerSecond: number
-};
-
-declare type SamplingStrategyResponse = {
-    strategyType: number,
-    probabilisticSampling?: ProbabilisticSamplingStrategy,
-    rateLimitingSampling?: RateLimitingSamplingStrategy
-};
-
-declare type TChannelSpan = {
-    id: Array<number>,
-    traceid: Array<number>,
-    parentid: Array<number>,
-    flags: number
 };
