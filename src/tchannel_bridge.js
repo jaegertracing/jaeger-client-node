@@ -139,7 +139,7 @@ export default class TChannelBridge {
         return channel;
     }
 
-    static makeFakeTChannelParentSpan(): TChannelSpan {
+    static makeFakeTChannelParentSpan(): any {
         return {
             id: [0, 0],
             traceid: [0, 0],

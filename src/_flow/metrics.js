@@ -21,7 +21,7 @@
 
 // Counter tracks the number of times an event has occurred
 declare interface Counter {
-    // Add adds the given value to the counter.
+    // Adds the given value to the counter.
     increment(delta: number): void;
 }
 
