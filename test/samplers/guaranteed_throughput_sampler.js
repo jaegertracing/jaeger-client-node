@@ -98,4 +98,28 @@ describe('GuaranteedThroughput sampler', () => {
 
         sampler.close();
     });
+
+    it('should update only the parts that changed', () => {
+        let sampler = new GuaranteedThroughputSampler(2, 1.0);
+
+        let assertValues = function assertValues(lb, rate) {
+            assert.equal(lb, sampler._lowerBound);
+            assert.equal(rate, sampler._samplingRate);
+        };
+
+        assertValues(2, 1.0);
+
+        let p1 = sampler._probabilisticSampler;
+        let p2 = sampler._lowerBoundSampler;
+        sampler.update(3, 1.0);
+        assert.isOk(p1 === sampler._probabilisticSampler);
+        assert.isNotOk(p2 === sampler._lowerBoundSampler);
+        assertValues(3, 1.0);
+
+        p2 = sampler._lowerBoundSampler;
+        sampler.update(3, 0.9);
+        assert.isNotOk(p1 === sampler._probabilisticSampler);
+        assert.isOk(p2 === sampler._lowerBoundSampler);
+        assertValues(3, 0.9);
+    });
 });

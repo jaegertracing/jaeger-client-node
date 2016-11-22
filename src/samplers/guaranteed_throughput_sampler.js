@@ -79,4 +79,15 @@ export default class GuaranteedThroughputSampler {
             callback();
         }
     }
+
+    update(lowerBound: number, samplingRate: number): void {
+        if (this._samplingRate != samplingRate) {
+            this._samplingRate = samplingRate;
+            this._probabilisticSampler =  new ProbabilisticSampler(samplingRate);
+        }
+        if (this._lowerBound != lowerBound) {
+            this._lowerBound = lowerBound;
+            this._lowerBoundSampler = new RateLimitingSampler(lowerBound);
+        }
+    }
 }
