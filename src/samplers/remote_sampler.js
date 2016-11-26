@@ -35,35 +35,46 @@ const RATELIMITING_STRATEGY_TYPE = 1;
 
 export default class RemoteControlledSampler {
 
+    _serviceName: string;
     _sampler: Sampler;
-    _callerName: string;
-    _logger: any;
-    _host: string;
-    _port: number;
-    _timeoutHandle: any;
-    _intervalHandle: any;
+    _logger: Logger;
+    _metrics: Metrics;
+
     _onSamplerUpdate: Function;
     _refreshInterval: number;
-    _metrics: any;
 
-    constructor(callerName: string,
-                options: any = {}) {
+    _host: string;
+    _port: number;
+    _initialDelayTimeoutHandle: any;
+    _refreshIntervalHandle: any;
 
-        this._callerName = callerName;
+    /**
+     * Creates a sampler remotely controlled by jaeger-agent.
+     *
+     * @param {string} [serviceName] - name of the current service / application, same as given to Tracer
+     * @param {object} [options] - optional settings
+     * @param {object} [options.sampler] - initial sampler to use prior to retrieving strategies from Agent
+     * @param {object} [options.logger] - optional logger, see _flow/logger.js
+     * @param {object} [options.metrics] - instance of Metrics object
+     * @param {number} [refreshInterval] - interval in milliseconds before sampling strategy refreshes (0 to not refresh)
+     * @param {string} [host] - host for jaeger-agent, defaults to 'localhost'
+     * @param {number} [port] - port for jaeger-agent for SamplingManager endpoint
+     * @param {function} [onSamplerUpdate]
+     */
+    constructor(serviceName: string, options: any = {}) {
+        this._serviceName = serviceName;
         this._sampler = options.sampler || new ProbabilisticSampler(DEFAULT_INITIAL_SAMPLING_RATE);
         this._logger = options.logger || new NullLogger();
+        this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
         this._refreshInterval = options.refreshInterval || SAMPLING_REFRESH_INTERVAL;
+        this._onSamplerUpdate = options.onSamplerUpdate || function onSamplerUpdate(sampler: Sampler) {};
 
-        let randomDelay: number = Math.random() * this._refreshInterval;
-        this._onSamplerUpdate = options.onSamplerUpdate;
         this._host = options.host || DEFAULT_SAMPLING_HOST;
         this._port = options.port || DEFAULT_SAMPLING_PORT;
-        this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
 
-        if (!options.stopPolling) {
-            this._timeoutHandle = setTimeout(() => {
-                this._intervalHandle = setInterval(this._refreshSamplingStrategy.bind(this), this._refreshInterval);
-            }, randomDelay);
+        if (options.refreshInterval !== 0) {
+            let randomDelay: number = Math.random() * this._refreshInterval;
+            this._initialDelayTimeoutHandle = setTimeout(this._afterInitialDelay.bind(this), randomDelay);
         }
     }
 
@@ -71,8 +82,15 @@ export default class RemoteControlledSampler {
         return 'RemoteSampler';
     }
 
+    _afterInitialDelay(): void {
+        this._refreshIntervalHandle = setInterval(
+            this._refreshSamplingStrategy.bind(this),
+            this._refreshInterval
+        );
+    }
+
     _refreshSamplingStrategy() {
-        this._getSamplingStrategy(this._callerName);
+        this._getSamplingStrategy(this._serviceName);
     }
 
     _getSamplingStrategy(callerName: string): ?SamplingStrategyResponse  {
@@ -81,14 +99,14 @@ export default class RemoteControlledSampler {
             if (err) {
                 this._logger.error('Error in fetching sampling strategy.');
                 this._metrics.samplerQueryFailure.increment(1);
-                if (this._onSamplerUpdate) {
-                    this._onSamplerUpdate();
-                }
+                this._onSamplerUpdate();
                 return null;
             }
 
             let strategy = JSON.parse(response.body);
             this._setSampler(strategy);
+
+            this._onSamplerUpdate(this._sampler);
         });
     }
 
@@ -114,10 +132,6 @@ export default class RemoteControlledSampler {
             this._sampler = newSampler;
             this._metrics.samplerUpdated.increment(1);
         }
-
-        if (this._onSamplerUpdate) {
-            this._onSamplerUpdate(this._sampler);
-        }
     }
 
 
@@ -126,8 +140,8 @@ export default class RemoteControlledSampler {
     }
 
     close(callback: Function): void {
-        clearTimeout(this._timeoutHandle);
-        clearInterval(this._intervalHandle);
+        clearTimeout(this._initialDelayTimeoutHandle);
+        clearInterval(this._refreshIntervalHandle);
 
         if (callback) {
             callback();

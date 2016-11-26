@@ -39,7 +39,7 @@ declare interface Gauge {
     update(value: number): void;
 }
 
-declare interface MetricFactory {
+declare interface MetricsFactory {
     createCounter(name: string, tags: any): Counter;
     createTimer(name: string, tags: any): Timer;
     createGauge(name: string, tags: any): Gauge;

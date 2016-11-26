@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,7 +23,7 @@ import NullLogger from '../src/logger';
 
 describe ('NullLogger', () => {
     it('should do nothing', () => {
-        let logger = new NullLogger();
+        let logger: Logger = new NullLogger();
         logger.info('nothing');
         logger.error('nothing');
     });
