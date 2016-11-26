@@ -19,7 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-declare class Logger {
+declare interface Logger {
     info(msg: string): void;
     error(msg: string): void;
 };

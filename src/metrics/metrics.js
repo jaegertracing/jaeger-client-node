@@ -20,7 +20,7 @@
 // THE SOFTWARE.
 
 export default class Metrics {
-    _factory: MetricFactory;
+    _factory: MetricsFactory;
     tracesStartedSampled: Counter;
     tracesStartedNotSampled: Counter;
     tracesJoinedSampled: Counter;
@@ -39,7 +39,7 @@ export default class Metrics {
     samplerQueryFailure: Counter;
     samplerParsingFailure: Counter;
 
-    constructor(factory: MetricFactory) {
+    constructor(factory: MetricsFactory) {
         this._factory = factory;
 
         this.tracesStartedSampled = this._factory.createCounter('traces', {
