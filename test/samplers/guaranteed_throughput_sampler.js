@@ -61,50 +61,13 @@ describe('GuaranteedThroughput sampler', () => {
         sampler.close();
     });
 
-    it('should become probabilistic after minimum throughput', () => {
-        let sampler = new GuaranteedThroughputSampler(2, 1.0);
-
-        let expectedTagsLB = {'sampler.type': 'lowerbound', 'sampler.param': 1.0};
-        let expectedTagsProb = {'sampler.type': 'probabilistic', 'sampler.param': 1.0};
-
-        // The sampler is setup with 2 traces per second and 100% probability otherwise.
-        // The 100% probability takes precedence over lower-bound, so we manipulate
-        // the probability for every iteration.
-        [
-            // 100% probability triggers probabilistic sampler
-            {probability: 1, sampled: true, tags: expectedTagsProb},
-            // 0% probability triggers lower-bound sampler
-            {probability: 0, sampled: true, tags: expectedTagsLB},
-            // 0% probability results in sampled=false because rate limit was reached 
-            {probability: 0, sampled: false, tags: {}},
-            // 100% probability triggers probabilitic sampler again
-            {probability: 1, sampled: true, tags: expectedTagsProb}
-        ].forEach((testCase) => {
-            // override probability
-            sampler._probabilisticSampler._samplingRate = testCase.probability;
-            let expectedDecision = testCase.sampled;
-            let expectedTags = testCase.tags;
-
-            let actualTags = {};
-            let decision = sampler.isSampled('testOperationName', actualTags);
-            if (expectedDecision) {
-                assert.isOk(decision, `must sample, test case ${testCase}`);
-                assert.deepEqual(expectedTags, actualTags, `must match tags, test case ${testCase}`);
-            } else {
-                assert.isNotOk(decision, `must not sample, test case ${testCase}`);
-                assert.deepEqual({}, actualTags, `must not have tags, test case ${testCase}`);
-            }
-        });
-
-        sampler.close();
-    });
 
     it('should update only the parts that changed', () => {
         let sampler = new GuaranteedThroughputSampler(2, 1.0);
 
         let assertValues = function assertValues(lb, rate) {
-            assert.equal(lb, sampler._lowerBound);
-            assert.equal(rate, sampler._samplingRate);
+            assert.equal(lb, sampler._lowerBoundSampler.maxTracesPerSecond);
+            assert.equal(rate, sampler._probabilisticSampler.samplingRate);
         };
 
         assertValues(2, 1.0);
@@ -121,5 +84,47 @@ describe('GuaranteedThroughput sampler', () => {
         assert.isNotOk(p1 === sampler._probabilisticSampler);
         assert.isOk(p2 === sampler._lowerBoundSampler);
         assertValues(3, 0.9);
+    });
+
+    it('should become probabilistic after minimum throughput', () => {
+        let sampler = new GuaranteedThroughputSampler(2, 1.0);
+
+        let expectedTagsLB = {'sampler.type': 'lowerbound', 'sampler.param': 0.0};
+        let expectedTagsProb = {'sampler.type': 'probabilistic', 'sampler.param': 1.0};
+
+        // The sampler is setup with 2 traces per second and 100% probability otherwise.
+        // The 100% probability takes precedence over lower-bound, so we manipulate
+        // the probability for every iteration.
+        [
+            // 100% probability triggers probabilistic sampler
+            {num: 1, probability: 1, sampled: true, tags: expectedTagsProb},
+            // 0% probability triggers lower-bound sampler
+            {num: 2, probability: 0, sampled: true, tags: expectedTagsLB},
+            // 0% probability results in sampled=false because rate limit was reached 
+            {num: 3, probability: 0, sampled: false, tags: {}},
+            // 100% probability triggers probabilitic sampler again
+            {num: 4, probability: 1, sampled: true, tags: expectedTagsProb}
+        ].forEach((testCase) => {
+            // override probability, and do a sanity check
+            let s = sampler._lowerBoundSampler;
+            sampler.update(2, testCase.probability);
+            assert.strictEqual(s, sampler._lowerBoundSampler, 'lower bound sampled unchanged');
+            assert.equal(sampler._probabilisticSampler.samplingRate, testCase.probability);
+
+            let expectedDecision = testCase.sampled;
+            let expectedTags = testCase.tags;
+
+            let actualTags = {};
+            let decision = sampler.isSampled('testOperationName', actualTags);
+            if (expectedDecision) {
+                assert.isOk(decision, `must sample, test case ${testCase.num}`);
+                assert.deepEqual(expectedTags, actualTags, `must match tags, test case ${testCase.num}`);
+            } else {
+                assert.isNotOk(decision, `must not sample, test case ${testCase.num}`);
+                assert.deepEqual({}, actualTags, `must not have tags, test case ${testCase.num}`);
+            }
+        });
+
+        sampler.close();
     });
 });

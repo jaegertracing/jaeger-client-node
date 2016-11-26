@@ -31,15 +31,11 @@ import RateLimitingSampler from './ratelimiting_sampler.js';
 // The probabilisticSampler is given higher priority when tags are emitted, ie. if IsSampled() for both
 // samplers return true, the tags for probabilisticSampler will be used.
 export default class GuaranteedThroughputSampler {
-    _samplingRate:         number;
-    _lowerBound:           number;
-    _probabilisticSampler: Sampler;
-    _lowerBoundSampler:    Sampler;
+    _probabilisticSampler: ProbabilisticSampler;
+    _lowerBoundSampler:    RateLimitingSampler;
     _tagsPlaceholder:      any;
 
     constructor(lowerBound: number, samplingRate: number) {
-        this._samplingRate = samplingRate;
-        this._lowerBound = lowerBound;
         this._probabilisticSampler =  new ProbabilisticSampler(samplingRate);
         this._lowerBoundSampler = new RateLimitingSampler(lowerBound);
         // we never let the lowerBoundSampler return its real tags, so avoid allocations
@@ -60,7 +56,7 @@ export default class GuaranteedThroughputSampler {
         let decision = this._lowerBoundSampler.isSampled(operation, this._tagsPlaceholder);
         if (decision) {
             tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_LOWER_BOUND;
-            tags[constants.SAMPLER_PARAM_TAG_KEY] = this._samplingRate;
+            tags[constants.SAMPLER_PARAM_TAG_KEY] = this._probabilisticSampler.samplingRate;
         }
         return decision;
     }
@@ -81,12 +77,10 @@ export default class GuaranteedThroughputSampler {
     }
 
     update(lowerBound: number, samplingRate: number): void {
-        if (this._samplingRate != samplingRate) {
-            this._samplingRate = samplingRate;
-            this._probabilisticSampler =  new ProbabilisticSampler(samplingRate);
+        if (this._probabilisticSampler.samplingRate != samplingRate) {
+            this._probabilisticSampler = new ProbabilisticSampler(samplingRate);
         }
-        if (this._lowerBound != lowerBound) {
-            this._lowerBound = lowerBound;
+        if (this._lowerBoundSampler.maxTracesPerSecond != lowerBound) {
             this._lowerBoundSampler = new RateLimitingSampler(lowerBound);
         }
     }

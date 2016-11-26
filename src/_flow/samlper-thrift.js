@@ -46,5 +46,6 @@ declare type PerOperationSamplingStrategies = {
 declare type SamplingStrategyResponse = {
     strategyType: number,
     probabilisticSampling?: ProbabilisticSamplingStrategy,
-    rateLimitingSampling?: RateLimitingSamplingStrategy
+    rateLimitingSampling?: RateLimitingSamplingStrategy,
+    operationSampling?: PerOperationSamplingStrategies
 };
