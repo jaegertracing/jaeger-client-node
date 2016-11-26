@@ -56,11 +56,10 @@ export default class RemoteControlledSampler {
      * @param {object} [options.sampler] - initial sampler to use prior to retrieving strategies from Agent
      * @param {object} [options.logger] - optional logger, see _flow/logger.js
      * @param {object} [options.metrics] - instance of Metrics object
-     * @param {number} [refreshInterval]
+     * @param {number} [refreshInterval] - interval in milliseconds before sampling strategy refreshes (0 to not refresh)
      * @param {string} [host] - host for jaeger-agent, defaults to 'localhost'
      * @param {number} [port] - port for jaeger-agent for SamplingManager endpoint
      * @param {function} [onSamplerUpdate]
-     * @param {boolean} [stopPolling]
      */
     constructor(serviceName: string, options: any = {}) {
         this._serviceName = serviceName;
@@ -73,7 +72,7 @@ export default class RemoteControlledSampler {
         this._host = options.host || DEFAULT_SAMPLING_HOST;
         this._port = options.port || DEFAULT_SAMPLING_PORT;
 
-        if (!options.stopPolling) {
+        if (options.refreshInterval !== 0) {
             let randomDelay: number = Math.random() * this._refreshInterval;
             this._initialDelayTimeoutHandle = setTimeout(this._afterInitialDelay.bind(this), randomDelay);
         }
@@ -106,6 +105,8 @@ export default class RemoteControlledSampler {
 
             let strategy = JSON.parse(response.body);
             this._setSampler(strategy);
+
+            this._onSamplerUpdate(this._sampler);
         });
     }
 
@@ -131,8 +132,6 @@ export default class RemoteControlledSampler {
             this._sampler = newSampler;
             this._metrics.samplerUpdated.increment(1);
         }
-
-        this._onSamplerUpdate(this._sampler);
     }
 
 

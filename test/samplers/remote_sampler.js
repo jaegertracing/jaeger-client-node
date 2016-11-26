@@ -39,7 +39,7 @@ describe('remote sampler should', () => {
     it('set probabilistic sampler', (done) => {
         let metrics = new Metrics(new LocalMetricFactory());
         let sampler = new RemoteSampler('probabilistic-service', {
-            stopPolling: true,
+            refreshInterval: 0,
             metrics: metrics,
             onSamplerUpdate: (sampler) => {
                 assert.equal(sampler._samplingRate, 1.0);
@@ -59,7 +59,7 @@ describe('remote sampler should', () => {
         let logger = new MockLogger();
         let metrics = new Metrics(new LocalMetricFactory());
         let sampler = new RemoteSampler('error-service', {
-            stopPolling: true,
+            refreshInterval: 0,
             metrics: metrics,
             logger: logger,
             onSamplerUpdate: () => {
@@ -77,7 +77,7 @@ describe('remote sampler should', () => {
 
     it('set ratelimiting sampler', (done) => {
         let sampler = new RemoteSampler('ratelimiting-service', {
-            stopPolling: true,
+            refreshInterval: 0,
             onSamplerUpdate: (sampler) => {
                 let expectedMaxTracesPerSecond = 10;
                 assert.equal(sampler._maxTracesPerSecond, expectedMaxTracesPerSecond);
@@ -101,7 +101,7 @@ describe('remote sampler should', () => {
         let logger = new MockLogger();
         let metrics = new Metrics(new LocalMetricFactory());
         let sampler = new RemoteSampler('error-service', {
-            stopPolling: true,
+            refreshInterval: 0,
             metrics: metrics,
             logger: logger,
             onSamplerUpdate: () => {
