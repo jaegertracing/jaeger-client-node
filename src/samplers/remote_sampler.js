@@ -22,12 +22,14 @@
 import request from 'request';
 import ProbabilisticSampler from './probabilistic_sampler.js';
 import RateLimitingSampler from './ratelimiting_sampler.js';
+import PerOperationSampler from './per_operation_sampler.js';
 import Metrics from '../metrics/metrics.js';
 import NullLogger from '../logger.js';
 import NoopMetricFactory from '../metrics/noop/metric_factory';
 
 const DEFAULT_INITIAL_SAMPLING_RATE = 0.001;
-const SAMPLING_REFRESH_INTERVAL = 60000;
+const DEFAULT_REFRESH_INTERVAL = 60000;
+const DEFAULT_MAX_OPERATIONS = 2000;
 const DEFAULT_SAMPLING_HOST = '0.0.0.0';
 const DEFAULT_SAMPLING_PORT = 5778;
 const PROBABILISTIC_STRATEGY_TYPE = 0;
@@ -40,11 +42,13 @@ export default class RemoteControlledSampler {
     _logger: Logger;
     _metrics: Metrics;
 
-    _onSamplerUpdate: Function;
     _refreshInterval: number;
-
     _host: string;
     _port: number;
+    _maxOperations: number;
+
+    _onSamplerUpdate: Function;
+
     _initialDelayTimeoutHandle: any;
     _refreshIntervalHandle: any;
 
@@ -59,6 +63,7 @@ export default class RemoteControlledSampler {
      * @param {number} [refreshInterval] - interval in milliseconds before sampling strategy refreshes (0 to not refresh)
      * @param {string} [host] - host for jaeger-agent, defaults to 'localhost'
      * @param {number} [port] - port for jaeger-agent for SamplingManager endpoint
+     * @param {number} [maxOperations] - max number of operations to track in PerOperationSampler
      * @param {function} [onSamplerUpdate]
      */
     constructor(serviceName: string, options: any = {}) {
@@ -66,11 +71,12 @@ export default class RemoteControlledSampler {
         this._sampler = options.sampler || new ProbabilisticSampler(DEFAULT_INITIAL_SAMPLING_RATE);
         this._logger = options.logger || new NullLogger();
         this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
-        this._refreshInterval = options.refreshInterval || SAMPLING_REFRESH_INTERVAL;
-        this._onSamplerUpdate = options.onSamplerUpdate || function onSamplerUpdate(sampler: Sampler) {};
-
+        this._refreshInterval = options.refreshInterval || DEFAULT_REFRESH_INTERVAL;
         this._host = options.host || DEFAULT_SAMPLING_HOST;
         this._port = options.port || DEFAULT_SAMPLING_PORT;
+        this._maxOperations = options.maxOperations || DEFAULT_MAX_OPERATIONS;
+
+        this._onSamplerUpdate = options.onSamplerUpdate || function onSamplerUpdate(sampler: Sampler) {};
 
         if (options.refreshInterval !== 0) {
             let randomDelay: number = Math.random() * this._refreshInterval;
@@ -94,48 +100,62 @@ export default class RemoteControlledSampler {
     }
 
     _refreshSamplingStrategy() {
-        this._getSamplingStrategy(this._serviceName);
-    }
-
-    _getSamplingStrategy(callerName: string): ?SamplingStrategyResponse  {
-        let encodedCaller: string = encodeURIComponent(callerName);
-        request.get(`http://${this._host}:${this._port}/?service=${encodedCaller}`, (err, response) => {
+        let serviceName: string = encodeURIComponent(this._serviceName);
+        let url: string = `http://${this._host}:${this._port}/?service=${serviceName}`;
+        request.get(url, (err, response) => {
             if (err) {
-                this._logger.error('Error in fetching sampling strategy.');
+                this._logger.error(`Error in fetching sampling strategy from ${url}: ${err}.`);
                 this._metrics.samplerQueryFailure.increment(1);
-                this._onSamplerUpdate();
-                return null;
+                return;
             }
-
-            let strategy = JSON.parse(response.body);
-            this._setSampler(strategy);
-
-            this._onSamplerUpdate(this._sampler);
+            this._metrics.samplerRetrieved.increment(1);
+            let strategy;
+            try {
+                strategy = JSON.parse(response.body);
+            } catch (error) {
+                this._logger.error(`Error in parsing sampling strategy: ${error}.`);
+                this._metrics.samplerParsingFailure.increment(1);
+                return;
+            }
+            if (strategy) {
+                try {
+                    if (this._updateSampler(strategy)) {
+                        this._metrics.samplerUpdated.increment(1);
+                        this._onSamplerUpdate(this._sampler);
+                    }
+                } catch (error) {
+                    this._logger.error(`Error in updating sampler: ${error}.`);
+                    this._metrics.samplerParsingFailure.increment(1);
+                }
+            }
         });
     }
 
-    _setSampler(strategy: ?SamplingStrategyResponse): void {
-        if (!strategy) {
-            return;
+    _updateSampler(response: ?SamplingStrategyResponse): boolean {
+        if (typeof(this._sampler) instanceof PerOperationSampler) {
+            this._sampler.update(response);
+            return true;
         }
-
-        let newSampler;
-        if (strategy.strategyType === PROBABILISTIC_STRATEGY_TYPE && strategy.probabilisticSampling) {
-            let samplingRate = strategy.probabilisticSampling.samplingRate;
+        if (response.operationSampling) {
+            this._sampler = new PerOperationSampler(response.operationSampling, this._maxOperations);
+            return true;
+        }
+        let newSampler: Sampler;
+        if (response.strategyType === PROBABILISTIC_STRATEGY_TYPE && response.probabilisticSampling) {
+            let samplingRate = response.probabilisticSampling.samplingRate;
             newSampler = new ProbabilisticSampler(samplingRate);
-        } else if (strategy.strategyType === RATELIMITING_STRATEGY_TYPE && strategy.rateLimitingSampling) {
-            let maxTracesPerSecond = strategy.rateLimitingSampling.maxTracesPerSecond;
+        } else if (response.strategyType === RATELIMITING_STRATEGY_TYPE && response.rateLimitingSampling) {
+            let maxTracesPerSecond = response.rateLimitingSampling.maxTracesPerSecond;
             newSampler = new RateLimitingSampler(maxTracesPerSecond);
         } else {
-            this._metrics.samplerParsingFailure.increment(1);
-            this._logger.error('Unrecognized strategy type: ' + JSON.stringify({error: strategy}));
+            throw 'Malformed response: ' + JSON.stringify({error: response});
         }
-        this._metrics.samplerRetrieved.increment(1);
 
         if (newSampler && (!this._sampler.equal(newSampler))) {
             this._sampler = newSampler;
-            this._metrics.samplerUpdated.increment(1);
+            return true;
         }
+        return false;
     }
 
 
