@@ -19,7 +19,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import _ from 'lodash';
 import {assert, expect} from 'chai';
 import sinon from 'sinon';
 import * as constants from '../../src/constants.js';
@@ -31,9 +30,8 @@ import PerOperationSampler from '../../src/samplers/per_operation_sampler.js';
 import RemoteSampler from '../../src/samplers/remote_sampler.js';
 import Utils from '../../src/util';
 
-describe('samplers should', () => {
-
-    describe('All Samplers', () => {
+describe('All samplers', () => {
+    describe('should support close()', () => {
         let samplers = Utils.combinations({
             useCallback: [true, false],
             sampler: [
@@ -51,8 +49,8 @@ describe('samplers should', () => {
             ]
         });
 
-        _.each(samplers, (o) => {
-            it ('should support close() - ' + o.description, () => {
+        samplers.forEach((o) => {
+            it (o.description, () => {
                 if (o.useCallback) {
                     let closeCallback = sinon.spy();
                     o.sampler.close(closeCallback);
@@ -64,43 +62,7 @@ describe('samplers should', () => {
         });
     });
 
-    describe('ConstSampler', () => {
-        let sampler;
-        before(() => {
-            sampler = new ConstSampler(true);
-        });
-
-        it('decision reflects given parameter', () => {
-            assert.isOk(sampler.decision);
-        });
-
-        it ('does NOT equal another type of sampler', () => {
-            let otherSampler = new ProbabilisticSampler(0.5);
-            let equals = sampler.equal(otherSampler);
-            assert.isNotOk(equals);
-        });
-
-        it ('does equal the same type of sampler', () => {
-            let otherSampler = new ConstSampler(true);
-            let equals = sampler.equal(otherSampler);
-            assert.isOk(equals);
-        });
-    });
-
-    describe('ProbabilisticSampler', () => {
-        it ('throws error on out of range sampling rate', () => {
-            expect(() => { new ProbabilisticSampler(2.0); }).to.throw('The sampling rate must be less than 0.0 and greater than 1.0. Received 2');
-        });
-
-        it ('calls is Sampled, and returns false', () => {
-            let sampler = new ProbabilisticSampler(0.0);
-            let tags = {};
-            assert.isNotOk(sampler.isSampled('operation', tags));
-            assert.deepEqual(tags, {});
-        });
-    });
-
-    it('return correct tags', () => {
+    describe('should return correct tags', () => {
         var samplers = [
             {sampler: new ConstSampler(true), 'type': constants.SAMPLER_TYPE_CONST, param: true, decision: true},
             {sampler: new ConstSampler(false), 'type': constants.SAMPLER_TYPE_CONST, param: false, decision: false},
@@ -114,20 +76,59 @@ describe('samplers should', () => {
             },
         ];
 
-        _.each(samplers, (samplerSetup) => {
+        samplers.forEach((samplerSetup) => {
             let sampler = samplerSetup['sampler'];
-            let expectedTags = {};
-            let expectedDecision = !!samplerSetup['decision'];
-            let description = `sampler ${sampler.name()}:${samplerSetup['param']} expectation`;
+            it(sampler.toString(), () => {
+                let expectedTags = {};
+                let expectedDecision = !!samplerSetup['decision'];
+                let description = `sampler ${sampler.name()}:${samplerSetup['param']} expectation`;
 
-            if (expectedDecision) {
-                expectedTags[constants.SAMPLER_TYPE_TAG_KEY] = samplerSetup['type'];
-                expectedTags[constants.SAMPLER_PARAM_TAG_KEY] = samplerSetup['param'];
-            }
-            let actualTags = {};
-            let decision = !!sampler.isSampled('operation', actualTags);
-            assert.equal(decision, expectedDecision, description);
-            assert.deepEqual(actualTags, expectedTags, description);
+                if (expectedDecision) {
+                    expectedTags[constants.SAMPLER_TYPE_TAG_KEY] = samplerSetup['type'];
+                    expectedTags[constants.SAMPLER_PARAM_TAG_KEY] = samplerSetup['param'];
+                }
+                let actualTags = {};
+                let decision = !!sampler.isSampled('operation', actualTags);
+                assert.equal(decision, expectedDecision, description);
+                assert.deepEqual(actualTags, expectedTags, description);
+            });
         });
+    });
+
+});
+
+describe('ConstSampler', () => {
+    let sampler;
+    before(() => {
+        sampler = new ConstSampler(true);
+    });
+
+    it('decision reflects given parameter', () => {
+        assert.isOk(sampler.decision);
+    });
+
+    it ('does NOT equal another type of sampler', () => {
+        let otherSampler = new ProbabilisticSampler(0.5);
+        let equals = sampler.equal(otherSampler);
+        assert.isNotOk(equals);
+    });
+
+    it ('does equal the same type of sampler', () => {
+        let otherSampler = new ConstSampler(true);
+        let equals = sampler.equal(otherSampler);
+        assert.isOk(equals);
+    });
+});
+
+describe('ProbabilisticSampler', () => {
+    it ('throws error on out of range sampling rate', () => {
+        expect(() => { new ProbabilisticSampler(2.0); }).to.throw('The sampling rate must be less than 0.0 and greater than 1.0. Received 2');
+    });
+
+    it ('calls is Sampled, and returns false', () => {
+        let sampler = new ProbabilisticSampler(0.0);
+        let tags = {};
+        assert.isNotOk(sampler.isSampled('operation', tags));
+        assert.deepEqual(tags, {});
     });
 });
