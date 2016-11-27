@@ -30,8 +30,9 @@ describe ('leaky bucket ratelimiter should', () => {
         for (let i = 0; i < 10; i++) {
             limiter.checkCredit(1);
         }
-
         assert.equal(limiter.checkCredit(1), false, 'expected checkCredit to be false');
+
+        clock.restore();
         clock = sinon.useFakeTimers(initialDate + 1000);
         assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
         clock.restore();
@@ -48,6 +49,8 @@ describe ('leaky bucket ratelimiter should', () => {
         }
 
         assert.equal(limiter.checkCredit(cost), false, 'expected checkCredit to be false');
+
+        clock.restore();
         clock = sinon.useFakeTimers(initialDate + 1000);
         assert.equal(limiter.checkCredit(cost), true, 'expected checkCredit to be true');
         clock.restore();

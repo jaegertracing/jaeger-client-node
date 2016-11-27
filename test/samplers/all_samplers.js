@@ -81,14 +81,14 @@ describe('All samplers', () => {
             it(sampler.toString(), () => {
                 let expectedTags = {};
                 let expectedDecision = !!samplerSetup['decision'];
-                let description = `sampler ${sampler.name()}:${samplerSetup['param']} expectation`;
+                let description = `${sampler.toString()}, param=${samplerSetup['param']}`;
 
                 if (expectedDecision) {
                     expectedTags[constants.SAMPLER_TYPE_TAG_KEY] = samplerSetup['type'];
                     expectedTags[constants.SAMPLER_PARAM_TAG_KEY] = samplerSetup['param'];
                 }
                 let actualTags = {};
-                let decision = !!sampler.isSampled('operation', actualTags);
+                let decision = sampler.isSampled('operation', actualTags);
                 assert.equal(decision, expectedDecision, description);
                 assert.deepEqual(actualTags, expectedTags, description);
             });
