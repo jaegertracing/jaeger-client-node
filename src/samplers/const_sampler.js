@@ -32,6 +32,10 @@ export default class ConstSampler {
         return 'ConstSampler';
     }
 
+    toString(): string {
+        return `${this.name()}(${this._decision ? 'always' : 'never'})`;
+    }
+
     get decision(): boolean {
         return this._decision;
     }

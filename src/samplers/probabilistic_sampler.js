@@ -36,6 +36,10 @@ export default class ProbabilisticSampler {
         return 'ProbabilisticSampler';
     }
 
+    toString(): string {
+        return `${this.name()}(samplingRate=${this._samplingRate})`;
+    }
+
     get samplingRate(): number {
         return this._samplingRate;
     }

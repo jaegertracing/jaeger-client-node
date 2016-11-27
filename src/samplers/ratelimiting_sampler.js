@@ -39,6 +39,10 @@ export default class RateLimitingSampler {
         return 'RateLimitingSampler';
     }
 
+    toString(): string {
+        return `${this.name()}(maxTracesPerSecond=${this._maxTracesPerSecond})`;
+    }
+
     get maxTracesPerSecond(): number {
         return this._maxTracesPerSecond;
     }

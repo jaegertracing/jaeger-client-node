@@ -35,6 +35,7 @@ describe('samplers should', () => {
             useCallback: [true, false],
             sampler: [
                 new ConstSampler(true),
+                new ConstSampler(false),
                 new ProbabilisticSampler(0.5),
                 new RateLimitingSampler(2),
                 new RemoteSampler('some-service-name')
@@ -42,14 +43,11 @@ describe('samplers should', () => {
         });
 
         _.each(samplers, (o) => {
-            it (o.description + 'close calls callback', () => {
+            it ('should support close() - ' + o.description, () => {
                 if (o.useCallback) {
-                    let callbackCalled = 0;
-                    let closeCallback = () => { callbackCalled = 1; };
-
+                    let closeCallback = sinon.spy();
                     o.sampler.close(closeCallback);
-
-                    assert.equal(callbackCalled, 1);
+                    assert(closeCallback.calledOnce);
                 } else {
                     o.sampler.close();
                 }
