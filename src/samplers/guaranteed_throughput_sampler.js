@@ -47,6 +47,10 @@ export default class GuaranteedThroughputSampler {
         return 'GuaranteedThroughputSampler';
     }
 
+    toString(): string {
+        return `${this.name()}(samplingRate=${this._probabilisticSampler.samplingRate}, lowerBound=${this._lowerBoundSampler.maxTracesPerSecond})`;
+    }
+
     isSampled(operation: string, tags: any): boolean {
         if (this._probabilisticSampler.isSampled(operation, tags)) {
             // make rate limiting sampler update its budget
@@ -80,12 +84,16 @@ export default class GuaranteedThroughputSampler {
         }
     }
 
-    update(lowerBound: number, samplingRate: number): void {
+    update(lowerBound: number, samplingRate: number): boolean {
+        let updated = false;
         if (this._probabilisticSampler.samplingRate != samplingRate) {
             this._probabilisticSampler = new ProbabilisticSampler(samplingRate);
+            updated = true;
         }
         if (this._lowerBoundSampler.maxTracesPerSecond != lowerBound) {
             this._lowerBoundSampler = new RateLimitingSampler(lowerBound);
+            updated = true;
         }
+        return updated;
     }
 }

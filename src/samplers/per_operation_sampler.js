@@ -43,7 +43,7 @@ export default class PerOperationSampler {
         this.update(strategies);
     }
 
-    update(strategies: PerOperationSamplingStrategies): void {
+    update(strategies: PerOperationSamplingStrategies): boolean {
         assert(
             typeof strategies.defaultLowerBoundTracesPerSecond === 'number',
             'expected strategies.defaultLowerBoundTracesPerSecond to be number'
@@ -53,26 +53,37 @@ export default class PerOperationSampler {
             'expected strategies.defaultSamplingProbability to be number'
         );
 		
+        let updated: boolean = this._defaultLowerBound == strategies.defaultLowerBoundTracesPerSecond;
+
         this._defaultLowerBound = strategies.defaultLowerBoundTracesPerSecond;
         strategies.perOperationStrategies.forEach((strategy) => {
             let operation = strategy.operation;
             let samplingRate = strategy.probabilisticSampling.samplingRate;
             let sampler = this._samplersByOperation[operation];
             if (sampler) {
-                sampler.update(this._defaultLowerBound, samplingRate);
+                if (sampler.update(this._defaultLowerBound, samplingRate)) {
+                    updated = true;
+                }
             }  else {
                 sampler = new GuaranteedThroughputSampler(this._defaultLowerBound, samplingRate);
                 this._samplersByOperation[operation] = sampler;
+                updated = true;
             }
         });
         let defaultSamplingRate = strategies.defaultSamplingProbability;
         if (!this._defaultSampler || this._defaultSampler.samplingRate != defaultSamplingRate) {
             this._defaultSampler = new ProbabilisticSampler(defaultSamplingRate);
+            updated = true;
         }
+        return updated;
     }
 
     name(): string {
         return 'PerOperationSampler';
+    }
+
+    toString(): string {
+        return `${this.name()}(maxOperations=${this._maxOperations})`;
     }
 
     isSampled(operation: string, tags: any): boolean {

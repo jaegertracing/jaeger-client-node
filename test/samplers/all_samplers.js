@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,6 +26,8 @@ import * as constants from '../../src/constants.js';
 import ConstSampler from '../../src/samplers/const_sampler.js';
 import ProbabilisticSampler from '../../src/samplers/probabilistic_sampler.js';
 import RateLimitingSampler from '../../src/samplers/ratelimiting_sampler.js';
+import GuaranteedThroughputSampler from '../../src/samplers/guaranteed_throughput_sampler.js';
+import PerOperationSampler from '../../src/samplers/per_operation_sampler.js';
 import RemoteSampler from '../../src/samplers/remote_sampler.js';
 import Utils from '../../src/util';
 
@@ -38,6 +41,12 @@ describe('samplers should', () => {
                 new ConstSampler(false),
                 new ProbabilisticSampler(0.5),
                 new RateLimitingSampler(2),
+                new GuaranteedThroughputSampler(2, 0.5),
+                new PerOperationSampler({
+                    defaultLowerBoundTracesPerSecond: 2,
+                    defaultSamplingProbability: 0.01,
+                    perOperationStrategies: [],
+                }, 200),
                 new RemoteSampler('some-service-name')
             ]
         });
