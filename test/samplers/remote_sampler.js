@@ -28,7 +28,7 @@ import SamplingServer from '../lib/sampler_server';
 import LocalMetricFactory from '../lib/metrics/local/metric_factory.js';
 import LocalBackend from '../lib/metrics/local/backend.js';
 
-describe('remote sampler should', () => {
+describe('RemoteSampler should', () => {
     let server: SamplingServer;
     let logger: MockLogger;
     let metrics: Metrics;
@@ -57,28 +57,66 @@ describe('remote sampler should', () => {
         remoteSampler.close();
     });
 
-    it('set probabilistic sampler', (done) => {
+    it ('log metric on failing to query for sampling strategy', (done) => {
+        metrics.samplerQueryFailure.increment = function() {
+            assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
+            done();
+        };
+        remoteSampler._host = 'fake-host';
+        remoteSampler._refreshSamplingStrategy();
+    });
+
+    let badResponses: Array<any> = ['junk', '0', 'false', {}];
+    badResponses.forEach((resp) => {
+        it (`log metric on failing to parse bad http response ${resp}`, (done) => {
+            metrics.samplerParsingFailure.increment = function() {
+                assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
+                done();
+            };
+            server.addStrategy('service1', resp);
+            remoteSampler._refreshSamplingStrategy();
+        });
+    });
+
+    it('throw error on bad sampling strategy', (done) => {
+        metrics.samplerParsingFailure.increment = function() {
+            assert.equal(logger._errorMsgs.length, 1);
+            done();
+        };
+        remoteSampler._serviceName = 'bad-service';
+        remoteSampler._refreshSamplingStrategy();
+    });
+
+    it('set probabilistic sampler, but only once', (done) => {
         remoteSampler._onSamplerUpdate = (s) => {
             assert.equal(s._samplingRate, 1.0);
-            assert.isOk(LocalBackend.counterEquals(metrics.samplerRetrieved, 1));
-            assert.isOk(LocalBackend.counterEquals(metrics.samplerUpdated, 1));
-            done();
-        }
+            assert.equal(LocalBackend.counterValue(metrics.samplerRetrieved), 1);
+            assert.equal(LocalBackend.counterValue(metrics.samplerUpdated), 1);
+
+            let firstSampler = s;
+
+            // prepare for second update
+            remoteSampler._onSamplerUpdate = (s) => {
+                assert.strictEqual(s, firstSampler, 'must not have changed the sampler');
+
+                assert.equal(LocalBackend.counterValue(metrics.samplerRetrieved), 2);
+                assert.equal(LocalBackend.counterValue(metrics.samplerUpdated), 1);
+
+                // prepare for third update - for test coverage only
+                remoteSampler._onSamplerUpdate = null;
+                remoteSampler._refreshSamplingStrategy();
+
+                done();
+            };
+
+            remoteSampler._refreshSamplingStrategy();
+        };
         server.addStrategy('service1', {
             strategyType: 0,
             probabilisticSampling: {
                 samplingRate: 1.0
             }
         });
-        remoteSampler._refreshSamplingStrategy();
-    });
-
-    it ('log metric on failing sampling strategy', (done) => {
-        metrics.samplerQueryFailure.increment = function() {
-            assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
-            done();
-        };
-        remoteSampler._host = 'fake-host';
         remoteSampler._refreshSamplingStrategy();
     });
 
@@ -94,15 +132,6 @@ describe('remote sampler should', () => {
                 maxTracesPerSecond: maxTracesPerSecond
             }
         });
-        remoteSampler._refreshSamplingStrategy();
-    });
-
-    it('throw error on bad sampling strategy', (done) => {
-        metrics.samplerParsingFailure.increment = function() {
-            assert.equal(logger._errorMsgs.length, 1);
-            done();
-        };
-        remoteSampler._serviceName = 'bad-service';
         remoteSampler._refreshSamplingStrategy();
     });
 });

@@ -47,7 +47,7 @@ export default class RemoteControlledSampler {
     _port: number;
     _maxOperations: number;
 
-    _onSamplerUpdate: Function;
+    _onSamplerUpdate: ?Function;
 
     _initialDelayTimeoutHandle: any;
     _refreshIntervalHandle: any;
@@ -76,7 +76,7 @@ export default class RemoteControlledSampler {
         this._port = options.port || DEFAULT_SAMPLING_PORT;
         this._maxOperations = options.maxOperations || DEFAULT_MAX_OPERATIONS;
 
-        this._onSamplerUpdate = options.onSamplerUpdate || function onSamplerUpdate(sampler: Sampler) {};
+        this._onSamplerUpdate = options.onSamplerUpdate;
 
         if (options.refreshInterval !== 0) {
             let randomDelay: number = Math.random() * this._refreshInterval;
@@ -112,21 +112,25 @@ export default class RemoteControlledSampler {
             let strategy;
             try {
                 strategy = JSON.parse(response.body);
+                if (!strategy) {
+                    throw 'Malformed response: ' + response.body;
+                }
             } catch (error) {
                 this._logger.error(`Error in parsing sampling strategy: ${error}.`);
                 this._metrics.samplerParsingFailure.increment(1);
                 return;
             }
-            if (strategy) {
-                try {
-                    if (this._updateSampler(strategy)) {
-                        this._metrics.samplerUpdated.increment(1);
-                        this._onSamplerUpdate(this._sampler);
-                    }
-                } catch (error) {
-                    this._logger.error(`Error in updating sampler: ${error}.`);
-                    this._metrics.samplerParsingFailure.increment(1);
+            try {
+                if (this._updateSampler(strategy)) {
+                    this._metrics.samplerUpdated.increment(1);
                 }
+            } catch (error) {
+                this._logger.error(`Error in updating sampler: ${error}.`);
+                this._metrics.samplerParsingFailure.increment(1);
+                return;
+            }
+            if (this._onSamplerUpdate) {
+                this._onSamplerUpdate(this._sampler);
             }
         });
     }
@@ -151,11 +155,11 @@ export default class RemoteControlledSampler {
             throw 'Malformed response: ' + JSON.stringify({error: response});
         }
 
-        if (newSampler && (!this._sampler.equal(newSampler))) {
-            this._sampler = newSampler;
-            return true;
+        if (this._sampler.equal(newSampler)) {
+            return false;
         }
-        return false;
+        this._sampler = newSampler;
+        return true;
     }
 
 
