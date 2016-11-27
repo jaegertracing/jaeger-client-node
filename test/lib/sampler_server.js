@@ -34,8 +34,12 @@ export default class SamplingServer {
         this._app.get('/', this._handle.bind(this));
     }
 
-    addStrategy(serviceName: string, response: SamplingStrategyResponse) {
+    addStrategy(serviceName: string, response: SamplingStrategyResponse): void {
         this._strategies[serviceName] = response;
+    }
+
+    clearStrategies(): void {
+        this._strategies = Object.create(null);
     }
 
     _handle(req: any, res: any) {
@@ -44,7 +48,7 @@ export default class SamplingServer {
         if (strategy) {
             res.send(strategy);
         } else {
-            res.status(404).send({err: `unknown service name ${service}`});
+            res.status(404).send({err: `unknown service name '${service}'`});
         }
     }
 
