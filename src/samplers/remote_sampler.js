@@ -131,12 +131,12 @@ export default class RemoteControlledSampler {
         });
     }
 
-    _updateSampler(response: ?SamplingStrategyResponse): boolean {
-        if (typeof(this._sampler) instanceof PerOperationSampler) {
-            this._sampler.update(response);
-            return true;
-        }
+    _updateSampler(response: SamplingStrategyResponse): boolean {
         if (response.operationSampling) {
+            if (typeof(this._sampler) instanceof PerOperationSampler) {
+                let sampler: PerOperationSampler = ((this._sampler: any): PerOperationSampler);
+                return sampler.update(response.operationSampling);
+            }
             this._sampler = new PerOperationSampler(response.operationSampling, this._maxOperations);
             return true;
         }
