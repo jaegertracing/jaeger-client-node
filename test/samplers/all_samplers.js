@@ -49,7 +49,7 @@ describe('All samplers', () => {
             ]
         });
 
-        samplers.forEach((o) => {
+        samplers.forEach((o: any) => {
             it (o.description, () => {
                 if (o.useCallback) {
                     let closeCallback = sinon.spy();
@@ -76,7 +76,7 @@ describe('All samplers', () => {
             },
         ];
 
-        samplers.forEach((samplerSetup) => {
+        samplers.forEach((samplerSetup: any) => {
             let sampler = samplerSetup['sampler'];
             it(sampler.toString(), () => {
                 let expectedTags = {};
