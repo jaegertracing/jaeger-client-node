@@ -133,8 +133,8 @@ export default class RemoteControlledSampler {
 
     _updateSampler(response: SamplingStrategyResponse): boolean {
         if (response.operationSampling) {
-            if (typeof(this._sampler) instanceof PerOperationSampler) {
-                let sampler: PerOperationSampler = ((this._sampler: any): PerOperationSampler);
+            if (this._sampler instanceof PerOperationSampler) {
+                let sampler: PerOperationSampler = this._sampler;
                 return sampler.update(response.operationSampling);
             }
             this._sampler = new PerOperationSampler(response.operationSampling, this._maxOperations);
