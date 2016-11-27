@@ -62,7 +62,11 @@ export default class GuaranteedThroughputSampler {
     }
 
     equal(other: Sampler): boolean {
-        return false; // TODO equal should be removed
+        if (!(other instanceof GuaranteedThroughputSampler)) {
+            return false;
+        }
+        return this._probabilisticSampler.equal(other._probabilisticSampler) &&
+            this._lowerBoundSampler.equal(other._lowerBoundSampler);
     }
 
     close(callback: Function): void {

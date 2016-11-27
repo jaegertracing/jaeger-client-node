@@ -32,10 +32,16 @@ describe('GuaranteedThroughput sampler', () => {
         assert(callback.calledOnce);
     });
 
-    it('should equal nothing', () => {
+    it('should not equal other types', () => {
         let sampler = new GuaranteedThroughputSampler(2, 0);
         assert.isNotOk(sampler.equal({}));
-        assert.isNotOk(sampler.equal(sampler));
+        sampler.close();
+    });
+
+    it('should equal itself', () => {
+        let sampler = new GuaranteedThroughputSampler(2, 0);
+        assert.isOk(sampler.equal(sampler));
+        assert.isOk(sampler.equal(new GuaranteedThroughputSampler(2, 0)));
         sampler.close();
     });
 
