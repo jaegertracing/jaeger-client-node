@@ -82,6 +82,10 @@ export default class RemoteControlledSampler {
         return 'RemoteSampler';
     }
 
+    toString(): string {
+        return `${this.name()}(serviceName=${this._serviceName})`;
+    }
+
     _afterInitialDelay(): void {
         this._refreshIntervalHandle = setInterval(
             this._refreshSamplingStrategy.bind(this),
