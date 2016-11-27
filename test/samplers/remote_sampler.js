@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 import {assert} from 'chai';
+import sinon from 'sinon';
 import Metrics from '../../src/metrics/metrics.js';
 import RemoteSampler from '../../src/samplers/remote_sampler';
 import MockLogger from '../lib/mock_logger';
@@ -38,7 +39,7 @@ describe('remote sampler should', () => {
 
     it('set probabilistic sampler', (done) => {
         let metrics = new Metrics(new LocalMetricFactory());
-        let sampler = new RemoteSampler('probabilistic-service', {
+        let sampler = new RemoteSampler('service1', {
             refreshInterval: 0,
             metrics: metrics,
             onSamplerUpdate: (sampler) => {
@@ -52,6 +53,12 @@ describe('remote sampler should', () => {
                 done();
             }
         });
+        server.addStrategy('service1', {
+            strategyType: 0,
+            probabilisticSampling: {
+                samplingRate: 1.0
+            }
+        });
         sampler._refreshSamplingStrategy();
     });
 
@@ -61,22 +68,20 @@ describe('remote sampler should', () => {
         let sampler = new RemoteSampler('error-service', {
             refreshInterval: 0,
             metrics: metrics,
-            logger: logger,
-            onSamplerUpdate: () => {
-                assert.equal(logger._errorMsgs[0], 'Error in fetching sampling strategy.');
-
-                //metrics
-                assert.isOk(LocalBackend.counterEquals(metrics.samplerQueryFailure, 1));
-                done();
-            }
+            logger: logger
         });
+
+        metrics.samplerQueryFailure.increment = function() {
+            assert.equal(logger._errorMsgs.length, 1);
+            done();
+        };
 
         sampler._host = 'fake-host';
         sampler._refreshSamplingStrategy();
     });
 
     it('set ratelimiting sampler', (done) => {
-        let sampler = new RemoteSampler('ratelimiting-service', {
+        let sampler = new RemoteSampler('service1', {
             refreshInterval: 0,
             onSamplerUpdate: (sampler) => {
                 let expectedMaxTracesPerSecond = 10;
@@ -94,25 +99,31 @@ describe('remote sampler should', () => {
                 done();
             }
         });
+
+        server.addStrategy('service1', {
+            strategyType: 1,
+            rateLimitingSampling: {
+                maxTracesPerSecond: 10
+            }
+        });
+
         sampler._refreshSamplingStrategy();
     });
 
     it('throw error on bad sampling strategy', (done) => {
         let logger = new MockLogger();
         let metrics = new Metrics(new LocalMetricFactory());
-        let sampler = new RemoteSampler('error-service', {
+        let sampler = new RemoteSampler('ERROR-service', {
             refreshInterval: 0,
             metrics: metrics,
-            logger: logger,
-            onSamplerUpdate: () => {
-                assert.equal(logger._errorMsgs[0], 'Unrecognized strategy type: {"error":{"err":"bad things happened"}}');
-
-                //metrics
-                assert.isOk(LocalBackend.counterEquals(metrics.samplerParsingFailure, 1));
-
-                done();
-            }
+            logger: logger
         });
+
+        metrics.samplerParsingFailure.increment = function() {
+            assert.equal(logger._errorMsgs.length, 1);
+            done();
+        };
+
         sampler._refreshSamplingStrategy();
     });
 });
