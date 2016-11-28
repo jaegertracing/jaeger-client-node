@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,6 +21,7 @@
 
 import {assert} from 'chai';
 import sinon from 'sinon';
+import ConstSampler from '../../src/samplers/const_sampler';
 import GuaranteedThroughputSampler from '../../src/samplers/guaranteed_throughput_sampler';
 
 describe('GuaranteedThroughput sampler', () => {
@@ -34,7 +36,7 @@ describe('GuaranteedThroughput sampler', () => {
 
     it('should not equal other types', () => {
         let sampler = new GuaranteedThroughputSampler(2, 0);
-        assert.isNotOk(sampler.equal({}));
+        assert.isFalse(sampler.equal(new ConstSampler(true)));
         sampler.close();
     });
 
@@ -67,29 +69,49 @@ describe('GuaranteedThroughput sampler', () => {
         sampler.close();
     });
 
+    let assertValues = function assertValues(sampler, lb, rate) {
+        assert.equal(lb, sampler._lowerBoundSampler.maxTracesPerSecond);
+        assert.equal(rate, sampler._probabilisticSampler.samplingRate);
+    };
 
-    it('should update only the parts that changed', () => {
+    it('should not change when update() called with the same values', () => {
         let sampler = new GuaranteedThroughputSampler(2, 1.0);
-
-        let assertValues = function assertValues(lb, rate) {
-            assert.equal(lb, sampler._lowerBoundSampler.maxTracesPerSecond);
-            assert.equal(rate, sampler._probabilisticSampler.samplingRate);
-        };
-
-        assertValues(2, 1.0);
+        assertValues(sampler, 2, 1.0);
 
         let p1 = sampler._probabilisticSampler;
         let p2 = sampler._lowerBoundSampler;
-        sampler.update(3, 1.0);
-        assert.isOk(p1 === sampler._probabilisticSampler);
-        assert.isNotOk(p2 === sampler._lowerBoundSampler);
-        assertValues(3, 1.0);
+        let isUpdated: boolean = sampler.update(2, 1.0);
+        assert.isFalse(isUpdated);
+        assert.strictEqual(sampler._probabilisticSampler, p1);
+        assert.strictEqual(sampler._lowerBoundSampler, p2);
+        assertValues(sampler, 2, 1.0);
+    });
 
-        p2 = sampler._lowerBoundSampler;
-        sampler.update(3, 0.9);
+    it('should update only lower bound', () => {
+        let sampler = new GuaranteedThroughputSampler(2, 1.0);
+        assertValues(sampler, 2, 1.0);
+
+        // should only change lower bound
+        let p1 = sampler._probabilisticSampler;
+        let p2 = sampler._lowerBoundSampler;
+        let isUpdated: boolean = sampler.update(3, 1.0);
+        assert.isTrue(isUpdated);
+        assert.strictEqual(sampler._probabilisticSampler, p1);
+        assert.isNotOk(p2 === sampler._lowerBoundSampler);
+        assertValues(sampler, 3, 1.0);
+    });
+
+    it('should update only sampling rate', () => {
+        let sampler = new GuaranteedThroughputSampler(2, 1.0);
+        assertValues(sampler, 2, 1.0);
+
+        let p1 = sampler._probabilisticSampler;
+        let p2 = sampler._lowerBoundSampler;
+        let isUpdated: boolean = sampler.update(2, 0.9);
+        assert.isTrue(isUpdated);
         assert.isNotOk(p1 === sampler._probabilisticSampler);
-        assert.isOk(p2 === sampler._lowerBoundSampler);
-        assertValues(3, 0.9);
+        assert.strictEqual(sampler._lowerBoundSampler, p2);
+        assertValues(sampler, 2, 0.9);
     });
 
     it('should become probabilistic after minimum throughput', () => {
