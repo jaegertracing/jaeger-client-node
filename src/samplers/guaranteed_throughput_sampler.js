@@ -73,7 +73,7 @@ export default class GuaranteedThroughputSampler {
             this._lowerBoundSampler.equal(other._lowerBoundSampler);
     }
 
-    close(callback: Function): void {
+    close(callback: ?Function): void {
         // neither probabilistic nor rate limiting samplers allocate resources,
         // so their close methods are effectively no-op. We do not need to
         // pass the callback to them (if we did we'd need to wrap it).

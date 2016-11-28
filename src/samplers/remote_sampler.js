@@ -152,7 +152,7 @@ export default class RemoteControlledSampler {
             let maxTracesPerSecond = response.rateLimitingSampling.maxTracesPerSecond;
             newSampler = new RateLimitingSampler(maxTracesPerSecond);
         } else {
-            throw 'Malformed response: ' + JSON.stringify({error: response});
+            throw 'Malformed response: ' + JSON.stringify(response);
         }
 
         if (this._sampler.equal(newSampler)) {
@@ -167,7 +167,7 @@ export default class RemoteControlledSampler {
         return this._sampler.isSampled(operation, tags);
     }
 
-    close(callback: Function): void {
+    close(callback: ?Function): void {
         clearTimeout(this._initialDelayTimeoutHandle);
         clearInterval(this._refreshIntervalHandle);
 

@@ -56,7 +56,7 @@ export default class ConstSampler {
         return this.decision === other.decision;
     }
 
-    close(callback: Function): void {
+    close(callback: ?Function): void {
         if (callback) {
             callback();
         }
