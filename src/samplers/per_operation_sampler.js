@@ -53,8 +53,7 @@ export default class PerOperationSampler {
             'expected strategies.defaultSamplingProbability to be number'
         );
 		
-        let updated: boolean = this._defaultLowerBound == strategies.defaultLowerBoundTracesPerSecond;
-
+        let updated: boolean = this._defaultLowerBound !== strategies.defaultLowerBoundTracesPerSecond;
         this._defaultLowerBound = strategies.defaultLowerBoundTracesPerSecond;
         strategies.perOperationStrategies.forEach((strategy) => {
             let operation = strategy.operation;

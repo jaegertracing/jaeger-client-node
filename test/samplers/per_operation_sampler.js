@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,7 +25,7 @@ import PerOperationSampler from '../../src/samplers/per_operation_sampler';
 
 describe('PerOperationSampler', () => {
 
-    let strategies: PerOperationStrategies = {
+    let strategies: PerOperationSamplingStrategies = {
         defaultLowerBoundTracesPerSecond: 1.1,
         defaultSamplingProbability: 0.123,
         perOperationStrategies: [
@@ -93,7 +94,7 @@ describe('PerOperationSampler', () => {
 
     it('should update samplers', () => {
         let sampler = new PerOperationSampler(strategies, 2);
-        let updated: PerOperationStrategies = {
+        let updated: PerOperationSamplingStrategies = {
             defaultLowerBoundTracesPerSecond: 2,
             defaultSamplingProbability: 0.333,
             perOperationStrategies: [
@@ -107,7 +108,8 @@ describe('PerOperationSampler', () => {
                 }
             ]
         };
-        sampler.update(updated);
+        let isUpdated: boolean = sampler.update(updated);
+        assert.isTrue(isUpdated);
         assert.equal(sampler._defaultLowerBound, 2);
         assert.isObject(sampler._defaultSampler);
         assert.equal(sampler._defaultSampler.samplingRate, 0.333);
@@ -123,7 +125,7 @@ describe('PerOperationSampler', () => {
     });
 
     it('should not update samplers if strategies did not change', () => {
-        let strategies: PerOperationStrategies = {
+        let strategies: PerOperationSamplingStrategies = {
             defaultLowerBoundTracesPerSecond: 2,
             defaultSamplingProbability: 0.333,
             perOperationStrategies: [
@@ -142,8 +144,8 @@ describe('PerOperationSampler', () => {
         let s1 = sampler._samplersByOperation['op1'];
         let s2 = sampler._samplersByOperation['op2'];
 
-        sampler.update(strategies);
-
+        let isUpdated: boolean = sampler.update(strategies);
+        assert.isFalse(isUpdated);
         assert.strictEqual(sampler._defaultSampler, s0);
         assert.strictEqual(sampler._samplersByOperation['op1'], s1);
         assert.strictEqual(sampler._samplersByOperation['op2'], s2);
