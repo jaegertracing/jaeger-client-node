@@ -52,18 +52,6 @@ export default class SamplingServer {
         }
     }
 
-    _setupEndpoint(){
-        this._app.get('/', function (req, res) {
-            let service = req.query.service;
-            let strategy = this._strategies[service];
-            if (strategy) {
-                res.send(strategy);
-            } else {
-                res.status(404).send({err: `unknown service name ${service}`});
-            }
-        });
-    }
-
     start(): SamplingServer {
         this._server = this._app.listen(this._port);
         return this;
