@@ -26,7 +26,7 @@ import GuaranteedThroughputSampler from './guaranteed_throughput_sampler.js';
 
 type SamplersByOperation = { [key: string]: GuaranteedThroughputSampler };
 
-// PerOperationSampler keeps track of all operation names is it asked to sample
+// PerOperationSampler keeps track of all operation names it is asked to sample
 // and uses GuaranteedThroughputSampler for each operation name to ensure
 // that all endpoints are represented in the sampled traces. If the number
 // of distinct operation names exceeds maxOperations, all other names are
