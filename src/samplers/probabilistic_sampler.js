@@ -65,7 +65,7 @@ export default class ProbabilisticSampler {
         return this.samplingRate === other.samplingRate;
     }
 
-    close(callback: Function): void {
+    close(callback: ?Function): void {
         if (callback) {
             callback();
         }

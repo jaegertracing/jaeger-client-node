@@ -19,15 +19,23 @@
 // THE SOFTWARE.
 
 import {assert} from 'chai';
+import sinon from 'sinon';
 import Metrics from '../../src/metrics/metrics.js';
+import RateLimitingSampler from '../../src/samplers/ratelimiting_sampler';
+import ProbabilisticSampler from '../../src/samplers/probabilistic_sampler.js';
+import PerOperationSampler from '../../src/samplers/per_operation_sampler';
 import RemoteSampler from '../../src/samplers/remote_sampler';
 import MockLogger from '../lib/mock_logger';
 import SamplingServer from '../lib/sampler_server';
 import LocalMetricFactory from '../lib/metrics/local/metric_factory.js';
 import LocalBackend from '../lib/metrics/local/backend.js';
 
-describe('remote sampler should', () => {
+describe('RemoteSampler', () => {
     let server: SamplingServer;
+    let logger: MockLogger;
+    let metrics: Metrics;
+    let remoteSampler: RemoteSampler;
+
     before(() => {
         server = new SamplingServer().start();
     });
@@ -36,83 +44,155 @@ describe('remote sampler should', () => {
         server.close();
     });
 
-    it('set probabilistic sampler', (done) => {
-        let metrics = new Metrics(new LocalMetricFactory());
-        let sampler = new RemoteSampler('probabilistic-service', {
+    beforeEach(() => {
+        server.clearStrategies();
+        logger = new MockLogger();
+        metrics = new Metrics(new LocalMetricFactory());
+        remoteSampler = new RemoteSampler('service1', {
             refreshInterval: 0,
             metrics: metrics,
-            onSamplerUpdate: (sampler) => {
-                assert.equal(sampler._samplingRate, 1.0);
-
-                // metrics
-                assert.isOk(LocalBackend.counterEquals(metrics.samplerRetrieved, 1));
-                assert.isOk(LocalBackend.counterEquals(metrics.samplerUpdated, 1));
-
-                sampler.close();
-                done();
-            }
+            logger: logger
         });
-        sampler._refreshSamplingStrategy();
     });
 
-    it ('log metric on failing sampling strategy', (done) => {
-        let logger = new MockLogger();
-        let metrics = new Metrics(new LocalMetricFactory());
-        let sampler = new RemoteSampler('error-service', {
-            refreshInterval: 0,
+    afterEach(() => {
+        remoteSampler.close();
+    });
+
+    it ('should log metric on failing to query for sampling strategy', (done) => {
+        metrics.samplerQueryFailure.increment = function() {
+            assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
+            done();
+        };
+        remoteSampler._host = 'fake-host';
+        remoteSampler._refreshSamplingStrategy();
+    });
+
+    let badResponses: Array<any> = ['junk', '0', 'false', {}];
+    badResponses.forEach((resp) => {
+        it (`should log metric on failing to parse bad http response ${resp}`, (done) => {
+            metrics.samplerParsingFailure.increment = function() {
+                assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
+                done();
+            };
+            server.addStrategy('service1', resp);
+            remoteSampler._refreshSamplingStrategy();
+        });
+    });
+
+    it('should throw error on bad sampling strategy', (done) => {
+        metrics.samplerParsingFailure.increment = function() {
+            assert.equal(logger._errorMsgs.length, 1);
+            done();
+        };
+        remoteSampler._serviceName = 'bad-service';
+        remoteSampler._refreshSamplingStrategy();
+    });
+
+    it('should set probabilistic sampler, but only once', (done) => {
+        remoteSampler._onSamplerUpdate = (s) => {
+            assert.equal(s._samplingRate, 1.0);
+            assert.equal(LocalBackend.counterValue(metrics.samplerRetrieved), 1);
+            assert.equal(LocalBackend.counterValue(metrics.samplerUpdated), 1);
+
+            let firstSampler = s;
+
+            // prepare for second update
+            remoteSampler._onSamplerUpdate = (s) => {
+                assert.strictEqual(s, firstSampler, 'must not have changed the sampler');
+
+                assert.equal(LocalBackend.counterValue(metrics.samplerRetrieved), 2);
+                assert.equal(LocalBackend.counterValue(metrics.samplerUpdated), 1);
+
+                // prepare for third update - for test coverage only
+                remoteSampler._onSamplerUpdate = null;
+                remoteSampler._refreshSamplingStrategy();
+
+                done();
+            };
+
+            remoteSampler._refreshSamplingStrategy();
+        };
+        server.addStrategy('service1', {
+            strategyType: 0,
+            probabilisticSampling: {
+                samplingRate: 1.0
+            }
+        });
+        remoteSampler._refreshSamplingStrategy();
+    });
+
+    it('should set ratelimiting sampler', (done) => {
+        let maxTracesPerSecond = 10;
+        remoteSampler._onSamplerUpdate = (s) => {
+            assert.isOk(s.equal(new RateLimitingSampler(maxTracesPerSecond)));
+            done();
+        };
+        server.addStrategy('service1', {
+            strategyType: 1,
+            rateLimitingSampling: {
+                maxTracesPerSecond: maxTracesPerSecond
+            }
+        });
+        remoteSampler._refreshSamplingStrategy();
+    });
+
+    it('should set per-operation sampler', (done) => {
+        server.addStrategy('service1', {
+            strategyType: 0,
+            probabilisticSampling: {
+                samplingRate: 1.0
+            },
+            operationSampling: {
+                defaultSamplingProbability: 0.05,
+                defaultLowerBoundTracesPerSecond: 0.1,
+                perOperationStrategies: []
+            }
+        });
+        remoteSampler._onSamplerUpdate = (s) => {
+            assert.isOk(s instanceof PerOperationSampler);
+            assert.equal(LocalBackend.counterValue(metrics.samplerRetrieved), 1);
+            assert.equal(LocalBackend.counterValue(metrics.samplerUpdated), 1);
+
+            // cause a second refresh without changes
+            remoteSampler._onSamplerUpdate = (s2) => {
+                assert.strictEqual(s2, s);
+                assert.equal(LocalBackend.counterValue(metrics.samplerRetrieved), 2, 'second retrieval');
+                assert.equal(LocalBackend.counterValue(metrics.samplerUpdated), 1, 'but no update');
+                done();
+            };
+            remoteSampler._refreshSamplingStrategy();
+        };
+        remoteSampler._refreshSamplingStrategy();
+    });
+
+    it('should refresh periodically', (done) => {
+        server.addStrategy('service1', {
+            strategyType: 0,
+            probabilisticSampling: {
+                samplingRate: 0.777
+            }
+        });
+
+        let clock: any = sinon.useFakeTimers();
+
+        let sampler = new RemoteSampler('service1', {
+            refreshInterval: 10, // 10ms
             metrics: metrics,
             logger: logger,
-            onSamplerUpdate: () => {
-                assert.equal(logger._errorMsgs[0], 'Error in fetching sampling strategy.');
+            onSamplerUpdate: (s) => {
+                assert.notEqual(LocalBackend.counterValue(metrics.samplerRetrieved), 0);
+                assert.notEqual(LocalBackend.counterValue(metrics.samplerUpdated), 0);
+                assert.equal(logger._errorMsgs.length, 0, 'number of error logs');
+                assert.isTrue(sampler._sampler.equal(new ProbabilisticSampler(0.777)), sampler._sampler.toString());
 
-                //metrics
-                assert.isOk(LocalBackend.counterEquals(metrics.samplerQueryFailure, 1));
-                done();
+                clock.restore();
+
+                sampler._onSamplerUpdate = null;
+                sampler.close(done);
             }
         });
 
-        sampler._host = 'fake-host';
-        sampler._refreshSamplingStrategy();
-    });
-
-    it('set ratelimiting sampler', (done) => {
-        let sampler = new RemoteSampler('ratelimiting-service', {
-            refreshInterval: 0,
-            onSamplerUpdate: (sampler) => {
-                let expectedMaxTracesPerSecond = 10;
-                assert.equal(sampler._maxTracesPerSecond, expectedMaxTracesPerSecond);
-
-                let count = 0;
-                for (let i = 0; i < expectedMaxTracesPerSecond; i++) {
-                    if (sampler.isSampled('operation', {})) {
-                        count++;
-                    }
-                }
-
-                assert.equal(count, expectedMaxTracesPerSecond);
-                sampler.close();
-                done();
-            }
-        });
-        sampler._refreshSamplingStrategy();
-    });
-
-    it('throw error on bad sampling strategy', (done) => {
-        let logger = new MockLogger();
-        let metrics = new Metrics(new LocalMetricFactory());
-        let sampler = new RemoteSampler('error-service', {
-            refreshInterval: 0,
-            metrics: metrics,
-            logger: logger,
-            onSamplerUpdate: () => {
-                assert.equal(logger._errorMsgs[0], 'Unrecognized strategy type: {"error":{"err":"bad things happened"}}');
-
-                //metrics
-                assert.isOk(LocalBackend.counterEquals(metrics.samplerParsingFailure, 1));
-
-                done();
-            }
-        });
-        sampler._refreshSamplingStrategy();
+        clock.tick(20);
     });
 });

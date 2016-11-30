@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,7 +24,7 @@ import ProbabilisticSampler from '../../src/samplers/probabilistic_sampler.js';
 import RateLimitingSampler from '../../src/samplers/ratelimiting_sampler.js';
 import sinon from 'sinon';
 
-describe ('ratelimiting sampler should', () => {
+describe ('RateLimitingSampler should', () => {
     it('block after threshold is met', () => {
         let initialDate = new Date(2011,9,1).getTime();
         let clock = sinon.useFakeTimers(initialDate);

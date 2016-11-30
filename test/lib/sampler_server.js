@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,47 +22,42 @@
 import express from 'express';
 
 export default class SamplingServer {
-    constructor(port=5778) {
+    _port: number;
+    _app: any;
+    _server: any;
+    _strategies: { [service: string]: SamplingStrategyResponse };
+
+    constructor(port: number = 5778) {
         this._port = port
         this._app = express();
-        this._setupResponses();
+        this._strategies = Object.create(null);
+        this._app.get('/', this._handle.bind(this));
     }
 
-    _setupResponses(){
-        this._app.get('/', function (req, res) {
-            let service = req.query.service;
-            if (service === 'probabilistic-service') {
-                res.send({
-                    strategyType: 0,
-                    probabilisticSampling: {
-                        samplingRate: 1.0
-                    }
-                });
-            } else if (service === 'ratelimiting-service') {
-                res.send({
-                    strategyType: 1,
-                    rateLimitingSampling: {
-                        maxTracesPerSecond: 10
-                    }
-                });
-            } else if (service === 'updated-probabilistic') {
-                res.send({
-                    strategyType: 0,
-                    probabilisticSampling: {
-                        samplingRate: 0.5
-                    }
-                });
-            } else {
-                res.status(500).send({err: 'bad things happened'});
-            }
-        });
+    addStrategy(serviceName: string, response: SamplingStrategyResponse): void {
+        this._strategies[serviceName] = response;
     }
 
-    start() {
-        return this._app.listen(this._port);
+    clearStrategies(): void {
+        this._strategies = Object.create(null);
     }
 
-    close() {
-        this._app.close();
+    _handle(req: any, res: any) {
+        let service = req.query.service;
+        let strategy = this._strategies[service];
+        if (strategy) {
+            res.send(strategy);
+        } else {
+            res.status(404).send({err: `unknown service name '${service}'`});
+        }
+    }
+
+    start(): SamplingServer {
+        this._server = this._app.listen(this._port);
+        return this;
+    }
+
+    close(): void {
+        this._server.close();
     }
 }

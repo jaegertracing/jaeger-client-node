@@ -40,6 +40,10 @@ export default class LocalBackend {
         return valueEqual && tagsEqual;
     }
 
+    static counterValue(counter: LocalCounter): number {
+        return counter._backend._counterValues[counter._name];
+    }
+
     reset() {
         this._counterValues = {};
         this._counterTags = {};
@@ -50,7 +54,10 @@ export default class LocalBackend {
     }
 
     increment(name: string, delta: number, tags: any): void {
-        this._counterValues[name] = delta;
+        if (this._counterValues[name] === undefined) {
+            this._counterValues[name] = 0;
+        }
+        this._counterValues[name] += delta;
         this._counterTags[name] = tags;
     }
 

@@ -45,5 +45,5 @@ declare interface Sampler {
 
     equal(other: Sampler): boolean;
 
-    close(callback: Function): void;
+    close(callback: ?Function): void;
 }

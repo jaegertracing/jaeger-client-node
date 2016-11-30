@@ -64,7 +64,7 @@ export default class RateLimitingSampler {
         return this.maxTracesPerSecond === other.maxTracesPerSecond;
     }
 
-    close(callback: Function): void {
+    close(callback: ?Function): void {
         if (callback) {
             callback();
         }
