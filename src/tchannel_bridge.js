@@ -62,7 +62,8 @@ export default class TChannelBridge {
      * a the handler's context with a span.
      **/
     tracedHandler(handlerFunc: any, options: startSpanArgs = {}): Function {
-        return (context, request, headers, body, callback) => {
+        return (perProcessOptions, request, headers, body, callback) => {
+            let context: DefaultContext = new DefaultContext();
             let operationName = options.operationName || request.arg1;
             let span = this._extractSpan(operationName, headers);
 
@@ -95,7 +96,7 @@ export default class TChannelBridge {
 
     _wrapTChannelSend(wrappedSend, channel, req, endpoint, headers, body, callback) {
         headers = headers || {};
-        let context = req.context || new DefaultContext();
+        let context: DefaultContext = req.context || new DefaultContext();
         let childOf = context.getSpan();
         let clientSpan = this._tracer.startSpan(endpoint, {
             childOf: childOf // ok if null, will start a new trace

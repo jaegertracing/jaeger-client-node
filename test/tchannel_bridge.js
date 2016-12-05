@@ -91,9 +91,9 @@ describe ('test tchannel span bridge', () => {
                 entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // ignored in json case
             });
 
-            // register the server request function.
-            let context = new DefaultContext();
-            encodedChannel.register(server, 'Echo::echo', context, bridge.tracedHandler(handleServerReq));
+            // We pass 'null' as the context because the handler will provide a context
+            // that gets created on every request.
+            encodedChannel.register(server, 'Echo::echo', null, bridge.tracedHandler(handleServerReq));
             function handleServerReq(context, req, head, body, callback) {
                 // headers should not contain $tracing$ prefixed keys, which should be the
                 // only headers used for this test.

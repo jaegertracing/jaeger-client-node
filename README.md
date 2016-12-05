@@ -31,10 +31,11 @@ a tchannel bridge, and wrap there encoded handler function with `tracedHandler` 
         entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // file path to a thrift file
     });
 
-    serverThriftChannel.register(server, 'Echo::echo', context, bridge.tracedHandler(
+    let perProcessOptions = {};
+    serverThriftChannel.register(server, 'Echo::echo', perProcessOptions, bridge.tracedHandler(
         (context, req, head, body, callback) => {
-            // context must be an object with the methods 'setSpan', and 'getSpan' which are responsible,
-            // respectively, for setting and getting the span on the context.
+            // Context must implement 'setSpan', and 'getSpan' which are responsible,
+            // for setting and getting the span on the context respectively.
 
             /* Your handler code goes here. */
         }
