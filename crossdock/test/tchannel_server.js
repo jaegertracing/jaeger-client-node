@@ -23,6 +23,7 @@ import {assert} from 'chai';
 import * as constants from '../../src/constants';
 import * as crossdock_constants from '../src/constants';
 import ConstSampler from '../../src/samplers/const_sampler.js';
+import DefaultContext from '../../src/default_context';
 import opentracing from 'opentracing';
 import InMemoryReporter from '../../src/reporters/in_memory_reporter.js';
 import TChannelBridge from '../../src/tchannel_bridge';
@@ -82,9 +83,11 @@ describe('crossdock tchannel server should', () => {
                 }
             };
 
+            let context = new DefaultContext();
+            context.setSpan(span);
             tracedChannel.request({
                 timeout: 100000,
-                context: { openTracingSpan: span },
+                context: context,
                 serviceName: 'node',
                 headers: {
                     cn: 'node-tchannel'

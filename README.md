@@ -16,7 +16,7 @@ Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 Because [tchannel-node](https://github.com/uber/tchannel-node) does not have instrumentation
 for OpenTracing, Jaeger-Client exposes methods wrapping tchannel handlers, and encoded channels.
-An encoded channel is a channel wrapped in either a thrift encoder `TChannelAsThrift`, 
+An encoded channel is a channel wrapped in either a thrift encoder `TChannelAsThrift`,
 or json encoder `TChannelAsJson`.  To wrap a server handler for thrift one can initialize
 a tchannel bridge, and wrap there encoded handler function with `tracedHandler` decorator.
 
@@ -33,8 +33,10 @@ a tchannel bridge, and wrap there encoded handler function with `tracedHandler` 
 
     serverThriftChannel.register(server, 'Echo::echo', context, bridge.tracedHandler(
         (context, req, head, body, callback) => {
-            // context will contain an 'openTracingSpan' field that stores the tracing span for the inbound request.
-            // Your handler code goes here.
+            // context must be an object with the methods 'setSpan', and 'getSpan' which are responsible,
+            // respectively, for setting and getting the span on the context.
+
+            /* Your handler code goes here. */
         }
     ));
 ```

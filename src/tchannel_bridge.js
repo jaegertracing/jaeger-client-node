@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 import * as constants from './constants';
+import DefaultContext from '../src/default_context';
 import Span from './span';
 import SpanContext from './span_context';
 import Utils from './util';
@@ -76,8 +77,7 @@ export default class TChannelBridge {
                 span.setTag('as', request.headers.as);
             }
 
-            // In theory may overwrite tchannel span, but thats what we want anyway.
-            context.openTracingSpan = span;
+            context.setSpan(span);
 
             // remove headers prefixed with $tracing$
             let headerKeys = Object.keys(headers);
@@ -95,8 +95,8 @@ export default class TChannelBridge {
 
     _wrapTChannelSend(wrappedSend, channel, req, endpoint, headers, body, callback) {
         headers = headers || {};
-        let context = req.context || {};
-        let childOf = context.openTracingSpan;
+        let context = req.context || new DefaultContext();
+        let childOf = context.getSpan();
         let clientSpan = this._tracer.startSpan(endpoint, {
             childOf: childOf // ok if null, will start a new trace
         });
