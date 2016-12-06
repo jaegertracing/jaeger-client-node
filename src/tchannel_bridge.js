@@ -19,27 +19,29 @@
 // THE SOFTWARE.
 
 import * as constants from './constants';
-import DefaultContext from '../src/default_context';
+import DefaultContext from './default_context';
 import Span from './span';
 import SpanContext from './span_context';
 import Utils from './util';
 import opentracing from 'opentracing';
-import Tracer from '../src/tracer';
-import TextMapCodec from '../src/propagators/text_map_codec';
+import Tracer from './tracer';
+import TextMapCodec from './propagators/text_map_codec';
 
 let TCHANNEL_TRACING_PREFIX = '$tracing$';
 
 export default class TChannelBridge {
     _tracer: Tracer;
     _codec: TextMapCodec;
+    _contextFactory: Function;
 
-    constructor(tracer: Tracer) {
+    constructor(tracer: Tracer, contextFactory: Function) {
         this._tracer = tracer;
         this._codec = new TextMapCodec({
             urlEncoding: false,
             contextKey: TCHANNEL_TRACING_PREFIX + constants.TRACER_STATE_HEADER_NAME,
             baggagePrefix: TCHANNEL_TRACING_PREFIX + constants.TRACER_BAGGAGE_HEADER_PREFIX
         });
+        this._contextFactory = contextFactory || function() { return new DefaultContext(); };
     }
 
     _tchannelCallbackWrapper(span, callback, err, res) {
@@ -63,7 +65,7 @@ export default class TChannelBridge {
      **/
     tracedHandler(handlerFunc: any, options: startSpanArgs = {}): Function {
         return (perProcessOptions, request, headers, body, callback) => {
-            let context: DefaultContext = new DefaultContext();
+            let context: Context = this._contextFactory();
             let operationName = options.operationName || request.arg1;
             let span = this._extractSpan(operationName, headers);
 
@@ -90,13 +92,14 @@ export default class TChannelBridge {
             }
 
             let wrappingCallback = this._tchannelCallbackWrapper.bind(null, span, callback);
+            request.context = context;
             handlerFunc(context, request, headers, body, wrappingCallback);
         };
     }
 
     _wrapTChannelSend(wrappedSend, channel, req, endpoint, headers, body, callback) {
         headers = headers || {};
-        let context: DefaultContext = req.context || new DefaultContext();
+        let context: Context = req.context || this._contextFactory();
         let childOf = context.getSpan();
         let clientSpan = this._tracer.startSpan(endpoint, {
             childOf: childOf // ok if null, will start a new trace
