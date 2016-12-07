@@ -58,9 +58,10 @@ export default class TChannelServer {
         });
     }
 
-    handleTChannelRequest(context: any, req: any, head: any, body: any, callback: Function) {
+    handleTChannelRequest(perProcessOptions: any, req: any, head: any, body: any, callback: Function) {
         let isStartRequest: boolean = false;
         let traceRequest = body.request;
+        let context = req.context;
         Helpers.log('TChannel', traceRequest.serverRole, 'received joinTrace request', Helpers.json2str(traceRequest));
 
         let promise = this._helpers.handleRequest(
