@@ -31,7 +31,7 @@ and assign the span to the context respectively.
         return new Context();
     };
 
-    let bridge = new TChannelBridge(tracer, contextFactory);
+    let bridge = new TChannelBridge(tracer, {contextFactory: contextFactory});
     let server = new TChannel({ serviceName: 'server' });
     server.listen(4040, '127.0.0.1');
     let serverThriftChannel = TChannelAsThrift({
