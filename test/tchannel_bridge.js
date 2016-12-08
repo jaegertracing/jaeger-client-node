@@ -44,7 +44,9 @@ describe ('test tchannel span bridge', () => {
         reporter,
         new ConstSampler(true)
     );
-    let bridge = new TChannelBridge(tracer, () => { return new DefaultContext(); });
+    let bridge = new TChannelBridge(tracer, {
+        contextFactory: () => { return new DefaultContext(); }
+    });
     let originalSpan = tracer.startSpan('futurama');
     originalSpan.setBaggageItem('leela', 'fry');
     let ctx1 = new DefaultContext();

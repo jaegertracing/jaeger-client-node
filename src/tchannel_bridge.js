@@ -19,6 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import assert from 'assert';
 import * as constants from './constants';
 import DefaultContext from './default_context';
 import Span from './span';
@@ -34,15 +35,27 @@ export default class TChannelBridge {
     _tracer: Tracer;
     _codec: TextMapCodec;
     _contextFactory: Function;
+    _getSpan: Function;
+    _setSpan: Function;
 
-    constructor(tracer: Tracer, contextFactory: ?Function) {
+    /**
+     * @param {Object} [tracer] - Jaeger Tracer
+     * @param {Object} [options] - options
+     * @param {Function} [options.contextFactory] - function used to create new Context object instead of DefaultContext
+     * @param {Function} [options.getSpan] - function(ctx): Span - used to read Span from Context object; default is ctx.getSpan()
+     * @param {Function} [options.setSpan] - function(ctx, span): void - used to set Span on the Context object; default is ctx.setSpan(span)
+     */
+    constructor(tracer: Tracer, options: any = {}) {
         this._tracer = tracer;
+        assert.equal('object', typeof(options), 'options must be an object');
         this._codec = new TextMapCodec({
             urlEncoding: false,
             contextKey: TCHANNEL_TRACING_PREFIX + constants.TRACER_STATE_HEADER_NAME,
             baggagePrefix: TCHANNEL_TRACING_PREFIX + constants.TRACER_BAGGAGE_HEADER_PREFIX
         });
-        this._contextFactory = contextFactory || function() { return new DefaultContext(); };
+        this._contextFactory = options.contextFactory || function() { return new DefaultContext(); };
+        this._getSpan = options.getSpan || function(ctx) { return ctx.getSpan(); };
+        this._setSpan = options.setSpan || function(ctx, span) { return ctx.setSpan(span); };
     }
 
     _tchannelCallbackWrapper(span: Span, callback: Function, err: any, res: any) {
@@ -81,7 +94,7 @@ export default class TChannelBridge {
                 span.setTag('as', request.headers.as);
             }
 
-            context.setSpan(span);
+            this._setSpan(context, span);
 
             // remove headers prefixed with $tracing$
             let headerKeys: Array<string> = Object.keys(headers);
@@ -101,7 +114,7 @@ export default class TChannelBridge {
     _wrapTChannelSend(wrappedSend: Function, channel: any, req: any, endpoint: string, headers: any, body: any, callback: Function) {
         headers = headers || {};
         let context: Context = req.context || this._contextFactory();
-        let childOf: Span = context.getSpan();
+        let childOf: Span = this._getSpan(context);
         let clientSpan = this._tracer.startSpan(endpoint, {
             childOf: childOf // ok if null, will start a new trace
         });
