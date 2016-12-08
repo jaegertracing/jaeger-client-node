@@ -23,6 +23,7 @@ import _ from 'lodash';
 import {assert} from 'chai';
 import * as constants from '../src/constants';
 import ConstSampler from '../src/samplers/const_sampler';
+import DefaultContext from '../src/default_context';
 import path from 'path';
 import InMemoryReporter from '../src/reporters/in_memory_reporter';
 import opentracing from 'opentracing';
@@ -43,20 +44,24 @@ describe ('test tchannel span bridge', () => {
         reporter,
         new ConstSampler(true)
     );
-    let bridge = new TChannelBridge(tracer);
+    let bridge = new TChannelBridge(tracer, {
+        contextFactory: () => { return new DefaultContext(); }
+    });
     let originalSpan = tracer.startSpan('futurama');
     originalSpan.setBaggageItem('leela', 'fry');
+    let ctx1 = new DefaultContext();
+    ctx1.setSpan(originalSpan);
 
     let options = Utils.combinations({
             as: ['json', 'thrift'],
             mode: ['req.send', 'channel.send'],
-            context: [{ openTracingSpan: originalSpan }, null],
+            context: [ctx1, null],
             headers: [{}, null]
     });
 
     _.each(options, (o) => {
-        o.description = `${o.as}#${o.mode}:context:${!!o.context}headers:${o.headers}`;
-        o.channelEncoding = o.as === 'json' ? TChannelAsJSON: TChannelAsThrift; 
+        o.description = `as=${o.as}|mode=${o.mode}`;
+        o.channelEncoding = o.as === 'json' ? TChannelAsJSON: TChannelAsThrift;
 
         it (o.description + ' spans propagate through tchannel and preserve parent span properties', (done) => {
             let server = new TChannel({
@@ -88,9 +93,8 @@ describe ('test tchannel span bridge', () => {
                 entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // ignored in json case
             });
 
-            // register the server request function.
-            let context = {};
-            encodedChannel.register(server, 'Echo::echo', context, bridge.tracedHandler(handleServerReq));
+            let options: any = {};
+            encodedChannel.register(server, 'Echo::echo', options, bridge.tracedHandler(handleServerReq));
             function handleServerReq(context, req, head, body, callback) {
                 // headers should not contain $tracing$ prefixed keys, which should be the
                 // only headers used for this test.
@@ -98,7 +102,7 @@ describe ('test tchannel span bridge', () => {
 
                 // assert that the serverSpan is a child of the original span, if context exists
                 // assert that the serverSpan is NOT a child of the original span, if contexts is null
-                assert.equal(originalSpan.context().traceIdStr === context.openTracingSpan.context().traceIdStr, !!o.context);
+                assert.equal(originalSpan.context().traceIdStr === req.context.getSpan().context().traceIdStr, !!o.context);
                 callback(null, { ok: true, body: { value: 'some-string' }});
             }
 

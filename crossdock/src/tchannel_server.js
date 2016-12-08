@@ -21,6 +21,7 @@
 
 import * as constants from './constants.js';
 import ConstSampler from '../../src/samplers/const_sampler.js';
+import DefaultContext from '../../src/default_context.js';
 import Helpers from './helpers';
 import InMemoryReporter from '../../src/reporters/in_memory_reporter.js';
 import Tracer from '../../src/tracer.js';
@@ -46,7 +47,7 @@ export default class TChannelServer {
             'channel': serverChannel,
             'entryPoint': crossdockSpecPath
         });
-        let context = {};
+        let context = new DefaultContext();
 
         let bridge = new TChannelBridge(this._tracer);
         let tracedHandler = bridge.tracedHandler(this.handleTChannelRequest.bind(this));
@@ -57,15 +58,16 @@ export default class TChannelServer {
         });
     }
 
-    handleTChannelRequest(context: any, req: any, head: any, body: any, callback: Function) {
+    handleTChannelRequest(perProcessOptions: any, req: any, head: any, body: any, callback: Function) {
         let isStartRequest: boolean = false;
         let traceRequest = body.request;
+        let context = req.context;
         Helpers.log('TChannel', traceRequest.serverRole, 'received joinTrace request', Helpers.json2str(traceRequest));
 
         let promise = this._helpers.handleRequest(
             isStartRequest,
             traceRequest,
-            context.openTracingSpan,
+            context.getSpan()
         );
 
         promise.then((tchannelResp) => {

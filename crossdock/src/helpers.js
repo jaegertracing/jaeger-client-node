@@ -23,6 +23,7 @@ import * as constants from './constants.js';
 import fs from 'fs';
 import path from 'path';
 import dns from 'dns';
+import DefaultContext from '../../src/default_context';
 import opentracing from 'opentracing';
 import request from 'request';
 import RSVP from 'rsvp';
@@ -148,9 +149,11 @@ export default class Helpers {
             let port = parseInt(downstream.port);
             let downstreamUrl = `http://${downstream.host}:${port}/join_trace`;
 
+            let context = new DefaultContext();
+            context.setSpan(serverSpan);
             let request = this._tracedChannel.request({
                 timeout: 5000,
-                context: { openTracingSpan: serverSpan },
+                context: context,
                 headers: {
                     cn: 'tcollector-requestor'
                 },
