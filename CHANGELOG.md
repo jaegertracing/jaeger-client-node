@@ -1,10 +1,13 @@
 sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
-
-1.2.1 (Unreleased)
+1.3.1 (Unreleased)
 -------------------
 
+1.3.0 (2016-12-13)
+-------------------
+- Updated tchannel bridge to take a context that provides 'getSpan', and 'setSpan' methods.
+- Added support for adaptive sampling.
 
 1.2.0 (2016-11-15)
 -------------------
