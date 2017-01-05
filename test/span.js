@@ -21,6 +21,7 @@
 import _ from 'lodash';
 import {assert, expect} from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
+import deepEqual from 'deep-equal';
 import * as constants from '../src/constants.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import MockLogger from './lib/mock_logger';
@@ -180,6 +181,39 @@ describe('span should', () => {
 
         assert.equal(key, 'some-key');
         assert.isOk(unnormalizedKey in Span._getBaggageHeaderCache());
+    });
+
+    describe('post trace sampling tests for span', () => {
+        let options = [
+            { desc: 'sampled: ', sampling: true, reportedSpans: 1 },
+            { desc: 'unsampled: ', sampling: false, reportedSpans: 0}
+        ];
+        _.each(options, (o) => {
+            it (o.desc + 'should save tags, and logs on an unsampled span incase it later becomes sampled', () => {
+                let reporter = new InMemoryReporter();
+                let tracer = new Tracer(
+                    'test-service-name',
+                    reporter,
+                    new ConstSampler(false),
+                    { logger: new MockLogger() }
+                );
+                let span = tracer.startSpan('initially-unsampled-span');
+                span.setTag('tagKeyOne', 'tagValueOne');
+                span.addTags({
+                    'tagKeyTwo': 'tagValueTwo'
+                });
+                span.log({'logkeyOne': 'logValueOne'});
+
+                tracer._sampler = new ConstSampler(o.sampling);
+                span.setOperationName('sampled-span');
+                span.finish();
+
+                assert.isOk(deepEqual(span._tags[0], {key: 'tagKeyOne', value: 'tagValueOne'}));
+                assert.isOk(deepEqual(span._tags[1], {key: 'tagKeyTwo', value: 'tagValueTwo'}));
+                assert.isOk(deepEqual(span._logs[0].fields[0], {key: 'logkeyOne', value: 'logValueOne'}));
+                assert.equal(reporter.spans.length, o.reportedSpans);
+            });
+        });
     });
 
     describe('setTag', () => {

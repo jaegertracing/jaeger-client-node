@@ -144,6 +144,17 @@ export default class Span {
      **/
     setOperationName(operationName: string): Span {
         this._operationName = operationName;
+        // If the span has debug set, then the question of resampling
+        // after setting the operation name is irrelevant.  The span is always
+        // sampled.
+        if (!this._spanContext.isDebug()) {
+            let sampler = this.tracer()._sampler;
+            var tags = {};  // TODO:oibe shouldn't this be initialized if not passed?
+            if (sampler.isSampled(operationName, tags)) {
+                this._spanContext.flags |= constants.SAMPLED_MASK;
+            }
+        }
+        this._spanContext.samplingFinished = true;
         return this;
     }
 
@@ -168,6 +179,19 @@ export default class Span {
     }
 
     /**
+     * Checks whether a span's sampling decision is finalized by calling setOperationName 
+     * This is used to hold onto tags, and logs, so that we can re-sample the span after
+     * an operation name is set on the span.  This is necessary because setting a sampling
+     * rate on the span before we know the operation name means adaptive-sampling
+     * does not know how to correlate the operation with sampling decisions.
+     *
+     * @return {boolean} - The decision about whether this span is done being sampled.
+     **/
+    isSampledAndFinished(): boolean {
+        return this._spanContext.isSampled() || !this._spanContext.samplingFinished;
+    }
+
+    /**
      * Adds a set of tags to a span.
      *
      * @param {Object} keyValuePairs - An object with key value pairs
@@ -180,7 +204,7 @@ export default class Span {
             delete keyValuePairs[opentracing_tags.SAMPLING_PRIORITY];
         }
 
-        if (this._spanContext.isSampled()) {
+        if (this.isSampledAndFinished()) {
             for (let key in keyValuePairs) {
                 if (keyValuePairs.hasOwnProperty(key)) {
                     let value = keyValuePairs[key];
@@ -205,7 +229,7 @@ export default class Span {
             return this;
         }
 
-        if (this._spanContext.isSampled()) {
+        if (this.isSampledAndFinished()) {
             this._tags.push({'key': key, 'value': value});
         }
         return this;
@@ -218,8 +242,7 @@ export default class Span {
      * @param {number} [timestamp] - the starting timestamp of a span.
      **/
     log(keyValuePairs: any, timestamp: ?number): void {
-        if (this._spanContext.isSampled()) {
-
+        if (this.isSampledAndFinished()) {
             this._logs.push({
                 'timestamp': timestamp || Utils.getTimestampMicros(),
                 'fields': Utils.convertObjectToTags(keyValuePairs)

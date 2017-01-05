@@ -33,6 +33,7 @@ export default class SpanContext {
     _flags: number;
     _baggage: any;
     _debugId: ?string;
+    _samplingFinished: boolean;
 
     constructor(traceId: any,
                 spanId: any,
@@ -42,7 +43,8 @@ export default class SpanContext {
                 parentIdStr: ?string,
                 flags: number = 0,
                 baggage: any = {},
-                debugId: ?string = '') {
+                debugId: ?string = '',
+                samplingFinished: boolean = false) {
         this._traceId = traceId;
         this._spanId = spanId;
         this._parentId = parentId;
@@ -52,6 +54,7 @@ export default class SpanContext {
         this._flags = flags;
         this._baggage = baggage;
         this._debugId = debugId;
+        this._samplingFinished = samplingFinished;
     }
 
     get traceId(): any {
@@ -108,6 +111,10 @@ export default class SpanContext {
         return this._debugId;
     }
 
+    get samplingFinished(): boolean {
+        return this._samplingFinished;
+    }
+
     set traceId(traceId: Buffer): void {
         this._traceId = traceId;
         this._traceIdStr = null;
@@ -133,6 +140,10 @@ export default class SpanContext {
 
     set debugId(debugId: ?string): void {
         this._debugId = debugId;
+    }
+
+    set samplingFinished(finished: boolean) {
+        this._samplingFinished = finished;
     }
 
     get isValid(): boolean {
@@ -169,7 +180,9 @@ export default class SpanContext {
             this._parentIdStr,
             this._flags,
             newBaggage,
-            this._debugId);
+            this._debugId,
+            this._samplingFinished
+            );
     }
 
     /**
