@@ -33,7 +33,20 @@ export default class SpanContext {
     _flags: number;
     _baggage: any;
     _debugId: ?string;
-    _samplingFinished: boolean;
+    /**
+     * This field exists to help distinguish between when a span can have a properly
+     * correlated operation name -> sampling rate mapping, and when it cannot.
+     * Adaptive sampling uses the operation name of a span to correlate it with
+     * a sampling rate.  If an operation name is set on a span after the span's creation
+     * then adaptive sampling can no long connect the name to the proper sampling rate.
+     * In order to correct this we allow a span to be written to, so that we can re-sample
+     * it in the case that an operation name is set after span creation. Situations 
+     * where a span context's sampling decision is finalized include:
+     * 1.)  Finishing the span.
+     * 2.)  Using the span context as a parent when beginning a new span.
+     * 3.)  Setting the operation name on the span.
+     * */
+    _samplingFinalized: boolean;
 
     constructor(traceId: any,
                 spanId: any,
@@ -44,7 +57,7 @@ export default class SpanContext {
                 flags: number = 0,
                 baggage: any = {},
                 debugId: ?string = '',
-                samplingFinished: boolean = false) {
+                samplingFinalized: boolean = false) {
         this._traceId = traceId;
         this._spanId = spanId;
         this._parentId = parentId;
@@ -54,7 +67,7 @@ export default class SpanContext {
         this._flags = flags;
         this._baggage = baggage;
         this._debugId = debugId;
-        this._samplingFinished = samplingFinished;
+        this._samplingFinalized = samplingFinalized;
     }
 
     get traceId(): any {
@@ -111,8 +124,8 @@ export default class SpanContext {
         return this._debugId;
     }
 
-    get samplingFinished(): boolean {
-        return this._samplingFinished;
+    get samplingFinalized(): boolean {
+        return this._samplingFinalized;
     }
 
     set traceId(traceId: Buffer): void {
@@ -142,8 +155,8 @@ export default class SpanContext {
         this._debugId = debugId;
     }
 
-    set samplingFinished(finished: boolean) {
-        this._samplingFinished = finished;
+    set samplingFinalized(finished: boolean) {
+        this._samplingFinalized = finished;
     }
 
     get isValid(): boolean {
@@ -181,7 +194,7 @@ export default class SpanContext {
             this._flags,
             newBaggage,
             this._debugId,
-            this._samplingFinished
+            this._samplingFinalized
             );
     }
 

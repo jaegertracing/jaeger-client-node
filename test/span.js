@@ -21,9 +21,11 @@
 import _ from 'lodash';
 import {assert, expect} from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
+import ProbabilisticSampler from '../src/samplers/probabilistic_sampler';
 import deepEqual from 'deep-equal';
 import * as constants from '../src/constants.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
+import JaegerTestUtils from '../src/test_util';
 import MockLogger from './lib/mock_logger';
 import Span from '../src/span.js';
 import SpanContext from '../src/span_context.js';
@@ -183,7 +185,7 @@ describe('span should', () => {
         assert.isOk(unnormalizedKey in Span._getBaggageHeaderCache());
     });
 
-    describe('post trace sampling tests for span', () => {
+    describe('adaptive sampling tests for span', () => {
         let options = [
             { desc: 'sampled: ', sampling: true, reportedSpans: 1 },
             { desc: 'unsampled: ', sampling: false, reportedSpans: 0}
@@ -213,6 +215,32 @@ describe('span should', () => {
                 assert.isOk(deepEqual(span._logs[0].fields[0], {key: 'logkeyOne', value: 'logValueOne'}));
                 assert.equal(reporter.spans.length, o.reportedSpans);
             });
+        });
+
+        it ('isWriteable returns false when finished or finalized', () => {
+            let finishedSpan = tracer.startSpan('finished-span');
+            finishedSpan.finish();
+
+            let finalizedSpan = tracer.startSpan('leela');
+            finalizedSpan.setOperationName('finalized-span');
+            finalizedSpan.context().flags = 0;  // Make span unsampled
+
+            assert.equal(finishedSpan._isWriteable(), false);
+            assert.equal(finalizedSpan._isWriteable(), false);
+        });
+
+        it ('setOperationName should add sampler tags to span', () => {
+            let span = tracer.startSpan('fry');
+            assert.isOk(JaegerTestUtils.hasTags(span, {
+                'sampler.type': 'const',
+                'sampler.param': true
+            }));
+            tracer._sampler = new ProbabilisticSampler(1.0);
+            span.setOperationName('re-sampled-span');
+            assert.isOk(JaegerTestUtils.hasTags(span, {
+                'sampler.type': 'probabilistic',
+                'sampler.param': 1
+            }));
         });
     });
 

@@ -202,6 +202,11 @@ export default class Tracer {
                 }
             }
         }
+        // Whenever a span context is the child of or a reference used for creating another span
+        // then the parent span context must be finalized.
+        if (parent) {
+            parent.samplingFinalized = true;
+        }
 
         let spanKindValue = userTags[opentracing_tags.SPAN_KIND];
         let rpcServer = (spanKindValue === opentracing_tags.SPAN_KIND_RPC_SERVER);
@@ -267,6 +272,7 @@ export default class Tracer {
             throw new Error(`Unsupported format: ${format}`);
         }
 
+        spanContext.samplingFinalized = true;
         injector.inject(spanContext, carrier);
     }
 

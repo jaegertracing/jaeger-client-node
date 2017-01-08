@@ -137,24 +137,51 @@ export default class Span {
     }
 
     /**
+     * Checks whether or not a span can be written to.
+     *
+     * @return {boolean} - The decision about whether this span can be written to.
+     **/
+    _isWriteable(): boolean {
+        // A span can NOT be written to if it:
+        // 1.) is finished.
+        // 2.) has been finalized, and is not sampled
+        return  this._duration === undefined &&
+                (!this._spanContext.samplingFinalized ||
+                this._spanContext.isSampled());
+    }
+
+    /**
      * Sets the operation name on this given span.
      *
      * @param {string} name - The name to use for setting a span's operation name.
      * @return {Span} - returns this span.
      **/
     setOperationName(operationName: string): Span {
+        if (!this._isWriteable()) {
+            return this;
+        }
+
         this._operationName = operationName;
         // If the span has debug set, then the question of resampling
         // after setting the operation name is irrelevant.  The span is always
         // sampled.
-        if (!this._spanContext.isDebug()) {
+
+        // Do not re-sample the span if:
+        // 1.)  Debug has been set on the span.  Sampling is irrelevant in this case
+        //      the span will be reported no matter what.
+        // 2.)  The span is the first in process.  If the span is the first in process
+        //      then the sampling decision has already been made.
+        // 3.)  The span is not writable.  This can happen if the span's context was used
+        //      to create another span, or if the span is finished.
+        if (!this._spanContext.isDebug() || !this._firstInProcess) {
             let sampler = this.tracer()._sampler;
-            var tags = {};  // TODO:oibe shouldn't this be initialized if not passed?
+            let tags = {};
             if (sampler.isSampled(operationName, tags)) {
                 this._spanContext.flags |= constants.SAMPLED_MASK;
+                this.addTags(tags);
             }
         }
-        this._spanContext.samplingFinished = true;
+        this._spanContext.samplingFinalized = true;
         return this;
     }
 
@@ -179,19 +206,6 @@ export default class Span {
     }
 
     /**
-     * Checks whether a span's sampling decision is finalized by calling setOperationName 
-     * This is used to hold onto tags, and logs, so that we can re-sample the span after
-     * an operation name is set on the span.  This is necessary because setting a sampling
-     * rate on the span before we know the operation name means adaptive-sampling
-     * does not know how to correlate the operation with sampling decisions.
-     *
-     * @return {boolean} - The decision about whether this span is done being sampled.
-     **/
-    isSampledAndFinished(): boolean {
-        return this._spanContext.isSampled() || !this._spanContext.samplingFinished;
-    }
-
-    /**
      * Adds a set of tags to a span.
      *
      * @param {Object} keyValuePairs - An object with key value pairs
@@ -204,7 +218,7 @@ export default class Span {
             delete keyValuePairs[opentracing_tags.SAMPLING_PRIORITY];
         }
 
-        if (this.isSampledAndFinished()) {
+        if (this._isWriteable()) {
             for (let key in keyValuePairs) {
                 if (keyValuePairs.hasOwnProperty(key)) {
                     let value = keyValuePairs[key];
@@ -229,7 +243,7 @@ export default class Span {
             return this;
         }
 
-        if (this.isSampledAndFinished()) {
+        if (this._isWriteable()) {
             this._tags.push({'key': key, 'value': value});
         }
         return this;
@@ -242,7 +256,7 @@ export default class Span {
      * @param {number} [timestamp] - the starting timestamp of a span.
      **/
     log(keyValuePairs: any, timestamp: ?number): void {
-        if (this.isSampledAndFinished()) {
+        if (this._isWriteable()) {
             this._logs.push({
                 'timestamp': timestamp || Utils.getTimestampMicros(),
                 'fields': Utils.convertObjectToTags(keyValuePairs)
