@@ -43,8 +43,9 @@ export default class SpanContext {
      * it in the case that an operation name is set after span creation. Situations 
      * where a span context's sampling decision is finalized include:
      * 1.)  Finishing the span.
-     * 2.)  Using the span context as a parent when beginning a new span.
-     * 3.)  Setting the operation name on the span.
+     * 2.)  Extracting the span context from the wire format.
+     * 3.)  A span that was created wth a parent span context.
+     * 4.)  Setting the operation name on the span.
      * */
     _samplingFinalized: boolean;
 
@@ -155,12 +156,12 @@ export default class SpanContext {
         this._debugId = debugId;
     }
 
-    set samplingFinalized(finished: boolean) {
-        this._samplingFinalized = finished;
-    }
-
     get isValid(): boolean {
         return !!((this._traceId || this._traceIdStr) && (this._spanId || this._spanIdStr));
+    }
+
+    finalizeSampling(): void {
+        this._samplingFinalized = true;
     }
 
     isDebugIDContainerOnly(): boolean {

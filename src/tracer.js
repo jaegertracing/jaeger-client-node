@@ -202,11 +202,6 @@ export default class Tracer {
                 }
             }
         }
-        // Whenever a span context is the child of or a reference used for creating another span
-        // then the parent span context must be finalized.
-        if (parent) {
-            parent.samplingFinalized = true;
-        }
 
         let spanKindValue = userTags[opentracing_tags.SPAN_KIND];
         let rpcServer = (spanKindValue === opentracing_tags.SPAN_KIND_RPC_SERVER);
@@ -241,6 +236,10 @@ export default class Tracer {
 
             // reuse parent's baggage as we'll never change it
             ctx.baggage = parent.baggage;
+
+            // Whenever a span context is the child of or a reference used for creating another span
+            // then the child span's context must be finalized.
+            ctx.finalizeSampling();
         }
 
         return this._startInternalSpan(
@@ -272,7 +271,14 @@ export default class Tracer {
             throw new Error(`Unsupported format: ${format}`);
         }
 
-        spanContext.samplingFinalized = true;
+        // Here because opentracing api compatibility tests can pass
+        // either span or span context.  Calling finalizeSampling below
+        // only works on a span context.
+        if (spanContext.context) {
+            spanContext = spanContext.context();
+        }
+
+        spanContext.finalizeSampling();
         injector.inject(spanContext, carrier);
     }
 
@@ -292,7 +298,13 @@ export default class Tracer {
             throw new Error(`Unsupported format: ${format}`);
         }
 
-        return extractor.extract(carrier);
+        let spanContext = extractor.extract(carrier);
+
+        // spanContext can be null if using a differnt type of extractor. i.e. BinaryCodec
+        if (spanContext) {
+            spanContext.finalizeSampling();
+        }
+        return spanContext;
     }
 
     /**

@@ -138,13 +138,15 @@ export default class Span {
 
     /**
      * Checks whether or not a span can be written to.
+     * A span can be written to if it:
+     *  - 'finish' has not been called on the span.
+     *  - the span is not finalized.
+     *  - the span has been finalized, but also is sampled.
+     *  - the span has not been serialized using injectors.
      *
      * @return {boolean} - The decision about whether this span can be written to.
      **/
     _isWriteable(): boolean {
-        // A span can NOT be written to if it:
-        // 1.) is finished.
-        // 2.) has been finalized, and is not sampled
         return  this._duration === undefined &&
                 (!this._spanContext.samplingFinalized ||
                 this._spanContext.isSampled());
@@ -157,31 +159,24 @@ export default class Span {
      * @return {Span} - returns this span.
      **/
     setOperationName(operationName: string): Span {
-        if (!this._isWriteable()) {
+        // TODO:oibe is it wrong to allow this to be set even if we are finished?
+        this._operationName = operationName;
+        // We re-sample the span if all of the following conditions hold:
+        // 1.)  The span is not marked as a 'debug' span.
+        // 2.)  The span is not the first in the process.
+        // 3.)  '_isWriteable' returns true.
+        if (this._spanContext.isDebug()  || !this._isWriteable()) {
             return this;
         }
 
-        this._operationName = operationName;
-        // If the span has debug set, then the question of resampling
-        // after setting the operation name is irrelevant.  The span is always
-        // sampled.
-
-        // Do not re-sample the span if:
-        // 1.)  Debug has been set on the span.  Sampling is irrelevant in this case
-        //      the span will be reported no matter what.
-        // 2.)  The span is the first in process.  If the span is the first in process
-        //      then the sampling decision has already been made.
-        // 3.)  The span is not writable.  This can happen if the span's context was used
-        //      to create another span, or if the span is finished.
-        if (!this._spanContext.isDebug() || !this._firstInProcess) {
-            let sampler = this.tracer()._sampler;
-            let tags = {};
-            if (sampler.isSampled(operationName, tags)) {
-                this._spanContext.flags |= constants.SAMPLED_MASK;
-                this.addTags(tags);
-            }
+        let sampler = this.tracer()._sampler;
+        let tags = {};
+        if (!this._spanContext._samplingFinalized && sampler.isSampled(operationName, tags)) {
+            this._spanContext.flags |= constants.SAMPLED_MASK;
+            this.addTags(tags);
         }
-        this._spanContext.samplingFinalized = true;
+        this._spanContext.finalizeSampling();
+
         return this;
     }
 

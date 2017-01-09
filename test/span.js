@@ -27,6 +27,7 @@ import * as constants from '../src/constants.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import JaegerTestUtils from '../src/test_util';
 import MockLogger from './lib/mock_logger';
+import * as opentracing from 'opentracing';
 import Span from '../src/span.js';
 import SpanContext from '../src/span_context.js';
 import sinon from 'sinon';
@@ -217,6 +218,18 @@ describe('span should', () => {
             });
         });
 
+        it ('a span is finalized if injected into headers', () => {
+            let headers = {};
+            tracer.inject(span.context(), opentracing.FORMAT_HTTP_HEADERS, headers);
+
+            assert.isOk(span.context().samplingFinalized);
+        });
+
+        it ('a child span is finalized', () => {
+            let childSpan = tracer.startSpan('finalized', { childOf: span.context() });
+            assert.isOk(childSpan.context().samplingFinalized);
+        });
+
         it ('isWriteable returns false when finished or finalized', () => {
             let finishedSpan = tracer.startSpan('finished-span');
             finishedSpan.finish();
@@ -229,17 +242,42 @@ describe('span should', () => {
             assert.equal(finalizedSpan._isWriteable(), false);
         });
 
-        it ('setOperationName should add sampler tags to span', () => {
+        it ('setOperationName should add sampler tags to span, and change operationName', () => {
             let span = tracer.startSpan('fry');
+
+            assert.equal(span.operationName, 'fry');
             assert.isOk(JaegerTestUtils.hasTags(span, {
                 'sampler.type': 'const',
                 'sampler.param': true
             }));
             tracer._sampler = new ProbabilisticSampler(1.0);
             span.setOperationName('re-sampled-span');
+
+            assert.equal(span.operationName, 're-sampled-span');
             assert.isOk(JaegerTestUtils.hasTags(span, {
                 'sampler.type': 'probabilistic',
                 'sampler.param': 1
+            }));
+        });
+
+        it ('setOperationName should not change the sampling tags, but should change the samplingRate', () => {
+            let span = tracer.startSpan('fry');
+
+            span.setOperationName('new-span-one');
+            assert.equal(span.operationName, 'new-span-one');
+
+            // update sampler to something will always sample
+            tracer._sampler = new ProbabilisticSampler(1.0);
+
+            // The second cal lshould rename the operation name, but
+            // not re-sample the span.  This is because finalize was set 
+            // in the first 'setOperationName' call.
+            span.setOperationName('new-span-two');
+
+            assert.equal(span.operationName, 'new-span-two');
+            assert.isOk(JaegerTestUtils.hasTags(span, {
+                'sampler.type': 'const',
+                'sampler.param': true
             }));
         });
     });
