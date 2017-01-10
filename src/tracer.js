@@ -239,6 +239,7 @@ export default class Tracer {
 
             // Whenever a span context is the child of or a reference used for creating another span
             // then the child span's context must be finalized.
+            parent.finalizeSampling();
             ctx.finalizeSampling();
         }
 
@@ -271,15 +272,14 @@ export default class Tracer {
             throw new Error(`Unsupported format: ${format}`);
         }
 
-        // Here because opentracing api compatibility tests can pass
-        // either span or span context.  Calling finalizeSampling below
-        // only works on a span context.
         if (spanContext.context) {
             spanContext = spanContext.context();
         }
 
-        spanContext.finalizeSampling();
-        injector.inject(spanContext, carrier);
+        if (spanContext) {
+            spanContext.finalizeSampling();
+            injector.inject(spanContext, carrier);
+        }
     }
 
     /**
@@ -300,7 +300,6 @@ export default class Tracer {
 
         let spanContext = extractor.extract(carrier);
 
-        // spanContext can be null if using a differnt type of extractor. i.e. BinaryCodec
         if (spanContext) {
             spanContext.finalizeSampling();
         }

@@ -22,7 +22,7 @@
 import * as constants from './constants.js';
 import NullLogger from './logger.js';
 import SpanContext from './span_context.js';
-import {Tags as opentracing_tags} from 'opentracing';
+import * as opentracing from 'opentracing';
 import Utils from './util.js';
 
 export default class Span {
@@ -138,18 +138,18 @@ export default class Span {
 
     /**
      * Checks whether or not a span can be written to.
-     * A span can be written to if it:
-     *  - 'finish' has not been called on the span.
-     *  - the span is not finalized.
-     *  - the span has been finalized, but also is sampled.
-     *  - the span has not been serialized using injectors.
+     * A span is finalized when either of these happens:
+     * - it has inherited the sampling decision from its parent
+     * - its debug flag is set via the sampling.priority tag
+     * - it is finish()-ed
+     * - setOperationName is called
+     * - it is used as a parent for another span
+     * - its context is serialized using injectors
      *
      * @return {boolean} - The decision about whether this span can be written to.
      **/
     _isWriteable(): boolean {
-        return  this._duration === undefined &&
-                (!this._spanContext.samplingFinalized ||
-                this._spanContext.isSampled());
+        return !this._spanContext.samplingFinalized || this._spanContext.isSampled();
     }
 
     /**
@@ -161,11 +161,8 @@ export default class Span {
     setOperationName(operationName: string): Span {
         // TODO:oibe is it wrong to allow this to be set even if we are finished?
         this._operationName = operationName;
-        // We re-sample the span if all of the following conditions hold:
-        // 1.)  The span is not marked as a 'debug' span.
-        // 2.)  The span is not the first in the process.
-        // 3.)  '_isWriteable' returns true.
-        if (this._spanContext.isDebug()  || !this._isWriteable()) {
+        // We re-sample the span if it has not been finalized.
+        if (this._spanContext.samplingFinalized) {
             return this;
         }
 
@@ -193,6 +190,7 @@ export default class Span {
             return;
         }
 
+        this._spanContext.finalizeSampling();
         if (this._spanContext.isSampled()) {
             let endTime = finishTime || Utils.getTimestampMicros();
             this._duration = endTime - this._startTime;
@@ -208,9 +206,9 @@ export default class Span {
      * @return {Span} - returns this span.
      **/
     addTags(keyValuePairs: any): Span {
-        if (opentracing_tags.SAMPLING_PRIORITY in keyValuePairs) {
-            this._setSamplingPriority(keyValuePairs[opentracing_tags.SAMPLING_PRIORITY]);
-            delete keyValuePairs[opentracing_tags.SAMPLING_PRIORITY];
+        if (opentracing.Tags.SAMPLING_PRIORITY in keyValuePairs) {
+            this._setSamplingPriority(keyValuePairs[opentracing.Tags.SAMPLING_PRIORITY]);
+            delete keyValuePairs[opentracing.Tags.SAMPLING_PRIORITY];
         }
 
         if (this._isWriteable()) {
@@ -233,7 +231,7 @@ export default class Span {
      * @return {Span} - returns this span.
      * */
     setTag(key: string, value: any): Span {
-        if (key === opentracing_tags.SAMPLING_PRIORITY) {
+        if (key === opentracing.Tags.SAMPLING_PRIORITY) {
             this._setSamplingPriority(value);
             return this;
         }
@@ -276,6 +274,7 @@ export default class Span {
     _setSamplingPriority(priority: number): void {
         if (priority > 0) {
             this._spanContext.flags = this._spanContext.flags | constants.SAMPLED_MASK | constants.DEBUG_MASK;
+            this._spanContext.finalizeSampling();
         } else {
             this._spanContext.flags = this._spanContext.flags & (~constants.SAMPLED_MASK);
         }

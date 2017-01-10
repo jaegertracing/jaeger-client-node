@@ -218,28 +218,47 @@ describe('span should', () => {
             });
         });
 
-        it ('a span is finalized if injected into headers', () => {
-            let headers = {};
-            tracer.inject(span.context(), opentracing.FORMAT_HTTP_HEADERS, headers);
+        describe('Finalize spans that', () => {
+            it ('inherit sampling decision is finalized', () => {
+                let childSpan = tracer.startSpan('child-span', {childOf: span});
+                assert.isOk(span.context().samplingFinalized);
+                assert.isOk(childSpan.context().samplingFinalized);
+            });
 
-            assert.isOk(span.context().samplingFinalized);
+            it ('set the sampling priority to enable debug', () => {
+                span.setTag(opentracing.Tags.SAMPLING_PRIORITY, 1);
+                assert.isOk(span.context().samplingFinalized);
+            });
+
+            it ('has finished', () => {
+                span.finish();
+                assert.isOk(span.context().samplingFinalized);
+            });
+
+            it ('has called setOperationName', () => {
+                span.setOperationName('fry');
+                assert.isOk(span.context().samplingFinalized);
+            });
+
+            it ('are injected into headers', () => {
+                let headers = {};
+                tracer.inject(span.context(), opentracing.FORMAT_HTTP_HEADERS, headers);
+
+                assert.isOk(span.context().samplingFinalized);
+            });
         });
 
-        it ('a child span is finalized', () => {
-            let childSpan = tracer.startSpan('finalized', { childOf: span.context() });
-            assert.isOk(childSpan.context().samplingFinalized);
-        });
+        it ('isWriteable returns true if not finalized, or the span is sampled', () => {
+            tracer = new Tracer(
+                'test-service-name',
+                new InMemoryReporter(),
+                new ConstSampler(false),
+                { logger: new MockLogger() }
+            );
+            let unFinalizedSpan = tracer.startSpan('unFinalizedSpan');
 
-        it ('isWriteable returns false when finished or finalized', () => {
-            let finishedSpan = tracer.startSpan('finished-span');
-            finishedSpan.finish();
-
-            let finalizedSpan = tracer.startSpan('leela');
-            finalizedSpan.setOperationName('finalized-span');
-            finalizedSpan.context().flags = 0;  // Make span unsampled
-
-            assert.equal(finishedSpan._isWriteable(), false);
-            assert.equal(finalizedSpan._isWriteable(), false);
+            assert.isOk(unFinalizedSpan._isWriteable());
+            assert.isOk(span._isWriteable());
         });
 
         it ('setOperationName should add sampler tags to span, and change operationName', () => {
@@ -260,7 +279,7 @@ describe('span should', () => {
             }));
         });
 
-        it ('setOperationName should not change the sampling tags, but should change the samplingRate', () => {
+        it ('setOperationName should not change the sampling tags, but should change the operationName', () => {
             let span = tracer.startSpan('fry');
 
             span.setOperationName('new-span-one');
