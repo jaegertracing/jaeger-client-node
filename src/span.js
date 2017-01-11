@@ -138,7 +138,7 @@ export default class Span {
 
     /**
      * Checks whether or not a span can be written to.
-     * A span is finalized when either of these happens:
+     * A span is finalized when any of these happens:
      * - it has inherited the sampling decision from its parent
      * - its debug flag is set via the sampling.priority tag
      * - it is finish()-ed
@@ -168,7 +168,7 @@ export default class Span {
 
         let sampler = this.tracer()._sampler;
         let tags = {};
-        if (!this._spanContext._samplingFinalized && sampler.isSampled(operationName, tags)) {
+        if (sampler.isSampled(operationName, tags)) {
             this._spanContext.flags |= constants.SAMPLED_MASK;
             this.addTags(tags);
         }

@@ -44,7 +44,7 @@ export default class SpanContext {
      * where a span context's sampling decision is finalized include:
      * 1.)  Finishing the span.
      * 2.)  Extracting the span context from the wire format.
-     * 3.)  A span that was created wth a parent span context.
+     * 3.)  A span that was created with a parent span context.
      * 4.)  Setting the operation name on the span.
      * */
     _samplingFinalized: boolean;
