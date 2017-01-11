@@ -228,9 +228,13 @@ describe('span should', () => {
             it ('set the sampling priority to enable debug', () => {
                 span.setTag(opentracing.Tags.SAMPLING_PRIORITY, 1);
                 assert.isOk(span.context().samplingFinalized);
+
+                let unsampledSpan = tracer.startSpan('usampled-span');
+                unsampledSpan.setTag(opentracing.Tags.SAMPLING_PRIORITY, -1);
+                assert.isOk(unsampledSpan.context().samplingFinalized);
             });
 
-            it ('has finished', () => {
+            it ('have finished', () => {
                 span.finish();
                 assert.isOk(span.context().samplingFinalized);
             });
@@ -256,12 +260,14 @@ describe('span should', () => {
                 { logger: new MockLogger() }
             );
             let unFinalizedSpan = tracer.startSpan('unFinalizedSpan');
-
             assert.isOk(unFinalizedSpan._isWriteable());
-            assert.isOk(span._isWriteable());
+
+            tracer._sampler = new ConstSampler(true);
+            let sampledSpan = tracer.startSpan('sampled-span');
+            assert.isOk(sampledSpan._isWriteable());
         });
 
-        it ('setOperationName should add sampler tags to span, and change operationName', () => {
+        it ('2nd setOperationName should add sampler tags to span, and change operationName', () => {
             let span = tracer.startSpan('fry');
 
             assert.equal(span.operationName, 'fry');
@@ -279,7 +285,7 @@ describe('span should', () => {
             }));
         });
 
-        it ('setOperationName should not change the sampling tags, but should change the operationName', () => {
+        it ('2nd setOperationName should not change the sampling tags, but should change the operationName', () => {
             let span = tracer.startSpan('fry');
 
             span.setOperationName('new-span-one');

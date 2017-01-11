@@ -42,10 +42,12 @@ export default class SpanContext {
      * In order to correct this we allow a span to be written to, so that we can re-sample
      * it in the case that an operation name is set after span creation. Situations 
      * where a span context's sampling decision is finalized include:
-     * 1.)  Finishing the span.
-     * 2.)  Extracting the span context from the wire format.
-     * 3.)  A span that was created with a parent span context.
-     * 4.)  Setting the operation name on the span.
+     * - it has inherited the sampling decision from its parent
+     * - its debug flag is set via the sampling.priority tag
+     * - it is finish()-ed
+     * - setOperationName is called
+     * - it is used as a parent for another span
+     * - its context is serialized using injectors
      * */
     _samplingFinalized: boolean;
 

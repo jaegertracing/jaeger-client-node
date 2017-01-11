@@ -138,13 +138,6 @@ export default class Span {
 
     /**
      * Checks whether or not a span can be written to.
-     * A span is finalized when any of these happens:
-     * - it has inherited the sampling decision from its parent
-     * - its debug flag is set via the sampling.priority tag
-     * - it is finish()-ed
-     * - setOperationName is called
-     * - it is used as a parent for another span
-     * - its context is serialized using injectors
      *
      * @return {boolean} - The decision about whether this span can be written to.
      **/
@@ -274,9 +267,9 @@ export default class Span {
     _setSamplingPriority(priority: number): void {
         if (priority > 0) {
             this._spanContext.flags = this._spanContext.flags | constants.SAMPLED_MASK | constants.DEBUG_MASK;
-            this._spanContext.finalizeSampling();
         } else {
             this._spanContext.flags = this._spanContext.flags & (~constants.SAMPLED_MASK);
         }
+        this._spanContext.finalizeSampling();
     }
 }
