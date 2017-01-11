@@ -43,7 +43,9 @@ let jaegerSchema = {
         'sampler': {
             'properties': {
                 'type': {'type': 'string' },
-                'param': {'type': 'number' }
+                'param': {'type': 'number' },
+                'host': {'type': 'string' },
+                'port': {'type': 'number' }
             },
             'required': ['type', 'param'],
             'additionalProperties': false
@@ -65,6 +67,8 @@ export default class Configuration {
     static _getSampler(config) {
         let type = config.sampler.type;
         let param = config.sampler.param;
+        let host;
+        let port;
 
         let sampler;
         if (type === 'probabilistic') {
@@ -81,7 +85,9 @@ export default class Configuration {
 
         if (type === 'remote') {
             sampler = new RemoteSampler(config.serviceName, {
-                sampler: new ProbabilisticSampler(param)
+                sampler: new ProbabilisticSampler(param),
+                host: host,
+                port: port
             });
         }
 
