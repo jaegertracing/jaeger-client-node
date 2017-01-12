@@ -237,8 +237,6 @@ export default class Tracer {
             // reuse parent's baggage as we'll never change it
             ctx.baggage = parent.baggage;
 
-            // Whenever a span context is the child of or a reference used for creating another span
-            // then the child span's context must be finalized.
             parent.finalizeSampling();
             ctx.finalizeSampling();
         }
@@ -267,6 +265,10 @@ export default class Tracer {
      *         for a description of the carrier object.
      **/
     inject(spanContext: SpanContext, format: string, carrier: any): void {
+        if (!spanContext) {
+            return;
+        }
+
         let injector = this._injectors[format];
         if (!injector) {
             throw new Error(`Unsupported format: ${format}`);
@@ -276,10 +278,8 @@ export default class Tracer {
             spanContext = spanContext.context();
         }
 
-        if (spanContext) {
-            spanContext.finalizeSampling();
-            injector.inject(spanContext, carrier);
-        }
+        spanContext.finalizeSampling();
+        injector.inject(spanContext, carrier);
     }
 
     /**

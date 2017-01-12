@@ -152,7 +152,6 @@ export default class Span {
      * @return {Span} - returns this span.
      **/
     setOperationName(operationName: string): Span {
-        // TODO:oibe is it wrong to allow this to be set even if we are finished?
         this._operationName = operationName;
         // We re-sample the span if it has not been finalized.
         if (this._spanContext.samplingFinalized) {

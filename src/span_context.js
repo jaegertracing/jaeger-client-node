@@ -38,7 +38,7 @@ export default class SpanContext {
      * correlated operation name -> sampling rate mapping, and when it cannot.
      * Adaptive sampling uses the operation name of a span to correlate it with
      * a sampling rate.  If an operation name is set on a span after the span's creation
-     * then adaptive sampling can no long connect the name to the proper sampling rate.
+     * then adaptive sampling cannot associate the operation name with the proper sampling rate.
      * In order to correct this we allow a span to be written to, so that we can re-sample
      * it in the case that an operation name is set after span creation. Situations 
      * where a span context's sampling decision is finalized include:
