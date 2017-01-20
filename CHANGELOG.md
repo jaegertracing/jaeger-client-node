@@ -1,8 +1,14 @@
 sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
-1.3.1 (Unreleased)
+3.0.1 (Unreleased)
 -------------------
+
+3.0.0 (2017-01-20)
+-------------------
+- Added re-sampling after setOperationName is called.  This supports
+  adaptive sampling in the cases where a span is given an operation name
+  after it has been created.
 
 1.3.0 (2016-12-13)
 -------------------
