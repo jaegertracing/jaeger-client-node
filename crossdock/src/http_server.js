@@ -66,8 +66,9 @@ export default class HttpServer {
                 });
             });
         });
-        app.post('/create_traces', handler.generateTraces);
-
+        app.post('/create_traces', (req, res) => {
+            handler.generateTraces(req, res);
+        });
         app.listen(8081, () => {
             Helpers.log('HTTP server listening on port 8081...');
         });

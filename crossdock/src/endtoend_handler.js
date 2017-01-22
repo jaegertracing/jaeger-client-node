@@ -21,18 +21,37 @@
 
 import {initTracer} from '../../src/index';
 import Tracer from '../../src/tracer.js';
-import * as constants from './constants.js';
+import * as constants from '../../src/constants.js';
 
 export default class EndToEndHandler {
     _tracer: Tracer;
 
-    constructor() {
+    /**
+     * Handler that creates traces from a http request.
+     *
+     * json: {
+     *   "operation": "operationName",
+     *   "count": 2,
+     *   "tags": {
+     *     "key": "value"
+     *   }
+     * }
+     *
+     * Given the above json payload, the handler will create 2 traces for the "operationName"
+     * operation with the tags: {"key":"value"}. These traces are reported to the agent with
+     * the hostname "test_driver".
+     *
+     * @param {object} [options] - optional settings
+     * @param {string} [options.host] - host for jaeger-agent reporting endpoint, defaults to 'test_driver'
+     * @param {number} [options.port] - port for jaeger-agent reporting endpoint, defaults to 6832
+     */
+    constructor(options: any = {}) {
         let tracerConfig: any = {
             serviceName: "crossdock-node",
             reporter: {
                 flushIntervalMs: 1000,
-                agentHost: "test_driver",
-                agentPort: 6832
+                agentHost: options.host || "test_driver",
+                agentPort: options.port || 6832
             },
             sampler: {
                 type: constants.SAMPLER_TYPE_REMOTE,
@@ -43,25 +62,21 @@ export default class EndToEndHandler {
             }
         };
         this._tracer = initTracer(tracerConfig);
-    };
+    }
 
     generateTraces(req: any, res: any): void {
         let traceRequest = req.body;
-        this.createTraces(
-            traceRequest.operation,
-            traceRequest.count,
-            traceRequest.tags
-        );
-        res.send(200);
+        this._createTraces(traceRequest.operation, traceRequest.count, traceRequest.tags);
+        res.sendStatus(200);
     }
 
-    createTraces(operationName: string, numTraces: number, tags: any): void {
+    _createTraces(operationName: string, numTraces: number, tags: any): void {
         for (let i = 0; i < numTraces; i++) {
-            this.createAndReportTrace(operationName, tags);
+            this._createAndReportTrace(operationName, tags);
         }
     }
 
-    createAndReportTrace(operationName: string, tags: any): void {
+    _createAndReportTrace(operationName: string, tags: any): void {
         let span = this._tracer.startSpan(operationName, {tags: tags});
         span.finish();
     }
