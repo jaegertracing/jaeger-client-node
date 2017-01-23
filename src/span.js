@@ -22,7 +22,7 @@
 import * as constants from './constants.js';
 import NullLogger from './logger.js';
 import SpanContext from './span_context.js';
-import {Tags as opentracing_tags} from 'opentracing';
+import * as opentracing from 'opentracing';
 import Utils from './util.js';
 
 export default class Span {
@@ -137,6 +137,15 @@ export default class Span {
     }
 
     /**
+     * Checks whether or not a span can be written to.
+     *
+     * @return {boolean} - The decision about whether this span can be written to.
+     **/
+    _isWriteable(): boolean {
+        return !this._spanContext.samplingFinalized || this._spanContext.isSampled();
+    }
+
+    /**
      * Sets the operation name on this given span.
      *
      * @param {string} name - The name to use for setting a span's operation name.
@@ -144,6 +153,19 @@ export default class Span {
      **/
     setOperationName(operationName: string): Span {
         this._operationName = operationName;
+        // We re-sample the span if it has not been finalized.
+        if (this._spanContext.samplingFinalized) {
+            return this;
+        }
+
+        let sampler = this.tracer()._sampler;
+        let tags = {};
+        if (sampler.isSampled(operationName, tags)) {
+            this._spanContext.flags |= constants.SAMPLED_MASK;
+            this.addTags(tags);
+        }
+        this._spanContext.finalizeSampling();
+
         return this;
     }
 
@@ -160,6 +182,7 @@ export default class Span {
             return;
         }
 
+        this._spanContext.finalizeSampling();
         if (this._spanContext.isSampled()) {
             let endTime = finishTime || Utils.getTimestampMicros();
             this._duration = endTime - this._startTime;
@@ -175,12 +198,12 @@ export default class Span {
      * @return {Span} - returns this span.
      **/
     addTags(keyValuePairs: any): Span {
-        if (opentracing_tags.SAMPLING_PRIORITY in keyValuePairs) {
-            this._setSamplingPriority(keyValuePairs[opentracing_tags.SAMPLING_PRIORITY]);
-            delete keyValuePairs[opentracing_tags.SAMPLING_PRIORITY];
+        if (opentracing.Tags.SAMPLING_PRIORITY in keyValuePairs) {
+            this._setSamplingPriority(keyValuePairs[opentracing.Tags.SAMPLING_PRIORITY]);
+            delete keyValuePairs[opentracing.Tags.SAMPLING_PRIORITY];
         }
 
-        if (this._spanContext.isSampled()) {
+        if (this._isWriteable()) {
             for (let key in keyValuePairs) {
                 if (keyValuePairs.hasOwnProperty(key)) {
                     let value = keyValuePairs[key];
@@ -200,12 +223,12 @@ export default class Span {
      * @return {Span} - returns this span.
      * */
     setTag(key: string, value: any): Span {
-        if (key === opentracing_tags.SAMPLING_PRIORITY) {
+        if (key === opentracing.Tags.SAMPLING_PRIORITY) {
             this._setSamplingPriority(value);
             return this;
         }
 
-        if (this._spanContext.isSampled()) {
+        if (this._isWriteable()) {
             this._tags.push({'key': key, 'value': value});
         }
         return this;
@@ -218,8 +241,7 @@ export default class Span {
      * @param {number} [timestamp] - the starting timestamp of a span.
      **/
     log(keyValuePairs: any, timestamp: ?number): void {
-        if (this._spanContext.isSampled()) {
-
+        if (this._isWriteable()) {
             this._logs.push({
                 'timestamp': timestamp || Utils.getTimestampMicros(),
                 'fields': Utils.convertObjectToTags(keyValuePairs)
@@ -247,5 +269,6 @@ export default class Span {
         } else {
             this._spanContext.flags = this._spanContext.flags & (~constants.SAMPLED_MASK);
         }
+        this._spanContext.finalizeSampling();
     }
 }

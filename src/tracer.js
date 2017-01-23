@@ -236,6 +236,9 @@ export default class Tracer {
 
             // reuse parent's baggage as we'll never change it
             ctx.baggage = parent.baggage;
+
+            parent.finalizeSampling();
+            ctx.finalizeSampling();
         }
 
         return this._startInternalSpan(
@@ -262,11 +265,20 @@ export default class Tracer {
      *         for a description of the carrier object.
      **/
     inject(spanContext: SpanContext, format: string, carrier: any): void {
+        if (!spanContext) {
+            return;
+        }
+
         let injector = this._injectors[format];
         if (!injector) {
             throw new Error(`Unsupported format: ${format}`);
         }
 
+        if (spanContext.context) {
+            spanContext = spanContext.context();
+        }
+
+        spanContext.finalizeSampling();
         injector.inject(spanContext, carrier);
     }
 
@@ -286,7 +298,12 @@ export default class Tracer {
             throw new Error(`Unsupported format: ${format}`);
         }
 
-        return extractor.extract(carrier);
+        let spanContext = extractor.extract(carrier);
+
+        if (spanContext) {
+            spanContext.finalizeSampling();
+        }
+        return spanContext;
     }
 
     /**
