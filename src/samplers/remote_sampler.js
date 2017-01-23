@@ -60,11 +60,11 @@ export default class RemoteControlledSampler {
      * @param {object} [options.sampler] - initial sampler to use prior to retrieving strategies from Agent
      * @param {object} [options.logger] - optional logger, see _flow/logger.js
      * @param {object} [options.metrics] - instance of Metrics object
-     * @param {number} [refreshInterval] - interval in milliseconds before sampling strategy refreshes (0 to not refresh)
-     * @param {string} [host] - host for jaeger-agent, defaults to 'localhost'
-     * @param {number} [port] - port for jaeger-agent for SamplingManager endpoint
-     * @param {number} [maxOperations] - max number of operations to track in PerOperationSampler
-     * @param {function} [onSamplerUpdate]
+     * @param {number} [options.refreshInterval] - interval in milliseconds before sampling strategy refreshes (0 to not refresh)
+     * @param {string} [options.host] - host for jaeger-agent, defaults to 'localhost'
+     * @param {number} [options.port] - port for jaeger-agent for SamplingManager endpoint
+     * @param {number} [options.maxOperations] - max number of operations to track in PerOperationSampler
+     * @param {function} [options.onSamplerUpdate]
      */
     constructor(serviceName: string, options: any = {}) {
         this._serviceName = serviceName;

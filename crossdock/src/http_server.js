@@ -26,6 +26,7 @@ import Helpers from './helpers';
 import InMemoryReporter from '../../src/reporters/in_memory_reporter.js';
 import opentracing from 'opentracing';
 import Tracer from '../../src/tracer.js';
+import EndToEndHandler from "./endtoend_handler";
 
 export default class HttpServer {
     _tracer: Tracer;
@@ -35,6 +36,7 @@ export default class HttpServer {
         let app = express();
         this._tracer = new Tracer('node', new InMemoryReporter(), new ConstSampler(false));
         this._helpers = new Helpers(this._tracer);
+        let handler = new EndToEndHandler();
 
         // json responses need bodyParser when working with express
         app.use(bodyParser.json());
@@ -64,7 +66,9 @@ export default class HttpServer {
                 });
             });
         });
-
+        app.post('/create_traces', (req, res) => {
+            handler.generateTraces(req, res);
+        });
         app.listen(8081, () => {
             Helpers.log('HTTP server listening on port 8081...');
         });

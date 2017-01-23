@@ -18,7 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-
 import SpanContext from './span_context';
 import Span from './span';
 import ConstSampler from './samplers/const_sampler';
@@ -33,6 +32,7 @@ import Tracer from './tracer';
 import UDPSender from './reporters/udp_sender';
 import {Validator} from 'jsonschema';
 import opentracing from 'opentracing';
+import * as constants from './constants.js';
 
 let jaegerSchema = {
     'id': '/jaeger',
@@ -43,7 +43,10 @@ let jaegerSchema = {
         'sampler': {
             'properties': {
                 'type': {'type': 'string' },
-                'param': {'type': 'number' }
+                'param': {'type': 'number' },
+                'host': {'type': 'string' },
+                'port': {'type': 'number' },
+                'refreshIntervalMs': {'type': 'number' }
             },
             'required': ['type', 'param'],
             'additionalProperties': false
@@ -65,23 +68,29 @@ export default class Configuration {
     static _getSampler(config) {
         let type = config.sampler.type;
         let param = config.sampler.param;
+        let host = config.sampler.host;
+        let port = config.sampler.port;
+        let refreshIntervalMs = config.sampler.refreshIntervalMs;
 
         let sampler;
-        if (type === 'probabilistic') {
+        if (type === constants.SAMPLER_TYPE_PROBABILISTIC) {
             sampler = new ProbabilisticSampler(param);
         }
 
-        if (type === 'ratelimiting') {
+        if (type === constants.SAMPLER_TYPE_RATE_LIMITING) {
             sampler = new RateLimitingSampler(param);
         }
 
-        if (type === 'const') {
+        if (type === constants.SAMPLER_TYPE_CONST) {
             sampler = new ConstSampler(param === 1);
         }
 
-        if (type === 'remote') {
+        if (type === constants.SAMPLER_TYPE_REMOTE) {
             sampler = new RemoteSampler(config.serviceName, {
-                sampler: new ProbabilisticSampler(param)
+                sampler: new ProbabilisticSampler(param),
+                host: host,
+                port: port,
+                refreshInterval: refreshIntervalMs
             });
         }
 
