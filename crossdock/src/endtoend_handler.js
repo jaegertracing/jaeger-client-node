@@ -20,7 +20,6 @@
 // THE SOFTWARE.
 
 import {initTracer} from '../../src/index';
-import Tracer from '../../src/tracer.js';
 import * as constants from '../../src/constants.js';
 
 export default class EndToEndHandler {
@@ -57,7 +56,7 @@ export default class EndToEndHandler {
             },
             sampler: {
                 type: constants.SAMPLER_TYPE_REMOTE,
-                param: 1.0,
+                param: 1,
                 host: "test_driver",
                 port: 5778,
                 refreshIntervalMs: 5000
