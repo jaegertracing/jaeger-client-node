@@ -101,7 +101,7 @@ export default class RemoteControlledSampler {
 
     _refreshSamplingStrategy() {
         let serviceName: string = encodeURIComponent(this._serviceName);
-        let url: string = `http://${this._host}:${this._port}/?service=${serviceName}`;
+        let url: string = `http://${this._host}:${this._port}/sampling?service=${serviceName}`;
         request.get(url, (err, response) => {
             if (err) {
                 this._logger.error(`Error in fetching sampling strategy from ${url}: ${err}.`);
