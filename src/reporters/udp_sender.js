@@ -23,20 +23,18 @@ import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
 import {Thrift} from 'thriftrw';
-import Span from '../span.js';
 
 const HOST = 'localhost';
 const PORT =  6832;
-const DEFAULT_UDP_SPAN_SERVER_HOST_PORT = `${HOST}:${PORT}`;
 const UDP_PACKET_MAX_LENGTH = 65000;
 
 export default class UDPSender {
-    _hostPort: string;
+    _host: string;
+    _port: number;
     _maxPacketSize: number;
     _process: Process;
     _emitSpanBatchOverhead: number;
     _maxSpanBytes: number;
-    _thriftBuffer: Buffer;
     _client: any;
     _spec: any;
     _byteBufferSize: number;
@@ -44,10 +42,10 @@ export default class UDPSender {
     _batch: Batch;
     _thriftProcessMessage: any;
 
-    constructor(hostPort: string = DEFAULT_UDP_SPAN_SERVER_HOST_PORT,
-                maxPacketSize: number = UDP_PACKET_MAX_LENGTH) {
-        this._hostPort = hostPort;
-        this._maxPacketSize = maxPacketSize;
+    constructor(options: any = {}) {
+        this._host = options.host || HOST;
+        this._port = options.port || PORT;
+        this._maxPacketSize = options.maxPacketSize || UDP_PACKET_MAX_LENGTH;
         this._byteBufferSize = 0;
         this._client = dgram.createSocket('udp4');
         this._spec = fs.readFileSync(path.join(__dirname, '../jaeger-idl/thrift/jaeger.thrift'), 'ascii');
@@ -130,7 +128,7 @@ export default class UDPSender {
         }
 
         // TODO(oibe) use callback in send
-        this._client.send(thriftBuffer, 0, thriftBuffer.length, PORT, HOST);
+        this._client.send(thriftBuffer, 0, thriftBuffer.length, this._port, this._host);
         this._reset();
 
         return {err: false, numSpans: numSpans};
