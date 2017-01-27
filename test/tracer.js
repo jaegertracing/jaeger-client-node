@@ -104,10 +104,11 @@ describe('tracer should', () => {
 
         assert.equal(actualTags[0].key, 'jaeger.hostname');
         assert.equal(actualTags[1].key, 'jaeger.version');
-        assert.equal(actualTags[2].key, 'sampler.param');
-        assert.equal(actualTags[3].key, 'sampler.type');
-        assert.equal(actualTags[2].value, true);
-        assert.equal(actualTags[3].value, 'const');
+        assert.equal(actualTags[2].key, 'peer.ipv4');
+        assert.equal(actualTags[3].key, 'sampler.param');
+        assert.equal(actualTags[4].key, 'sampler.type');
+        assert.equal(actualTags[3].value, true);
+        assert.equal(actualTags[4].value, 'const');
     });
 
     it ('start a root span with proper structure', () => {

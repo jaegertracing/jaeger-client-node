@@ -69,19 +69,18 @@ export default class TestUtils {
         return span._duration === duration;
     }
 
-    static hasTags(span: Span, tags: any): boolean {
+    static hasTags(span: Span, expectedTags: any): boolean {
         // TODO(oibe) make this work for duplicate tags
-        let expectedTags = {};
+        let actualTags = {};
         for (let i = 0; i < span._tags.length; i++) {
             let key = span._tags[i].key;
-            let value = span._tags[i].value;
-            expectedTags[key] = value;
+            actualTags[key] = span._tags[i].value;
         }
 
-        for (let tag in tags) {
-            if (tags.hasOwnProperty(tag) && expectedTags.hasOwnProperty(tag)) {
-                if (expectedTags[tag] !== tags[tag]) {
-                    console.log('expected tag:', expectedTags[tag], ', actual tag: ', tags[tag]);
+        for (let tag in expectedTags) {
+            if (expectedTags.hasOwnProperty(tag) && actualTags.hasOwnProperty(tag)) {
+                if (actualTags[tag] !== expectedTags[tag]) {
+                    console.log('expected tag:', expectedTags[tag], ', actual tag: ', actualTags[tag]);
                     return false;
                 }
             } else {
