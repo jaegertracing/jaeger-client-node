@@ -90,11 +90,10 @@ describe('tracer should', () => {
         assert.isOk(deepEqual(span.context().parentId, parentId));
         assert.equal(span.context().flags, flags);
         assert.equal(span._startTime, start);
-        assert.isNotOk(span._firstInProcess);
         assert.equal(Object.keys(span._tags).length, 2);
     });
 
-    it ('report a span with tracer level tags', () => {
+    it ('report a span with no tracer level tags', () => {
         let span = tracer.startSpan('op-name');
         tracer._report(span);
         assert.isOk(reporter.spans.length, 1);
@@ -102,13 +101,11 @@ describe('tracer should', () => {
             return o.key;
         });
 
-        assert.equal(actualTags[0].key, 'jaeger.hostname');
-        assert.equal(actualTags[1].key, 'jaeger.version');
-        assert.equal(actualTags[2].key, 'peer.ipv4');
-        assert.equal(actualTags[3].key, 'sampler.param');
-        assert.equal(actualTags[4].key, 'sampler.type');
-        assert.equal(actualTags[3].value, true);
-        assert.equal(actualTags[4].value, 'const');
+        assert.equal(2, actualTags.length);
+        assert.equal(actualTags[0].key, 'sampler.param');
+        assert.equal(actualTags[1].key, 'sampler.type');
+        assert.equal(actualTags[0].value, true);
+        assert.equal(actualTags[1].value, 'const');
     });
 
     it ('start a root span with proper structure', () => {
