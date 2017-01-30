@@ -33,6 +33,7 @@ import NullLogger from './logger';
 import Utils from './util';
 import Metrics from './metrics/metrics';
 import NoopMetricFactory from './metrics/noop/metric_factory';
+import os from 'os';
 
 export default class Tracer {
     _serviceName: string;
@@ -50,7 +51,8 @@ export default class Tracer {
             options: any = {}) {
         this._tags = options.tags || {};
         this._tags[constants.JAEGER_CLIENT_VERSION_TAG_KEY] = `Node-${pjson.version}`;
-        this._tags[constants.TRACER_HOSTNAME_TAG_KEY] = Utils.myIp();
+        this._tags[constants.TRACER_HOSTNAME_TAG_KEY] = os.hostname();
+        this._tags[opentracing.Tags.PEER_HOST_IPV4] = Utils.myIp();
 
         this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
 
@@ -151,22 +153,22 @@ export default class Tracer {
     /**
     * The method for creating a root or child span.
     *
-    * @param {string} name - the name of the operation.
-    * @param {object} [fields] - the fields to set on the newly created span.
-    * @param {string} fields.operationName - the name to use for the newly
+    * @param {string} operationName - the name of the operation.
+    * @param {object} [options] - the fields to set on the newly created span.
+    * @param {string} options.operationName - the name to use for the newly
     *        created span. Required if called with a single argument.
-    * @param {SpanContext} [fields.childOf] - a parent SpanContext (or Span,
+    * @param {SpanContext} [options.childOf] - a parent SpanContext (or Span,
     *        for convenience) that the newly-started span will be the child of
     *        (per REFERENCE_CHILD_OF). If specified, `fields.references` must
     *        be unspecified.
-    * @param {array} [fields.references] - an array of Reference instances,
+    * @param {array} [options.references] - an array of Reference instances,
     *        each pointing to a causal parent SpanContext. If specified,
     *        `fields.childOf` must be unspecified.
-    * @param {object} [fields.tags] - set of key-value pairs which will be set
+    * @param {object} [options.tags] - set of key-value pairs which will be set
     *        as tags on the newly created Span. Ownership of the object is
     *        passed to the created span for efficiency reasons (the caller
     *        should not modify this object after calling startSpan).
-    * @param {number} [fields.startTime] - a manually specified start time for
+    * @param {number} [options.startTime] - a manually specified start time for
     *        the created Span object. The time should be specified in
     *        milliseconds as Unix timestamp. Decimal value are supported
     *        to represent time values with sub-millisecond accuracy.
@@ -312,7 +314,7 @@ export default class Tracer {
      * @param {Function} [callback] - a callback that runs after the tracer has been closed.
      **/
     close(callback: Function): void {
-        var reporter = this._reporter;
+        let reporter = this._reporter;
         this._reporter = new NoopReporter();
         reporter.close(() => {
             this._sampler.close(callback);

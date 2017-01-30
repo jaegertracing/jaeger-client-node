@@ -87,7 +87,6 @@ export default class TChannelBridge {
             span.setTag(opentracing.Tags.PEER_SERVICE, request.callerName);
             let hostPort: Array<string> = request.remoteAddr.split(':');
             if (hostPort.length == 2) {
-                span.setTag(opentracing.Tags.PEER_HOST_IPV4, Utils.ipToInt(hostPort[0]));
                 span.setTag(opentracing.Tags.PEER_PORT, parseInt(hostPort[1]));
             }
             if (request.headers && request.headers.as) {
