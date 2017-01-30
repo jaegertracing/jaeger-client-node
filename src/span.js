@@ -32,7 +32,6 @@ export default class Span {
     _startTime: number;
     _logger: any;
     _duration: number;
-    _firstInProcess: boolean;
     _logs: Array<LogData>;
     _tags: Array<Tag>;
     static _baggageHeaderCache: any;
@@ -42,7 +41,6 @@ export default class Span {
                 operationName: string,
                 spanContext: SpanContext,
                 startTime: number,
-                firstInProcess: boolean = false,
                 references: Array<Reference>
     ) {
         this._tracer = tracer;
@@ -50,14 +48,9 @@ export default class Span {
         this._spanContext = spanContext;
         this._startTime = startTime;
         this._logger = tracer._logger;
-        this._firstInProcess = firstInProcess;
         this._references = references;
         this._logs = [];
         this._tags = [];
-    }
-
-    get firstInProcess(): boolean {
-        return this._firstInProcess;
     }
 
     get operationName(): string {

@@ -52,7 +52,7 @@ export default class Tracer {
         this._tags = options.tags || {};
         this._tags[constants.JAEGER_CLIENT_VERSION_TAG_KEY] = `Node-${pjson.version}`;
         this._tags[constants.TRACER_HOSTNAME_TAG_KEY] = os.hostname();
-        this._tags[opentracing.Tags.PEER_HOST_IPV4] = Utils.myIp();
+        this._tags[opentracing.Tags.PEER_HOST_IPV4] = Utils.ipToInt(Utils.myIp());
 
         this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
 
@@ -99,13 +99,11 @@ export default class Tracer {
         references: Array<Reference>): Span {
 
         let hadParent = parentContext && !parentContext.isDebugIDContainerOnly();
-        let firstInProcess: boolean = rpcServer || (spanContext.parentId == null);
         let span = new Span(
             this,
             operationName,
             spanContext,
             startTime,
-            firstInProcess,
             references
         );
 
@@ -135,10 +133,6 @@ export default class Tracer {
 
     _report(span: Span): void {
         this._metrics.spansFinished.increment(1);
-        if (span.firstInProcess) {
-            span.addTags(this._tags);
-        }
-
         this._reporter.report(span);
     }
 
