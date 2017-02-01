@@ -122,7 +122,6 @@ describe ('test tchannel span bridge', () => {
                     let serverSpanTags = {};
                     serverSpanTags[opentracing.Tags.PEER_SERVICE] = 'echo';
                     serverSpanTags[opentracing.Tags.SPAN_KIND] = opentracing.Tags.SPAN_KIND_RPC_SERVER;
-                    serverSpanTags[opentracing.Tags.PEER_HOST_IPV4] = ((127 << 24) | 1);
                     serverSpanTags['as'] = o.as;
                     // TODO(oibe) the port for the client request ephemeral, and I don't know how to get it, or if I can.
 
