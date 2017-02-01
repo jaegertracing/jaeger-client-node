@@ -101,7 +101,7 @@ export default class Configuration {
         let sender;
         let reporterConfig = {};
         let reporters = [];
-        let hostPort = '';
+        let senderConfig = {};
         if (config.reporter) {
             if (config.reporter.logSpans) {
                 reporters.push(new LoggingReporter(options.logger));
@@ -111,12 +111,15 @@ export default class Configuration {
                 reporterConfig['bufferFlushInterval'] = config.reporter.flushIntervalMs;
             }
 
-            if (config.reporter.agentHost && config.reporter.agentPort) {
-                hostPort = `${config.reporter.agentHost}:${config.reporter.agentPort}`;
+            if (config.reporter.agentHost) {
+                senderConfig['host'] = config.reporter.agentHost;
+            }
+
+            if (config.reporter.agentPort) {
+                senderConfig['port'] = config.reporter.agentPort;
             }
         }
-
-        sender = new UDPSender(hostPort);
+        sender = new UDPSender(senderConfig);
         reporters.push(new RemoteReporter(sender, reporterConfig));
         return new CompositeReporter(reporters);
     }

@@ -119,6 +119,7 @@ describe('initTracer', () => {
 
         // TODO(oibe) replace with TestUtils
         assert.equal(remoteReporter._bufferFlushInterval, 2000);
-        assert.equal(remoteReporter._sender._hostPort, '127.0.0.1:4939');
+        assert.equal(remoteReporter._sender._host, '127.0.0.1');
+        assert.equal(remoteReporter._sender._port, 4939);
     });
 });
