@@ -22,7 +22,6 @@ import _ from 'lodash';
 import {assert} from 'chai';
 import deepEqual from 'deep-equal';
 import ConstSampler from '../src/samplers/const_sampler.js';
-import * as constants from '../src/constants.js'
 import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
@@ -65,7 +64,7 @@ describe('udp sender should', () => {
         server.close();
     });
 
-    it ('read and verify spans sent', (done) => {
+    it ('read and verify spans and process sent', (done) => {
         let spanOne = tracer.startSpan('operation-one');
         spanOne.finish(); // finish to set span duration
         spanOne = ThriftUtils.spanToThrift(spanOne);
@@ -85,6 +84,15 @@ describe('udp sender should', () => {
 
             assert.isOk(TestUtils.thriftSpanEqual(spanOne, batch.spans[0]));
             assert.isOk(TestUtils.thriftSpanEqual(spanTwo, batch.spans[1]));
+
+            assert.equal(batch.process.serviceName, 'test-service-name');
+            let actualTags = _.sortBy(batch.process.tags, (o) => {
+                return o.key;
+            });
+            assert.equal(actualTags.length, 3);
+            assert.equal(actualTags[0].key, 'jaeger.hostname');
+            assert.equal(actualTags[1].key, 'jaeger.version');
+            assert.equal(actualTags[2].key, 'peer.ipv4');
 
             sender.close();
             done();

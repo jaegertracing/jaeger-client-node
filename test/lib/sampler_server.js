@@ -28,10 +28,10 @@ export default class SamplingServer {
     _strategies: { [service: string]: SamplingStrategyResponse };
 
     constructor(port: number = 5778) {
-        this._port = port
+        this._port = port;
         this._app = express();
         this._strategies = Object.create(null);
-        this._app.get('/', this._handle.bind(this));
+        this._app.get('/sampling', this._handle.bind(this));
     }
 
     addStrategy(serviceName: string, response: SamplingStrategyResponse): void {
