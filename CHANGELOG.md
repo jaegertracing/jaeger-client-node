@@ -1,8 +1,15 @@
 sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
-3.0.1 (Unreleased)
+3.1.1 (Unreleased)
 -------------------
+
+3.1.0 (2017-02-02)
+-------------------
+- Added support for end to end crossdock integration tests.
+- Fixed bug where "peer.ipv4" tag was not being saved.
+- Fixed bug where tracer tags were being reported twice.
+- Updated sampler config to allow extra customization.
 
 3.0.0 (2017-01-20)
 -------------------
