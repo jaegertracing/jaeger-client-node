@@ -51,7 +51,7 @@ describe ('ThriftUtils', () => {
         assert.isOk(deepEqual(ThriftUtils.emptyBuffer, buf));
     });
 
-    it ('should conver timestamps to microseconds', () => {
+    it ('should convert timestamps to microseconds', () => {
         let reporter = new InMemoryReporter();
         let tracer = new Tracer(
             'test-service-name',
