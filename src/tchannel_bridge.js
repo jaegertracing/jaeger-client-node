@@ -119,7 +119,7 @@ export default class TChannelBridge {
         });
         clientSpan.setTag(opentracing.Tags.PEER_SERVICE, req.serviceName);
         clientSpan.setTag(opentracing.Tags.SPAN_KIND, opentracing.Tags.SPAN_KIND_RPC_CLIENT);
-        this._codec.inject(clientSpan.context(), headers);
+        this.inject(clientSpan.context(), headers);
 
         // wrap callback so that span can be finished as soon as the response is received
         let wrappingCallback: Function = this._tchannelCallbackWrapper.bind(null, clientSpan, callback);
@@ -136,6 +136,15 @@ export default class TChannelBridge {
         let tchannelRequest: any = wrappedRequestMethod.call(channel, requestOptions);
         tchannelRequest.context = requestOptions.context;
         return tchannelRequest;
+    }
+
+    /**
+     * Encode given span context as tchannel headers and store into the headers dictionary.
+     * @param {Object} spanContext - Jaeger SpanContext.
+     * @returns {Object} headers - a dictionary with TChannel application headers.
+     */
+    inject(spanContext: any, headers: any) {
+        this._codec.inject(spanContext, headers);
     }
 
     /**
