@@ -83,7 +83,7 @@ export default class ThriftUtils {
         for (let i = 0; i < logs.length; i++) {
             let log = logs[i];
             thriftLogs.push({
-                'timestamp': log.timestamp,
+                'timestamp': Utils.encodeInt64(log.timestamp * 1000), // to microseconds
                 'fields': ThriftUtils.getThriftTags(log.fields)
             });
         }
@@ -130,8 +130,8 @@ export default class ThriftUtils {
             operationName: span._operationName,
             references: ThriftUtils.spanRefsToThriftRefs(span._references),
             flags: span._spanContext.flags,
-            startTime: Utils.encodeInt64(span._startTime),
-            duration: Utils.encodeInt64(span._duration),
+            startTime: Utils.encodeInt64(span._startTime * 1000), // to microseconds
+            duration: Utils.encodeInt64(span._duration * 1000), // to microseconds
             tags: tags,
             logs: logs
         }

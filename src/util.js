@@ -102,16 +102,6 @@ export default class Utils {
         return input.substring(counter);
     }
 
-    /**
-     * Returns the timestamp in microseconds.
-     * @return {number} - The microseconds since the epoch.
-     **/
-    static getTimestampMicros(): number {
-        // TODO(oibe) investigate process.hrtime.  I'm not sure if its in all node versions.
-        // http://stackoverflow.com/questions/11725691/how-to-get-a-microtime-in-node-js
-        return Date.now() * 1000;
-    }
-
     static myIp(): string {
         let myIp = '0.0.0.0';
         let ifaces = os.networkInterfaces();

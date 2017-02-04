@@ -75,7 +75,7 @@ describe('tracer should', () => {
         let parentId = Utils.encodeInt64(3);
         let flags = 1;
         let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
-        let start = Utils.getTimestampMicros();
+        let start = 123.456;
         let rpcServer = false;
         let internalTags = [];
         let references = [];
@@ -126,17 +126,17 @@ describe('tracer should', () => {
         let parentId = Utils.encodeInt64(3);
         let flags = 1;
         let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
-        let startTime = Utils.getTimestampMicros();
+        let startTime = 123.456;
 
         let childOfParams = {
             operationName: 'test-name',
             childOf: context,
-            startTime, startTime
+            startTime: startTime
         };
 
         let referenceParams = {
             operationName: 'test-name',
-            startTime, startTime,
+            startTime: startTime,
             references: [new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, context)],
         };
 

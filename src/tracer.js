@@ -174,10 +174,7 @@ export default class Tracer {
         let references = options.references || [];
 
         let userTags = options.tags || {};
-        let startTime = options.startTime;
-        if (!startTime) {
-            startTime = Utils.getTimestampMicros();
-        }
+        let startTime = options.startTime || this.now();
 
         // This flag is used to ensure that CHILD_OF reference is preferred 
         // as a parent even if it comes after FOLLOWS_FROM reference.
@@ -313,5 +310,16 @@ export default class Tracer {
         reporter.close(() => {
             this._sampler.close(callback);
         });
+    }
+
+    /**
+     * Returns the current timestamp in milliseconds since the Unix epoch.
+     * Fractional values are allowed so that timestamps with sub-millisecond
+     * accuracy can be represented.
+     */
+    now(): number {
+        // TODO investigate process.hrtime; verify it is available in all Node versions.
+        // http://stackoverflow.com/questions/11725691/how-to-get-a-microtime-in-node-js
+        return Date.now();
     }
 }

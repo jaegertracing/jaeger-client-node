@@ -58,7 +58,7 @@ describe('span should', () => {
             tracer,
             'op-name',
             spanContext,
-            Utils.getTimestampMicros()
+            tracer.now()
         );
     });
 
@@ -149,14 +149,14 @@ describe('span should', () => {
     });
 
     it('add logs with event, but without timestamp', () => {
-        let expectedTimestamp = new Date(2016, 8, 12).getTime();
+        let expectedTimestamp = 123.456;
         // mock global clock
         let clock = sinon.useFakeTimers(expectedTimestamp);
         let event = 'some messgae';
         span.log({ event });
 
         assert.equal(span._logs.length, 1);
-        assert.equal(span._logs[0].timestamp, expectedTimestamp * 1000); // to micros
+        assert.equal(span._logs[0].timestamp, expectedTimestamp);
         assert.equal(span._logs[0].fields[0].value, event);
         clock.restore();
     });
