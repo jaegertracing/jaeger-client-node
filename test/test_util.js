@@ -106,7 +106,7 @@ describe('TestUtils', () => {
             'log2_key': 'some-log-value2'
         };
 
-        let timestamp = Utils.getTimestampMicros();
+        let timestamp = Date.now();
 
         span.log(log1, timestamp);
         span.log(log2, timestamp);

@@ -21,10 +21,14 @@
 import {assert} from 'chai';
 import deepEqual from 'deep-equal';
 import Long from 'long';
+import ConstSampler from '../src/samplers/const_sampler.js';
+import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
+import Tracer from '../src/tracer.js';
 import ThriftUtils from '../src/thrift.js';
+import Utils from '../src/util.js';
 
-describe ('ThriftUtils should', () => {
-    it ('exercise all paths in getTagType', () => {
+describe ('ThriftUtils', () => {
+    it ('should exercise all paths in getTagType', () => {
         let tags = ThriftUtils.getThriftTags([
             {'key': 'double', 'value': 1.0 },
             {'key': 'boolean', 'value': true },
@@ -40,10 +44,27 @@ describe ('ThriftUtils should', () => {
         assert.equal(tags[4].vType, 'STRING');
     });
 
-    it ('initialize emptyBuffer to all zeros', () => {
+    it ('should initialize emptyBuffer to all zeros', () => {
         let buf = new Buffer(8);
         buf.fill(0);
 
         assert.isOk(deepEqual(ThriftUtils.emptyBuffer, buf));
+    });
+
+    it ('should convert timestamps to microseconds', () => {
+        let reporter = new InMemoryReporter();
+        let tracer = new Tracer(
+            'test-service-name',
+            reporter,
+            new ConstSampler(true)
+        );
+        let span = tracer.startSpan('some operation', { startTime: 123.456 });
+        span.log({ event: 'some log' }, 123.567);
+        span.finish(123.678);
+        tracer.close();
+        let tSpan = ThriftUtils.spanToThrift(span);
+        assert.deepEqual(tSpan.startTime, Utils.encodeInt64(123456));
+        assert.deepEqual(tSpan.duration, Utils.encodeInt64((123.678-123.456) * 1000));
+        assert.deepEqual(tSpan.logs[0].timestamp, Utils.encodeInt64(123567));
     });
 });

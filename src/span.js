@@ -96,6 +96,12 @@ export default class Span {
      **/
     setBaggageItem(key: string, value: string): Span {
         let normalizedKey = this._normalizeBaggageKey(key);
+        // We create a new instance of the context here instead of just adding
+        // another entry to the baggage dictionary. By doing so we keep the
+        // baggage immutable so that it can be passed to children spans as is.
+        // If it was mutable, we would have to make a copy of the dictionary
+        // for every child span, which on average we expect to occur more 
+        // frequently than items being added to the baggage.
         this._spanContext = this._spanContext.withBaggageItem(normalizedKey, value);
         return this;
     }
@@ -163,11 +169,18 @@ export default class Span {
     }
 
     /**
-     * Finishes a span which has the effect of reporting it and
-     * setting the finishTime on the span.
+     * Sets the end timestamp and finalizes Span state.
      *
-     * @param {number} finishTime - The time on which this span finished.
-     **/
+     * With the exception of calls to Span.context() (which are always allowed),
+     * finish() must be the last call made to any span instance, and to do
+     * otherwise leads to undefined behavior.
+     *
+     * @param  {number} finishTime
+     *         Optional finish time in milliseconds as a Unix timestamp. Decimal
+     *         values are supported for timestamps with sub-millisecond accuracy.
+     *         If not specified, the current time (as defined by the
+     *         implementation) will be used.
+     */
     finish(finishTime: ?number): void {
         if (this._duration !== undefined) {
             let spanInfo = `operation=${this.operationName},context=${this.context().toString()}`;
@@ -177,7 +190,7 @@ export default class Span {
 
         this._spanContext.finalizeSampling();
         if (this._spanContext.isSampled()) {
-            let endTime = finishTime || Utils.getTimestampMicros();
+            let endTime = finishTime || this._tracer.now();
             this._duration = endTime - this._startTime;
             this._tracer._report(this);
         }
@@ -230,13 +243,21 @@ export default class Span {
     /**
      * Adds a log event, or payload to a span.
      *
-     * @param {Object} keyValuePairs - an object that represents the keyValuePairs to log.
-     * @param {number} [timestamp] - the starting timestamp of a span.
-     **/
+     * @param {object} keyValuePairs
+     *        An object mapping string keys to arbitrary value types. All
+     *        Tracer implementations should support bool, string, and numeric
+     *        value types, and some may also support Object values.
+     * @param {number} timestamp
+     *        An optional parameter specifying the timestamp in milliseconds
+     *        since the Unix epoch. Fractional values are allowed so that
+     *        timestamps with sub-millisecond accuracy can be represented. If
+     *        not specified, the implementation is expected to use its notion
+     *        of the current time of the call.
+     */
     log(keyValuePairs: any, timestamp: ?number): void {
         if (this._isWriteable()) {
             this._logs.push({
-                'timestamp': timestamp || Utils.getTimestampMicros(),
+                'timestamp': timestamp || this._tracer.now(),
                 'fields': Utils.convertObjectToTags(keyValuePairs)
             });
         }
