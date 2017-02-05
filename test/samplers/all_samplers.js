@@ -28,11 +28,11 @@ import RateLimitingSampler from '../../src/samplers/ratelimiting_sampler.js';
 import GuaranteedThroughputSampler from '../../src/samplers/guaranteed_throughput_sampler.js';
 import PerOperationSampler from '../../src/samplers/per_operation_sampler.js';
 import RemoteSampler from '../../src/samplers/remote_sampler.js';
-import Utils from '../../src/util';
+import combinations from '../lib/combinations.js'
 
 describe('All samplers', () => {
     describe('should support close()', () => {
-        let samplers = Utils.combinations({
+        let samplers = combinations({
             useCallback: [true, false],
             sampler: [
                 new ConstSampler(true),

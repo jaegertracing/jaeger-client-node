@@ -20,7 +20,6 @@
 // THE SOFTWARE.
 
 import fs from 'fs';
-import Long from 'long';
 import opentracing from 'opentracing';
 import path from 'path';
 import {Thrift} from 'thriftrw';
@@ -47,21 +46,23 @@ export default class ThriftUtils {
             let vStr: string = '';
 
             let vType: string = '';
-            if (typeof(tag.value) === 'number') {
+            let valueType = typeof(tag.value);
+            if (valueType === 'number') {
                 vType = ThriftUtils._thrift.TagType.DOUBLE;
                 vDouble = tag.value;
-            } else if (typeof(tag.value) === 'boolean') {
+            } else if (valueType === 'boolean') {
                 vType = ThriftUtils._thrift.TagType.BOOL;
                 vBool = tag.value;
-            } else if (tag.value instanceof Long) { //TODO(oibe) how else to recognize a long?
-                vType = ThriftUtils._thrift.TagType.LONG;
-                vLong = tag.value;
             } else if (tag.value instanceof Buffer) {
                 vType = ThriftUtils._thrift.TagType.BINARY;
                 vBinary = tag.value;
             } else {
                 vType = ThriftUtils._thrift.TagType.STRING;
-                vStr = tag.value;
+                if (valueType === 'string') {
+                    vStr = tag.value;
+                } else {
+                    vStr = String(tag.value);
+                }
             }
 
             thriftTags.push({

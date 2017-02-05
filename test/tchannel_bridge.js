@@ -33,7 +33,7 @@ import TChannel from 'tchannel';
 import TChannelBridge from '../src/tchannel_bridge.js';
 import TChannelAsThrift from 'tchannel/as/thrift';
 import TChannelAsJSON from 'tchannel/as/json';
-import Utils from '../src/util.js';
+import combinations from './lib/combinations.js'
 
 describe ('test tchannel span bridge', () => {
     // BIG_TIMEOUT is useful for debugging purposes.
@@ -52,7 +52,7 @@ describe ('test tchannel span bridge', () => {
     let ctx1 = new DefaultContext();
     ctx1.setSpan(originalSpan);
 
-    let options = Utils.combinations({
+    let options = combinations({
             as: ['json', 'thrift'],
             mode: ['req.send', 'channel.send'],
             context: [ctx1, null],

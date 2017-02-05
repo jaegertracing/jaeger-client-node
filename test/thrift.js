@@ -20,7 +20,6 @@
 
 import {assert} from 'chai';
 import deepEqual from 'deep-equal';
-import Long from 'long';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import Tracer from '../src/tracer.js';
@@ -32,15 +31,15 @@ describe ('ThriftUtils', () => {
         let tags = ThriftUtils.getThriftTags([
             {'key': 'double', 'value': 1.0 },
             {'key': 'boolean', 'value': true },
-            {'key': 'long', 'value': new Long() },
             {'key': 'binary', 'value': new Buffer(1) },
-            {'key': 'string', 'value': 'some-string' }
+            {'key': 'string', 'value': 'some-string' },
+            {'key': 'object', 'value': { x: 'y' } }
         ]);
 
         assert.equal(tags[0].vType, 'DOUBLE');
         assert.equal(tags[1].vType, 'BOOL');
-        assert.equal(tags[2].vType, 'LONG');
-        assert.equal(tags[3].vType, 'BINARY');
+        assert.equal(tags[2].vType, 'BINARY');
+        assert.equal(tags[3].vType, 'STRING');
         assert.equal(tags[4].vType, 'STRING');
     });
 

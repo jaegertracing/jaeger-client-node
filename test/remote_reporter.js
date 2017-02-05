@@ -38,18 +38,23 @@ describe('Composite and Remote Reporter should', () => {
     let metrics;
 
     beforeEach(() => {
-        metrics = new Metrics(new LocalMetricFactory());
-        sender = new UDPSender();
-        logger = new MockLogger();
-        reporter = new RemoteReporter(sender, {
-            logger: logger,
-            metrics: metrics
-        });
-        tracer = new Tracer(
-            'test-service-name',
-            reporter,
-            new ConstSampler(true)
-        );
+        try {
+            metrics = new Metrics(new LocalMetricFactory());
+            sender = new UDPSender();
+            logger = new MockLogger();
+            reporter = new RemoteReporter(sender, {
+                logger: logger,
+                metrics: metrics
+            });
+            tracer = new Tracer(
+                'test-service-name',
+                reporter,
+                new ConstSampler(true)
+            );
+        } catch (e) {
+            console.log('beforeEach failed', e);
+            console.log(e.stack);
+        }
     });
 
     afterEach(() => {
