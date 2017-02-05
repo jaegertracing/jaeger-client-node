@@ -1,8 +1,13 @@
 sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
-3.1.1 (Unreleased)
+
+3.2.0 (Unreleased)
 -------------------
+- Remove most methods from TestUtils
+- Remove unnecessary dependencies
+- Accept external timestamps in milliseconds since epoch (#94)
+- Expose TChannelBridge.inject method (#93)
 
 3.1.0 (2017-02-02)
 -------------------
