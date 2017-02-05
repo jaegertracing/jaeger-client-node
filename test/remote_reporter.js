@@ -52,6 +52,7 @@ describe('Composite and Remote Reporter should', () => {
                 new ConstSampler(true)
             );
         } catch (e) {
+            // this is useful to catch errors when thrift definition is changed
             console.log('beforeEach failed', e);
             console.log(e.stack);
         }
