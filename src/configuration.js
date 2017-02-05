@@ -30,7 +30,6 @@ import LoggingReporter from './reporters/logging_reporter';
 import RemoteSampler from './samplers/remote_sampler';
 import Tracer from './tracer';
 import UDPSender from './reporters/udp_sender';
-import {Validator} from 'jsonschema';
 import opentracing from 'opentracing';
 import * as constants from './constants.js';
 
@@ -71,6 +70,10 @@ export default class Configuration {
         let host = config.sampler.host;
         let port = config.sampler.port;
         let refreshIntervalMs = config.sampler.refreshIntervalMs;
+
+        if (typeof(param) !== 'number') {
+            throw new Error(`Expecting sampler.param to be a number. Received ${param}`);
+        }
 
         let sampler;
         if (type === constants.SAMPLER_TYPE_PROBABILISTIC) {
@@ -124,12 +127,29 @@ export default class Configuration {
         return new CompositeReporter(reporters);
     }
 
+    /**
+     * Initialize and return a new instance of Jaeger Tracer.
+     * 
+     * The config dictionary is not validated for adherence to the schema above.
+     * Such validation can be performed like this:
+     * 
+     *     import {Validator} from 'jsonschema';
+     * 
+     *     let v = new Validator();
+     *     v.validate(config, jaegerSchema, {
+     *       throwError: true
+     *     });
+     * 
+     * @param {Object} config - configuration matching the jaegerSchema definition.
+     * @param {Object} options - options
+     * @param {Object} [options.reporter] - if provided, this reporter will be used.
+     *        Otherwise a new reporter will be created according to the description
+     *        in the config.
+     * @param {Object} [options.logger] - when a new reporter is created, if span
+     *        logging is requested via config.reporter.logSpans, then a logging 
+     *        reporter will be added using options.logger if set, else NullLogger.
+     */
     static initTracer(config, options = {}) {
-        let v = new Validator();
-        v.validate(config, jaegerSchema, {
-            throwError: true
-        });
-
         let reporters = [];
         let reporter;
         let sampler;

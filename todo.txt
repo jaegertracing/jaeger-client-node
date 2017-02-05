@@ -1,9 +1,0 @@
-+ Create a diff to recreate object as optional args, since es6 doesn't have real optional args
-+ implement special tag handlers
-+ add metrics
-+ profile performance of Noop tracer vs. Jaeger tracer with const sampling off and on
-+ opentracing test harness
-+ propagate 1 or many spanRefs froms startSpan options to created span.
-+ upgrade span code to use latest jaeger-idl model
-+ test span attributes are populated correctly
-+ tag values can be any type, so toString is not sufficient

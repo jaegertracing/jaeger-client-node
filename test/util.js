@@ -20,8 +20,8 @@
 // THE SOFTWARE.
 
 import {assert} from 'chai';
-import deepEqual from 'deep-equal';
 import Utils from '../src/util.js';
+import combinations from './lib/combinations.js'
 
 describe('utils', () => {
     describe('ipToInt', () => {
@@ -57,13 +57,13 @@ describe('utils', () => {
     });
 
     it ('combinations should generate all combinations given valid parameters', () => {
-        let results = Utils.combinations({ encoding: ['json', 'thrift'], mode: ['channel', 'request']});
+        let results = combinations({ encoding: ['json', 'thrift'], mode: ['channel', 'request']});
         let expectedTags = [
             { encoding: 'json', mode: 'channel', description: 'encoding=json,mode=channel' },
             { encoding: 'json', mode: 'request', description: 'encoding=json,mode=request' },
             { encoding: 'thrift', mode: 'channel', description: 'encoding=thrift,mode=channel' },
             { encoding: 'thrift', mode: 'request', description: 'encoding=thrift,mode=request' }
         ];
-        assert.isOk(deepEqual(expectedTags, results));
+        assert.deepEqual(expectedTags, results);
     });
 });

@@ -20,7 +20,6 @@
 
 import _ from 'lodash';
 import {assert, expect} from 'chai';
-import deepEqual from 'deep-equal';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import * as constants from '../src/constants.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
@@ -85,9 +84,9 @@ describe('tracer should', () => {
         };
         let span = tracer._startInternalSpan(context, 'op-name', start, internalTags, tags, null, rpcServer, references);
 
-        assert.isOk(deepEqual(span.context().traceId, traceId));
-        assert.isOk(deepEqual(span.context().spanId, spanId));
-        assert.isOk(deepEqual(span.context().parentId, parentId));
+        assert.deepEqual(span.context().traceId, traceId);
+        assert.deepEqual(span.context().spanId, spanId);
+        assert.deepEqual(span.context().parentId, parentId);
         assert.equal(span.context().flags, flags);
         assert.equal(span._startTime, start);
         assert.equal(Object.keys(span._tags).length, 2);
@@ -142,8 +141,8 @@ describe('tracer should', () => {
 
         let assertByStartSpanParameters = (params) => {
             let span = tracer.startSpan('test-span', params);
-            assert.isOk(deepEqual(span.context().traceId, traceId));
-            assert.isOk(deepEqual(span.context().parentId, spanId));
+            assert.deepEqual(span.context().traceId, traceId);
+            assert.deepEqual(span.context().parentId, spanId);
             assert.equal(span.context().flags, constants.SAMPLED_MASK);
             assert.equal(span._startTime, startTime);
         }
@@ -172,9 +171,9 @@ describe('tracer should', () => {
             tracer.inject(savedContext, format, carrier);
             let extractedContext = tracer.extract(format, carrier);
 
-            assert.isOk(deepEqual(savedContext.traceId, extractedContext.traceId));
-            assert.isOk(deepEqual(savedContext.spanId, extractedContext.spanId));
-            assert.isOk(deepEqual(savedContext.parentId, extractedContext.parentId));
+            assert.deepEqual(savedContext.traceId, extractedContext.traceId);
+            assert.deepEqual(savedContext.spanId, extractedContext.spanId);
+            assert.deepEqual(savedContext.parentId, extractedContext.parentId);
             assert.equal(savedContext.flags, extractedContext.flags);
             assert.equal(savedContext.baggage[keyOne], extractedContext.baggage[keyOne]);
             assert.equal(savedContext.baggage[keyTwo], extractedContext.baggage[keyTwo]);

@@ -20,7 +20,6 @@
 // THE SOFTWARE.
 
 import * as constants from './constants.js';
-import Int64 from 'node-int64';
 import Utils from './util.js';
 
 export default class SpanContext {
@@ -225,8 +224,8 @@ export default class SpanContext {
 
         // Note: Number type in JS cannot represent the full range of 64bit unsigned ints,
         // so using parseInt() on strings representing 64bit hex numbers only returns
-        // an approximation of the actual value. Fortunately, we do not depend on parsing
-        // the IDs with parseInt(), we are only using it to validate that the string is
+        // an approximation of the actual value. Fortunately, we do not depend on the
+        // returned value, we are only using it to validate that the string is
         // a valid hex number (which is faster than doing it manually).  We cannot use
         // Int64(numberValue).toBuffer() because it throws exceptions on bad strings.
         let approxTraceId = parseInt(headers[0], 16);

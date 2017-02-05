@@ -1,6 +1,6 @@
 {
   "name": "jaeger-client",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Jaeger binding for OpenTracing Node",
   "license": "MIT",
   "keywords": [],
@@ -16,11 +16,7 @@
     }
   ],
   "dependencies": {
-    "deep-equal": "^1.0.1",
-    "long": "^3.2.0",
     "node-int64": "^0.4.0",
-    "js-yaml": "^3.6.1",
-    "jsonschema": "^1.1.0",
     "request": "^2.74.0",
     "thriftrw": "^3.5.0",
     "xorshift": "^0.2.0",
@@ -46,6 +42,7 @@
     "express": "^4.14.0",
     "flow-bin": "^0.30.0",
     "gulp-sourcemaps": "1.7.x",
+    "js-yaml": "^3.6.1",
     "lodash": "^4.15.0",
     "minimist": "1.2.0",
     "mocha": "^3.0.1",

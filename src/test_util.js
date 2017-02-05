@@ -19,56 +19,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import deepEqual from 'deep-equal';
 import opentracing from 'opentracing';
 import Span from './span';
 import Utils from './util';
 
 export default class TestUtils {
-    static traceIdEqual(span: Span, traceId: number): boolean {
-        var spanTraceId = span.context().traceId
-        if (spanTraceId == null && traceId == null) {
-            return true;
-        }
-
-        return deepEqual(spanTraceId, Utils.encodeInt64(traceId));
-    }
-
-    static spanIdEqual(span: Span, spanId: number): boolean {
-        var spanContextId = span.context().spanId
-        if (spanContextId == null && spanId == null) {
-            return true;
-        }
-
-        return deepEqual(spanContextId, Utils.encodeInt64(spanId));
-    }
-
-    static parentIdEqual(span: Span, parentId: number): boolean {
-        var spanParentId = span.context().parentId
-        if (spanParentId == null && parentId == null) {
-            return true;
-        }
-
-        return deepEqual(spanParentId, Utils.encodeInt64(parentId));
-    }
-
-    static flagsEqual(span: Span, flags: number): boolean {
-        var spanFlagsId = span.context().flags;
-        return spanFlagsId === flags;
-    }
-
-    static operationNameEqual(span: Span, operationName: string): boolean {
-        return span._operationName === operationName;
-    }
-
-    static startTimeEqual(span: Span, startTime: number): boolean {
-        return span._startTime === startTime;
-    }
-
-    static durationEqual(span: Span, duration: number): boolean {
-        return span._duration === duration;
-    }
-
     static hasTags(span: Span, expectedTags: any): boolean {
         // TODO(oibe) make this work for duplicate tags
         let actualTags = {};
@@ -90,86 +45,5 @@ export default class TestUtils {
         }
 
         return true;
-    }
-
-    static hasLogs(span: Span, logs: Array<any>): boolean {
-        /*
-        1.) This method does not work if span logs have nested objects...
-        2.)  This is hard to make linear because if an object does not have a guaranteed order
-              then I cannot stringify a log, and use it as a key in a hashmap.  So its safer to compare object
-              equality with a O(n^2) which is only used for testing.
-        */
-        for (let i = 0; i < logs.length; i++) {
-            let expectedLog = span._logs[i];
-            let found = false;
-            for (let j = 0; j < span._logs.length; j++) {
-                let spanLog = span._logs[j];
-                if (deepEqual(spanLog, expectedLog)) {
-                    found = true
-                }
-            }
-            if (!found) {
-                return false;
-            }
-            found = false;
-        }
-
-        return true;
-    }
-
-    static isClient(span: Span): boolean {
-        let tag = {};
-        tag[opentracing.Tags.SPAN_KIND] = opentracing.Tags.SPAN_KIND_RPC_CLIENT;
-        return TestUtils.hasTags(span, tag);
-    }
-
-    static hasBaggage(span: Span, baggage: any): boolean {
-        let found = false;
-        for (let key in baggage) {
-            found = span.getBaggageItem(key);
-            if (!found) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    static isDebug(span: Span): boolean {
-        return span.context().isDebug();
-    }
-
-    static isSampled(span: Span): boolean {
-        return span.context().isSampled();
-    }
-
-    static carrierHasTracerState(carrier: any): boolean {
-        let tracerState = carrier['uber-trace-id'];
-        return tracerState !== null && tracerState !== undefined;
-    }
-
-    static carrierHasBaggage(carrier: any, baggage: any, prefix: string = 'uberctx-') {
-        for (let key in baggage) {
-            if (baggage.hasOwnProperty(key)) {
-                let prefixKey = prefix+key;
-                if (!(prefixKey in carrier)) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    static thriftSpanEqual(spanOne, spanTwo) {
-        return  deepEqual(spanOne.traceIdLow, spanTwo.traceIdLow) &&
-                deepEqual(spanOne.traceIdHigh, spanTwo.traceIdHigh) &&
-                deepEqual(spanOne.spanId, spanTwo.spanId) &&
-                deepEqual(spanOne.parentSpanId, spanTwo.parentSpanId) &&
-                spanOne.operationName === spanTwo.operationName &&
-                deepEqual(spanOne.references, spanTwo.references) &&
-                spanOne.flags === spanTwo.flags &&
-                deepEqual(spanOne.startTime, spanTwo.startTime) &&
-                deepEqual(spanOne.duration, spanTwo.duration);
     }
 }
