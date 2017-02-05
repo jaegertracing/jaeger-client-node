@@ -4,8 +4,14 @@ Changes by Version
 
 3.2.0 (Unreleased)
 -------------------
-- Remove most methods from TestUtils
-- Remove unnecessary dependencies
+- Remove the following dependencies
+   -    `"deep-equal": "^1.0.1",`
+   -    `"long": "^3.2.0",`
+   -    `"js-yaml": "^3.6.1",`
+   -    `"jsonschema": "^1.1.0",`
+- Move `TestUtil.thriftSpansEqual` and `Util.combinations` functions under `tests/lib`
+- Remove most methods from TestUtils because the same checks can be done via public API
+- Remove `hasLogs` method that was not particularly useful in practice because it compared the timestamp
 - Accept external timestamps in milliseconds since epoch (#94)
 - Expose TChannelBridge.inject method (#93)
 
