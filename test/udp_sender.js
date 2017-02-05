@@ -26,7 +26,6 @@ import fs from 'fs';
 import path from 'path';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import opentracing from 'opentracing';
-import thriftSpanEqual from './lib/thrift_span_equal.js';
 import Tracer from '../src/tracer.js';
 import {Thrift} from 'thriftrw';
 import ThriftUtils from '../src/thrift.js';
@@ -40,6 +39,18 @@ describe('udp sender should', () => {
     let tracer;
     let thrift;
     let sender;
+
+    function assertThriftSpanEqual(assert, spanOne, spanTwo) {
+        assert.deepEqual(spanOne.traceIdLow, spanTwo.traceIdLow);
+        assert.deepEqual(spanOne.traceIdHigh, spanTwo.traceIdHigh);
+        assert.deepEqual(spanOne.spanId, spanTwo.spanId);
+        assert.deepEqual(spanOne.parentSpanId, spanTwo.parentSpanId);
+        assert.equal(spanOne.operationName, spanTwo.operationName);
+        assert.deepEqual(spanOne.references, spanTwo.references);
+        assert.equal(spanOne.flags, spanTwo.flags);
+        assert.deepEqual(spanOne.startTime, spanTwo.startTime);
+        assert.deepEqual(spanOne.duration, spanTwo.duration);
+    }
 
     beforeEach(() => {
         server = dgram.createSocket('udp4');
@@ -81,8 +92,8 @@ describe('udp sender should', () => {
             assert.isOk(batch);
             assert.equal(batch.spans.length, 2);
 
-            assert.isOk(thriftSpanEqual(spanOne, batch.spans[0]));
-            assert.isOk(thriftSpanEqual(spanTwo, batch.spans[1]));
+            assertThriftSpanEqual(assert, spanOne, batch.spans[0]);
+            assertThriftSpanEqual(assert, spanTwo, batch.spans[1]);
 
             assert.equal(batch.process.serviceName, 'test-service-name');
             let actualTags = _.sortBy(batch.process.tags, (o) => {
@@ -141,7 +152,7 @@ describe('udp sender should', () => {
                     let ref = span.references[0];
 
                     assert.isOk(batch);
-                    assert.isOk(thriftSpanEqual(span, batch.spans[0]));
+                    assertThriftSpanEqual(assert, span, batch.spans[0]);
                     if (o.expectedTraceId) {
                         assert.deepEqual(span.traceIdLow, o.expectedTraceId);
                     }
