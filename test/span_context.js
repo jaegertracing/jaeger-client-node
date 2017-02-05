@@ -19,7 +19,6 @@
 // THE SOFTWARE.
 
 import {assert} from 'chai';
-import deepEqual from 'deep-equal';
 import * as constants from '../src/constants.js';
 import SpanContext from '../src/span_context.js';
 import Utils from '../src/util.js';
@@ -40,9 +39,9 @@ describe ('SpanContext should', () => {
 
         let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
 
-        assert.isOk(deepEqual(traceId, context.traceId));
-        assert.isOk(deepEqual(spanId, context.spanId));
-        assert.isOk(deepEqual(parentId, context.parentId));
+        assert.deepEqual(traceId, context.traceId);
+        assert.deepEqual(spanId, context.spanId);
+        assert.deepEqual(parentId, context.parentId);
         assert.equal(flags, context.flags);
     });
 
@@ -83,8 +82,8 @@ describe ('SpanContext should', () => {
     it ('turn properly formatted strings into correct span contexts', () => {
         let context = SpanContext.fromString('100:7f:0:1');
 
-        assert.isOk(deepEqual(Utils.encodeInt64(0x100), context.traceId));
-        assert.isOk(deepEqual(Utils.encodeInt64(0x7f), context.spanId));
+        assert.deepEqual('100', context.traceIdStr);
+        assert.deepEqual(Utils.encodeInt64(0x7f), context.spanId);
         assert.equal(null, context.parentId);
         assert.equal(1, context.flags);
 
@@ -92,8 +91,9 @@ describe ('SpanContext should', () => {
         context = SpanContext.fromString('ffffffffffffffff:ffffffffffffffff:5:1');
         assert.equal('ffffffffffffffff', context.traceIdStr);
         assert.equal('ffffffffffffffff', context.spanIdStr);
-        assert.isOk(deepEqual(LARGEST_64_BUFFER, context.spanId));
-        assert.isOk(deepEqual(Utils.encodeInt64(0x5), context.parentId));
+        assert.deepEqual(LARGEST_64_BUFFER, context.spanId);
+        assert.deepEqual(LARGEST_64_BUFFER, context.spanId);
+        assert.deepEqual(Utils.encodeInt64(0x5), context.parentId);
         assert.equal(context.flags, 0x1);
     });
 

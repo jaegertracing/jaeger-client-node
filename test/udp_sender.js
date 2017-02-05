@@ -20,14 +20,13 @@
 
 import _ from 'lodash';
 import {assert} from 'chai';
-import deepEqual from 'deep-equal';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import opentracing from 'opentracing';
-import TestUtils from '../src/test_util.js';
+import thriftSpanEqual from './lib/thrift_span_equal.js';
 import Tracer from '../src/tracer.js';
 import {Thrift} from 'thriftrw';
 import ThriftUtils from '../src/thrift.js';
@@ -82,8 +81,8 @@ describe('udp sender should', () => {
             assert.isOk(batch);
             assert.equal(batch.spans.length, 2);
 
-            assert.isOk(TestUtils.thriftSpanEqual(spanOne, batch.spans[0]));
-            assert.isOk(TestUtils.thriftSpanEqual(spanTwo, batch.spans[1]));
+            assert.isOk(thriftSpanEqual(spanOne, batch.spans[0]));
+            assert.isOk(thriftSpanEqual(spanTwo, batch.spans[1]));
 
             assert.equal(batch.process.serviceName, 'test-service-name');
             let actualTags = _.sortBy(batch.process.tags, (o) => {
@@ -142,13 +141,13 @@ describe('udp sender should', () => {
                     let ref = span.references[0];
 
                     assert.isOk(batch);
-                    assert.isOk(TestUtils.thriftSpanEqual(span, batch.spans[0]));
+                    assert.isOk(thriftSpanEqual(span, batch.spans[0]));
                     if (o.expectedTraceId) {
-                        assert.isOk(deepEqual(span.traceIdLow, o.expectedTraceId));
+                        assert.deepEqual(span.traceIdLow, o.expectedTraceId);
                     }
 
                     if (o.expectedParentId) {
-                        assert.isOk(deepEqual(span.parentId, o.expectedParentId));
+                        assert.deepEqual(span.parentId, o.expectedParentId);
                     } else {
                         assert.isNotOk(span.parentId);
                     }

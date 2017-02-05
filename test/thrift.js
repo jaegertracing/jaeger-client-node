@@ -19,7 +19,6 @@
 // THE SOFTWARE.
 
 import {assert} from 'chai';
-import deepEqual from 'deep-equal';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import Tracer from '../src/tracer.js';
@@ -47,7 +46,7 @@ describe ('ThriftUtils', () => {
         let buf = new Buffer(8);
         buf.fill(0);
 
-        assert.isOk(deepEqual(ThriftUtils.emptyBuffer, buf));
+        assert.deepEqual(ThriftUtils.emptyBuffer, buf);
     });
 
     it ('should convert timestamps to microseconds', () => {

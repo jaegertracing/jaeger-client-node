@@ -22,7 +22,6 @@ import _ from 'lodash';
 import {assert, expect} from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import ProbabilisticSampler from '../src/samplers/probabilistic_sampler';
-import deepEqual from 'deep-equal';
 import * as constants from '../src/constants.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import JaegerTestUtils from '../src/test_util';
@@ -211,9 +210,9 @@ describe('span should', () => {
                 span.setOperationName('sampled-span');
                 span.finish();
 
-                assert.isOk(deepEqual(span._tags[0], {key: 'tagKeyOne', value: 'tagValueOne'}));
-                assert.isOk(deepEqual(span._tags[1], {key: 'tagKeyTwo', value: 'tagValueTwo'}));
-                assert.isOk(deepEqual(span._logs[0].fields[0], {key: 'logkeyOne', value: 'logValueOne'}));
+                assert.deepEqual(span._tags[0], {key: 'tagKeyOne', value: 'tagValueOne'});
+                assert.deepEqual(span._tags[1], {key: 'tagKeyTwo', value: 'tagValueTwo'});
+                assert.deepEqual(span._logs[0].fields[0], {key: 'logkeyOne', value: 'logValueOne'});
                 assert.equal(reporter.spans.length, o.reportedSpans);
             });
         });

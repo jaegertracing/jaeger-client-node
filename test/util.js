@@ -20,7 +20,6 @@
 // THE SOFTWARE.
 
 import {assert} from 'chai';
-import deepEqual from 'deep-equal';
 import Utils from '../src/util.js';
 import combinations from './lib/combinations.js'
 
@@ -65,6 +64,6 @@ describe('utils', () => {
             { encoding: 'thrift', mode: 'channel', description: 'encoding=thrift,mode=channel' },
             { encoding: 'thrift', mode: 'request', description: 'encoding=thrift,mode=request' }
         ];
-        assert.isOk(deepEqual(expectedTags, results));
+        assert.deepEqual(expectedTags, results);
     });
 });
