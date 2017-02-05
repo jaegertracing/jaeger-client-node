@@ -2,7 +2,10 @@ sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
 
-3.2.0 (Unreleased)
+3.2.1 (Unreleased)
+-------------------
+
+3.2.0 (2017-02-04)
 -------------------
 - Remove the following dependencies
    -    `"deep-equal": "^1.0.1",`
