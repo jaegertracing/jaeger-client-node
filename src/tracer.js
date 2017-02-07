@@ -45,6 +45,16 @@ export default class Tracer {
     _extractors: any;
     _metrics: any;
 
+    /**
+     * @param {string} [serviceName] - name of the current service or application.
+     * @param {object} [reporter] - reporter used to submit finished spans to Jaeger backend.
+     * @param {object} [sampler] - sampler used to decide if trace should be samlped when starting a new one.
+     * @param {object} [options] - the fields to set on the newly created span.
+     * @param {object} [options.tags] - set of key-value pairs which will be set
+     *        as process-level tags on the Tracer itself.
+     * @param {object} [options.metrics] - instance of the Metrics class from ./metrics/metrics.js.
+     * @param {object} [options.logger] - a logger matching NullLogger API from ./logger.js.
+     */
     constructor(serviceName: string,
             reporter: Reporter = new NoopReporter(),
             sampler: Sampler = new ConstSampler(false),
@@ -81,10 +91,6 @@ export default class Tracer {
         this.registerInjector(opentracing.FORMAT_BINARY, binaryCodec);
         this.registerExtractor(opentracing.FORMAT_BINARY, binaryCodec);
 
-        this._setProcess();
-    }
-
-    _setProcess(): void {
         this._reporter.setProcess(this._serviceName, Utils.convertObjectToTags(this._tags));
     }
 
