@@ -117,9 +117,23 @@ describe('initTracer', () => {
             }
         }
 
-        // TODO(oibe) replace with TestUtils
         assert.equal(remoteReporter._bufferFlushInterval, 2000);
         assert.equal(remoteReporter._sender._host, '127.0.0.1');
         assert.equal(remoteReporter._sender._port, 4939);
+    });
+
+    it ('should pass options to tracer', () => {
+        let tracer = initTracer({
+            serviceName: 'test-service'
+        }, {
+            logger: 'some logger',
+            metrics: 'some metrics',
+            tags: {
+                'x': 'y'
+            }
+        });
+        assert.equal(tracer._logger, 'some logger');
+        assert.equal(tracer._metrics, 'some metrics');
+        assert.equal(tracer._tags['x'], 'y');
     });
 });

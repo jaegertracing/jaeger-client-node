@@ -145,9 +145,10 @@ export default class Configuration {
      * @param {Object} [options.reporter] - if provided, this reporter will be used.
      *        Otherwise a new reporter will be created according to the description
      *        in the config.
-     * @param {Object} [options.logger] - when a new reporter is created, if span
-     *        logging is requested via config.reporter.logSpans, then a logging 
-     *        reporter will be added using options.logger if set, else NullLogger.
+     * @param {Object} [options.metrics] - instance of the Metrics class from ./metrics/metrics.js.
+     * @param {Object} [options.logger] - - a logger matching NullLogger API from ./logger.js.
+     * @param {Object} [options.tags] - set of key-value pairs which will be set
+     *        as process-level tags on the Tracer itself.
      */
     static initTracer(config, options = {}) {
         let reporters = [];
@@ -174,7 +175,12 @@ export default class Configuration {
         return new Tracer(
             config.serviceName,
             reporter,
-            sampler
+            sampler,
+            {
+                metrics: options.metrics,
+                logger: options.logger,
+                tags: options.tags
+            }
         );
     }
 }
