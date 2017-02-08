@@ -20,8 +20,6 @@
 
 import _ from 'lodash';
 import {assert, expect} from 'chai';
-import fs from 'fs';
-import path from 'path';
 import NoopReporter from '../src/reporters/noop_reporter';
 import CompositeReporter from '../src/reporters/composite_reporter';
 import RemoteReporter from '../src/reporters/remote_reporter';
@@ -29,26 +27,28 @@ import ConstSampler from '../src/samplers/const_sampler';
 import ProbabilisticSampler from '../src/samplers/probabilistic_sampler';
 import RemoteSampler from '../src/samplers/remote_sampler';
 import RateLimitingSampler from '../src/samplers/ratelimiting_sampler';
-import yaml from 'js-yaml';
 import {initTracer} from '../src/index.js';
 import opentracing from 'opentracing';
 
 describe('initTracer', () => {
     it ('should initialize noop tracer when disable is set', () => {
-        let configFile = fs.readFileSync(path.join(__dirname, 'config' , 'disable_tracer.yaml'), 'utf8');
-        let config = yaml.safeLoad(configFile);
+        let config = {
+            serviceName: 'test-service',
+            disable: true
+        };
         let tracer = initTracer(config);
 
         expect(tracer).to.be.an.instanceof(opentracing.Tracer);
     });
 
     it ('should initialize normal tracer when only service name given', () => {
-        let configFile = fs.readFileSync(path.join(__dirname, 'config' , 'basic_tracer.yaml'), 'utf8');
-        let config = yaml.load(configFile);
+        let config = {
+            serviceName: 'test-service'
+        };
         let tracer = initTracer(config);
 
         expect(tracer._sampler).to.be.an.instanceof(RemoteSampler);
-        expect(tracer._reporter).to.be.an.instanceof(CompositeReporter);
+        expect(tracer._reporter).to.be.an.instanceof(RemoteReporter);
     });
 
     it ('should initialize proper samplers', () => {
@@ -104,10 +104,22 @@ describe('initTracer', () => {
     });
 
     it ('should respect reporter options', () => {
-        let configFile = fs.readFileSync(path.join(__dirname, 'config' , 'tracer_with_reporter_options.yaml'), 'utf8');
-        let config = yaml.load(configFile);
+        let config = {
+            serviceName: 'test-service',
+            sampler: {
+                type: 'const',
+                param: 0
+            },
+            reporter: {
+                logSpans: true,
+                agentHost: '127.0.0.1',
+                agentPort: 4939,
+                flushIntervalMs: 2000
+            }
+        }
         let tracer = initTracer(config);
 
+        expect(tracer._reporter).to.be.an.instanceof(CompositeReporter);
         let remoteReporter;
         for (let i = 0; i < tracer._reporter._reporters.length; i++) {
             let reporter = tracer._reporter._reporters[i];
@@ -123,16 +135,19 @@ describe('initTracer', () => {
     });
 
     it ('should pass options to tracer', () => {
+        var logger = {
+            'info': function info(msg){}
+        };
         let tracer = initTracer({
             serviceName: 'test-service'
         }, {
-            logger: 'some logger',
+            logger: logger,
             metrics: 'some metrics',
             tags: {
                 'x': 'y'
             }
         });
-        assert.equal(tracer._logger, 'some logger');
+        assert.equal(tracer._logger, logger);
         assert.equal(tracer._metrics, 'some metrics');
         assert.equal(tracer._tags['x'], 'y');
     });
