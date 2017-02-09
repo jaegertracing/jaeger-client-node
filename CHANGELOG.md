@@ -2,7 +2,7 @@ sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
 
-3.2.1 (Unreleased)
+3.2.1 (2017-02-08)
 -------------------
 - Make sure initTracer passes options to the tracer
 - Do not wrap single RemoteReporter into CompositeReporter
