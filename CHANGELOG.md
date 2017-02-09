@@ -5,6 +5,7 @@ Changes by Version
 3.2.1 (Unreleased)
 -------------------
 - Make sure initTracer passes options to the tracer
+- Do not wrap single RemoteReporter into CompositeReporter
 
 3.2.0 (2017-02-04)
 -------------------
