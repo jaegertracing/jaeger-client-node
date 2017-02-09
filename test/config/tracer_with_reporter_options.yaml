@@ -1,9 +1,0 @@
-serviceName: 'test-service'
-sampler:
-    type: 'const'
-    param: 0
-reporter:
-    logSpans: true
-    agentHost: '127.0.0.1'
-    agentPort: 4939
-    flushIntervalMs: 2000

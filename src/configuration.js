@@ -101,7 +101,6 @@ export default class Configuration {
     }
 
     static _getReporter(config, options) {
-        let sender;
         let reporterConfig = {};
         let reporters = [];
         let senderConfig = {};
@@ -122,8 +121,12 @@ export default class Configuration {
                 senderConfig['port'] = config.reporter.agentPort;
             }
         }
-        sender = new UDPSender(senderConfig);
-        reporters.push(new RemoteReporter(sender, reporterConfig));
+        let sender = new UDPSender(senderConfig);
+        let remoteReporter = new RemoteReporter(sender, reporterConfig);
+        if (reporters.length == 0) {
+            return remoteReporter;
+        }
+        reporters.push(remoteReporter);
         return new CompositeReporter(reporters);
     }
 
@@ -170,8 +173,12 @@ export default class Configuration {
             }
         }
 
-        console.log(`Using ${reporter.name()}`);
-        console.log(`Using ${sampler.name()}`);
+        if (options.logger) {
+            options.logger.info(
+                `Initializing Jaeger Tracer with ${reporter.name()} and ${sampler.name()}`
+            );
+        }
+
         return new Tracer(
             config.serviceName,
             reporter,
