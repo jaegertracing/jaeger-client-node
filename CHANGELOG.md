@@ -2,6 +2,12 @@ sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
 
+3.2.2 (Unreleased)
+------------------
+
+- No changes yet
+
+
 3.2.1 (2017-02-08)
 -------------------
 - Make sure initTracer passes options to the tracer
