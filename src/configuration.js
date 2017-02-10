@@ -28,6 +28,7 @@ import RemoteReporter from './reporters/remote_reporter';
 import CompositeReporter from './reporters/composite_reporter';
 import LoggingReporter from './reporters/logging_reporter';
 import RemoteSampler from './samplers/remote_sampler';
+import Metrics from './metrics/metrics';
 import Tracer from './tracer';
 import UDPSender from './reporters/udp_sender';
 import opentracing from 'opentracing';
@@ -148,8 +149,8 @@ export default class Configuration {
      * @param {Object} [options.reporter] - if provided, this reporter will be used.
      *        Otherwise a new reporter will be created according to the description
      *        in the config.
-     * @param {Object} [options.metrics] - instance of the Metrics class from ./metrics/metrics.js.
-     * @param {Object} [options.logger] - - a logger matching NullLogger API from ./logger.js.
+     * @param {Object} [options.metrics] - a metrics factory (see ./_flow/metrics.js)
+     * @param {Object} [options.logger] - a logger (see ./_flow/logger.js)
      * @param {Object} [options.tags] - set of key-value pairs which will be set
      *        as process-level tags on the Tracer itself.
      */
@@ -179,12 +180,17 @@ export default class Configuration {
             );
         }
 
+        var metrics = null;
+        if (options.metrics) {
+            metrics = new Metrics(options.metrics);
+        }
+
         return new Tracer(
             config.serviceName,
             reporter,
             sampler,
             {
-                metrics: options.metrics,
+                metrics: metrics,
                 logger: options.logger,
                 tags: options.tags
             }

@@ -138,17 +138,22 @@ describe('initTracer', () => {
         var logger = {
             'info': function info(msg){}
         };
+        var metrics = {
+            'createCounter': function createCounter() { return {}; },
+            'createGauge': function createGauge() { return {}; },
+            'createTimer': function createTimer() { return {}; },
+        };
         let tracer = initTracer({
             serviceName: 'test-service'
         }, {
             logger: logger,
-            metrics: 'some metrics',
+            metrics: metrics,
             tags: {
                 'x': 'y'
             }
         });
         assert.equal(tracer._logger, logger);
-        assert.equal(tracer._metrics, 'some metrics');
+        assert.equal(tracer._metrics._factory, metrics);
         assert.equal(tracer._tags['x'], 'y');
     });
 });
