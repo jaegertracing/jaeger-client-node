@@ -45,7 +45,7 @@ describe('TestUtils', () => {
         spanContext = SpanContext.fromString('ab:cd:ef:3');
     });
 
-    it ('hasTags', () => {
+    it ('should support hasTags', () => {
         let tags = {
             'keyOne': 'valueOne',
             'keyTwo': 'valueTwo'
@@ -55,5 +55,18 @@ describe('TestUtils', () => {
         assert.isOk(TestUtils.hasTags(span, tags));
         assert.isNotOk(TestUtils.hasTags(span, { 'k': 'v' }));
         assert.isNotOk(TestUtils.hasTags(span, { 'keyOne': 'valueTwo' }));
+    });
+
+    it ('should support getTags', () => {
+        let expectedTags = {
+            'keyOne': 'valueOne',
+            'keyTwo': 'valueTwo'
+        };
+        span.addTags(expectedTags);
+        let actualTags = TestUtils.getTags(span);
+        assert.equal(actualTags['keyOne'], expectedTags['keyOne']);
+        assert.equal(actualTags['keyTwo'], expectedTags['keyTwo']);
+        let filteredTags = TestUtils.getTags(span, ['keyTwo', 'keyThree']);
+        assert.deepEqual({'keyTwo': 'valueTwo'}, filteredTags);
     });
 });

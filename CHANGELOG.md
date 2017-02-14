@@ -5,7 +5,7 @@ Changes by Version
 3.3.1 (Unreleased)
 ------------------
 
-- No changes yet
+- Add TestUtils.getTags(span, ?keys)
 
 
 3.3.0 (2017-02-09)
