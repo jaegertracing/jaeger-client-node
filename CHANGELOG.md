@@ -2,7 +2,7 @@ sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
 
-3.3.1 (Unreleased)
+3.3.1 (2017-02-13)
 ------------------
 
 - Add TestUtils.getTags(span, ?keys)
