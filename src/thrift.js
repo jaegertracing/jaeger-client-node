@@ -56,6 +56,9 @@ export default class ThriftUtils {
             } else if (tag.value instanceof Buffer) {
                 vType = ThriftUtils._thrift.TagType.BINARY;
                 vBinary = tag.value;
+            } else if (valueType === 'object') {
+                vType = ThriftUtils._thrift.TagType.STRING;
+                vStr = JSON.stringify(tag.value);
             } else {
                 vType = ThriftUtils._thrift.TagType.STRING;
                 if (valueType === 'string') {

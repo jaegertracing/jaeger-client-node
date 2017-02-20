@@ -27,19 +27,30 @@ import Utils from '../src/util.js';
 
 describe ('ThriftUtils', () => {
     it ('should exercise all paths in getTagType', () => {
-        let tags = ThriftUtils.getThriftTags([
-            {'key': 'double', 'value': 1.0 },
-            {'key': 'boolean', 'value': true },
-            {'key': 'binary', 'value': new Buffer(1) },
-            {'key': 'string', 'value': 'some-string' },
-            {'key': 'object', 'value': { x: 'y' } }
-        ]);
+        let blob = new Buffer(1);
+        let testCases = [
+            {'key': 'double', 'value': 1.0, vType: 'DOUBLE', vDouble: 1.0 },
+            {'key': 'boolean', 'value': true, vType: 'BOOL', vBool: true },
+            {'key': 'binary', 'value': blob, vType: 'BINARY', vBinary: blob },
+            {'key': 'string', 'value': 'some-string', vType: 'STRING', vStr: 'some-string' },
+            {'key': 'object', 'value': { x: 'y' }, vType: 'STRING', vStr: `{"x":"y"}` },
+            {'key': 'func', 'value': function f(){}, vType: 'STRING', vStr: `function f() {}` }
+        ];
 
-        assert.equal(tags[0].vType, 'DOUBLE');
-        assert.equal(tags[1].vType, 'BOOL');
-        assert.equal(tags[2].vType, 'BINARY');
-        assert.equal(tags[3].vType, 'STRING');
-        assert.equal(tags[4].vType, 'STRING');
+        testCases.forEach(testCase => {
+            let tag = {'key': testCase['key'], 'value': testCase['value']};
+            let actualTag = ThriftUtils.getThriftTags([tag])[0];
+            let expectedTag = {
+                key: testCase.key,
+                vType: testCase.vType,
+                vStr: testCase.vStr === undefined ? '' : testCase.vStr,
+                vDouble: testCase.vDouble === undefined ? 0 : testCase.vDouble,
+                vBool: testCase.vBool === undefined ? false : testCase.vBool,
+                vLong: testCase.vLong === undefined ? ThriftUtils.emptyBuffer : testCase.vLong,
+                vBinary: testCase.vBinary === undefined ? ThriftUtils.emptyBuffer : testCase.vBinary
+            }
+            assert.deepEqual(actualTag, expectedTag);
+        });
     });
 
     it ('should initialize emptyBuffer to all zeros', () => {
