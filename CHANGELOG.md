@@ -2,10 +2,10 @@ sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
 
-3.3.2 (Unreleased)
+3.4.0 (Unreleased)
 ------------------
 
-- No changes yet
+- Allow tags/logs with 'object' values and convert them to JSON (#102)
 
 
 3.3.1 (2017-02-13)
