@@ -19,7 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import request from 'request';
+import http from 'http';
 import ProbabilisticSampler from './probabilistic_sampler.js';
 import RateLimitingSampler from './ratelimiting_sampler.js';
 import PerOperationSampler from './per_operation_sampler.js';
@@ -101,38 +101,54 @@ export default class RemoteControlledSampler {
 
     _refreshSamplingStrategy() {
         let serviceName: string = encodeURIComponent(this._serviceName);
-        let url: string = `http://${this._host}:${this._port}/sampling?service=${serviceName}`;
-        request.get(url, (err, response) => {
-            if (err) {
-                this._logger.error(`Error in fetching sampling strategy from ${url}: ${err}.`);
-                this._metrics.samplerQueryFailure.increment(1);
-                return;
-            }
-            this._metrics.samplerRetrieved.increment(1);
-            let strategy;
-            try {
-                strategy = JSON.parse(response.body);
-                if (!strategy) {
-                    throw 'Malformed response: ' + response.body;
-                }
-            } catch (error) {
-                this._logger.error(`Error in parsing sampling strategy: ${error}.`);
-                this._metrics.samplerParsingFailure.increment(1);
-                return;
-            }
-            try {
-                if (this._updateSampler(strategy)) {
-                    this._metrics.samplerUpdated.increment(1);
-                }
-            } catch (error) {
-                this._logger.error(`Error in updating sampler: ${error}.`);
-                this._metrics.samplerParsingFailure.increment(1);
-                return;
-            }
-            if (this._onSamplerUpdate) {
-                this._onSamplerUpdate(this._sampler);
-            }
+        http.get({
+            'host': this._host,
+            'port': this._port,
+            'path': `/sampling?service=${serviceName}`
+        }, (res) => {
+            // explicitly treat incoming data as utf8 (avoids issues with multi-byte chars)
+            res.setEncoding('utf8');
+
+            // incrementally capture the incoming response body
+            let body = '';
+            res.on('data', (chunk) => {
+                body += chunk;
+            });
+
+            res.on('end', () => {
+                this._parseSamplingServerResponse(body);
+            });
+        }).on('error', (err) => {
+            this._logger.error(`Error in fetching sampling strategy: ${err}.`);
+            this._metrics.samplerQueryFailure.increment(1);
         });
+    }
+
+    _parseSamplingServerResponse(body: string) {
+        this._metrics.samplerRetrieved.increment(1);
+        let strategy;
+        try {
+            strategy = JSON.parse(body);
+            if (!strategy) {
+                throw 'Malformed response: ' + body;
+            }
+        } catch (error) {
+            this._logger.error(`Error in parsing sampling strategy: ${error}.`);
+            this._metrics.samplerParsingFailure.increment(1);
+            return;
+        }
+        try {
+            if (this._updateSampler(strategy)) {
+                this._metrics.samplerUpdated.increment(1);
+            }
+        } catch (error) {
+            this._logger.error(`Error in updating sampler: ${error}.`);
+            this._metrics.samplerParsingFailure.increment(1);
+            return;
+        }
+        if (this._onSamplerUpdate) {
+            this._onSamplerUpdate(this._sampler);
+        }
     }
 
     _updateSampler(response: SamplingStrategyResponse): boolean {
