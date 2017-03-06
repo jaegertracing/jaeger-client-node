@@ -26,7 +26,7 @@ describe ('leaky bucket ratelimiter should', () => {
     it('block after threshold is met', () => {
         let initialDate = new Date(2011,9,1).getTime();
         let clock = sinon.useFakeTimers(initialDate);
-        let limiter = new RateLimiter(10);
+        let limiter = new RateLimiter(10, 10);
         for (let i = 0; i < 10; i++) {
             limiter.checkCredit(1);
         }
@@ -43,7 +43,7 @@ describe ('leaky bucket ratelimiter should', () => {
         let clock = sinon.useFakeTimers(initialDate);
         let limit = 500;
         let cost = 1 / limit;
-        let limiter = new RateLimiter(1);
+        let limiter = new RateLimiter(1, 1);
         for (let i = 0; i < limit; i++) {
             limiter.checkCredit(cost);
         }

@@ -32,7 +32,7 @@ export default class RateLimitingSampler {
         }
 
         this._maxTracesPerSecond = maxTracesPerSecond;
-        this._rateLimiter = new RateLimiter(maxTracesPerSecond);
+        this._rateLimiter = new RateLimiter(maxTracesPerSecond, 2.0);
     }
 
     name(): string {
