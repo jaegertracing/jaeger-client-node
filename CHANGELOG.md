@@ -2,10 +2,10 @@ sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
 
-3.4.1 (Unreleased)
+3.5.0 (2017-03-06)
 ------------------
 
-- No changes yet
+- Remove dependency on 'request' module, use 'http' instead (https://github.com/uber/jaeger-client-node/pull/103)
 
 
 3.4.0 (2017-02-20)
