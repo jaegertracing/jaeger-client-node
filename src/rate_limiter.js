@@ -27,7 +27,7 @@ export default class RateLimiter {
 
     constructor(creditsPerSecond: number, maxBalance: number) {
         this._creditsPerSecond = creditsPerSecond;
-        this._balance = creditsPerSecond;
+        this._balance = maxBalance;
         this._maxBalance = maxBalance;
         this._lastTick = new Date().getTime();
     }

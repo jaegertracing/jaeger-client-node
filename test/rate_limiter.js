@@ -55,4 +55,18 @@ describe ('leaky bucket ratelimiter should', () => {
         assert.equal(limiter.checkCredit(cost), true, 'expected checkCredit to be true');
         clock.restore();
     });
+
+    it('work with creditsPerSecond smaller than 1', () => {
+        let initialDate = new Date(2011,9,1).getTime();
+        let clock = sinon.useFakeTimers(initialDate);
+        let limiter = new RateLimiter(0.1, 1);
+        assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
+
+        clock.restore();
+        // move time 20s forward, enough to accumulate credits for 2 messages, but it should still be capped at 1
+        clock = sinon.useFakeTimers(initialDate + 20000);
+        assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
+        assert.equal(limiter.checkCredit(1), false, 'expected checkCredit to be false');
+        clock.restore();
+    });
 });
