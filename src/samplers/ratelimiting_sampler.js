@@ -30,9 +30,10 @@ export default class RateLimitingSampler {
         if (maxTracesPerSecond < 0) {
             throw new Error(`maxTracesPerSecond must be greater than 0.0.  Received ${maxTracesPerSecond}`);
         }
+        let maxBalance = maxTracesPerSecond < 1.0 ? 1.0 : maxTracesPerSecond;
 
         this._maxTracesPerSecond = maxTracesPerSecond;
-        this._rateLimiter = new RateLimiter(maxTracesPerSecond);
+        this._rateLimiter = new RateLimiter(maxTracesPerSecond, maxBalance);
     }
 
     name(): string {
