@@ -1,4 +1,4 @@
-[![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![NPM Published Version][npm-img]][npm]
+[![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![NPM Published Version][npm-img]][npm] [![OpenTracing 1.0 Enabled][ot-img]][ot-url]
 
 # Jaeger Bindings for Javascript OpenTracing API
 
@@ -6,11 +6,41 @@ This is a client side library that implements
 [Javascript OpenTracing API](https://github.com/opentracing/opentracing-javascript/),
 with Zipkin-compatible data model.
 
-**This project is currently WIP and not ready for use. Do not use it until this notice goes away.**
+## Installation
+
+`npm install --save jaeger-client`
+
+## Initialization
+
+```javascript
+var initTracer = require('jaeger-client').initTracer;
+
+// See schema https://github.com/uber/jaeger-client-node/blob/master/src/configuration.js#L37
+var config = {
+  'serviceName': 'my-awesome-service'
+};
+var options = {
+  'tags': {
+    'my-awesome-service.version': '1.1.2'
+  },
+  'metrics': metrics,
+  'logger': logger
+};
+var tracer = initTracer(config, options);
+```
+
+## Usage
+
+The Tracer instance created by `initTracer` is OpenTracing-1.0 compliant.
+See [opentracing-javascript](https://github.com/opentracing/opentracing-javascript) for usage examples.
 
 ## Contributing
 
 Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## License
+
+[The MIT License](./LICENSE).
 
 ### TChannel Span Bridging
 
@@ -141,3 +171,6 @@ This allows using Jaeger UI to find the trace by this tag.
   [cov]: https://coveralls.io/github/uber/jaeger-client-node?branch=master
   [npm-img]: https://badge.fury.io/js/jaeger-client.svg
   [npm]: https://www.npmjs.com/package/jaeger-client
+  [ot-img]: https://img.shields.io/badge/OpenTracing--1.0-enabled-blue.svg
+  [ot-url]: http://opentracing.io
+
