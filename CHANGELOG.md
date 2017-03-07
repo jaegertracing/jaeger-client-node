@@ -2,10 +2,10 @@ sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
 
-3.5.1 (unreleased)
+3.5.1 (2017-03-07)
 ------------------
 
-- No changes yet
+- Fix bug where leaky bucket never fills up when creditsPerSecond < itemCost (#104)
 
 
 3.5.0 (2017-03-06)
