@@ -2,9 +2,8 @@
 
 # Jaeger Bindings for Javascript OpenTracing API
 
-This is a client side instrumentation library for Node.js that implements
+This is [Jaeger](https://uber.github.io/jaeger/)'s client side instrumentation library for Node.js that implements
 [Javascript OpenTracing API 1.0](https://github.com/opentracing/opentracing-javascript/).
-Part of [Jaeger](https://uber.github.io/jaeger/).
 
 ## Installation
 
