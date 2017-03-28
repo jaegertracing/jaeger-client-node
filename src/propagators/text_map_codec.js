@@ -49,8 +49,14 @@ export default class TextMapCodec {
     }
 
     _decodedValue(value: string): string {
-        if (this._urlEncoding) {
-            return decodeURIComponent(value);
+        // only use url-decoding if there are meta-characters '%'
+        if (this._urlEncoding && value.indexOf('%') > -1) {
+            // unfortunately, decodeURIComponent() can throw 'URIError: URI malformed'
+            try {
+                return decodeURIComponent(value);
+            } catch (e) {
+                return value;
+            }
         }
 
         return value;
@@ -89,7 +95,7 @@ export default class TextMapCodec {
 
     inject(spanContext: SpanContext, carrier: any): void {
         let stringSpanContext = spanContext.toString();
-        carrier[this._contextKey] = this._encodedValue(stringSpanContext);
+        carrier[this._contextKey] = stringSpanContext; // no need to encode this
 
         let baggage = spanContext.baggage;
         for (let key in baggage) {
