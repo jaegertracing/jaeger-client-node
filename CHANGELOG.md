@@ -2,6 +2,12 @@ sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
 
+3.5.2 (2017-03-29)
+
+- Protect from exceptions in decodeURIComponent (#105)
+- Do not url-encode span context (#105)
+
+
 3.5.1 (2017-03-07)
 ------------------
 
