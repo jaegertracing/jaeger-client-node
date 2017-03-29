@@ -25,13 +25,16 @@ import SpanContext from '../src/span_context';
 describe ('TextMapCodec', () => {
     it('should not URL-decode value that has no % meta-characters', () => {
         let codec = new TextMapCodec({ urlEncoding: true });
-        assert.strictEqual(codec._decodedValue('abc'), 'abc');
+        codec._decodeURIValue = (value: string) => {
+            throw new URIError('fake error');
+        };
+        assert.strictEqual(codec._decodeValue('abc'), 'abc');
     });
 
     it('should not throw exception on bad URL-encoded values', () => {
         let codec = new TextMapCodec({ urlEncoding: true });
         // this string throws exception when passed to decodeURIComponent
-        assert.strictEqual(codec._decodedValue('%EA'), '%EA');
+        assert.strictEqual(codec._decodeValue('%EA'), '%EA');
     });
 
     it('should not URL-encode span context', () => {

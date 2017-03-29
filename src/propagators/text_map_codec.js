@@ -40,7 +40,7 @@ export default class TextMapCodec {
         this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
     }
 
-    _encodedValue(value: string): string {
+    _encodeValue(value: string): string {
         if (this._urlEncoding) {
             return encodeURIComponent(value);
         }
@@ -48,18 +48,22 @@ export default class TextMapCodec {
         return value;
     }
 
-    _decodedValue(value: string): string {
+    _decodeValue(value: string): string {
         // only use url-decoding if there are meta-characters '%'
         if (this._urlEncoding && value.indexOf('%') > -1) {
-            // unfortunately, decodeURIComponent() can throw 'URIError: URI malformed'
-            try {
-                return decodeURIComponent(value);
-            } catch (e) {
-                return value;
-            }
+            return this._decodeURIValue(value);
         }
 
         return value;
+    }
+
+    _decodeURIValue(value: string): string {
+        // unfortunately, decodeURIComponent() can throw 'URIError: URI malformed' on bad strings
+        try {
+            return decodeURIComponent(value);
+        } catch (e) {
+            return value;
+        }
     }
 
     extract(carrier: any): ?SpanContext {
@@ -71,19 +75,19 @@ export default class TextMapCodec {
             if (carrier.hasOwnProperty(key)) {
                 let lowerKey = key.toLowerCase();
                 if (lowerKey === this._contextKey) {
-                    let decodedContext = SpanContext.fromString(this._decodedValue(carrier[key]));
+                    let decodedContext = SpanContext.fromString(this._decodeValue(carrier[key]));
                     if (decodedContext === null) {
                         this._metrics.decodingErrors.increment(1);
                     } else {
                         spanContext = decodedContext;
                     }
                 } else if (lowerKey === constants.JAEGER_DEBUG_HEADER) {
-                    debugId = this._decodedValue(carrier[key]);
+                    debugId = this._decodeValue(carrier[key]);
                 } else if (lowerKey === constants.JAEGER_BAGGAGE_HEADER) {
-                    this._parseCommaSeparatedBaggage(baggage, this._decodedValue(carrier[key]));
+                    this._parseCommaSeparatedBaggage(baggage, this._decodeValue(carrier[key]));
                 } else if (Utils.startsWith(lowerKey, this._baggagePrefix)) {
                     let keyWithoutPrefix = key.substring(this._baggagePrefix.length);
-                    baggage[keyWithoutPrefix] = this._decodedValue(carrier[key]);
+                    baggage[keyWithoutPrefix] = this._decodeValue(carrier[key]);
                 }
             }
         }
@@ -100,7 +104,7 @@ export default class TextMapCodec {
         let baggage = spanContext.baggage;
         for (let key in baggage) {
             if (baggage.hasOwnProperty(key)) {
-                let value = this._encodedValue(spanContext.baggage[key]);
+                let value = this._encodeValue(spanContext.baggage[key]);
                 carrier[`${this._baggagePrefix}${key}`] = value;
             }
         }
