@@ -313,7 +313,7 @@ describe('span should', () => {
             tracer._sampler = new ProbabilisticSampler(1.0);
 
             // The second cal lshould rename the operation name, but
-            // not re-sample the span.  This is because finalize was set 
+            // not re-sample the span.  This is because finalize was set
             // in the first 'setOperationName' call.
             span.setOperationName('new-span-two');
 
@@ -336,3 +336,64 @@ describe('span should', () => {
     // TODO(oibe) need tests for standard tags, and handlers
 });
 
+describe('span with deferred sampling flag', () => {
+    let reporter = new InMemoryReporter();
+    let sampler, tracer, span, spanContext;
+
+    beforeEach(() => {
+        sampler = new ConstSampler(true)
+
+        tracer = new Tracer(
+            'test-service-name',
+            reporter,
+            sampler,
+            {logger: new MockLogger()}
+        );
+
+        spanContext = SpanContext.withBinaryIds(
+            Utils.encodeInt64(1),
+            Utils.encodeInt64(2),
+            Utils.encodeInt64(3),
+            constants.DEFERRED_SAMPLING_MASK
+        );
+
+        span = new Span(
+            tracer,
+            'op-name',
+            spanContext,
+            tracer.now()
+        );
+    });
+
+    it('should not pass deferred sampling flag to child spans', () => {
+        let child = tracer.startSpan('child', {childOf: span.context()});
+        assert.notEqual(child.context.flags & constants.DEFERRED_SAMPLING_MASK,
+                        constants.DEFERRED_SAMPLING_MASK)
+    });
+
+    it('should not finalize child spans where parent had deferred sampling flag', () => {
+        let child = tracer.startSpan('child', {childOf: span.context()});
+        assert.isNotOk(child.context.samplingFinalized)
+    });
+
+    it('should make a call to the underlying sampler and use the sampling decision when true', () => {
+        let mockSampler = sinon.mock(sampler);
+        mockSampler.expects('isSampled').withExactArgs('goodOperation', {}).returns(true);
+        let child = tracer.startSpan('goodOperation', {childOf: span.context()});
+        mockSampler.verify()
+        assert.isOk(child.context().isSampled())
+    });
+
+    it('should make a call to the underlying sampler and use the sampling decision when false', () => {
+        let mockSampler = sinon.mock(sampler);
+        mockSampler.expects('isSampled').withExactArgs('horridOperation', {}).returns(false);
+        let child = tracer.startSpan('horridOperation', {childOf: span.context()});
+        mockSampler.verify()
+        assert.isNotOk(child.context().isSampled())
+    });
+
+    it('should set the deferred sampling status tag', () => {
+        let child = tracer.startSpan('child', {childOf: span.context()});
+        assert.deepEqual(child._tags[2], {key: constants.DEFERRED_SAMPLING_STATUS, value: true});
+    });
+});
