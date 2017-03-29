@@ -25,6 +25,9 @@ export const SAMPLED_MASK = 0x1;
 export const DEBUG_MASK = 0x2;
 
 // DEFERRED_SAMPLING_MASK is the bit mask indicating that a span has been marked for deferred sampling.
+// This flag is used in situations where a better sampling decision can be made by a service in the
+// call graph that isn't creating a root span. We use this feature to adaptively sample spans originating
+// from mobile devices because adaptive sampling parameters cannot be reliably pushed to mobile devices
 export const DEFERRED_SAMPLING_MASK = 0x4;
 
 // JAEGER_CLIENT_VERSION_TAG_KEY is the name of the tag used to report client version.
@@ -33,8 +36,9 @@ export const JAEGER_CLIENT_VERSION_TAG_KEY = 'jaeger.version';
 // TRACER_HOSTNAME_TAG_KEY used to report host name of the process.
 export const TRACER_HOSTNAME_TAG_KEY = 'jaeger.hostname';
 
-// DEFERRED_SAMPLING_STATUS indicated that deferred sampling was performed at this span.
-export const DEFERRED_SAMPLING_STATUS = 'deferredsampling.status'
+// DEFERRED_SAMPLING_TAG_KEY indicates that a concrete sampling decision was made for the trace.
+// Previous spans on this trace had a DEFERRED_SAMPLING_MASK set. 
+export const DEFERRED_SAMPLING_TAG_KEY = 'sampler.deferred_decision';
 
 // SAMPLER_TYPE_TAG_KEY reports which sampler was used on the root span.
 export const SAMPLER_TYPE_TAG_KEY = 'sampler.type';

@@ -233,19 +233,18 @@ export default class Tracer {
             ctx.parentId = parent.spanId;
             // reuse parent's baggage as we'll never change it
             ctx.baggage = parent.baggage;
+            ctx.flags = parent.flags;
 
             // Parent exists without a sampling decision
             // An example of where this happens is in mobile clients where sampler parameters
             // are not propagated
-            if ((parent.flags & constants.DEFERRED_SAMPLING_MASK)
-                === constants.DEFERRED_SAMPLING_MASK) {
-                ctx.flags = parent.flags ^ constants.DEFERRED_SAMPLING_MASK
+            if (parent.flags & constants.DEFERRED_SAMPLING_MASK) {
+                ctx.flags ^=  constants.DEFERRED_SAMPLING_MASK;
                 if (this._sampler.isSampled(operationName, internalTags)) {
-                    ctx.flags = parent.flags |= constants.SAMPLED_MASK
-                    internalTags[constants.DEFERRED_SAMPLING_STATUS] = true
+                    ctx.flags |= constants.SAMPLED_MASK;
+                    internalTags[constants.DEFERRED_SAMPLING_TAG_KEY] = true;
                 }
             } else {
-                ctx.flags = parent.flags
                 parent.finalizeSampling();
                 ctx.finalizeSampling();
             }
