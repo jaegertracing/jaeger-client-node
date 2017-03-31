@@ -209,7 +209,7 @@ export default class Tracer {
         let internalTags: any = {};
         if (!parent || !parent.isValid) {
             let randomId = Utils.getRandom64();
-            let flags = 0;
+            let flags = constants.DEFERRED_SAMPLING_MASK;
             if (this._sampler.isSampled(operationName, internalTags)) {
                 flags |= constants.SAMPLED_MASK;
             }
@@ -231,23 +231,13 @@ export default class Tracer {
             ctx.traceId = parent.traceId;
             ctx.spanId = Utils.getRandom64();
             ctx.parentId = parent.spanId;
-            // reuse parent's baggage as we'll never change it
-            ctx.baggage = parent.baggage;
             ctx.flags = parent.flags;
 
-            // Parent exists without a sampling decision
-            // An example of where this happens is in mobile clients where sampler parameters
-            // are not propagated
-            if (parent.flags & constants.DEFERRED_SAMPLING_MASK) {
-                ctx.flags ^=  constants.DEFERRED_SAMPLING_MASK;
-                if (this._sampler.isSampled(operationName, internalTags)) {
-                    ctx.flags |= constants.SAMPLED_MASK;
-                    internalTags[constants.DEFERRED_SAMPLING_TAG_KEY] = true;
-                }
-            } else {
-                parent.finalizeSampling();
-                ctx.finalizeSampling();
-            }
+            // reuse parent's baggage as we'll never change it
+            ctx.baggage = parent.baggage;
+
+            parent.finalizeSampling();
+            ctx.finalizeSampling();
         }
 
         return this._startInternalSpan(

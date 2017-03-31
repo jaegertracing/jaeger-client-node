@@ -32,23 +32,6 @@ export default class SpanContext {
     _flags: number;
     _baggage: any;
     _debugId: ?string;
-    /**
-     * This field exists to help distinguish between when a span can have a properly
-     * correlated operation name -> sampling rate mapping, and when it cannot.
-     * Adaptive sampling uses the operation name of a span to correlate it with
-     * a sampling rate.  If an operation name is set on a span after the span's creation
-     * then adaptive sampling cannot associate the operation name with the proper sampling rate.
-     * In order to correct this we allow a span to be written to, so that we can re-sample
-     * it in the case that an operation name is set after span creation. Situations 
-     * where a span context's sampling decision is finalized include:
-     * - it has inherited the sampling decision from its parent
-     * - its debug flag is set via the sampling.priority tag
-     * - it is finish()-ed
-     * - setOperationName is called
-     * - it is used as a parent for another span
-     * - its context is serialized using injectors
-     * */
-    _samplingFinalized: boolean;
 
     constructor(traceId: any,
                 spanId: any,
@@ -59,7 +42,7 @@ export default class SpanContext {
                 flags: number = 0,
                 baggage: any = {},
                 debugId: ?string = '',
-                samplingFinalized: boolean = false) {
+    ) {
         this._traceId = traceId;
         this._spanId = spanId;
         this._parentId = parentId;
@@ -69,7 +52,6 @@ export default class SpanContext {
         this._flags = flags;
         this._baggage = baggage;
         this._debugId = debugId;
-        this._samplingFinalized = samplingFinalized;
     }
 
     get traceId(): any {
@@ -126,8 +108,25 @@ export default class SpanContext {
         return this._debugId;
     }
 
+    /**
+     * This determines whether the sampling decision on this span is considered completed.
+     *
+     * Adaptive sampling uses the operation name of a span to correlate it with
+     * a sampling rate.  If an operation name is set on a span after the span's creation
+     * then adaptive sampling cannot associate the operation name with the proper sampling rate.
+     *
+     * In order to correct this we allow a span to be written to, so that we can re-sample
+     * it in the case that an operation name is set after span creation. Situations
+     * where a span context's sampling decision is finalized include:
+     * - it has inherited the sampling decision from its parent
+     * - its debug flag is set via the sampling.priority tag
+     * - it is finish()-ed
+     * - setOperationName is called
+     * - it is used as a parent for another span
+     * - its context is serialized using injectors
+     * */
     get samplingFinalized(): boolean {
-        return this._samplingFinalized;
+        return (this.flags & constants.DEFERRED_SAMPLING_MASK) !== constants.DEFERRED_SAMPLING_MASK
     }
 
     set traceId(traceId: Buffer): void {
@@ -162,7 +161,7 @@ export default class SpanContext {
     }
 
     finalizeSampling(): void {
-        this._samplingFinalized = true;
+        this.flags &= ~constants.DEFERRED_SAMPLING_MASK
     }
 
     isDebugIDContainerOnly(): boolean {
@@ -196,7 +195,6 @@ export default class SpanContext {
             this._flags,
             newBaggage,
             this._debugId,
-            this._samplingFinalized
             );
     }
 

@@ -62,7 +62,7 @@ describe('tracer should', () => {
 
         assert.isOk(rootSpan.context().traceId);
         assert.isNotOk(rootSpan.context().parentId);
-        assert.equal(rootSpan.context().flags, 1);
+        assert.equal(rootSpan.context().flags, constants.SAMPLED_MASK | constants.DEFERRED_SAMPLING_MASK);
         assert.equal('Bender', rootSpan.getBaggageItem('robot'));
         assert.equal('Leela', rootSpan.getBaggageItem('female'));
         assert.equal('Fry', rootSpan.getBaggageItem('male'));
