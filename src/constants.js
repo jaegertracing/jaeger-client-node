@@ -36,10 +36,6 @@ export const JAEGER_CLIENT_VERSION_TAG_KEY = 'jaeger.version';
 // TRACER_HOSTNAME_TAG_KEY used to report host name of the process.
 export const TRACER_HOSTNAME_TAG_KEY = 'jaeger.hostname';
 
-// DEFERRED_SAMPLING_TAG_KEY indicates that a concrete sampling decision was made for the trace.
-// Previous spans on this trace had a DEFERRED_SAMPLING_MASK set. 
-export const DEFERRED_SAMPLING_TAG_KEY = 'sampler.deferred_decision';
-
 // SAMPLER_TYPE_TAG_KEY reports which sampler was used on the root span.
 export const SAMPLER_TYPE_TAG_KEY = 'sampler.type';
 
