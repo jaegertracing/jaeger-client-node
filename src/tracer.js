@@ -228,6 +228,11 @@ export default class Tracer {
             ctx.parentId = null;
             ctx.flags = flags;
         } else {
+            if (!parent.samplingFinalized) {
+                parent._flags = constants.SAMPLED_MASK & this._sampler.isSampled(operationName, internalTags);
+                parent.finalizeSampling()
+            }
+
             ctx.traceId = parent.traceId;
             ctx.spanId = Utils.getRandom64();
             ctx.parentId = parent.spanId;
@@ -236,7 +241,6 @@ export default class Tracer {
             // reuse parent's baggage as we'll never change it
             ctx.baggage = parent.baggage;
 
-            parent.finalizeSampling();
             ctx.finalizeSampling();
         }
 
@@ -297,12 +301,7 @@ export default class Tracer {
             throw new Error(`Unsupported format: ${format}`);
         }
 
-        let spanContext = extractor.extract(carrier);
-
-        if (spanContext) {
-            spanContext.finalizeSampling();
-        }
-        return spanContext;
+        return extractor.extract(carrier);
     }
 
     /**

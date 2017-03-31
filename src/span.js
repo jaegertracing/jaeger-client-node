@@ -141,7 +141,7 @@ export default class Span {
      * @return {boolean} - The decision about whether this span can be written to.
      **/
     _isWriteable(): boolean {
-        return ~this._spanContext.samplingFinalized;
+        return !this._spanContext.samplingFinalized || this._spanContext.isSampled();
     }
 
     /**

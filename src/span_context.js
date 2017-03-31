@@ -126,7 +126,7 @@ export default class SpanContext {
      * - its context is serialized using injectors
      * */
     get samplingFinalized(): boolean {
-        return (this.flags & constants.DEFERRED_SAMPLING_MASK) !== constants.DEFERRED_SAMPLING_MASK
+        return ((this.flags & constants.DEFERRED_SAMPLING_MASK) !== constants.DEFERRED_SAMPLING_MASK)
     }
 
     set traceId(traceId: Buffer): void {

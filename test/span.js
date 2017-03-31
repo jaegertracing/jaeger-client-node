@@ -185,6 +185,49 @@ describe('span should', () => {
         assert.isOk(unnormalizedKey in Span._getBaggageHeaderCache());
     });
 
+    describe('with deferred sampling', () => {
+        it('should not pass deferred sampling flag to child spans', () => {
+            let child = tracer.startSpan('child', {childOf: span.context()});
+            assert.notEqual(child.context.flags & constants.DEFERRED_SAMPLING_MASK,
+                            constants.DEFERRED_SAMPLING_MASK);
+            assert.isOk(child._spanContext.samplingFinalized)
+        });
+
+        it('should make a call to the underlying sampler and use the sampling decision when true', () => {
+            let mockSampler = sinon.mock(tracer._sampler);
+            mockSampler.expects('isSampled').withExactArgs('goodOperation', {}).returns(true);
+            let child = tracer.startSpan('goodOperation', {childOf: span.context()});
+            mockSampler.verify();
+            assert.isOk(child.context().isSampled())
+        });
+
+        it('should make a call to the underlying sampler and use the sampling decision when false', () => {
+            let mockSampler = sinon.mock(tracer._sampler);
+            mockSampler.expects('isSampled').withExactArgs('horridOperation', {}).returns(false);
+            let child = tracer.startSpan('horridOperation', {childOf: span.context()});
+            mockSampler.verify();
+            assert.isNotOk(child.context().isSampled())
+        });
+
+        it('should make the same sampling decision for all children', () => {
+            let mockSampler = sinon.mock(tracer._sampler);
+            let parent = span.context();
+            mockSampler.expects('isSampled').withExactArgs('op1', {}).returns(false);
+            mockSampler.expects('isSampled').withExactArgs('op2', {}).throws();
+            mockSampler.expects('isSampled').withExactArgs('op3', {}).throws();
+
+            let child1 = tracer.startSpan('op1', {childOf: parent});
+            let child2 = tracer.startSpan('op2', {childOf: parent});
+            let child3 = tracer.startSpan('op3', {childOf: parent});
+
+            assert.isOk(parent.samplingFinalized);
+            assert.isNotOk(child1.context().isSampled());
+            assert.isNotOk(child2.context().isSampled());
+            assert.isNotOk(child3.context().isSampled())
+        });
+
+    });
+
     describe('adaptive sampling tests for span', () => {
         let options = [
             { desc: 'sampled: ', sampling: true, reportedSpans: 1 },
@@ -336,3 +379,55 @@ describe('span should', () => {
     // TODO(oibe) need tests for standard tags, and handlers
 });
 
+describe('span with deferred sampling flag', () => {
+    let reporter = new InMemoryReporter();
+    let sampler, tracer, span, spanContext;
+
+    beforeEach(() => {
+        sampler = new ConstSampler(true)
+
+        tracer = new Tracer(
+            'test-service-name',
+            reporter,
+            sampler,
+            {logger: new MockLogger()}
+        );
+
+        spanContext = SpanContext.withBinaryIds(
+            Utils.encodeInt64(1),
+            Utils.encodeInt64(2),
+            Utils.encodeInt64(3),
+            constants.DEFERRED_SAMPLING_MASK
+        );
+
+        span = new Span(
+            tracer,
+            'op-name',
+            spanContext,
+            tracer.now()
+        );
+    });
+
+    it('should not pass deferred sampling flag to child spans', () => {
+        let child = tracer.startSpan('child', {childOf: span.context()});
+        assert.notEqual(child.context.flags & constants.DEFERRED_SAMPLING_MASK,
+                        constants.DEFERRED_SAMPLING_MASK)
+    });
+
+    it('should make a call to the underlying sampler and use the sampling decision when true', () => {
+        let mockSampler = sinon.mock(sampler);
+        mockSampler.expects('isSampled').withExactArgs('goodOperation', {}).returns(true);
+        let child = tracer.startSpan('goodOperation', {childOf: span.context()});
+        mockSampler.verify()
+        assert.isOk(child.context().isSampled())
+    });
+
+    it('should make a call to the underlying sampler and use the sampling decision when false', () => {
+        let mockSampler = sinon.mock(sampler);
+        mockSampler.expects('isSampled').withExactArgs('horridOperation', {}).returns(false);
+        let child = tracer.startSpan('horridOperation', {childOf: span.context()});
+        mockSampler.verify()
+        assert.isNotOk(child.context().isSampled())
+    });
+
+});
