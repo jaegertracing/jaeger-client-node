@@ -229,7 +229,11 @@ export default class Tracer {
             ctx.flags = flags;
         } else {
             if (!parent.samplingFinalized) {
-                parent._flags = constants.SAMPLED_MASK & this._sampler.isSampled(operationName, internalTags);
+                if (this._sampler.isSampled(operationName, internalTags)) {
+                   parent._flags |= constants.SAMPLED_MASK
+                } else {
+                    parent._flags &= ~constants.SAMPLED_MASK
+                }
                 parent.finalizeSampling()
             }
 
