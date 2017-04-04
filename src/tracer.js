@@ -118,7 +118,7 @@ export default class Tracer {
 
         // emit metrics
         this._metrics.spansStarted.increment(1);
-        if (span.context().isSampled()) {
+        if (spanContext.isSampled()) {
             this._metrics.spansSampled.increment(1);
             if (!hadParent) {
                 this._metrics.tracesStartedSampled.increment(1);
@@ -228,15 +228,6 @@ export default class Tracer {
             ctx.parentId = null;
             ctx.flags = flags;
         } else {
-            if (!parent.samplingFinalized) {
-                if (this._sampler.isSampled(operationName, internalTags)) {
-                   parent._flags |= constants.SAMPLED_MASK
-                } else {
-                    parent._flags &= ~constants.SAMPLED_MASK
-                }
-                parent.finalizeSampling()
-            }
-
             ctx.traceId = parent.traceId;
             ctx.spanId = Utils.getRandom64();
             ctx.parentId = parent.spanId;

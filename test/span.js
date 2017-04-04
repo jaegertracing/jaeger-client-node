@@ -195,7 +195,7 @@ describe('span should', () => {
 
         it('should make a call to the underlying sampler and use the sampling decision when true', () => {
             let mockSampler = sinon.mock(tracer._sampler);
-            mockSampler.expects('isSampled').withExactArgs('goodOperation', {}).returns(true);
+            mockSampler.expects('isSampled').withExactArgs('op-name', []).returns(true);
             let child = tracer.startSpan('goodOperation', {childOf: span.context()});
             mockSampler.verify();
             assert.isOk(child.context().isSampled())
@@ -203,7 +203,7 @@ describe('span should', () => {
 
         it('should make a call to the underlying sampler and use the sampling decision when false', () => {
             let mockSampler = sinon.mock(tracer._sampler);
-            mockSampler.expects('isSampled').withExactArgs('horridOperation', {}).returns(false);
+            mockSampler.expects('isSampled').withExactArgs('op-name', []).returns(false);
             let child = tracer.startSpan('horridOperation', {childOf: span.context()});
             mockSampler.verify();
             assert.isNotOk(child.context().isSampled())
@@ -211,10 +211,8 @@ describe('span should', () => {
 
         it('should make the same sampling decision for all children', () => {
             let mockSampler = sinon.mock(tracer._sampler);
+            mockSampler.expects('isSampled').withExactArgs('op-name', []).returns(false);
             let parent = span.context();
-            mockSampler.expects('isSampled').withExactArgs('op1', {}).returns(false);
-            mockSampler.expects('isSampled').withExactArgs('op2', {}).throws();
-            mockSampler.expects('isSampled').withExactArgs('op3', {}).throws();
 
             let child1 = tracer.startSpan('op1', {childOf: parent});
             let child2 = tracer.startSpan('op2', {childOf: parent});
@@ -261,8 +259,11 @@ describe('span should', () => {
         });
 
         describe('span sampling finalizer', () => {
+            it ('should not finalize span unless triggered', () => {
+                assert.equal(span._spanContext.samplingFinalized, false);
+            });
+
             it ('should trigger when it inherits a sampling decision', () => {
-                assert.equal(span.context().samplingFinalized, false, 'Span created in before each is not finalized');
 
                 let childSpan = tracer.startSpan('child-span', {childOf: span});
                 assert.isOk(span.context().samplingFinalized);
@@ -270,9 +271,6 @@ describe('span should', () => {
             });
 
             it ('should trigger when it sets the sampling priority', () => {
-                // Span created in before each is not finalized.
-                assert.equal(span.context().samplingFinalized, false);
-
                 span.setTag(opentracing.Tags.SAMPLING_PRIORITY, 1);
                 assert.isOk(span.context().samplingFinalized);
 
@@ -282,25 +280,16 @@ describe('span should', () => {
             });
 
             it ('should trigger on a finish()-ed span', () => {
-                // Span created in before each is not finalized.
-                assert.equal(span.context().samplingFinalized, false);
-
                 span.finish();
                 assert.isOk(span.context().samplingFinalized);
             });
 
             it ('should trigger after calling setOperationName', () => {
-                // Span created in before each is not finalized.
-                assert.equal(span.context().samplingFinalized, false);
-
                 span.setOperationName('fry');
                 assert.isOk(span.context().samplingFinalized);
             });
 
             it ('should trigger when its context is injected into headers', () => {
-                // Span created in before each is not finalized.
-                assert.equal(span.context().samplingFinalized, false);
-
                 let headers = {};
                 tracer.inject(span.context(), opentracing.FORMAT_HTTP_HEADERS, headers);
 
@@ -316,7 +305,7 @@ describe('span should', () => {
                 { logger: new MockLogger() }
             );
             let unFinalizedSpan = tracer.startSpan('unFinalizedSpan');
-            assert.equal(unFinalizedSpan.context().samplingFinalized, false);
+            assert.equal(unFinalizedSpan._spanContext.samplingFinalized, false);
             assert.isOk(unFinalizedSpan._isWriteable());
 
             tracer._sampler = new ConstSampler(true);
