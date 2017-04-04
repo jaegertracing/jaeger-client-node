@@ -190,7 +190,7 @@ describe('span should', () => {
             let child = tracer.startSpan('child', {childOf: span.context()});
             assert.notEqual(child.context.flags & constants.DEFERRED_SAMPLING_MASK,
                             constants.DEFERRED_SAMPLING_MASK);
-            assert.isOk(child._spanContext.samplingFinalized)
+            assert.isOk(child._spanContext.samplingFinalized);
         });
 
         it('should make a call to the underlying sampler and use the sampling decision when true', () => {
@@ -198,7 +198,7 @@ describe('span should', () => {
             mockSampler.expects('isSampled').withExactArgs('op-name', []).returns(true);
             let child = tracer.startSpan('goodOperation', {childOf: span.context()});
             mockSampler.verify();
-            assert.isOk(child.context().isSampled())
+            assert.isOk(child.context().isSampled());
         });
 
         it('should make a call to the underlying sampler and use the sampling decision when false', () => {
@@ -206,7 +206,7 @@ describe('span should', () => {
             mockSampler.expects('isSampled').withExactArgs('op-name', []).returns(false);
             let child = tracer.startSpan('horridOperation', {childOf: span.context()});
             mockSampler.verify();
-            assert.isNotOk(child.context().isSampled())
+            assert.isNotOk(child.context().isSampled());
         });
 
         it('should make the same sampling decision for all children', () => {
@@ -221,7 +221,7 @@ describe('span should', () => {
             assert.isOk(parent.samplingFinalized);
             assert.isNotOk(child1.context().isSampled());
             assert.isNotOk(child2.context().isSampled());
-            assert.isNotOk(child3.context().isSampled())
+            assert.isNotOk(child3.context().isSampled());
         });
 
     });

@@ -125,11 +125,11 @@ export default class Span {
         let ctx = this._spanContext;
         if (!ctx.samplingFinalized) {
             if (ctx.isDebug() || this._tracer._sampler.isSampled(this.operationName, this._tags)) {
-                ctx._flags |= constants.SAMPLED_MASK
+                ctx._flags |= constants.SAMPLED_MASK;
             } else {
-                ctx._flags &= ~constants.SAMPLED_MASK
+                ctx._flags &= ~constants.SAMPLED_MASK;
             }
-            ctx.finalizeSampling()
+            ctx.finalizeSampling();
         }
         return ctx;
     }
