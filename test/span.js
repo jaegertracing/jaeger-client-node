@@ -211,22 +211,6 @@ describe('span should', () => {
             mockSampler.verify();
             assert.isNotOk(child.context().isSampled());
         });
-
-        it('should make the same sampling decision for all children', () => {
-            let mockSampler = sinon.mock(tracer._sampler);
-            mockSampler.expects('isSampled').withExactArgs('op1', {}).returns(false);
-            let parent = span.context();
-
-            let child1 = tracer.startSpan('op1', {childOf: parent});
-            let child2 = tracer.startSpan('op2', {childOf: parent});
-            let child3 = tracer.startSpan('op3', {childOf: parent});
-
-            assert.isOk(parent.samplingFinalized);
-            assert.isNotOk(child1.context().isSampled());
-            assert.isNotOk(child2.context().isSampled());
-            assert.isNotOk(child3.context().isSampled());
-        });
-
     });
 
     describe('adaptive sampling tests for span', () => {

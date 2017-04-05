@@ -228,7 +228,6 @@ export default class Tracer {
             ctx.parentId = null;
             ctx.flags = flags;
         } else {
-            this.processDeferredSampling(parent, operationName, internalTags);
             ctx.traceId = parent.traceId;
             ctx.spanId = Utils.getRandom64();
             ctx.parentId = parent.spanId;
@@ -238,6 +237,7 @@ export default class Tracer {
             ctx.baggage = parent.baggage;
 
             parent.finalizeSampling();
+            this.processDeferredSampling(ctx, operationName, internalTags);
             ctx.finalizeSampling();
         }
 
@@ -254,23 +254,23 @@ export default class Tracer {
     }
 
     /**
-     *  Makes a concrete sampling decision for the parent span context based on information
+     *  Makes a concrete sampling decision for the ctx span context based on information
      *  available to it's child span.
      *
-     *  The parent context's deferred mask is unset after this decision is made
+     *  The ctx context's deferred mask is unset after this decision is made
      *
-     * @param parent the parent span context
+     * @param ctx the span context
      * @param operationName the operation name for the child
      * @param tags tags to be applied by the sampler
      */
-    processDeferredSampling(parent: SpanContext, operationName: string, tags: any) {
-        if (parent.isDeferredSampling) {
+    processDeferredSampling(ctx: SpanContext, operationName: string, tags: any) {
+        if (ctx.isDeferredSampling) {
             if (this._sampler.isSampled(operationName, tags)) {
-                parent._flags |= constants.SAMPLED_MASK;
+                ctx._flags |= constants.SAMPLED_MASK;
             } else {
-                parent._flags &= ~constants.SAMPLED_MASK
+                ctx._flags &= ~constants.SAMPLED_MASK;
             }
-            parent.unsetDeferredSampling()
+            ctx.unsetDeferredSampling();
         }
     }
 
