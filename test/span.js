@@ -262,11 +262,8 @@ describe('span should', () => {
         });
 
         describe('span sampling finalizer', () => {
-            it ('should not finalize span unless triggered', () => {
-                assert.equal(span._spanContext.samplingFinalized, false);
-            });
-
             it ('should trigger when it inherits a sampling decision', () => {
+                assert.equal(span.context().samplingFinalized, false, 'Span created in before each is not finalized');
 
                 let childSpan = tracer.startSpan('child-span', {childOf: span});
                 assert.isOk(span.context().samplingFinalized);
@@ -274,6 +271,9 @@ describe('span should', () => {
             });
 
             it ('should trigger when it sets the sampling priority', () => {
+                // Span created in before each is not finalized.
+                assert.equal(span.context().samplingFinalized, false);
+
                 span.setTag(opentracing.Tags.SAMPLING_PRIORITY, 1);
                 assert.isOk(span.context().samplingFinalized);
 
@@ -283,16 +283,25 @@ describe('span should', () => {
             });
 
             it ('should trigger on a finish()-ed span', () => {
+                // Span created in before each is not finalized.
+                assert.equal(span.context().samplingFinalized, false);
+
                 span.finish();
                 assert.isOk(span.context().samplingFinalized);
             });
 
             it ('should trigger after calling setOperationName', () => {
+                // Span created in before each is not finalized.
+                assert.equal(span.context().samplingFinalized, false);
+
                 span.setOperationName('fry');
                 assert.isOk(span.context().samplingFinalized);
             });
 
             it ('should trigger when its context is injected into headers', () => {
+                // Span created in before each is not finalized.
+                assert.equal(span.context().samplingFinalized, false);
+
                 let headers = {};
                 tracer.inject(span.context(), opentracing.FORMAT_HTTP_HEADERS, headers);
 
@@ -308,7 +317,7 @@ describe('span should', () => {
                 { logger: new MockLogger() }
             );
             let unFinalizedSpan = tracer.startSpan('unFinalizedSpan');
-            assert.equal(unFinalizedSpan._spanContext.samplingFinalized, false);
+            assert.equal(unFinalizedSpan.context().samplingFinalized, false);
             assert.isOk(unFinalizedSpan._isWriteable());
 
             tracer._sampler = new ConstSampler(true);
