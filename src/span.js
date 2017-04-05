@@ -20,6 +20,7 @@
 // THE SOFTWARE.
 
 import * as constants from './constants.js';
+import NullLogger from './logger.js';
 import SpanContext from './span_context.js';
 import * as opentracing from 'opentracing';
 import Utils from './util.js';
@@ -117,21 +118,12 @@ export default class Span {
     }
 
     /**
-     * Finalizes the span and returns the span context that represents this span.
+     * Returns the span context that represents this span.
      *
      * @return {SpanContext} - Returns this span's span context.
      **/
     context(): SpanContext {
-        let ctx = this._spanContext;
-        if (!ctx.samplingFinalized) {
-            if (ctx.isDebug() || this._tracer._sampler.isSampled(this.operationName, this._tags)) {
-                ctx._flags |= constants.SAMPLED_MASK;
-            } else {
-                ctx._flags &= ~constants.SAMPLED_MASK;
-            }
-            ctx.finalizeSampling();
-        }
-        return ctx;
+        return this._spanContext;
     }
 
     /**

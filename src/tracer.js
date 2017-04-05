@@ -118,7 +118,7 @@ export default class Tracer {
 
         // emit metrics
         this._metrics.spansStarted.increment(1);
-        if (spanContext.isSampled()) {
+        if (span.context().isSampled()) {
             this._metrics.spansSampled.increment(1);
             if (!hadParent) {
                 this._metrics.tracesStartedSampled.increment(1);
@@ -209,7 +209,7 @@ export default class Tracer {
         let internalTags: any = {};
         if (!parent || !parent.isValid) {
             let randomId = Utils.getRandom64();
-            let flags = constants.DEFERRED_SAMPLING_MASK;
+            let flags = 0;
             if (this._sampler.isSampled(operationName, internalTags)) {
                 flags |= constants.SAMPLED_MASK;
             }
@@ -228,6 +228,7 @@ export default class Tracer {
             ctx.parentId = null;
             ctx.flags = flags;
         } else {
+            this.processDeferredSampling(parent, operationName, internalTags);
             ctx.traceId = parent.traceId;
             ctx.spanId = Utils.getRandom64();
             ctx.parentId = parent.spanId;
@@ -236,6 +237,7 @@ export default class Tracer {
             // reuse parent's baggage as we'll never change it
             ctx.baggage = parent.baggage;
 
+            parent.finalizeSampling();
             ctx.finalizeSampling();
         }
 
@@ -249,6 +251,27 @@ export default class Tracer {
             rpcServer,
             references
         );
+    }
+
+    /**
+     *  Makes a concrete sampling decision for the parent span context based on information
+     *  available to it's child span.
+     *
+     *  The parent context's deferred mask is unset after this decision is made
+     *
+     * @param parent the parent span context
+     * @param operationName the operation name for the child
+     * @param tags tags to be applied by the sampler
+     */
+    processDeferredSampling(parent: SpanContext, operationName: string, tags: any) {
+        if (parent.isDeferredSampling) {
+            if (this._sampler.isSampled(operationName, tags)) {
+                parent._flags |= constants.SAMPLED_MASK;
+            } else {
+                parent._flags &= ~constants.SAMPLED_MASK
+            }
+            parent.unsetDeferredSampling()
+        }
     }
 
     /**
@@ -296,7 +319,12 @@ export default class Tracer {
             throw new Error(`Unsupported format: ${format}`);
         }
 
-        return extractor.extract(carrier);
+        let spanContext = extractor.extract(carrier);
+
+        if (spanContext) {
+            spanContext.finalizeSampling();
+        }
+        return spanContext;
     }
 
     /**

@@ -50,7 +50,7 @@ describe('span should', () => {
             Utils.encodeInt64(1),
             Utils.encodeInt64(2),
             Utils.encodeInt64(3),
-            constants.SAMPLED_MASK | constants.DEFERRED_SAMPLING_MASK
+            constants.SAMPLED_MASK
         );
 
         span = new Span(
@@ -186,6 +186,9 @@ describe('span should', () => {
     });
 
     describe('with deferred sampling', () => {
+        beforeEach(function () {
+            spanContext._flags = constants.DEFERRED_SAMPLING_MASK;
+        });
         it('should not pass deferred sampling flag to child spans', () => {
             let child = tracer.startSpan('child', {childOf: span.context()});
             assert.notEqual(child.context.flags & constants.DEFERRED_SAMPLING_MASK,
@@ -195,7 +198,7 @@ describe('span should', () => {
 
         it('should make a call to the underlying sampler and use the sampling decision when true', () => {
             let mockSampler = sinon.mock(tracer._sampler);
-            mockSampler.expects('isSampled').withExactArgs('op-name', []).returns(true);
+            mockSampler.expects('isSampled').withExactArgs('goodOperation', {}).returns(true);
             let child = tracer.startSpan('goodOperation', {childOf: span.context()});
             mockSampler.verify();
             assert.isOk(child.context().isSampled());
@@ -203,7 +206,7 @@ describe('span should', () => {
 
         it('should make a call to the underlying sampler and use the sampling decision when false', () => {
             let mockSampler = sinon.mock(tracer._sampler);
-            mockSampler.expects('isSampled').withExactArgs('op-name', []).returns(false);
+            mockSampler.expects('isSampled').withExactArgs('horridOperation', {}).returns(false);
             let child = tracer.startSpan('horridOperation', {childOf: span.context()});
             mockSampler.verify();
             assert.isNotOk(child.context().isSampled());
@@ -211,7 +214,7 @@ describe('span should', () => {
 
         it('should make the same sampling decision for all children', () => {
             let mockSampler = sinon.mock(tracer._sampler);
-            mockSampler.expects('isSampled').withExactArgs('op-name', []).returns(false);
+            mockSampler.expects('isSampled').withExactArgs('op1', {}).returns(false);
             let parent = span.context();
 
             let child1 = tracer.startSpan('op1', {childOf: parent});
