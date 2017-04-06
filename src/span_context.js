@@ -166,7 +166,7 @@ export default class SpanContext {
     }
 
     unsetDeferredSampling(): void {
-        this._flags &= ~constants.DEFERRED_SAMPLING_MASK
+        this._flags &= ~constants.DEFERRED_SAMPLING_MASK;
     }
 
     finalizeSampling(): void {
