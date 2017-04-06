@@ -161,6 +161,14 @@ export default class SpanContext {
         return !!((this._traceId || this._traceIdStr) && (this._spanId || this._spanIdStr));
     }
 
+    get isDeferredSampling(): boolean {
+        return (this._flags & constants.DEFERRED_SAMPLING_MASK) === constants.DEFERRED_SAMPLING_MASK;
+    }
+
+    unsetDeferredSampling(): void {
+        this._flags &= ~constants.DEFERRED_SAMPLING_MASK;
+    }
+
     finalizeSampling(): void {
         this._samplingFinalized = true;
     }

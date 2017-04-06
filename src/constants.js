@@ -24,6 +24,11 @@ export const SAMPLED_MASK = 0x1;
 // DEBUG_MASK is the bit mask indicationg that a span has been marked for debug.
 export const DEBUG_MASK = 0x2;
 
+// DEFERRED_SAMPLING_MASK is the bit mask indicating that the upstream service that generated the
+// span did not make a definitive sampling decision, but deferred it to be made by some
+// downstream service.
+export const DEFERRED_SAMPLING_MASK = 0x4;
+
 // JAEGER_CLIENT_VERSION_TAG_KEY is the name of the tag used to report client version.
 export const JAEGER_CLIENT_VERSION_TAG_KEY = 'jaeger.version';
 
