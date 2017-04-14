@@ -78,7 +78,10 @@ export default class RemoteControlledSampler {
 
         this._onSamplerUpdate = options.onSamplerUpdate;
 
+        this._logger.info(`JAEGER: Refresh interval is ${options.refreshInterval}`);
+
         if (options.refreshInterval !== 0) {
+            this._logger.info(`JAEGER: Random delay start`);
             let randomDelay: number = Math.random() * this._refreshInterval;
             this._initialDelayTimeoutHandle = setTimeout(this._afterInitialDelay.bind(this), randomDelay);
         }
@@ -93,6 +96,7 @@ export default class RemoteControlledSampler {
     }
 
     _afterInitialDelay(): void {
+        this._logger.info(`JAEGER: afterInitialDelay`);
         this._refreshIntervalHandle = setInterval(
             this._refreshSamplingStrategy.bind(this),
             this._refreshInterval
@@ -100,6 +104,7 @@ export default class RemoteControlledSampler {
     }
 
     _refreshSamplingStrategy() {
+        this._logger.info(`JAEGER: refreshSamplingStrategy`);
         let serviceName: string = encodeURIComponent(this._serviceName);
         http.get({
             'host': this._host,
@@ -115,7 +120,9 @@ export default class RemoteControlledSampler {
                 body += chunk;
             });
 
+
             res.on('end', () => {
+                this._logger.info(`JAEGER: retrieved sampling strategy from agent`, body);
                 this._parseSamplingServerResponse(body);
             });
         }).on('error', (err) => {
@@ -125,11 +132,13 @@ export default class RemoteControlledSampler {
     }
 
     _parseSamplingServerResponse(body: string) {
+        this._logger.info(`JAEGER: parseSamplingServerResponse`);
         this._metrics.samplerRetrieved.increment(1);
         let strategy;
         try {
             strategy = JSON.parse(body);
             if (!strategy) {
+                this._logger.info(`JAEGER: Malformed response!!!!!!!`);
                 throw 'Malformed response: ' + body;
             }
         } catch (error) {
@@ -152,6 +161,7 @@ export default class RemoteControlledSampler {
     }
 
     _updateSampler(response: SamplingStrategyResponse): boolean {
+        this._logger.info(`JAEGER: updateSampler`, response);
         if (response.operationSampling) {
             if (this._sampler instanceof PerOperationSampler) {
                 let sampler: PerOperationSampler = this._sampler;
@@ -163,17 +173,22 @@ export default class RemoteControlledSampler {
         let newSampler: Sampler;
         if (response.strategyType === PROBABILISTIC_STRATEGY_TYPE && response.probabilisticSampling) {
             let samplingRate = response.probabilisticSampling.samplingRate;
+            this._logger.info(`JAEGER: probabilisticSampler`, samplingRate);
             newSampler = new ProbabilisticSampler(samplingRate);
         } else if (response.strategyType === RATELIMITING_STRATEGY_TYPE && response.rateLimitingSampling) {
             let maxTracesPerSecond = response.rateLimitingSampling.maxTracesPerSecond;
+            this._logger.info(`JAEGER: rateLimitingSampler`, maxTracesPerSecond);
             newSampler = new RateLimitingSampler(maxTracesPerSecond);
         } else {
+            this._logger.info(`JAEGER: updateSampler Malformed response`);
             throw 'Malformed response: ' + JSON.stringify(response);
         }
 
         if (this._sampler.equal(newSampler)) {
+            this._logger.info(`JAEGER: Not updating sampler`);
             return false;
         }
+        this._logger.info(`JAEGER: Updating sampler`);
         this._sampler = newSampler;
         return true;
     }
