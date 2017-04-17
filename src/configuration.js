@@ -175,7 +175,7 @@ export default class Configuration {
         }
 
         if (options.logger) {
-            options.logger.info(
+            options.logger.error(
                 `Initializing Jaeger Tracer with ${reporter.name()} and ${sampler.name()}`
             );
         }
