@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../src/index.js"],"names":["module","exports","initTracer"],"mappings":";;AAAA;;;;;;AAEAA,OAAOC,OAAP,GAAiB;AACbC,gBAAY,wBAAcA;AADb,CAAjB","file":"index.js","sourcesContent":["import Configuration from './configuration';\n\nmodule.exports = {\n    initTracer: Configuration.initTracer\n};\n"]}
