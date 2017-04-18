@@ -136,7 +136,8 @@ describe('initTracer', () => {
 
     it ('should pass options to tracer', () => {
         var logger = {
-            'info': function info(msg){}
+            'info': function info(msg){},
+            'error': function error(msg){}
         };
         var metrics = {
             'createCounter': function createCounter() { return {}; },

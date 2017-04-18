@@ -135,6 +135,7 @@ export default class RemoteControlledSampler {
         this._logger.error(`JAEGER: parseSamplingServerResponse`);
         this._metrics.samplerRetrieved.increment(1);
         let strategy;
+        this._logger.error(`JAEGER: parseSamplingServerResponse TRY 1`);
         try {
             strategy = JSON.parse(body);
             if (!strategy) {
@@ -146,6 +147,9 @@ export default class RemoteControlledSampler {
             this._metrics.samplerParsingFailure.increment(1);
             return;
         }
+        this._logger.error(`JAEGER: TRY 1 PASS`);
+        this._logger.error(`JAEGER: TRY 2`);
+        this._logger.error(`JAEGER: PRE sampler: ${this._sampler.toString()}.`);
         try {
             if (this._updateSampler(strategy)) {
                 this._metrics.samplerUpdated.increment(1);
@@ -155,13 +159,15 @@ export default class RemoteControlledSampler {
             this._metrics.samplerParsingFailure.increment(1);
             return;
         }
+        this._logger.error(`JAEGER: TRY 2 PASS`);
+        this._logger.error(`JAEGER: POST sampler: ${this._sampler.toString()}.`);
         if (this._onSamplerUpdate) {
             this._onSamplerUpdate(this._sampler);
         }
     }
 
     _updateSampler(response: SamplingStrategyResponse): boolean {
-        this._logger.error(`JAEGER: updateSampler`, response);
+        this._logger.error(`JAEGER: updateSampler.`);
         if (response.operationSampling) {
             if (this._sampler instanceof PerOperationSampler) {
                 let sampler: PerOperationSampler = this._sampler;
@@ -171,18 +177,21 @@ export default class RemoteControlledSampler {
             return true;
         }
         let newSampler: Sampler;
+        this._logger.error(`JAEGER: updateSampler TRY`);
         if (response.strategyType === PROBABILISTIC_STRATEGY_TYPE && response.probabilisticSampling) {
             let samplingRate = response.probabilisticSampling.samplingRate;
-            this._logger.error(`JAEGER: probabilisticSampler`, samplingRate);
+            this._logger.error(`JAEGER: probabilisticSampler: ${samplingRate}.`);
             newSampler = new ProbabilisticSampler(samplingRate);
         } else if (response.strategyType === RATELIMITING_STRATEGY_TYPE && response.rateLimitingSampling) {
             let maxTracesPerSecond = response.rateLimitingSampling.maxTracesPerSecond;
-            this._logger.error(`JAEGER: rateLimitingSampler`, maxTracesPerSecond);
+            this._logger.error(`JAEGER: rateLimitingSampler ${maxTracesPerSecond}.`);
             newSampler = new RateLimitingSampler(maxTracesPerSecond);
         } else {
             this._logger.error(`JAEGER: updateSampler Malformed response`);
             throw 'Malformed response: ' + JSON.stringify(response);
         }
+        this._logger.error(`JAEGER: updateSampler End`);
+        this._logger.error(`JAEGER: new Sampler: ${newSampler.toString()}.`);
 
         if (this._sampler.equal(newSampler)) {
             this._logger.error(`JAEGER: Not updating sampler`);
