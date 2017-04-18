@@ -89,7 +89,7 @@ var RemoteControlledSampler = function () {
         this._serviceName = serviceName;
         this._sampler = options.sampler || new _probabilistic_sampler2.default(DEFAULT_INITIAL_SAMPLING_RATE);
         this._logger = options.logger || new _logger2.default();
-        this._metrics = options.metrics || new _metrics2.default(new _metric_factory2.default());
+        this._metrics = new _metrics2.default(new _metric_factory2.default());
         this._refreshInterval = options.refreshInterval || DEFAULT_REFRESH_INTERVAL;
         this._host = options.host || DEFAULT_SAMPLING_HOST;
         this._port = options.port || DEFAULT_SAMPLING_PORT;
@@ -155,7 +155,9 @@ var RemoteControlledSampler = function () {
         key: '_parseSamplingServerResponse',
         value: function _parseSamplingServerResponse(body) {
             this._logger.error('JAEGER: parseSamplingServerResponse');
+            this._logger.error('JAEGER: a');
             this._metrics.samplerRetrieved.increment(1);
+            this._logger.error('JAEGER: b');
             var strategy = void 0;
             this._logger.error('JAEGER: parseSamplingServerResponse TRY 1');
             try {

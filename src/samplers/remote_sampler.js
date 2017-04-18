@@ -70,7 +70,7 @@ export default class RemoteControlledSampler {
         this._serviceName = serviceName;
         this._sampler = options.sampler || new ProbabilisticSampler(DEFAULT_INITIAL_SAMPLING_RATE);
         this._logger = options.logger || new NullLogger();
-        this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
+        this._metrics = new Metrics(new NoopMetricFactory());
         this._refreshInterval = options.refreshInterval || DEFAULT_REFRESH_INTERVAL;
         this._host = options.host || DEFAULT_SAMPLING_HOST;
         this._port = options.port || DEFAULT_SAMPLING_PORT;
@@ -132,7 +132,9 @@ export default class RemoteControlledSampler {
 
     _parseSamplingServerResponse(body: string) {
         this._logger.error(`JAEGER: parseSamplingServerResponse`);
+        this._logger.error(`JAEGER: a`);
         this._metrics.samplerRetrieved.increment(1);
+        this._logger.error(`JAEGER: b`);
         let strategy;
         this._logger.error(`JAEGER: parseSamplingServerResponse TRY 1`);
         try {
