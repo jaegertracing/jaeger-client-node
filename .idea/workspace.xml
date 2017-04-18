@@ -2,6 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="48ca8bae-2672-4c34-b2cb-5fcf7c059c8d" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/src/samplers/remote_sampler.js" afterPath="$PROJECT_DIR$/dist/src/samplers/remote_sampler.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/src/samplers/remote_sampler.js.map" afterPath="$PROJECT_DIR$/dist/src/samplers/remote_sampler.js.map" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/samplers/remote_sampler.js" afterPath="$PROJECT_DIR$/src/samplers/remote_sampler.js" />
     </list>
     <ignored path="jaeger-client-node.iws" />
@@ -26,17 +29,7 @@
         <entry file="file://$PROJECT_DIR$/test/samplers/remote_sampler.js">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="197">
-              <caret line="145" column="32" lean-forward="true" selection-start-line="145" selection-start-column="32" selection-end-line="145" selection-end-column="32" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="remote_sampler.js" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/samplers/remote_sampler.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="301">
-              <caret line="110" column="21" lean-forward="false" selection-start-line="110" selection-start-column="21" selection-end-line="110" selection-end-column="21" />
+              <caret line="104" column="52" lean-forward="false" selection-start-line="104" selection-start-column="52" selection-end-line="104" selection-end-column="52" />
               <folding />
             </state>
           </provider>
@@ -45,8 +38,8 @@
       <file leaf-file-name="endtoend_handler.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/crossdock/src/endtoend_handler.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="330">
-              <caret line="69" column="0" lean-forward="true" selection-start-line="69" selection-start-column="0" selection-end-line="69" selection-end-column="0" />
+            <state relative-caret-position="270">
+              <caret line="65" column="0" lean-forward="false" selection-start-line="65" selection-start-column="0" selection-end-line="65" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -55,19 +48,23 @@
       <file leaf-file-name="configuration.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/configuration.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="358">
-              <caret line="157" column="21" lean-forward="false" selection-start-line="157" selection-start-column="12" selection-end-line="157" selection-end-column="21" />
+            <state relative-caret-position="328">
+              <caret line="108" column="43" lean-forward="false" selection-start-line="108" selection-start-column="43" selection-end-line="108" selection-end-column="43" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="sampler_server.js" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/test/lib/sampler_server.js">
+      <file leaf-file-name="remote_sampler.js" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/samplers/remote_sampler.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="404">
-              <caret line="48" column="29" lean-forward="false" selection-start-line="48" selection-start-column="21" selection-end-line="48" selection-end-column="29" />
-              <folding />
+            <state relative-caret-position="332">
+              <caret line="191" column="75" lean-forward="false" selection-start-line="191" selection-start-column="75" selection-end-line="191" selection-end-column="75" />
+              <folding>
+                <marker date="1492541155000" expanded="true" signature="1813:9364" ph="{...}" />
+                <marker date="1492541155000" expanded="true" signature="4516:5514" ph="{...}" />
+                <marker date="1492541155000" expanded="true" signature="7087:9030" ph="{...}" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -76,9 +73,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>close()</find>
-      <find>DEFAULT_INITIAL_SAMPLING_RATE</find>
-      <find>DEFAULT_REFRESH_INTERVAL</find>
       <find>Failed to get the sampling rate strategy</find>
       <find>close</find>
       <find>close(</find>
@@ -106,6 +100,9 @@
       <find>_metrics</find>
       <find>Error in updating sampler: Malformed response</find>
       <find>Error in updating sampler</find>
+      <find>Error in parsing sampling strategy</find>
+      <find>Error in parsing sampling strategyError in parsing sampling strategyError in parsing sampling strategy</find>
+      <find>PROBABILISTIC_STRATEGY_TYPE</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -732,12 +729,12 @@
       <workItem from="1490980554594" duration="4435000" />
       <workItem from="1491317911714" duration="9401000" />
       <workItem from="1491417329268" duration="7000" />
-      <workItem from="1492196036869" duration="25945000" />
+      <workItem from="1492196036869" duration="26985000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="154959000" />
+    <option name="totallyTimeSpent" value="155999000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="2386" y="294" width="1440" height="793" extended-state="0" />
@@ -1128,10 +1125,26 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/crossdock/src/endtoend_handler.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="270">
+          <caret line="65" column="0" lean-forward="false" selection-start-line="65" selection-start-column="0" selection-end-line="65" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/test/lib/sampler_server.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="404">
-          <caret line="48" column="29" lean-forward="false" selection-start-line="48" selection-start-column="21" selection-end-line="48" selection-end-column="29" />
+        <state relative-caret-position="118">
+          <caret line="32" column="47" lean-forward="true" selection-start-line="32" selection-start-column="47" selection-end-line="32" selection-end-column="47" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/configuration.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="328">
+          <caret line="108" column="43" lean-forward="false" selection-start-line="108" selection-start-column="43" selection-end-line="108" selection-end-column="43" />
           <folding />
         </state>
       </provider>
@@ -1139,40 +1152,28 @@
     <entry file="file://$PROJECT_DIR$/test/samplers/remote_sampler.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="197">
-          <caret line="145" column="32" lean-forward="true" selection-start-line="145" selection-start-column="32" selection-end-line="145" selection-end-column="32" />
+          <caret line="104" column="52" lean-forward="false" selection-start-line="104" selection-start-column="52" selection-end-line="104" selection-end-column="52" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/_flow/sampler-thrift.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
-          <caret line="30" column="54" lean-forward="true" selection-start-line="30" selection-start-column="54" selection-end-line="30" selection-end-column="54" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/crossdock/src/endtoend_handler.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="69" column="0" lean-forward="true" selection-start-line="69" selection-start-column="0" selection-end-line="69" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/configuration.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="358">
-          <caret line="157" column="21" lean-forward="false" selection-start-line="157" selection-start-column="12" selection-end-line="157" selection-end-column="21" />
+        <state relative-caret-position="420">
+          <caret line="47" column="4" lean-forward="false" selection-start-line="47" selection-start-column="4" selection-end-line="47" selection-end-column="4" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/samplers/remote_sampler.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="301">
-          <caret line="110" column="21" lean-forward="false" selection-start-line="110" selection-start-column="21" selection-end-line="110" selection-end-column="21" />
-          <folding />
+        <state relative-caret-position="332">
+          <caret line="191" column="75" lean-forward="false" selection-start-line="191" selection-start-column="75" selection-end-line="191" selection-end-column="75" />
+          <folding>
+            <marker date="1492541155000" expanded="true" signature="1813:9364" ph="{...}" />
+            <marker date="1492541155000" expanded="true" signature="4516:5514" ph="{...}" />
+            <marker date="1492541155000" expanded="true" signature="7087:9030" ph="{...}" />
+          </folding>
         </state>
       </provider>
     </entry>

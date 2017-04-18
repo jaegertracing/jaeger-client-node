@@ -108,7 +108,7 @@ export default class RemoteControlledSampler {
         http.get({
             'host': this._host,
             'port': this._port,
-            'path': `?service=${serviceName}`
+            'path': `/sampling?service=${serviceName}`
         }, (res) => {
             // explicitly treat incoming data as utf8 (avoids issues with multi-byte chars)
             res.setEncoding('utf8');
@@ -180,7 +180,7 @@ export default class RemoteControlledSampler {
         let newSampler: Sampler;
         this._logger.error(`JAEGER: updateSampler TRY`);
         this._logger.error(`JAEGER: updateSampler response: ${response.strategyType}`);
-        if (response.strategyType === PROBABILISTIC_STRATEGY_TYPE && response.probabilisticSampling) {
+        if ((response.strategyType === PROBABILISTIC_STRATEGY_TYPE || response.strategyType === 'PROBABILISTIC') && response.probabilisticSampling) {
             let samplingRate = response.probabilisticSampling.samplingRate;
             this._logger.error(`JAEGER: probabilisticSampler: ${samplingRate.toString()}.`);
             newSampler = new ProbabilisticSampler(samplingRate);
