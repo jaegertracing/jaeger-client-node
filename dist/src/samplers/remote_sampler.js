@@ -173,7 +173,7 @@ var RemoteControlledSampler = function () {
             }
             this._logger.error('JAEGER: TRY 1 PASS');
             this._logger.error('JAEGER: TRY 2');
-            // this._logger.error(`JAEGER: PRE sampler: ${this._sampler.toString()}.`);
+            this._logger.error('JAEGER: PRE sampler: ' + this._sampler.toString() + '.');
             try {
                 if (this._updateSampler(strategy)) {
                     this._metrics.samplerUpdated.increment(1);
@@ -184,7 +184,7 @@ var RemoteControlledSampler = function () {
                 return;
             }
             this._logger.error('JAEGER: TRY 2 PASS');
-            // this._logger.error(`JAEGER: POST sampler: ${this._sampler.toString()}.`);
+            this._logger.error('JAEGER: POST sampler: ' + this._sampler.toString() + '.');
             if (this._onSamplerUpdate) {
                 this._onSamplerUpdate(this._sampler);
             }
@@ -203,20 +203,21 @@ var RemoteControlledSampler = function () {
             }
             var newSampler = void 0;
             this._logger.error('JAEGER: updateSampler TRY');
+            this._logger.error('JAEGER: updateSampler response: ' + response);
             if (response.strategyType === PROBABILISTIC_STRATEGY_TYPE && response.probabilisticSampling) {
                 var samplingRate = response.probabilisticSampling.samplingRate;
-                // this._logger.error(`JAEGER: probabilisticSampler: ${samplingRate.toString()}.`);
+                this._logger.error('JAEGER: probabilisticSampler: ' + samplingRate.toString() + '.');
                 newSampler = new _probabilistic_sampler2.default(samplingRate);
             } else if (response.strategyType === RATELIMITING_STRATEGY_TYPE && response.rateLimitingSampling) {
                 var maxTracesPerSecond = response.rateLimitingSampling.maxTracesPerSecond;
-                // this._logger.error(`JAEGER: rateLimitingSampler ${maxTracesPerSecond.toString()}.`);
+                this._logger.error('JAEGER: rateLimitingSampler ' + maxTracesPerSecond.toString() + '.');
                 newSampler = new _ratelimiting_sampler2.default(maxTracesPerSecond);
             } else {
                 this._logger.error('JAEGER: updateSampler Malformed response');
                 throw 'Malformed response: ' + JSON.stringify(response);
             }
             this._logger.error('JAEGER: updateSampler End');
-            // this._logger.error(`JAEGER: new Sampler: ${newSampler.toString()}.`);
+            this._logger.error('JAEGER: new Sampler: ' + newSampler.toString() + '.');
 
             if (this._sampler.equal(newSampler)) {
                 this._logger.error('JAEGER: Not updating sampler');

@@ -25,8 +25,8 @@
       <file leaf-file-name="remote_sampler.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/samplers/remote_sampler.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="72" column="24" lean-forward="false" selection-start-line="72" selection-start-column="24" selection-end-line="72" selection-end-column="24" />
+            <state relative-caret-position="185">
+              <caret line="181" column="58" lean-forward="false" selection-start-line="181" selection-start-column="58" selection-end-line="181" selection-end-column="58" />
               <folding />
             </state>
           </provider>
@@ -35,8 +35,8 @@
       <file leaf-file-name="configuration.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/configuration.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="197">
-              <caret line="166" column="71" lean-forward="false" selection-start-line="166" selection-start-column="64" selection-end-line="166" selection-end-column="71" />
+            <state relative-caret-position="62">
+              <caret line="157" column="21" lean-forward="false" selection-start-line="157" selection-start-column="12" selection-end-line="157" selection-end-column="21" />
               <folding />
             </state>
           </provider>
@@ -46,7 +46,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>null</find>
       <find>DEFAULT_SAMPLING_HOST</find>
       <find>close()</find>
       <find>DEFAULT_INITIAL_SAMPLING_RATE</find>
@@ -76,6 +75,7 @@
       <find>.error(</find>
       <find>PROBABILISTIC</find>
       <find>_metrics</find>
+      <find>Error in updating sampler: Malformed response</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -144,8 +144,8 @@
     <handled-path value="$PROJECT_DIR$/node_modules" />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="2595" />
-    <option name="y" value="234" />
+    <option name="x" value="2386" />
+    <option name="y" value="294" />
     <option name="width" value="1440" />
     <option name="height" value="793" />
   </component>
@@ -670,15 +670,15 @@
       <workItem from="1490980554594" duration="4435000" />
       <workItem from="1491317911714" duration="9401000" />
       <workItem from="1491417329268" duration="7000" />
-      <workItem from="1492196036869" duration="23442000" />
+      <workItem from="1492196036869" duration="24440000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="152456000" />
+    <option name="totallyTimeSpent" value="153454000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="2595" y="234" width="1440" height="793" extended-state="0" />
+    <frame x="2386" y="294" width="1440" height="793" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -1099,16 +1099,16 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/configuration.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="197">
-          <caret line="166" column="71" lean-forward="false" selection-start-line="166" selection-start-column="64" selection-end-line="166" selection-end-column="71" />
+        <state relative-caret-position="62">
+          <caret line="157" column="21" lean-forward="false" selection-start-line="157" selection-start-column="12" selection-end-line="157" selection-end-column="21" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/samplers/remote_sampler.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="72" column="24" lean-forward="false" selection-start-line="72" selection-start-column="24" selection-end-line="72" selection-end-column="24" />
+        <state relative-caret-position="185">
+          <caret line="181" column="58" lean-forward="false" selection-start-line="181" selection-start-column="58" selection-end-line="181" selection-end-column="58" />
           <folding />
         </state>
       </provider>
