@@ -179,7 +179,7 @@ export default class RemoteControlledSampler {
         }
         let newSampler: Sampler;
         this._logger.error(`JAEGER: updateSampler TRY`);
-        this._logger.error(`JAEGER: updateSampler response: ${response}`);
+        this._logger.error(`JAEGER: updateSampler response: ${response.strategyType}`);
         if (response.strategyType === PROBABILISTIC_STRATEGY_TYPE && response.probabilisticSampling) {
             let samplingRate = response.probabilisticSampling.samplingRate;
             this._logger.error(`JAEGER: probabilisticSampler: ${samplingRate.toString()}.`);

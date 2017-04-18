@@ -203,7 +203,7 @@ var RemoteControlledSampler = function () {
             }
             var newSampler = void 0;
             this._logger.error('JAEGER: updateSampler TRY');
-            this._logger.error('JAEGER: updateSampler response: ' + response);
+            this._logger.error('JAEGER: updateSampler response: ' + response.strategyType);
             if (response.strategyType === PROBABILISTIC_STRATEGY_TYPE && response.probabilisticSampling) {
                 var samplingRate = response.probabilisticSampling.samplingRate;
                 this._logger.error('JAEGER: probabilisticSampler: ' + samplingRate.toString() + '.');
