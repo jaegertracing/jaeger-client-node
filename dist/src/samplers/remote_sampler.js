@@ -144,6 +144,7 @@ var RemoteControlledSampler = function () {
 
                 res.on('end', function () {
                     _this._logger.error('JAEGER: retrieved sampling strategy from agent', body);
+                    _this._logger.error('JAEGER: service is: ' + serviceName);
                     _this._parseSamplingServerResponse(body);
                 });
             }).on('error', function (err) {

@@ -122,6 +122,7 @@ export default class RemoteControlledSampler {
 
             res.on('end', () => {
                 this._logger.error(`JAEGER: retrieved sampling strategy from agent`, body);
+                this._logger.error(`JAEGER: service is: ${serviceName}`);
                 this._parseSamplingServerResponse(body);
             });
         }).on('error', (err) => {
