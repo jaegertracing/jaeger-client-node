@@ -18,10 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import SpanContext from './span_context';
-import Span from './span';
 import ConstSampler from './samplers/const_sampler';
-import InMemoryReporter from './reporters/in_memory_reporter';
 import ProbabilisticSampler from './samplers/probabilistic_sampler';
 import RateLimitingSampler from './samplers/ratelimiting_sampler';
 import RemoteReporter from './reporters/remote_reporter';
@@ -155,9 +152,11 @@ export default class Configuration {
      *        as process-level tags on the Tracer itself.
      */
     static initTracer(config, options = {}) {
-        let reporters = [];
         let reporter;
         let sampler;
+        if (options.metrics) {
+            options.metrics = new Metrics(options.metrics);
+        }
         if (config.disable) {
             return new opentracing.Tracer();
         } else {
@@ -175,14 +174,9 @@ export default class Configuration {
         }
 
         if (options.logger) {
-            options.logger.error(
+            options.logger.info(
                 `Initializing Jaeger Tracer with ${reporter.name()} and ${sampler.name()}`
             );
-        }
-
-        var metrics = null;
-        if (options.metrics) {
-            metrics = new Metrics(options.metrics);
         }
 
         return new Tracer(
@@ -190,7 +184,7 @@ export default class Configuration {
             reporter,
             sampler,
             {
-                metrics: metrics,
+                metrics: options.metrics,
                 logger: options.logger,
                 tags: options.tags
             }

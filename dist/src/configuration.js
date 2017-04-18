@@ -24,21 +24,9 @@ var _createClass = function () { function defineProperties(target, props) { for 
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-var _span_context = require('./span_context');
-
-var _span_context2 = _interopRequireDefault(_span_context);
-
-var _span = require('./span');
-
-var _span2 = _interopRequireDefault(_span);
-
 var _const_sampler = require('./samplers/const_sampler');
 
 var _const_sampler2 = _interopRequireDefault(_const_sampler);
-
-var _in_memory_reporter = require('./reporters/in_memory_reporter');
-
-var _in_memory_reporter2 = _interopRequireDefault(_in_memory_reporter);
 
 var _probabilistic_sampler = require('./samplers/probabilistic_sampler');
 
@@ -222,9 +210,11 @@ var Configuration = function () {
         value: function initTracer(config) {
             var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-            var reporters = [];
             var reporter = void 0;
             var sampler = void 0;
+            if (options.metrics) {
+                options.metrics = new _metrics2.default(options.metrics);
+            }
             if (config.disable) {
                 return new _opentracing2.default.Tracer();
             } else {
@@ -242,16 +232,11 @@ var Configuration = function () {
             }
 
             if (options.logger) {
-                options.logger.error('Initializing Jaeger Tracer with ' + reporter.name() + ' and ' + sampler.name());
-            }
-
-            var metrics = null;
-            if (options.metrics) {
-                metrics = new _metrics2.default(options.metrics);
+                options.logger.info('Initializing Jaeger Tracer with ' + reporter.name() + ' and ' + sampler.name());
             }
 
             return new _tracer2.default(config.serviceName, reporter, sampler, {
-                metrics: metrics,
+                metrics: options.metrics,
                 logger: options.logger,
                 tags: options.tags
             });

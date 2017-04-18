@@ -89,7 +89,7 @@ var RemoteControlledSampler = function () {
         this._serviceName = serviceName;
         this._sampler = options.sampler || new _probabilistic_sampler2.default(DEFAULT_INITIAL_SAMPLING_RATE);
         this._logger = options.logger || new _logger2.default();
-        this._metrics = new _metrics2.default(new _metric_factory2.default());
+        this._metrics = options.metrics || new _metrics2.default(new _metric_factory2.default());
         this._refreshInterval = options.refreshInterval || DEFAULT_REFRESH_INTERVAL;
         this._host = options.host || DEFAULT_SAMPLING_HOST;
         this._port = options.port || DEFAULT_SAMPLING_PORT;
@@ -97,10 +97,7 @@ var RemoteControlledSampler = function () {
 
         this._onSamplerUpdate = options.onSamplerUpdate;
 
-        this._logger.error('JAEGER: Refresh interval is ' + options.refreshInterval);
-
         if (options.refreshInterval !== 0) {
-            this._logger.error('JAEGER: Random delay start');
             var randomDelay = Math.random() * this._refreshInterval;
             this._initialDelayTimeoutHandle = setTimeout(this._afterInitialDelay.bind(this), randomDelay);
         }
@@ -144,7 +141,6 @@ var RemoteControlledSampler = function () {
 
                 res.on('end', function () {
                     _this._logger.error('JAEGER: retrieved sampling strategy from agent', body);
-                    _this._logger.error('JAEGER: service is: ' + serviceName);
                     _this._parseSamplingServerResponse(body);
                 });
             }).on('error', function (err) {

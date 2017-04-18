@@ -70,7 +70,7 @@ export default class RemoteControlledSampler {
         this._serviceName = serviceName;
         this._sampler = options.sampler || new ProbabilisticSampler(DEFAULT_INITIAL_SAMPLING_RATE);
         this._logger = options.logger || new NullLogger();
-        this._metrics = new Metrics(new NoopMetricFactory());
+        this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
         this._refreshInterval = options.refreshInterval || DEFAULT_REFRESH_INTERVAL;
         this._host = options.host || DEFAULT_SAMPLING_HOST;
         this._port = options.port || DEFAULT_SAMPLING_PORT;
@@ -78,10 +78,7 @@ export default class RemoteControlledSampler {
 
         this._onSamplerUpdate = options.onSamplerUpdate;
 
-        this._logger.error(`JAEGER: Refresh interval is ${options.refreshInterval}`);
-
         if (options.refreshInterval !== 0) {
-            this._logger.error(`JAEGER: Random delay start`);
             let randomDelay: number = Math.random() * this._refreshInterval;
             this._initialDelayTimeoutHandle = setTimeout(this._afterInitialDelay.bind(this), randomDelay);
         }
@@ -122,7 +119,6 @@ export default class RemoteControlledSampler {
 
             res.on('end', () => {
                 this._logger.error(`JAEGER: retrieved sampling strategy from agent`, body);
-                this._logger.error(`JAEGER: service is: ${serviceName}`);
                 this._parseSamplingServerResponse(body);
             });
         }).on('error', (err) => {
