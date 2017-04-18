@@ -108,7 +108,7 @@ export default class RemoteControlledSampler {
         http.get({
             'host': this._host,
             'port': this._port,
-            'path': `/sampling?service=${serviceName}`
+            'path': `?service=${serviceName}`
         }, (res) => {
             // explicitly treat incoming data as utf8 (avoids issues with multi-byte chars)
             res.setEncoding('utf8');

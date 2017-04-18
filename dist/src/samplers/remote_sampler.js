@@ -131,7 +131,7 @@ var RemoteControlledSampler = function () {
             _http2.default.get({
                 'host': this._host,
                 'port': this._port,
-                'path': '/sampling?service=' + serviceName
+                'path': '?service=' + serviceName
             }, function (res) {
                 // explicitly treat incoming data as utf8 (avoids issues with multi-byte chars)
                 res.setEncoding('utf8');
