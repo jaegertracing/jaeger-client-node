@@ -5,10 +5,7 @@
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/src/samplers/remote_sampler.js" afterPath="$PROJECT_DIR$/dist/src/samplers/remote_sampler.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/src/samplers/remote_sampler.js.map" afterPath="$PROJECT_DIR$/dist/src/samplers/remote_sampler.js.map" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/test/init_tracer.js" afterPath="$PROJECT_DIR$/dist/test/init_tracer.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/test/init_tracer.js.map" afterPath="$PROJECT_DIR$/dist/test/init_tracer.js.map" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/samplers/remote_sampler.js" afterPath="$PROJECT_DIR$/src/samplers/remote_sampler.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/init_tracer.js" afterPath="$PROJECT_DIR$/test/init_tracer.js" />
     </list>
     <ignored path="jaeger-client-node.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -28,21 +25,21 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="remote_sampler.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="remote_sampler.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test/samplers/remote_sampler.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="284">
-              <caret line="61" column="54" lean-forward="true" selection-start-line="61" selection-start-column="54" selection-end-line="61" selection-end-column="54" />
+            <state relative-caret-position="239">
+              <caret line="58" column="30" lean-forward="false" selection-start-line="58" selection-start-column="30" selection-end-line="58" selection-end-column="30" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="remote_sampler.js" pinned="false" current-in-tab="false">
+      <file leaf-file-name="remote_sampler.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/samplers/remote_sampler.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="268">
-              <caret line="181" column="75" lean-forward="false" selection-start-line="181" selection-start-column="75" selection-end-line="181" selection-end-column="75" />
+            <state relative-caret-position="298">
+              <caret line="198" column="27" lean-forward="false" selection-start-line="198" selection-start-column="20" selection-end-line="198" selection-end-column="27" />
               <folding />
             </state>
           </provider>
@@ -62,9 +59,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>should log metric on failing to query for sampling strategy</find>
-      <find>startSpan(</find>
-      <find>startSpan</find>
       <find>_refreshInterval</find>
       <find>_onSamplerUpdate</find>
       <find>null</find>
@@ -92,6 +86,9 @@
       <find>_parseSamplingServerResponse</find>
       <find>updateSampler</find>
       <find>error(</find>
+      <find>logger.error</find>
+      <find>retrieved sampling strategy from agent</find>
+      <find>.error(</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -138,8 +135,9 @@
         <option value="$PROJECT_DIR$/test/samplers/remote_sampler.js" />
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/src/configuration.js" />
-        <option value="$PROJECT_DIR$/src/samplers/remote_sampler.js" />
         <option value="$PROJECT_DIR$/test/init_tracer.js" />
+        <option value="$PROJECT_DIR$/dist/src/samplers/remote_sampler.js" />
+        <option value="$PROJECT_DIR$/src/samplers/remote_sampler.js" />
       </list>
     </option>
   </component>
@@ -204,6 +202,60 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="scripts" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jaeger-client-node" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jaeger-client-node" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="dist" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jaeger-client-node" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jaeger-client-node" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="dist" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jaeger-client-node" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jaeger-client-node" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="dist" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="samplers" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -681,12 +733,12 @@
       <workItem from="1490980554594" duration="4435000" />
       <workItem from="1491317911714" duration="9401000" />
       <workItem from="1491417329268" duration="7000" />
-      <workItem from="1492196036869" duration="21417000" />
+      <workItem from="1492196036869" duration="22453000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="150431000" />
+    <option name="totallyTimeSpent" value="151467000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="2595" y="234" width="1440" height="793" extended-state="0" />
@@ -972,14 +1024,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/dist/src/samplers/remote_sampler.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="237">
-          <caret line="129" column="29" lean-forward="false" selection-start-line="129" selection-start-column="25" selection-end-line="129" selection-end-column="29" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/dist/src/configuration.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="237">
@@ -1084,14 +1128,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="jar://$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/lib/JavaScriptLanguage.jar!/com/intellij/lang/javascript/index/predefined/EcmaScript.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="224">
-          <caret line="98" column="0" lean-forward="false" selection-start-line="98" selection-start-column="0" selection-end-line="98" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/_flow/sampler-thrift.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="390">
@@ -1108,18 +1144,34 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/samplers/remote_sampler.js">
+    <entry file="file://$PROJECT_DIR$/dist/src/samplers/remote_sampler.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="268">
-          <caret line="181" column="75" lean-forward="false" selection-start-line="181" selection-start-column="75" selection-end-line="181" selection-end-column="75" />
+        <state relative-caret-position="582">
+          <caret line="246" column="0" lean-forward="true" selection-start-line="246" selection-start-column="0" selection-end-line="246" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/test/samplers/remote_sampler.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="284">
-          <caret line="61" column="54" lean-forward="true" selection-start-line="61" selection-start-column="54" selection-end-line="61" selection-end-column="54" />
+        <state relative-caret-position="239">
+          <caret line="58" column="30" lean-forward="false" selection-start-line="58" selection-start-column="30" selection-end-line="58" selection-end-column="30" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/lib/JavaScriptLanguage.jar!/com/intellij/lang/javascript/index/predefined/EcmaScript.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="224">
+          <caret line="652" column="0" lean-forward="false" selection-start-line="652" selection-start-column="0" selection-end-line="652" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/samplers/remote_sampler.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="298">
+          <caret line="198" column="27" lean-forward="false" selection-start-line="198" selection-start-column="20" selection-end-line="198" selection-end-column="27" />
           <folding />
         </state>
       </provider>
