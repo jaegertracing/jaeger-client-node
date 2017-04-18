@@ -231,7 +231,7 @@ var Configuration = function () {
                 if (config.sampler) {
                     sampler = Configuration._getSampler(config);
                 } else {
-                    sampler = new _remote_sampler2.default(config.serviceName);
+                    sampler = new _remote_sampler2.default(config.serviceName, options);
                 }
 
                 if (!options.reporter) {
@@ -242,7 +242,7 @@ var Configuration = function () {
             }
 
             if (options.logger) {
-                options.logger.info('Initializing Jaeger Tracer with ' + reporter.name() + ' and ' + sampler.name());
+                options.logger.error('Initializing Jaeger Tracer with ' + reporter.name() + ' and ' + sampler.name());
             }
 
             var metrics = null;
