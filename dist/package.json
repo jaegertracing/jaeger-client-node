@@ -1,0 +1,72 @@
+{
+  "name": "jaeger-client",
+  "version": "3.5.2",
+  "description": "Jaeger binding for OpenTracing Node",
+  "license": "MIT",
+  "keywords": [],
+  "author": "oibe <oibe@uber.com>",
+  "main": "./entrypoint.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/uber/jaeger-client-node.git"
+  },
+  "contributors": [
+    {
+      "name": "oibe"
+    }
+  ],
+  "dependencies": {
+    "node-int64": "^0.4.0",
+    "thriftrw": "^3.5.0",
+    "xorshift": "^0.2.0",
+    "opentracing": "^0.13.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.11.4",
+    "babel-istanbul": "^0.11.0",
+    "babel-node-debug": "^2.0.0",
+    "babel-plugin-transform-class-properties": "^6.11.5",
+    "babel-plugin-transform-flow-strip-types": "^6.8.0",
+    "babel-preset-es2015": "^6.13.2",
+    "babel-register": "^6.11.6",
+    "beautify-benchmark": "^0.2.4",
+    "benchmark": "^2.1.1",
+    "body-parser": "^1.15.2",
+    "chai": "^3.5.0",
+    "coveralls": "^2.11.14",
+    "eslint": "^2.4.0",
+    "eslint-config-airbnb": "^6.2.0",
+    "eslint-plugin-flowtype": "^2.4.0",
+    "eslint-plugin-react": "^4.3.0",
+    "express": "^4.14.0",
+    "flow-bin": "^0.30.0",
+    "gulp-sourcemaps": "1.7.x",
+    "lodash": "^4.15.0",
+    "minimist": "1.2.0",
+    "mocha": "^3.0.1",
+    "request": "^2.74.0",
+    "rsvp": "^3.3.1",
+    "sinon": "^1.17.5",
+    "source-map-support": "^0.4.5",
+    "tchannel": "^3.9.0",
+    "uber-licence": "^2.0.2",
+    "underscore": "^1.8.3"
+  },
+  "scripts": {
+    "add-license": "./node_modules/.bin/uber-licence",
+    "check-license": "./node_modules/.bin/uber-licence --dry",
+    "check-ls": "npm ls --loglevel=http --parseable 1>/dev/null && echo '# npm is in a good state'",
+    "cover": "babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/ test/samplers/",
+    "coveralls": "cat ./coverage/lcov.info | coveralls",
+    "flow": "flow",
+    "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed'",
+    "lint-ci": "npm run lint && echo '# TODO: ADD npm run check-license'",
+    "test": "make test",
+    "test-ci": "npm run test && npm run lint-ci && npm run cover",
+    "test-all": "npm run test-core && npm run test-samplers && npm run test-crossdock",
+    "test-core": "mocha --compilers js:babel-core/register test",
+    "test-samplers": "mocha --compilers js:babel-core/register test/samplers",
+    "test-crossdock": "mocha --compilers js:babel-register crossdock/test",
+    "show-cover": "open coverage/lcov-report/index.html"
+  }
+}

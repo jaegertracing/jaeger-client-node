@@ -146,6 +146,7 @@ export default class RemoteControlledSampler {
             this._metrics.samplerParsingFailure.increment(1);
             return;
         }
+        this._logger.error(`New sampler is: ${this._sampler.toString()}`);
         if (this._onSamplerUpdate) {
             this._onSamplerUpdate(this._sampler);
         }
