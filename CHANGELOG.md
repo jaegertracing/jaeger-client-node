@@ -2,7 +2,7 @@ sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
 
-3.5.3 (2017-04-19)
+3.6.0 (2017-04-19)
 ------------------
 
 - Fix SamplingStrategyResponse strategyType (#110)

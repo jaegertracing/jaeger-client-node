@@ -1,6 +1,6 @@
 {
   "name": "jaeger-client",
-  "version": "3.5.3",
+  "version": "3.6.0",
   "description": "Jaeger binding for OpenTracing Node",
   "license": "MIT",
   "keywords": [],
