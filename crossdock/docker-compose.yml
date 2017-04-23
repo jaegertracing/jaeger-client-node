@@ -16,9 +16,9 @@ services:
             - CALL_TIMEOUT=60s
 
             - AXIS_CLIENT=go
-            - AXIS_S1NAME=go,java,node
-            - AXIS_SAMPLED=true
-            - AXIS_S2NAME=go,java,node
+            - AXIS_S1NAME=go,java,node,python
+            - AXIS_SAMPLED=true,false
+            - AXIS_S2NAME=go,java,node,python
             - AXIS_S2TRANSPORT=http,tchannel
             - AXIS_S3NAME=go,java,node,python
             - AXIS_S3TRANSPORT=http,tchannel
