@@ -237,6 +237,7 @@ export default class Tracer {
             ctx.baggage = parent.baggage;
 
             parent.finalizeSampling();
+            this.processDeferredSampling(ctx, operationName, internalTags);
             ctx.finalizeSampling();
         }
 
@@ -250,6 +251,27 @@ export default class Tracer {
             rpcServer,
             references
         );
+    }
+
+    /**
+     *  Makes a concrete sampling decision for the ctx span context based on information
+     *  available to it's child span.
+     *
+     *  The ctx context's deferred mask is unset after this decision is made
+     *
+     * @param ctx the span context
+     * @param operationName the operation name for the child
+     * @param tags tags to be applied by the sampler
+     */
+    processDeferredSampling(ctx: SpanContext, operationName: string, tags: any) {
+        if (ctx.isDeferredSampling) {
+            if (this._sampler.isSampled(operationName, tags)) {
+                ctx._flags |= constants.SAMPLED_MASK;
+            } else {
+                ctx._flags &= ~constants.SAMPLED_MASK;
+            }
+            ctx.unsetDeferredSampling();
+        }
     }
 
     /**

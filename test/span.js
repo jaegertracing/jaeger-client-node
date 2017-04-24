@@ -185,6 +185,34 @@ describe('span should', () => {
         assert.isOk(unnormalizedKey in Span._getBaggageHeaderCache());
     });
 
+    describe('with deferred sampling', () => {
+        beforeEach(function () {
+            spanContext._flags = constants.DEFERRED_SAMPLING_MASK;
+        });
+        it('should not pass deferred sampling flag to child spans', () => {
+            let child = tracer.startSpan('child', {childOf: span.context()});
+            assert.notEqual(child.context.flags & constants.DEFERRED_SAMPLING_MASK,
+                            constants.DEFERRED_SAMPLING_MASK);
+            assert.isOk(child._spanContext.samplingFinalized);
+        });
+
+        it('should make a call to the underlying sampler and use the sampling decision when true', () => {
+            let mockSampler = sinon.mock(tracer._sampler);
+            mockSampler.expects('isSampled').withExactArgs('goodOperation', {}).returns(true);
+            let child = tracer.startSpan('goodOperation', {childOf: span.context()});
+            mockSampler.verify();
+            assert.isOk(child.context().isSampled());
+        });
+
+        it('should make a call to the underlying sampler and use the sampling decision when false', () => {
+            let mockSampler = sinon.mock(tracer._sampler);
+            mockSampler.expects('isSampled').withExactArgs('horridOperation', {}).returns(false);
+            let child = tracer.startSpan('horridOperation', {childOf: span.context()});
+            mockSampler.verify();
+            assert.isNotOk(child.context().isSampled());
+        });
+    });
+
     describe('adaptive sampling tests for span', () => {
         let options = [
             { desc: 'sampled: ', sampling: true, reportedSpans: 1 },
@@ -313,7 +341,7 @@ describe('span should', () => {
             tracer._sampler = new ProbabilisticSampler(1.0);
 
             // The second cal lshould rename the operation name, but
-            // not re-sample the span.  This is because finalize was set 
+            // not re-sample the span.  This is because finalize was set
             // in the first 'setOperationName' call.
             span.setOperationName('new-span-two');
 
