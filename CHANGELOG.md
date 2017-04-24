@@ -1,8 +1,12 @@
-sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
 
+3.6.0 (2017-04-06)
+------------------
+- Add support for deferred sampling (#107)
+
 3.5.2 (2017-03-29)
+------------------
 
 - Protect from exceptions in decodeURIComponent (#105)
 - Do not url-encode span context (#105)
