@@ -57,7 +57,7 @@ after_success:
 - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
 - export TAG=`if [ "$BRANCH" == "master" ]; then echo "latest"; else echo $BRANCH; fi`
 - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, REPO=$REPO, PR=$PR, BRANCH=$BRANCH, TAG=$TAG"
-- if [ "$BRANCH" == "master" ] && [ "$CROSSDOCK" == "1" ]; then echo 'upload to Docker Hub'; else echo 'skip docker upload for PR'; exit 0; fi
+- export DOCKER=$(if [ "$BRANCH" == "master" ] && [ "$CROSSDOCK" == "1" ]; then echo docker; else echo true; fi)
 - docker login -u $DOCKER_USER -p $DOCKER_PASS
 - docker build -f crossdock/Dockerfile -t $REPO:$COMMIT .
 - docker tag $REPO:$COMMIT $REPO:$TAG
