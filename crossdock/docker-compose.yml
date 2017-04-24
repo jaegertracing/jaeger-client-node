@@ -64,5 +64,4 @@ services:
         depends_on:
             - cassandra
         ports:
-    - "8080"
-     +
+            - "8080"
