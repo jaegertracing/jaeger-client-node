@@ -58,11 +58,11 @@ after_success:
 - export TAG=`if [ "$BRANCH" == "master" ]; then echo "latest"; else echo $BRANCH; fi`
 - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, REPO=$REPO, PR=$PR, BRANCH=$BRANCH, TAG=$TAG"
 - export DOCKER=$(if [ "$BRANCH" == "master" ] && [ "$CROSSDOCK" == "1" ]; then echo docker; else echo true; fi)
-- docker login -u $DOCKER_USER -p $DOCKER_PASS
-- docker build -f crossdock/Dockerfile -t $REPO:$COMMIT .
-- docker tag $REPO:$COMMIT $REPO:$TAG
-- docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
-- docker push $REPO
+- $DOCKER login -u $DOCKER_USER -p $DOCKER_PASS
+- $DOCKER build -f crossdock/Dockerfile -t $REPO:$COMMIT .
+- $DOCKER tag $REPO:$COMMIT $REPO:$TAG
+- $DOCKER tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
+- $DOCKER push $REPO
 
 deploy:
   provider: npm
