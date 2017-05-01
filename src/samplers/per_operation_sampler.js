@@ -20,9 +20,10 @@
 // THE SOFTWARE.
 
 import assert from 'assert';
-import * as constants from '../constants.js';
 import ProbabilisticSampler from './probabilistic_sampler.js';
 import GuaranteedThroughputSampler from './guaranteed_throughput_sampler.js';
+
+const defaultMaxSamplesPerSecond = 2.0;
 
 type SamplersByOperation = { [key: string]: GuaranteedThroughputSampler };
 
@@ -35,7 +36,8 @@ export default class PerOperationSampler {
     _maxOperations:        number;
     _samplersByOperation:  SamplersByOperation;
     _defaultSampler:       ProbabilisticSampler;
-    _defaultLowerBound:    number;
+    _defaultMinSamplesPerSecond:    number;
+    _defaultMaxSamplesPerSecond: number;
 
     constructor(strategies: PerOperationSamplingStrategies, maxOperations: number) {
         this._maxOperations = maxOperations;
@@ -53,18 +55,22 @@ export default class PerOperationSampler {
             'expected strategies.defaultSamplingProbability to be number'
         );
 		
-        let updated: boolean = this._defaultLowerBound !== strategies.defaultLowerBoundTracesPerSecond;
-        this._defaultLowerBound = strategies.defaultLowerBoundTracesPerSecond;
+        let updated: boolean = this._defaultMinSamplesPerSecond !== strategies.defaultLowerBoundTracesPerSecond;
+        this._defaultMinSamplesPerSecond = strategies.defaultLowerBoundTracesPerSecond;
+        this._defaultMaxSamplesPerSecond = defaultMaxSamplesPerSecond;
+        if (strategies.defaultUpperBoundTracesPerSecond !== null) {
+            this._defaultMaxSamplesPerSecond = strategies.defaultUpperBoundTracesPerSecond;
+        }
         strategies.perOperationStrategies.forEach((strategy) => {
             let operation = strategy.operation;
             let samplingRate = strategy.probabilisticSampling.samplingRate;
             let sampler = this._samplersByOperation[operation];
             if (sampler) {
-                if (sampler.update(this._defaultLowerBound, samplingRate)) {
+                if (sampler.update(samplingRate, this._defaultMinSamplesPerSecond, this._defaultMaxSamplesPerSecond)) {
                     updated = true;
                 }
             }  else {
-                sampler = new GuaranteedThroughputSampler(this._defaultLowerBound, samplingRate);
+                sampler = new GuaranteedThroughputSampler(samplingRate, this._defaultMinSamplesPerSecond, this._defaultMaxSamplesPerSecond);
                 this._samplersByOperation[operation] = sampler;
                 updated = true;
             }
@@ -92,8 +98,9 @@ export default class PerOperationSampler {
                 return this._defaultSampler.isSampled(operation, tags);
             }
             sampler = new GuaranteedThroughputSampler(
-                this._defaultLowerBound, 
-                this._defaultSampler.samplingRate
+                this._defaultSampler.samplingRate,
+                this._defaultMinSamplesPerSecond,
+                this._defaultMaxSamplesPerSecond
             );
             this._samplersByOperation[operation] = sampler;
         }

@@ -32,6 +32,10 @@ export default class RateLimiter {
         this._lastTick = new Date().getTime();
     }
 
+    get creditsPerSecond(): number {
+        return this._creditsPerSecond;
+    }
+
     checkCredit(itemCost: number): boolean {
         let currentTime: number = new Date().getTime();
         let elapsedTime: number = (currentTime - this._lastTick) / 1000;

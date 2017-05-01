@@ -22,6 +22,7 @@
 import * as constants from '../constants.js';
 import ProbabilisticSampler from './probabilistic_sampler.js';
 import RateLimitingSampler from './ratelimiting_sampler.js';
+import RateLimiter from './../rate_limiter.js';
 
 // GuaranteedThroughputProbabilisticSampler is a sampler that leverages both probabilisticSampler and
 // rateLimitingSampler. The rateLimitingSampler is used as a guaranteed lower bound sampler such that
@@ -33,11 +34,13 @@ import RateLimitingSampler from './ratelimiting_sampler.js';
 export default class GuaranteedThroughputSampler {
     _probabilisticSampler: ProbabilisticSampler;
     _lowerBoundSampler:    RateLimitingSampler;
+    _upperBoundRateLimiter: RateLimiter;
     _tagsPlaceholder:      any;
 
-    constructor(lowerBound: number, samplingRate: number) {
-        this._probabilisticSampler =  new ProbabilisticSampler(samplingRate);
-        this._lowerBoundSampler = new RateLimitingSampler(lowerBound);
+    constructor(samplingRate: number, minSamplesPerSecond: number, maxSamplesPerSecond: number) {
+        this._probabilisticSampler = new ProbabilisticSampler(samplingRate);
+        this._lowerBoundSampler = new RateLimitingSampler(minTracesPerSecond);
+        this._upperBoundRateLimiter = new RateLimiter(maxSamplesPerSecond, maxSamplesPerSecond);
         // we never let the lowerBoundSampler return its real tags, so avoid allocations
         // by reusing the same placeholder object
         this._tagsPlaceholder = {};
@@ -48,13 +51,17 @@ export default class GuaranteedThroughputSampler {
     }
 
     toString(): string {
-        return `${this.name()}(samplingRate=${this._probabilisticSampler.samplingRate}, lowerBound=${this._lowerBoundSampler.maxTracesPerSecond})`;
+        return `${this.name()}(samplingRate=${this._probabilisticSampler.samplingRate}, minSamplesPerSecond=${this._lowerBoundSampler.maxTracesPerSecond}, maxSamplesPerSecond=${this._upperBoundRateLimiter.creditsPerSecond})`;
     }
 
     isSampled(operation: string, tags: any): boolean {
         if (this._probabilisticSampler.isSampled(operation, tags)) {
             // make rate limiting sampler update its budget
             this._lowerBoundSampler.isSampled(operation, this._tagsPlaceholder);
+            if (!this._upperBoundRateLimiter.checkCredit(1.0)) {
+                let newSamplingRate = this._probabilisticSampler.samplingRate / 2.0;
+                this._probabilisticSampler = new ProbabilisticSampler(newSamplingRate);
+            }
             return true;
         }
         let decision = this._lowerBoundSampler.isSampled(operation, this._tagsPlaceholder);
@@ -70,7 +77,8 @@ export default class GuaranteedThroughputSampler {
             return false;
         }
         return this._probabilisticSampler.equal(other._probabilisticSampler) &&
-            this._lowerBoundSampler.equal(other._lowerBoundSampler);
+            this._lowerBoundSampler.equal(other._lowerBoundSampler) &&
+            this._upperBoundRateLimiter.creditsPerSecond == (other as GuaranteedThroughputSampler)._upperBoundRateLimiter.creditsPerSecond;
     }
 
     close(callback: ?Function): void {
@@ -84,14 +92,18 @@ export default class GuaranteedThroughputSampler {
         }
     }
 
-    update(lowerBound: number, samplingRate: number): boolean {
+    update(samplingRate: number, minSamplesPerSecond: number, maxSamplesPerSecond: number): boolean {
         let updated = false;
         if (this._probabilisticSampler.samplingRate != samplingRate) {
             this._probabilisticSampler = new ProbabilisticSampler(samplingRate);
             updated = true;
         }
-        if (this._lowerBoundSampler.maxTracesPerSecond != lowerBound) {
-            this._lowerBoundSampler = new RateLimitingSampler(lowerBound);
+        if (this._lowerBoundSampler.maxTracesPerSecond != minSamplesPerSecond) {
+            this._lowerBoundSampler = new RateLimitingSampler(minSamplesPerSecond);
+            updated = true;
+        }
+        if (this._upperBoundRateLimiter.creditsPerSecond != maxSamplesPerSecond) {
+            this._upperBoundRateLimiter = new RateLimiter(maxSamplesPerSecond, maxSamplesPerSecond);
             updated = true;
         }
         return updated;

@@ -41,6 +41,7 @@ declare type PerOperationSamplingStrategies = {
     defaultSamplingProbability: number,
     defaultLowerBoundTracesPerSecond: number,
     perOperationStrategies: Array<OperationSamplingStrategy>
+    defaultUpperBoundTracesPerSecond?: number,
 }
 
 declare type SamplingStrategyResponse = {
