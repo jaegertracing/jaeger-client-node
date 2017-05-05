@@ -58,7 +58,7 @@ export default class PerOperationSampler {
         let updated: boolean = this._defaultMinSamplesPerSecond !== strategies.defaultLowerBoundTracesPerSecond;
         this._defaultMinSamplesPerSecond = strategies.defaultLowerBoundTracesPerSecond;
         this._defaultMaxSamplesPerSecond = defaultMaxSamplesPerSecond;
-        if (strategies.defaultUpperBoundTracesPerSecond !== null) {
+        if (strategies.defaultUpperBoundTracesPerSecond) {
             this._defaultMaxSamplesPerSecond = strategies.defaultUpperBoundTracesPerSecond;
         }
         strategies.perOperationStrategies.forEach((strategy) => {

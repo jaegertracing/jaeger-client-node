@@ -39,7 +39,7 @@ export default class GuaranteedThroughputSampler {
 
     constructor(samplingRate: number, minSamplesPerSecond: number, maxSamplesPerSecond: number) {
         this._probabilisticSampler = new ProbabilisticSampler(samplingRate);
-        this._lowerBoundSampler = new RateLimitingSampler(minTracesPerSecond);
+        this._lowerBoundSampler = new RateLimitingSampler(minSamplesPerSecond);
         this._upperBoundRateLimiter = new RateLimiter(maxSamplesPerSecond, maxSamplesPerSecond);
         // we never let the lowerBoundSampler return its real tags, so avoid allocations
         // by reusing the same placeholder object
@@ -78,7 +78,7 @@ export default class GuaranteedThroughputSampler {
         }
         return this._probabilisticSampler.equal(other._probabilisticSampler) &&
             this._lowerBoundSampler.equal(other._lowerBoundSampler) &&
-            this._upperBoundRateLimiter.creditsPerSecond == (other as GuaranteedThroughputSampler)._upperBoundRateLimiter.creditsPerSecond;
+            this._upperBoundRateLimiter.creditsPerSecond == other._upperBoundRateLimiter.creditsPerSecond;
     }
 
     close(callback: ?Function): void {
