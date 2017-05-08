@@ -69,6 +69,22 @@ describe('GuaranteedThroughput sampler', () => {
         sampler.close();
     });
 
+    it('should rate limited by upper bound rate limiter', () => {
+        let sampler = new GuaranteedThroughputSampler(1, 1, 2);
+
+        let expectedTags = {'sampler.type': 'probabilistic', 'sampler.param': 1};
+        [1, 2, 3].forEach((_) => {
+            let actualTags = {};
+            assert.isOk(sampler.isSampled('testOperationName', actualTags), 'must sample');
+            assert.deepEqual(expectedTags, actualTags);
+        });
+        // The max_samples_per_second is 2, so after three calls, the upperBoundRateLimiter
+        // should be triggered and the samplingRate should be halved.
+        assertValues(sampler, 0.5, 1, 2);
+
+        sampler.close();
+    });
+
     let assertValues = function assertValues(sampler, rate, lb, up) {
         assert.equal(rate, sampler._probabilisticSampler.samplingRate);
         assert.equal(lb, sampler._lowerBoundSampler.maxTracesPerSecond);
@@ -90,7 +106,7 @@ describe('GuaranteedThroughput sampler', () => {
         assertValues(sampler, 1.0, 2, 3);
     });
 
-    it('should update only lower bound', () => {
+    it('should update only lower bound and upper bound', () => {
         let sampler = new GuaranteedThroughputSampler(1.0, 2, 3);
         assertValues(sampler, 1.0, 2, 3);
 

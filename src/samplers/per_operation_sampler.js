@@ -36,7 +36,7 @@ export default class PerOperationSampler {
     _maxOperations:        number;
     _samplersByOperation:  SamplersByOperation;
     _defaultSampler:       ProbabilisticSampler;
-    _defaultMinSamplesPerSecond:    number;
+    _defaultMinSamplesPerSecond: number;
     _defaultMaxSamplesPerSecond: number;
 
     constructor(strategies: PerOperationSamplingStrategies, maxOperations: number) {

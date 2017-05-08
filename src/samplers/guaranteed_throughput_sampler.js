@@ -59,8 +59,7 @@ export default class GuaranteedThroughputSampler {
             // make rate limiting sampler update its budget
             this._lowerBoundSampler.isSampled(operation, this._tagsPlaceholder);
             if (!this._upperBoundRateLimiter.checkCredit(1.0)) {
-                let newSamplingRate = this._probabilisticSampler.samplingRate / 2.0;
-                this._probabilisticSampler = new ProbabilisticSampler(newSamplingRate);
+                this.reduce_sampling_rate();
             }
             return true;
         }
@@ -70,6 +69,23 @@ export default class GuaranteedThroughputSampler {
             tags[constants.SAMPLER_PARAM_TAG_KEY] = this._probabilisticSampler.samplingRate;
         }
         return decision;
+    }
+
+    // Due to inherent latencies in the adaptive sampling feedback loop, the new probabilities
+    // are not calculated and propagated in real time. In the worst case, sampling probabilities
+    // can take up to 2 minutes to propagate to the corresponding client. This means that adaptive
+    // sampling cannot react to fluctuations in traffic.
+    //
+    // Under certain conditions, the sampling probability might increase to 100% (imagine having a
+    // very low QPS operation). However, every now and then, this operation is hit with a ton of
+    // traffic and all the requests are sampled before adaptive sampling can kick in and prevent
+    // oversampling.
+    //
+    // To prevent this, we reduce the sampling probability wherever the upper bound rate limiter
+    // is triggered such that clients don't over sample during traffic spikes.
+    reduce_sampling_rate(): void {
+        let newSamplingRate = this._probabilisticSampler.samplingRate / 2.0;
+        this._probabilisticSampler = new ProbabilisticSampler(newSamplingRate);
     }
 
     equal(other: Sampler): boolean {
