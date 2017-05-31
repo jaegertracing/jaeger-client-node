@@ -141,4 +141,8 @@ export default class Utils {
 
         return tags;
     }
+
+    static hrTimeSupport(): boolean{
+        return (typeof process !== 'undefined' && process.hrtime);
+    }
 }
