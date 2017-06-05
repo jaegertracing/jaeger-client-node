@@ -2,6 +2,12 @@ sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
 
+3.5.4 (unreleased)
+------------------
+
+- Nothing yet.
+
+
 3.5.3 (2017-04-24)
 ------------------
 
