@@ -100,9 +100,9 @@ describe('udp sender should', () => {
                 return o.key;
             });
             assert.equal(actualTags.length, 3);
-            assert.equal(actualTags[0].key, 'jaeger.hostname');
-            assert.equal(actualTags[1].key, 'jaeger.version');
-            assert.equal(actualTags[2].key, 'peer.ipv4');
+            assert.equal(actualTags[0].key, 'ip');
+            assert.equal(actualTags[1].key, 'jaeger.hostname');
+            assert.equal(actualTags[2].key, 'jaeger.version');
 
             sender.close();
             done();
