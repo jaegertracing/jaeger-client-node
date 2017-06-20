@@ -2,10 +2,11 @@ sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
 
-3.5.4 (unreleased)
+3.5.4 (2017-06-20)
 ------------------
 
-- Nothing yet.
+- Add deferred sampling(#126)
+- Use ip tag instead of peer.ipv4 in process (#125)
 
 
 3.5.3 (2017-04-24)
