@@ -56,6 +56,12 @@ let jaegerSchema = {
                 'flushIntervalMs': {'type': 'number'}
             },
             'additionalProperties': false
+        },
+        'upsampling': {
+            'properties' : {
+                'enabled' : 'boolean',
+                'allowOnInnerSpans': 'boolean',
+            }
         }
     }
 };
@@ -186,7 +192,8 @@ export default class Configuration {
             {
                 metrics: options.metrics,
                 logger: options.logger,
-                tags: options.tags
+                tags: options.tags,
+                upsampling: config.upsampling,
             }
         );
     }

@@ -49,6 +49,11 @@ export default class SpanContext {
      * - its context is serialized using injectors
      * */
     _samplingFinalized: boolean;
+    /**
+     * Upsampling decision for the first in-process span. This is set on parent spans, and will be
+     * reused when `upsampling.allowOnInnerSpans` is set to false.
+     */
+    _upsamplingDecision: ?Boolean;
 
     constructor(traceId: any,
                 spanId: any,
@@ -70,6 +75,7 @@ export default class SpanContext {
         this._baggage = baggage;
         this._debugId = debugId;
         this._samplingFinalized = samplingFinalized;
+        this.upsamplingDecision = null;
     }
 
     get traceId(): any {
@@ -159,6 +165,22 @@ export default class SpanContext {
 
     get isValid(): boolean {
         return !!((this._traceId || this._traceIdStr) && (this._spanId || this._spanIdStr));
+    }
+
+    get upsamplingDecision(): ?Boolean {
+        return this._upsamplingDecision;
+    }
+
+    set upsamplingDecision(samplingDecision: ?Boolean): void {
+        this._upsamplingDecision = samplingDecision;
+    }
+
+    set samplingDecision(samplingDecision: boolean): void {
+        if (samplingDecision) {
+            this._flags |= constants.SAMPLED_MASK;
+        } else {
+            this._flags &= ~constants.SAMPLED_MASK;
+        }
     }
 
     finalizeSampling(): void {

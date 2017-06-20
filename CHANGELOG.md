@@ -2,9 +2,10 @@ sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
 
-3.5.4 (unreleased)
+3.6.0 (unreleased)
 ------------------
 
+- Add support for upsampling (#128)
 - Save baggage in span logs (#129)
 
 

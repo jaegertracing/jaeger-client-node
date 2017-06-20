@@ -17,14 +17,14 @@
       "func-names": [0],
       "no-multi-spaces": [2, { "exceptions": {
           "AssignmentExpression": true,
-          "VariableDeclarator": true,
+          "VariableDeclarator": true
       }} ],
       "consistent-return": [0],
 
       // Disabled as the "exceptions" clause does not seem to currently work
-      "spaced-comment": [0],
+      "spaced-comment": [0]
   },
-  "plugins": {
+  "plugins": [
     "flowtype"
-  }
+  ]
 }

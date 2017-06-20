@@ -30,7 +30,6 @@ import * as opentracing from 'opentracing';
 import Span from '../src/span.js';
 import SpanContext from '../src/span_context.js';
 import sinon from 'sinon';
-import * as thrift from '../src/thrift.js';
 import Tracer from '../src/tracer.js';
 import Utils from '../src/util.js';
 
@@ -211,6 +210,150 @@ describe('span should', () => {
         assert.isOk(unnormalizedKey in Span._getBaggageHeaderCache());
     });
 
+    describe('upsampling', () => {
+        beforeEach(() => {
+            tracer._upsampling = {enabled: true};
+        });
+
+        let baseCase = {
+            flags: 0,
+            original: {
+                operationName: "originalOperation",
+                samplingDecision: false,
+            },
+            new: {
+                operationName: "newOperation",
+                samplingDecision: true,
+            },
+            finalSamplingDecision: true
+        };
+
+        let testCases = [
+            {
+                name: "for false sampling decision",
+                value: _.defaults({original: {samplingDecision: false}, baseCase})
+            },
+            {
+                name: "for true sampling decision",
+                value: _.defaults({original: {samplingDecision: true}, baseCase})
+            },
+            {
+                name: "on operation name change, modify sampling decision 0 -> 0",
+                value: _.defaults({
+                                      original: {samplingDecision: false},
+                                      new: {samplingDecision: false},
+                                      finalSamplingDecision: false
+                                  }, baseCase)
+            },
+            {
+                name: "on operation name change, modify sampling decision 0 -> 1",
+                value: _.defaults({
+                                      original: {samplingDecision: false},
+                                      new: {samplingDecision: true},
+                                  }, baseCase)
+            },
+            {
+                name: "on operation name change, modify sampling decision 1 -> 0",
+                value: _.defaults({
+                                      original: {samplingDecision: true},
+                                      new: {samplingDecision: false},
+                                  }, baseCase)
+            },
+            {
+                name: "on operation name change, modify sampling decision 1 -> 1",
+                value: _.defaults({
+                                      original: {samplingDecision: true},
+                                      new: {samplingDecision: true},
+                                  }, baseCase)
+            },
+
+        ];
+
+        describe("unsampled spans should call sampler", () => {
+            testCallSampler(testCases[0].name, testCases[0].value);
+            testCallSampler(testCases[1].name, testCases[1].value);
+
+            for (let i = 2; i < testCases.length; i++) {
+                testCallSamplerOnOperationNameChange(testCases[i].name, testCases[i].value)
+            }
+
+            function testCallSampler(name, testCase) {
+                it(name, () => {
+                    spanContext._flags = testCase.flags;
+
+                    let mockSampler = sinon.mock(tracer._sampler);
+                    mockSampler.expects('isSampled')
+                        .withExactArgs(testCase.original.operationName, {})
+                        .returns(testCase.original.samplingDecision);
+
+                    let child = tracer.startSpan(testCase.original.operationName,
+                                                 {childOf: span.context()});
+
+                    mockSampler.verify();
+                    assert.equal((child.context().isSampled() || child.context().isDebug()),
+                                 testCase.original.samplingDecision)
+                });
+            }
+
+            function testCallSamplerOnOperationNameChange(name, testCase) {
+                it(name, () => {
+                    spanContext._flags = testCase.flags;
+
+                    let mockSampler = sinon.mock(tracer._sampler);
+                    mockSampler.expects('isSampled')
+                        .withExactArgs(testCase.original.operationName, {})
+                        .returns(testCase.original.samplingDecision);
+                    mockSampler.expects('isSampled').withExactArgs(testCase.new.operationName, {})
+                        .returns(testCase.new.samplingDecision);
+
+                    let child = tracer.startSpan(testCase.original.operationName,
+                                                 {childOf: span.context()});
+                    child.setOperationName(testCase.new.operationName);
+
+                    mockSampler.verify();
+                    assert.equal((child.context().isSampled() || child.context().isDebug()),
+                                 testCase.finalSamplingDecision)
+                });
+            }
+        });
+
+        describe("sampled spans should not call sampler", () => {
+            testCases.forEach(function (testCase) {
+                testNoSamplerCalls(testCase.name,
+                                   _.defaults({flags: constants.SAMPLED_MASK}, testCase.value))
+            })
+        });
+
+        describe("debug spans should not call sampler", () => {
+            testCases.forEach(function (testCase) {
+                testNoSamplerCalls(testCase.name,
+                                   _.defaults({flags: constants.DEBUG_MASK}, testCase.value))
+            })
+
+        });
+
+        describe("debug and sampled spans should not call sampler", () => {
+            testCases.forEach(function (testCase) {
+                testNoSamplerCalls(testCase.name,
+                                   _.defaults({flags: constants.DEBUG_MASK || constants.SAMPLED_MASK}, testCase.value))
+            })
+        });
+
+        function testNoSamplerCalls(name, testCase) {
+            it(name, () => {
+                spanContext._flags = testCase.flags;
+
+                let mockSampler = sinon.mock(tracer._sampler);
+                let child = tracer.startSpan(testCase.original.operationName,
+                                             {childOf: span.context()});
+
+                mockSampler.verify();
+                assert.equal((child.context().isSampled() || child.context().isDebug()), true)
+            });
+        }
+
+    });
+
     describe('adaptive sampling tests for span', () => {
         let options = [
             { desc: 'sampled: ', sampling: true, reportedSpans: 1 },
@@ -339,7 +482,7 @@ describe('span should', () => {
             tracer._sampler = new ProbabilisticSampler(1.0);
 
             // The second cal lshould rename the operation name, but
-            // not re-sample the span.  This is because finalize was set 
+            // not re-sample the span.  This is because finalize was set
             // in the first 'setOperationName' call.
             span.setOperationName('new-span-two');
 

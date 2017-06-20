@@ -21,7 +21,7 @@
 // SAMPLED_MASK is the bit mask indicating that a span has been sampled.
 export const SAMPLED_MASK = 0x1;
 
-// DEBUG_MASK is the bit mask indicationg that a span has been marked for debug.
+// DEBUG_MASK is the bit mask indicating that a span has been marked for debug.
 export const DEBUG_MASK = 0x2;
 
 // JAEGER_CLIENT_VERSION_TAG_KEY is the name of the tag used to report client version.

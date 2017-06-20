@@ -20,7 +20,6 @@
 
 import _ from 'lodash';
 import {assert, expect} from 'chai';
-import NoopReporter from '../src/reporters/noop_reporter';
 import CompositeReporter from '../src/reporters/composite_reporter';
 import RemoteReporter from '../src/reporters/remote_reporter';
 import ConstSampler from '../src/samplers/const_sampler';
@@ -155,5 +154,24 @@ describe('initTracer', () => {
         assert.equal(tracer._logger, logger);
         assert.equal(tracer._metrics._factory, metrics);
         assert.equal(tracer._tags['x'], 'y');
+    });
+
+    describe("upsampling", () => {
+        let config = {
+            serviceName: 'test-service'
+        };
+
+        it('should default to false', () => {
+            let tracer = initTracer(config);
+
+            assert.isNotOk(tracer._upsampling.enabled)
+        });
+
+        it('should pass true if set to true', () => {
+            config.upsampling = {"enabled" : true};
+            let tracer = initTracer(config);
+
+            assert.isOk(tracer._upsampling.enabled)
+        });
     });
 });
