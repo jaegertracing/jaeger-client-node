@@ -38,6 +38,16 @@ describe('span should', () => {
     let reporter = new InMemoryReporter();
     let tracer, span, spanContext;
 
+    let assertBaggageLogs = function(log, key, value, override) {
+        assert.equal(log.fields.length, override ? 4 : 3);
+        assert.deepEqual(log.fields[0], {key: 'event', value: 'baggage'});
+        assert.deepEqual(log.fields[1], {key: 'key', value: key});
+        assert.deepEqual(log.fields[2], {key: 'value', value: value});
+        if (override) {
+            assert.deepEqual(log.fields[3], {key: 'override', value: 'true'});
+        }
+    };
+
     beforeEach(() => {
         tracer = new Tracer(
             'test-service-name',
@@ -166,6 +176,8 @@ describe('span should', () => {
 
         span.setBaggageItem(key, value);
         assert.equal(value, span.getBaggageItem(key));
+        assert.equal(span._logs.length, 1);
+        assertBaggageLogs(span._logs[0], key, value, false);
     });
 
     it ('inherit baggage from parent', () => {
@@ -175,6 +187,20 @@ describe('span should', () => {
         span.setBaggageItem(key, value);
         let child = tracer.startSpan('child', { childOf: span.context() });
         assert.equal(value, child.getBaggageItem(key));
+    });
+
+    it ('add override tag if baggage from parent is overwritten', () => {
+        let key = 'some-key';
+        let value = 'some-value';
+        let newValue = 'new-value';
+
+        span.setBaggageItem(key, value);
+        let child = tracer.startSpan('child', { childOf: span.context() });
+        assert.equal(value, child.getBaggageItem(key));
+
+        child.setBaggageItem(key, newValue);
+        assert.equal(child._logs.length, 1);
+        assertBaggageLogs(child._logs[0], key, newValue, true);
     });
 
     it ('normalized key correctly', () => {
@@ -355,11 +381,11 @@ describe('span should', () => {
 
     describe('setTag', () => {
         it('should set a tag, and return a span', () => {
-            var newSpan = span.setTag('key', 'value');
+            let newSpan = span.setTag('key', 'value');
             assert.isOk(newSpan instanceof Span);
             assert.isOk(_.isEqual(span._tags[0], {'key': 'key', 'value': 'value'}));
         });
-    })
+    });
 
     // TODO(oibe) need tests for standard tags, and handlers
 });
