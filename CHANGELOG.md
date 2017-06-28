@@ -5,7 +5,7 @@ Changes by Version
 3.5.4 (unreleased)
 ------------------
 
-- Nothing yet.
+- Save baggage in span logs (#129)
 
 
 3.5.3 (2017-04-24)
