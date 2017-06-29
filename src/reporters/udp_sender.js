@@ -36,9 +36,9 @@ export default class UDPSender {
     _emitSpanBatchOverhead: number;
     _maxSpanBytes: number;
     _client: any;
-    _spec: any;
     _byteBufferSize: number;
-    _thrift: any;
+    _agentThrift: Thrift;
+    _jaegerThrift: Thrift;
     _batch: Batch;
     _thriftProcessMessage: any;
 
@@ -48,21 +48,25 @@ export default class UDPSender {
         this._maxPacketSize = options.maxPacketSize || UDP_PACKET_MAX_LENGTH;
         this._byteBufferSize = 0;
         this._client = dgram.createSocket('udp4');
-        this._spec = fs.readFileSync(path.join(__dirname, '../jaeger-idl/thrift/jaeger.thrift'), 'ascii');
-        this._thrift = new Thrift({
-            source: this._spec,
+        this._agentThrift = new Thrift({
+            source: fs.readFileSync(path.join(__dirname, '../thriftrw-idl/agent.thrift'), 'ascii'),
+            allowOptionalArguments: true,
+            allowFilesystemAccess: true
+        });
+        this._jaegerThrift = new Thrift({
+            source: fs.readFileSync(path.join(__dirname, '../jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
             allowOptionalArguments: true
         });
     }
 
     _calcBatchSize(batch: Batch) {
-        return this._thrift.Agent.emitBatch.argumentsMessageRW.byteLength(
+        return this._agentThrift.Agent.emitBatch.argumentsMessageRW.byteLength(
             this._convertBatchToThriftMessage(this._batch)
         ).length;
     }
 
     _calcSpanSize(span: any): number {
-        return this._thrift.Span.rw.byteLength(new this._thrift.Span(span)).length;
+        return this._jaegerThrift.Span.rw.byteLength(new this._jaegerThrift.Span(span)).length;
     }
 
     setProcess(process: Process): void {
@@ -78,10 +82,10 @@ export default class UDPSender {
         let tagMessages = [];
         for (let j = 0; j < this._batch.process.tags.length; j++) {
             let tag = this._batch.process.tags[j];
-            tagMessages.push(new this._thrift.Tag(tag));
+            tagMessages.push(new this._jaegerThrift.Tag(tag));
         }
 
-        this._thriftProcessMessage = new this._thrift.Process({
+        this._thriftProcessMessage = new this._jaegerThrift.Process({
             serviceName: this._batch.process.serviceName,
             tags: tagMessages
         });
@@ -118,7 +122,7 @@ export default class UDPSender {
 
         let bufferLen = this._byteBufferSize + this._emitSpanBatchOverhead;
         let thriftBuffer = new Buffer(bufferLen);
-        let bufferResult = this._thrift.Agent.emitBatch.argumentsMessageRW.writeInto(
+        let bufferResult = this._agentThrift.Agent.emitBatch.argumentsMessageRW.writeInto(
             this._convertBatchToThriftMessage(this._batch), thriftBuffer, 0
         );
 
@@ -138,13 +142,13 @@ export default class UDPSender {
         let spanMessages = [];
         for (let i = 0; i < this._batch.spans.length; i++) {
             let span = this._batch.spans[i];
-            spanMessages.push(new this._thrift.Span(span))
+            spanMessages.push(new this._jaegerThrift.Span(span))
         }
 
-        return new this._thrift.Agent.emitBatch.ArgumentsMessage({
+        return new this._agentThrift.Agent.emitBatch.ArgumentsMessage({
             version: 1,
             id: 0,
-            body: {batch: new this._thrift.Batch({
+            body: {batch: new this._jaegerThrift.Batch({
                     process: this._thriftProcessMessage,
                     spans: spanMessages
             })}

@@ -53,7 +53,8 @@ describe('PerOperationSampler', () => {
     it('should parse initial strategies', () => {
         let sampler = new PerOperationSampler(strategies, 2);
         assert.equal(sampler._maxOperations, 2);
-        assert.equal(sampler._defaultLowerBound, 1.1);
+        assert.equal(sampler._defaultMinSamplesPerSecond, 1.1);
+        assert.equal(sampler._defaultMaxSamplesPerSecond, 2);
         assert.isObject(sampler._defaultSampler);
         assert.equal(sampler._defaultSampler.samplingRate, 0.123);
         assert.equal(Object.keys(sampler._samplersByOperation).length, 1);
@@ -96,6 +97,7 @@ describe('PerOperationSampler', () => {
         let sampler = new PerOperationSampler(strategies, 2);
         let updated: PerOperationSamplingStrategies = {
             defaultLowerBoundTracesPerSecond: 2,
+            defaultUpperBoundTracesPerSecond: 4,
             defaultSamplingProbability: 0.333,
             perOperationStrategies: [
                 {
@@ -110,7 +112,8 @@ describe('PerOperationSampler', () => {
         };
         let isUpdated: boolean = sampler.update(updated);
         assert.isTrue(isUpdated);
-        assert.equal(sampler._defaultLowerBound, 2);
+        assert.equal(sampler._defaultMinSamplesPerSecond, 2);
+        assert.equal(sampler._defaultMaxSamplesPerSecond, 4);
         assert.isObject(sampler._defaultSampler);
         assert.equal(sampler._defaultSampler.samplingRate, 0.333);
         assert.equal(Object.keys(sampler._samplersByOperation).length, 2);

@@ -39,7 +39,7 @@ describe('All samplers', () => {
                 new ConstSampler(false),
                 new ProbabilisticSampler(0.5),
                 new RateLimitingSampler(2),
-                new GuaranteedThroughputSampler(2, 0.5),
+                new GuaranteedThroughputSampler(0.5, 2, 3),
                 new PerOperationSampler({
                     defaultLowerBoundTracesPerSecond: 2,
                     defaultSamplingProbability: 0.01,

@@ -26,7 +26,7 @@ import GuaranteedThroughputSampler from '../../src/samplers/guaranteed_throughpu
 
 describe('GuaranteedThroughput sampler', () => {
     it('should have a name and be closable', () => {
-        let sampler = new GuaranteedThroughputSampler(2, 0);
+        let sampler = new GuaranteedThroughputSampler(0, 2, 3);
         assert.equal(sampler.name(), 'GuaranteedThroughputSampler');
 
         let callback = sinon.spy();
@@ -35,20 +35,20 @@ describe('GuaranteedThroughput sampler', () => {
     });
 
     it('should not equal other types', () => {
-        let sampler = new GuaranteedThroughputSampler(2, 0);
+        let sampler = new GuaranteedThroughputSampler(0, 2, 3);
         assert.isFalse(sampler.equal(new ConstSampler(true)));
         sampler.close();
     });
 
     it('should equal itself', () => {
-        let sampler = new GuaranteedThroughputSampler(2, 0);
+        let sampler = new GuaranteedThroughputSampler(0, 2, 3);
         assert.isOk(sampler.equal(sampler));
-        assert.isOk(sampler.equal(new GuaranteedThroughputSampler(2, 0)));
+        assert.isOk(sampler.equal(new GuaranteedThroughputSampler(0, 2, 3)));
         sampler.close();
     });
 
     it('should provide minimum throughput', () => {
-        let sampler = new GuaranteedThroughputSampler(2, 0);
+        let sampler = new GuaranteedThroughputSampler(0, 2, 3);
 
         let expectedTags = {'sampler.type': 'lowerbound', 'sampler.param': 0};
         [true, true, false].forEach((expectedDecision) => {
@@ -69,53 +69,76 @@ describe('GuaranteedThroughput sampler', () => {
         sampler.close();
     });
 
-    let assertValues = function assertValues(sampler, lb, rate) {
-        assert.equal(lb, sampler._lowerBoundSampler.maxTracesPerSecond);
+    it('should rate limited by upper bound rate limiter', () => {
+        let sampler = new GuaranteedThroughputSampler(1, 1, 2);
+
+        let expectedTags = {'sampler.type': 'probabilistic', 'sampler.param': 1};
+        [1, 2, 3].forEach((_) => {
+            let actualTags = {};
+            assert.isOk(sampler.isSampled('testOperationName', actualTags), 'must sample');
+            assert.deepEqual(expectedTags, actualTags);
+        });
+        // The max_samples_per_second is 2, so after three calls, the upperBoundRateLimiter
+        // should be triggered and the samplingRate should be halved.
+        assertValues(sampler, 0.5, 1, 2);
+
+        sampler.close();
+    });
+
+    let assertValues = function assertValues(sampler, rate, lb, up) {
         assert.equal(rate, sampler._probabilisticSampler.samplingRate);
+        assert.equal(lb, sampler._lowerBoundSampler.maxTracesPerSecond);
+        assert.equal(up, sampler._upperBoundRateLimiter.creditsPerSecond);
     };
 
     it('should not change when update() called with the same values', () => {
-        let sampler = new GuaranteedThroughputSampler(2, 1.0);
-        assertValues(sampler, 2, 1.0);
+        let sampler = new GuaranteedThroughputSampler(1.0, 2, 3);
+        assertValues(sampler, 1.0, 2, 3);
 
         let p1 = sampler._probabilisticSampler;
         let p2 = sampler._lowerBoundSampler;
-        let isUpdated: boolean = sampler.update(2, 1.0);
+        let p3 = sampler._upperBoundRateLimiter;
+        let isUpdated: boolean = sampler.update(1.0, 2, 3);
         assert.isFalse(isUpdated);
         assert.strictEqual(sampler._probabilisticSampler, p1);
         assert.strictEqual(sampler._lowerBoundSampler, p2);
-        assertValues(sampler, 2, 1.0);
+        assert.strictEqual(sampler._upperBoundRateLimiter, p3);
+        assertValues(sampler, 1.0, 2, 3);
     });
 
-    it('should update only lower bound', () => {
-        let sampler = new GuaranteedThroughputSampler(2, 1.0);
-        assertValues(sampler, 2, 1.0);
+    it('should update only lower bound and upper bound', () => {
+        let sampler = new GuaranteedThroughputSampler(1.0, 2, 3);
+        assertValues(sampler, 1.0, 2, 3);
 
         // should only change lower bound
         let p1 = sampler._probabilisticSampler;
         let p2 = sampler._lowerBoundSampler;
-        let isUpdated: boolean = sampler.update(3, 1.0);
+        let p3 = sampler._upperBoundRateLimiter;
+        let isUpdated: boolean = sampler.update(1.0, 3, 4);
         assert.isTrue(isUpdated);
         assert.strictEqual(sampler._probabilisticSampler, p1);
         assert.isNotOk(p2 === sampler._lowerBoundSampler);
-        assertValues(sampler, 3, 1.0);
+        assert.isNotOk(p3 === sampler._upperBoundRateLimiter);
+        assertValues(sampler, 1.0, 3, 4);
     });
 
     it('should update only sampling rate', () => {
-        let sampler = new GuaranteedThroughputSampler(2, 1.0);
-        assertValues(sampler, 2, 1.0);
+        let sampler = new GuaranteedThroughputSampler(1.0, 2, 3);
+        assertValues(sampler, 1.0, 2, 3);
 
         let p1 = sampler._probabilisticSampler;
         let p2 = sampler._lowerBoundSampler;
-        let isUpdated: boolean = sampler.update(2, 0.9);
+        let p3 = sampler._upperBoundRateLimiter;
+        let isUpdated: boolean = sampler.update(0.9, 2, 3);
         assert.isTrue(isUpdated);
         assert.isNotOk(p1 === sampler._probabilisticSampler);
         assert.strictEqual(sampler._lowerBoundSampler, p2);
-        assertValues(sampler, 2, 0.9);
+        assert.strictEqual(sampler._upperBoundRateLimiter, p3);
+        assertValues(sampler, 0.9, 2, 3);
     });
 
     it('should become probabilistic after minimum throughput', () => {
-        let sampler = new GuaranteedThroughputSampler(2, 1.0);
+        let sampler = new GuaranteedThroughputSampler(1.0, 2, 3);
 
         let expectedTagsLB = {'sampler.type': 'lowerbound', 'sampler.param': 0.0};
         let expectedTagsProb = {'sampler.type': 'probabilistic', 'sampler.param': 1.0};
@@ -135,8 +158,10 @@ describe('GuaranteedThroughput sampler', () => {
         ].forEach((testCase) => {
             // override probability, and do a sanity check
             let s = sampler._lowerBoundSampler;
-            sampler.update(2, testCase.probability);
+            let u = sampler._upperBoundRateLimiter;
+            sampler.update(testCase.probability, 2, 3);
             assert.strictEqual(s, sampler._lowerBoundSampler, 'lower bound sampled unchanged');
+            assert.strictEqual(u, sampler._upperBoundRateLimiter, 'upper bound rate limiter unchanged');
             assert.equal(sampler._probabilisticSampler.samplingRate, testCase.probability);
 
             let expectedDecision = testCase.sampled;
