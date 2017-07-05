@@ -30,6 +30,8 @@ import Tracer from './tracer';
 import UDPSender from './reporters/udp_sender';
 import opentracing from 'opentracing';
 import * as constants from './constants.js';
+import DefaultBaggageRestrictionManager from './baggage/default_baggage_restriction_manager';
+import RemoteBaggageRestrictionManager from './baggage/remote_baggage_restriction_manager';
 
 let jaegerSchema = {
     'id': '/jaeger',
@@ -54,6 +56,16 @@ let jaegerSchema = {
                 'agentHost': {'type': 'string'},
                 'agentPort': {'type': 'number'},
                 'flushIntervalMs': {'type': 'number'}
+            },
+            'additionalProperties': false
+        },
+        'baggageRestrictions': {
+            'properties': {
+                'enable': {'type': 'boolean'},
+                'failClosed': {'type': 'boolean'},
+                'host': {'type': 'string'},
+                'port': {'type': 'number'},
+                'refreshIntervalMs': {'type': 'number'}
             },
             'additionalProperties': false
         }
@@ -128,6 +140,17 @@ export default class Configuration {
         return new CompositeReporter(reporters);
     }
 
+    static _getBaggageRestrictionManager(config, options) {
+        return new RemoteBaggageRestrictionManager(config.serviceName, {
+            logger: options.logger,
+            metrics: options.metrics,
+            host: config.baggageRestrictions.host,
+            port: config.baggageRestrictions.port,
+            refreshInterval: config.baggageRestrictions.refreshIntervalMs,
+            failClosed: config.baggageRestrictions.failClosed,
+        });
+    }
+
     /**
      * Initialize and return a new instance of Jaeger Tracer.
      * 
@@ -154,6 +177,7 @@ export default class Configuration {
     static initTracer(config, options = {}) {
         let reporter;
         let sampler;
+        let baggageRestrictionManager;
         if (options.metrics) {
             options.metrics = new Metrics(options.metrics);
         }
@@ -171,6 +195,12 @@ export default class Configuration {
             } else {
                 reporter = options.reporter;
             }
+
+            if (config.baggageRestrictions && config.baggageRestrictions.enable) {
+                baggageRestrictionManager = Configuration._getBaggageRestrictionManager(config, options);
+            } else {
+                baggageRestrictionManager = new DefaultBaggageRestrictionManager()
+            }
         }
 
         if (options.logger) {
@@ -186,7 +216,8 @@ export default class Configuration {
             {
                 metrics: options.metrics,
                 logger: options.logger,
-                tags: options.tags
+                tags: options.tags,
+                baggageRestrictionManager: baggageRestrictionManager
             }
         );
     }

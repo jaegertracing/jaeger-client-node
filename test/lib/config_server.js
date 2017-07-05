@@ -21,38 +21,57 @@
 
 import express from 'express';
 
-export default class SamplingServer {
+export default class ConfigServer {
     _port: number;
     _app: any;
     _server: any;
     _strategies: { [service: string]: SamplingStrategyResponse };
+    _restrictions : { [service: string]: Array<BaggageRestriction>};
 
     constructor(port: number = 5778) {
         this._port = port;
         this._app = express();
         this._strategies = Object.create(null);
-        this._app.get('/sampling', this._handle.bind(this));
+        this._app.get('/sampling', this._handleSampling.bind(this));
+        this._app.get('/baggageRestrictions', this._handleRestrictions.bind(this));
     }
 
     addStrategy(serviceName: string, response: SamplingStrategyResponse): void {
         this._strategies[serviceName] = response;
     }
 
-    clearStrategies(): void {
-        this._strategies = Object.create(null);
+    addRestrictions(serviceName: string, response: Array<BaggageRestriction>): void {
+        this._restrictions[serviceName] = response;
     }
 
-    _handle(req: any, res: any) {
+    clearConfigs(): void {
+        this._strategies = Object.create(null);
+        this._restrictions = Object.create(null);
+    }
+
+    _handleSampling(req: any, res: any) {
+        this._handle(req, res, (service) => {
+            return this._strategies[service]
+        });
+    }
+
+    _handleRestrictions(req: any, res: any) {
+        this._handle(req, res, (service) => {
+            return this._restrictions[service]
+        })
+    }
+
+    _handle(req: any, res: any, getFunc: Function) {
         let service = req.query.service;
-        let strategy = this._strategies[service];
-        if (strategy) {
-            res.send(strategy);
+        let data = getFunc(service);
+        if (data) {
+            res.send(data);
         } else {
             res.status(404).send({err: `unknown service name '${service}'`});
         }
     }
 
-    start(): SamplingServer {
+    start(): ConfigServer {
         this._server = this._app.listen(this._port);
         return this;
     }

@@ -30,21 +30,36 @@ import * as opentracing from 'opentracing';
 import Span from '../src/span.js';
 import SpanContext from '../src/span_context.js';
 import sinon from 'sinon';
-import * as thrift from '../src/thrift.js';
 import Tracer from '../src/tracer.js';
 import Utils from '../src/util.js';
+
+const SOME_KEY = 'some-key';
+const BAGGAGE_LENGTH = 15;
+
+class MockBaggageRestrictionManager {
+
+    isValidBaggageKey(key: string): [boolean, number] {
+        if (key === SOME_KEY) {
+            return [true, BAGGAGE_LENGTH];
+        }
+        return [false, 0];
+    }
+}
 
 describe('span should', () => {
     let reporter = new InMemoryReporter();
     let tracer, span, spanContext;
 
-    let assertBaggageLogs = function(log, key, value, override) {
-        assert.equal(log.fields.length, override ? 4 : 3);
+    let assertBaggageLogs = function(log, key, value, override, truncated) {
+        assert.equal(log.fields.length, 3 + (override ? 1 : 0) + (truncated ? 1 : 0));
         assert.deepEqual(log.fields[0], {key: 'event', value: 'baggage'});
         assert.deepEqual(log.fields[1], {key: 'key', value: key});
         assert.deepEqual(log.fields[2], {key: 'value', value: value});
         if (override) {
             assert.deepEqual(log.fields[3], {key: 'override', value: 'true'});
+        }
+        if (truncated) {
+            assert.deepEqual(log.fields[override ? 4 : 3], {key: 'truncated', value: 'true'});
         }
     };
 
@@ -53,7 +68,10 @@ describe('span should', () => {
             'test-service-name',
             reporter,
             new ConstSampler(true),
-            { logger: new MockLogger() }
+            {
+                logger: new MockLogger(),
+                baggageRestrictionManager: new MockBaggageRestrictionManager()
+            }
         );
 
         spanContext = SpanContext.withBinaryIds(
@@ -67,7 +85,9 @@ describe('span should', () => {
             tracer,
             'op-name',
             spanContext,
-            tracer.now()
+            tracer.now(),
+            null,
+            new MockBaggageRestrictionManager()
         );
     });
 
@@ -177,7 +197,7 @@ describe('span should', () => {
         span.setBaggageItem(key, value);
         assert.equal(value, span.getBaggageItem(key));
         assert.equal(span._logs.length, 1);
-        assertBaggageLogs(span._logs[0], key, value, false);
+        assertBaggageLogs(span._logs[0], key, value, false, false);
     });
 
     it ('inherit baggage from parent', () => {
@@ -200,7 +220,27 @@ describe('span should', () => {
 
         child.setBaggageItem(key, newValue);
         assert.equal(child._logs.length, 1);
-        assertBaggageLogs(child._logs[0], key, newValue, true);
+        assertBaggageLogs(child._logs[0], key, newValue, true, false);
+    });
+
+    it ('add truncated tag if baggage is truncated', () => {
+        let key = 'some-key';
+        let value = '01234567890123456789';
+        let newValue = '012345678901234';
+
+        span.setBaggageItem(key, value);
+        assert.equal(newValue, span.getBaggageItem(key));
+
+        assert.equal(span._logs.length, 1);
+        assertBaggageLogs(span._logs[0], key, newValue, false, true);
+    });
+
+    it ('not set baggage value if key is not valid', () => {
+        let key = 'invalid-key';
+        let value = 'some-value';
+
+        span.setBaggageItem(key, value);
+        assert.isUndefined(span.getBaggageItem(key));
     });
 
     it ('normalized key correctly', () => {

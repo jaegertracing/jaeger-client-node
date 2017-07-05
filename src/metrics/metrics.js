@@ -38,6 +38,11 @@ export default class Metrics {
     samplerUpdated: Counter;
     samplerQueryFailure: Counter;
     samplerParsingFailure: Counter;
+    baggageUpdateSuccess: Counter;
+    baggageUpdateFailure: Counter;
+    baggageTruncate: Counter;
+    baggageRestrictionsUpdateSuccess: Counter;
+    baggageRestrictionsUpdateFailure: Counter;
 
     constructor(factory: MetricsFactory) {
         this._factory = factory;
@@ -114,6 +119,24 @@ export default class Metrics {
         this.samplerParsingFailure = this._factory.createCounter('sampler', {
             state: 'failure',
             phase: 'parsing'
+        });
+
+        this.baggageUpdateSuccess = this._factory.createCounter('baggage-update', {
+           result: 'ok',
+        });
+
+        this.baggageUpdateFailure = this._factory.createCounter('baggage-update', {
+            result: 'err',
+        });
+
+        this.baggageTruncate = this._factory.createCounter('baggage-trucate');
+
+        this.baggageRestrictionsUpdateSuccess = this._factory.createCounter('baggage-restrictions-update', {
+            result: 'ok',
+        });
+
+        this.baggageRestrictionsUpdateFailure = this._factory.createCounter('baggage-restrictions-update', {
+            result: 'err',
         });
     }
 }
