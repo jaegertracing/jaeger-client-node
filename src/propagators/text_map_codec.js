@@ -75,12 +75,17 @@ export default class TextMapCodec {
             if (carrier.hasOwnProperty(key)) {
                 let lowerKey = key.toLowerCase();
                 if (lowerKey === this._contextKey) {
-                    let decodedContext = SpanContext.fromString(this._decodeValue(carrier[key]));
+                    let decodedContext = SpanContext.fromString(carrier[key]);
+                    if (decodedContext !== null) { // trying to create context from split(":") worked ... no need to decode
+                        spanContext = decodedContext;
+                        continue;
+                    }
+                    decodedContext = SpanContext.fromString(this._decodeValue(carrier[key]));
                     if (decodedContext === null) {
                         this._metrics.decodingErrors.increment(1);
-                    } else {
-                        spanContext = decodedContext;
+                        continue;
                     }
+                    spanContext = decodedContext;
                 } else if (lowerKey === constants.JAEGER_DEBUG_HEADER) {
                     debugId = this._decodeValue(carrier[key]);
                 } else if (lowerKey === constants.JAEGER_BAGGAGE_HEADER) {
