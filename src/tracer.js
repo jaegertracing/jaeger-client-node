@@ -85,7 +85,7 @@ export default class Tracer {
             this._upsampling = {
                 enabled: false,
                 allowOnInnerSpans: false
-            }
+            };
         }
 
 
@@ -253,7 +253,7 @@ export default class Tracer {
             ctx.baggage = parent.baggage;
 
             parent.finalizeSampling();
-            if(parent.isSampled() || parent.isDebug()) {
+            if (parent.isSampled() || parent.isDebug()) {
                 ctx.finalizeSampling();
             } else {
                 this.handleUpsampling(parent, ctx, operationName, internalTags);

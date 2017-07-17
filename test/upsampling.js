@@ -82,7 +82,7 @@ describe('span upsampling', () => {
             value : _.defaults({ original : { samplingDecision : true } }, baseCase),
         },
         {
-            name  : 'on operation name change, modify sampling decision 0 -> 0',
+            name  : 'on operation name change, modify sampling decision 0 -> 0, verify final decision 0',
             value : _.defaults({
                 original              : { samplingDecision : false },
                 new                   : { samplingDecision : false },
@@ -90,21 +90,23 @@ describe('span upsampling', () => {
             }, baseCase),
         },
         {
-            name  : 'on operation name change, modify sampling decision 0 -> 1',
+            name  : 'on operation name change, modify sampling decision 0 -> 1, verify final decision 1',
             value : _.defaults({
                 original : { samplingDecision : false },
                 new      : { samplingDecision : true },
             }, baseCase),
         },
         {
-            name  : 'on operation name change, modify sampling decision 1 -> 0',
+            // This is because changing the operation name can only cause an unsampled span to be
+            // sampled and not vice-versa
+            name  : 'on operation name change, modify sampling decision 1 -> 0, verify final decision 1',
             value : _.defaults({
                 original : { samplingDecision : true },
                 new      : { samplingDecision : false },
             }, baseCase),
         },
         {
-            name  : 'on operation name change, modify sampling decision 1 -> 1',
+            name  : 'on operation name change, modify sampling decision 1 -> 1, verify final decision 1',
             value : _.defaults({
                 original : { samplingDecision : true },
                 new      : { samplingDecision : true },
