@@ -132,9 +132,9 @@ export default class UDPSender {
         }
 
         // https://nodejs.org/api/dgram.html#dgram_socket_send_msg_offset_length_port_address_callback
-        this._client.on('error', err => {
-            console.log(`error sending span: ${err}`)
-        })
+        // this._client.on('error', err => {
+        //     console.log(`error sending span: ${err}`)
+        // })
 
         this._client.send(thriftBuffer, 0, thriftBuffer.length, this._port, this._host);
         this._reset();

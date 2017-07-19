@@ -25,6 +25,7 @@ import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
+import RemoteReporter from '../src/reporters/remote_reporter.js';
 import opentracing from 'opentracing';
 import Tracer from '../src/tracer.js';
 import {Thrift} from 'thriftrw';
@@ -250,12 +251,19 @@ describe('udp sender should', () => {
         assert.equal(response.numSpans, 0);
     });
 
-    it ('flush gracefully handles errors emitted by socket.send', done => {
+    it ('flush gracefully handles errors emitted by socket.send', () => {
         sender._client.on('error', err => {
-            done();
+            assert.equal(err.message, 'getaddrinfo ENOTFOUND foo.bar.com')
         });
         sender._host = 'foo.bar.com';
         sender._port = 1234;
-        sender.flush();
+        let reporter = new RemoteReporter(sender);
+        tracer = new Tracer(
+            'test-service-name',
+            reporter,
+            new ConstSampler(true)
+        );
+        let span = tracer.startSpan('spanName');
+        span.finish();
     });
 });
