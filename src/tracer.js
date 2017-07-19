@@ -182,7 +182,7 @@ export default class Tracer {
         let userTags = options.tags || {};
         let startTime = options.startTime || this.now();
 
-        // This flag is used to ensure that CHILD_OF reference is preferred
+        // This flag is used to ensure that CHILD_OF reference is preferred 
         // as a parent even if it comes after FOLLOWS_FROM reference.
         let followsFromIsParent = false;
         let parent: ?SpanContext = options.childOf instanceof Span ? options.childOf.context() : options.childOf;
