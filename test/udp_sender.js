@@ -249,4 +249,13 @@ describe('udp sender should', () => {
         assert.equal(response.err, false);
         assert.equal(response.numSpans, 0);
     });
+
+    it ('flush gracefully handles errors emitted by socket.send', done => {
+        sender._client.on('error', err => {
+            done();
+        });
+        sender._host = 'foo.bar.com';
+        sender._port = 1234;
+        sender.flush();
+    });
 });

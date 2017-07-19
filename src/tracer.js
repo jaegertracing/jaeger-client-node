@@ -139,11 +139,7 @@ export default class Tracer {
 
     _report(span: Span): void {
         this._metrics.spansFinished.increment(1);
-        try {
-          this._reporter.report(span);
-        } catch (err) {
-          this._logger.error(`could not report span ${span.operationName}: ${err.message}`)
-        }
+        this._reporter.report(span);
     }
 
     registerInjector(format: string, injector: Injector): void {
