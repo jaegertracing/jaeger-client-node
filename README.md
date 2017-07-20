@@ -53,12 +53,12 @@ must be a function that returns a context with the methods 'getSpan', and 'setSp
 and assign the span to the context respectively.
 
 ```javascript
-import { TChannelBridge } from 'jaeger-client';
-import Context from 'some-conformant-context';
+    import { TChannelBridge } from 'jaeger-client';
+    import Context from 'some-conformant-context';
 
-function contextFactory() {
-    return new Context();
-};
+    function contextFactory() {
+        return new Context();
+    };
 
 let bridge = new TChannelBridge(tracer, {contextFactory: contextFactory});
 let server = new TChannel({ serviceName: 'server' });
