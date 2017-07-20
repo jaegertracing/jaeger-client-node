@@ -260,11 +260,11 @@ describe('udp sender should', () => {
             new ConstSampler(true)
         ).startSpan('testSpan').finish();
         let oldLog = console.log;
-        sender.flush();
         console.log = message =>  {
             expect(message).to.have.string('error sending span: Error: getaddrinfo ENOTFOUND');
             console.log = oldLog;
             done();
         };
+        sender.flush();
     });
 });
