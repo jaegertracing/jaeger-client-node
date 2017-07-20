@@ -60,20 +60,20 @@ and assign the span to the context respectively.
         return new Context();
     };
 
-let bridge = new TChannelBridge(tracer, {contextFactory: contextFactory});
-let server = new TChannel({ serviceName: 'server' });
-server.listen(4040, '127.0.0.1');
-let serverThriftChannel = TChannelAsThrift({
-    channel: server,
-    entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // file path to a thrift file
-});
+    let bridge = new TChannelBridge(tracer, {contextFactory: contextFactory});
+    let server = new TChannel({ serviceName: 'server' });
+    server.listen(4040, '127.0.0.1');
+    let serverThriftChannel = TChannelAsThrift({
+        channel: server,
+        entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // file path to a thrift file
+    });
 
-let perProcessOptions = {};
-serverThriftChannel.register(server, 'Echo::echo', perProcessOptions, bridge.tracedHandler(
-    (perProcessOptions, req, head, body, callback) => {
-        /* Your handler code goes here. */
-    }
-));
+    let perProcessOptions = {};
+    serverThriftChannel.register(server, 'Echo::echo', perProcessOptions, bridge.tracedHandler(
+        (perProcessOptions, req, head, body, callback) => {
+            /* Your handler code goes here. */
+        }
+    ));
 ```
 
 
