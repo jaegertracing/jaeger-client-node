@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 
 import _ from 'lodash';
-import {assert} from 'chai';
+import {assert, expect} from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import dgram from 'dgram';
 import fs from 'fs';
@@ -252,7 +252,7 @@ describe('udp sender should', () => {
         assert.equal(response.numSpans, 0);
     });
 
-    it ('flush gracefully handles errors emitted by socket.send', (done) => {
+    it ('flush gracefully handles errors emitted by socket.send', done => {
         let spy = sinon.spy(console, 'log');
         sender._host = 'foo.bar.com';
         sender._port = 1234;
@@ -262,10 +262,12 @@ describe('udp sender should', () => {
             new ConstSampler(true)
         ).startSpan('testSpan').finish();
         sender.flush();
-        setTimeout(() => {
-            assert(spy.calledWith('error sending span: Error: getaddrinfo ENOTFOUND foo.bar.com', 'error sending span: Error: getaddrinfo ENOTFOUND'));
+        let oldLog = console.log;
+        console.log = message =>  {
+            expect(message).to.have.string('error sending span: Error: getaddrinfo ENOTFOUND');
+            console.log = oldLog;
             spy.restore();
             done();
-        }, 50);
+        };
     });
 });
