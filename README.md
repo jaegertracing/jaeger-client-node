@@ -49,7 +49,7 @@ An encoded channel is a channel wrapped in either a thrift encoder `TChannelAsTh
 or json encoder `TChannelAsJson`.  To wrap a server handler for thrift one can initialize
 a tchannel bridge, and wrap the encoded handler function with a `tracedHandler` decorator.
 The tchannel bridge takes an OpenTracing  tracer, and a context factory.  The context factory
-must be a function that returns a context with the methods 'getSpan', and 'setSpan' which retrieve
+must be a function that returns a context with the methods 'getSpan', and 'setSpan' which retrieve 
 and assign the span to the context respectively.
 
 ```javascript
