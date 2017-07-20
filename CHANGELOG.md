@@ -1,11 +1,17 @@
-sh --registry=https://registry.npmjs.org
 Changes by Version
 ==================
 
-3.5.4 (unreleased)
+3.6.0 (unreleased)
 ------------------
 
+New features:
+
 - Save baggage in span logs (#129)
+
+Bug fixes:
+
+- Trap exceptions from socket.send() (#137) - thanks @frankgreco
+- Use ip tag instead of peer.ipv4 in process (#125)
 
 
 3.5.3 (2017-04-24)
