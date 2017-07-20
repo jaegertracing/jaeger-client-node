@@ -117,18 +117,18 @@ Outbound calls can be made in two ways, shown below.
 #### Using top level channel to create a request and calling `encodedChannel.send(request)`
 
 ```javascript
-let tracedChannel = bridge.tracedChannel(encodedThriftChannel);
+    let tracedChannel = bridge.tracedChannel(encodedThriftChannel);
 
-// tracedChannel.channel refers to encodedThriftChannel's inner channel which
-// is clientSubChannel in this instance.
-let req = tracedChannel.channel.request({
-    serviceName: 'server',
-    headers: { cn: 'echo' },
-    context: context, // must be passed through from the service handler shown above
-    timeout: someTimeout,
-});
-// send() can be called directly on the tracing decorator
-tracedChannel.send(req, 'Echo::echo', o.headers, { value: 'some-string' }, clientCallback);
+    // tracedChannel.channel refers to encodedThriftChannel's inner channel which
+    // is clientSubChannel in this instance.
+    let req = tracedChannel.channel.request({
+        serviceName: 'server',
+        headers: { cn: 'echo' },
+        context: context, // must be passed through from the service handler shown above
+        timeout: someTimeout,
+    });
+    // send() can be called directly on the tracing decorator
+    tracedChannel.send(req, 'Echo::echo', o.headers, { value: 'some-string' }, clientCallback);
 ```
 
 ### Debug Traces (Forced Sampling)
