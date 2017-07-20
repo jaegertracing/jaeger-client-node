@@ -53,27 +53,27 @@ must be a function that returns a context with the methods 'getSpan', and 'setSp
 and assign the span to the context respectively.
 
 ```javascript
-    import { TChannelBridge } from 'jaeger-client';
-    import Context from 'some-conformant-context';
+import { TChannelBridge } from 'jaeger-client';
+import Context from 'some-conformant-context';
 
-    function contextFactory() {
-        return new Context();
-    };
+function contextFactory() {
+    return new Context();
+};
 
-    let bridge = new TChannelBridge(tracer, {contextFactory: contextFactory});
-    let server = new TChannel({ serviceName: 'server' });
-    server.listen(4040, '127.0.0.1');
-    let serverThriftChannel = TChannelAsThrift({
-        channel: server,
-        entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // file path to a thrift file
-    });
+let bridge = new TChannelBridge(tracer, {contextFactory: contextFactory});
+let server = new TChannel({ serviceName: 'server' });
+server.listen(4040, '127.0.0.1');
+let serverThriftChannel = TChannelAsThrift({
+    channel: server,
+    entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // file path to a thrift file
+});
 
-    let perProcessOptions = {};
-    serverThriftChannel.register(server, 'Echo::echo', perProcessOptions, bridge.tracedHandler(
-        (perProcessOptions, req, head, body, callback) => {
-            /* Your handler code goes here. */
-        }
-    ));
+let perProcessOptions = {};
+serverThriftChannel.register(server, 'Echo::echo', perProcessOptions, bridge.tracedHandler(
+    (perProcessOptions, req, head, body, callback) => {
+        /* Your handler code goes here. */
+    }
+));
 ```
 
 
@@ -82,36 +82,36 @@ Outbound calls can be made in two ways, shown below.
 #### Using encoded channel to create a request and calling `request.send()`
 
 ```javascript
-import { TChannelBridge } from 'jaeger-client';
+    import { TChannelBridge } from 'jaeger-client';
 
-let bridge = new TChannelBridge(tracer);
-// Create the toplevel client channel.
-let client = new TChannel();
+    let bridge = new TChannelBridge(tracer);
+    // Create the toplevel client channel.
+    let client = new TChannel();
 
-// Create the client subchannel that makes requests.
-let clientSubChannel = client.makeSubChannel({
-    serviceName: 'server',
-    peers: ['127.0.0.1:4040']
-});
+    // Create the client subchannel that makes requests.
+    let clientSubChannel = client.makeSubChannel({
+        serviceName: 'server',
+        peers: ['127.0.0.1:4040']
+    });
 
-let encodedThriftChannel = TChannelAsThrift({
-    channel: clientSubChannel,
-    entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // file path to a thrift file
-});
+    let encodedThriftChannel = TChannelAsThrift({
+        channel: clientSubChannel,
+        entryPoint: path.join(__dirname, 'thrift', 'echo.thrift') // file path to a thrift file
+    });
 
-// wrap encodedThriftChannel in a tracing decorator
-let tracedChannel = bridge.tracedChannel(encodedThriftChannel);
+    // wrap encodedThriftChannel in a tracing decorator
+    let tracedChannel = bridge.tracedChannel(encodedThriftChannel);
 
-// The encodedThriftChannel's (also true for json encoded channels) request object can call 'send' directly.
-let req = tracedChannel.request({
-    serviceName: 'server',
-    context: context, // must be passed through from the service handler shown above
-    headers: { cn: 'echo' }
-});
+    // The encodedThriftChannel's (also true for json encoded channels) request object can call 'send' directly.
+    let req = tracedChannel.request({
+        serviceName: 'server',
+        context: context, // must be passed through from the service handler shown above
+        headers: { cn: 'echo' }
+    });
 
-// headers should contain your outgoing tchannel headers if any.
-// In this instance 'send' is being called on the request object, and not the channel.
-req.send('Echo::echo', headers, { value: 'some-string' });
+    // headers should contain your outgoing tchannel headers if any.
+    // In this instance 'send' is being called on the request object, and not the channel.
+    req.send('Echo::echo', headers, { value: 'some-string' });
 ```
 
 #### Using top level channel to create a request and calling `encodedChannel.send(request)`
