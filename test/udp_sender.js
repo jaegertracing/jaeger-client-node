@@ -31,7 +31,6 @@ import Tracer from '../src/tracer.js';
 import {Thrift} from 'thriftrw';
 import ThriftUtils from '../src/thrift.js';
 import UDPSender from '../src/reporters/udp_sender.js';
-import sinon from 'sinon';
 
 const PORT = 6832;
 const HOST = '127.0.0.1';
@@ -253,7 +252,6 @@ describe('udp sender should', () => {
     });
 
     it ('flush gracefully handles errors emitted by socket.send', done => {
-        let spy = sinon.spy(console, 'log');
         sender._host = 'foo.bar.com';
         sender._port = 1234;
         new Tracer(
@@ -261,12 +259,11 @@ describe('udp sender should', () => {
             new RemoteReporter(sender),
             new ConstSampler(true)
         ).startSpan('testSpan').finish();
-        sender.flush();
         let oldLog = console.log;
+        sender.flush();
         console.log = message =>  {
             expect(message).to.have.string('error sending span: Error: getaddrinfo ENOTFOUND');
             console.log = oldLog;
-            spy.restore();
             done();
         };
     });
