@@ -265,6 +265,6 @@ describe('udp sender should', () => {
             assert(spy.calledWith('error sending span: Error: getaddrinfo ENOTFOUND foo.bar.com'));
             spy.restore();
             done();
-        }, 50);
+        }, 1000);
     });
 });
