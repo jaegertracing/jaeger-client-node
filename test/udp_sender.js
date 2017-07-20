@@ -255,6 +255,7 @@ describe('udp sender should', () => {
     it ('flush gracefully handles errors emitted by socket.send', (done) => {
         let spy = sinon.spy(console, 'log');
         sender._host = 'foo.bar.com';
+        sender._port = 1234;
         new Tracer(
             'test-service-name',
             new RemoteReporter(sender),
