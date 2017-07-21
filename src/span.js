@@ -20,10 +20,11 @@
 // THE SOFTWARE.
 
 import * as constants from './constants.js';
-import NullLogger from './logger.js';
 import SpanContext from './span_context.js';
 import * as opentracing from 'opentracing';
 import Utils from './util.js';
+import Metrics from './metrics/metrics';
+import NoopMetricFactory from './metrics/noop/metric_factory';
 
 export default class Span {
     _tracer: any;
@@ -31,26 +32,31 @@ export default class Span {
     _spanContext: SpanContext;
     _startTime: number;
     _logger: any;
+    _metrics: Metrics;
     _duration: number;
     _logs: Array<LogData>;
     _tags: Array<Tag>;
     static _baggageHeaderCache: any;
     _references: Array<Reference>;
+    _baggageRestrictionManager: BaggageRestrictionManager;
 
     constructor(tracer: any,
                 operationName: string,
                 spanContext: SpanContext,
                 startTime: number,
-                references: Array<Reference>
+                references: Array<Reference>,
+                baggageRestrictionManager: BaggageRestrictionManager
     ) {
         this._tracer = tracer;
         this._operationName = operationName;
         this._spanContext = spanContext;
         this._startTime = startTime;
         this._logger = tracer._logger;
+        this._metrics = tracer._metrics || new Metrics(new NoopMetricFactory());
         this._references = references;
         this._logs = [];
         this._tags = [];
+        this._baggageRestrictionManager = baggageRestrictionManager;
     }
 
     get operationName(): string {
@@ -95,8 +101,18 @@ export default class Span {
      * @return {Span} - returns this span.
      **/
     setBaggageItem(key: string, value: string): Span {
-        // TODO emit a metric whenever baggage is updated
         let normalizedKey = this._normalizeBaggageKey(key);
+        let [valid, maxValueLength] = this._baggageRestrictionManager.isValidBaggageKey(normalizedKey);
+        if (!valid) {
+            this._metrics.baggageUpdateFailure.increment(1);
+            return this;
+        }
+        let truncated = false;
+        if (value.length > maxValueLength) {
+            this._metrics.baggageTruncate.increment(1);
+            truncated = true
+        }
+        value = value.substring(0, maxValueLength);
         if (this._spanContext.isSampled()) {
             let logs: { [key: string]: string } = {
                 'event': 'baggage',
@@ -105,6 +121,9 @@ export default class Span {
             };
             if (this.getBaggageItem(normalizedKey)) {
                 logs['override'] = 'true';
+            }
+            if (truncated) {
+                logs['truncated'] = 'true';
             }
             this.log(logs);
         }
@@ -115,6 +134,7 @@ export default class Span {
         // for every child span, which on average we expect to occur more 
         // frequently than items being added to the baggage.
         this._spanContext = this._spanContext.withBaggageItem(normalizedKey, value);
+        this._metrics.baggageUpdateSuccess.increment(1);
         return this;
     }
 
