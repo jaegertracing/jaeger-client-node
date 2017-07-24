@@ -27,13 +27,4 @@ add your name to the copyright section of the licence file.
 
 ## Releases
 
-Declaring formal releases requires peer review.
-
- - A reviewer of a pull request should recommend a new version number (patch, minor or major).
- - Once your change is merged feel free to bump the version as recommended by the reviewer.
- - A new version number should not be cut without peer review unless done by the project maintainer.
-
-### Cutting a new version
-
-TBD
-
+See [RELEASE.md](./RELEASE.md).

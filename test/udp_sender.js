@@ -19,12 +19,13 @@
 // THE SOFTWARE.
 
 import _ from 'lodash';
-import {assert} from 'chai';
+import {assert, expect} from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
+import RemoteReporter from '../src/reporters/remote_reporter.js';
 import opentracing from 'opentracing';
 import Tracer from '../src/tracer.js';
 import {Thrift} from 'thriftrw';
@@ -248,5 +249,22 @@ describe('udp sender should', () => {
 
         assert.equal(response.err, false);
         assert.equal(response.numSpans, 0);
+    });
+
+    it ('flush gracefully handles errors emitted by socket.send', done => {
+        sender._host = 'foo.bar.com';
+        sender._port = 1234;
+        new Tracer(
+            'test-service-name',
+            new RemoteReporter(sender),
+            new ConstSampler(true)
+        ).startSpan('testSpan').finish();
+        let oldLog = console.log;
+        console.log = message =>  {
+            expect(message).to.have.string('error sending span: Error: getaddrinfo ENOTFOUND');
+            console.log = oldLog;
+            done();
+        };
+        sender.flush();
     });
 });
