@@ -198,7 +198,7 @@ describe('span upsampling', () => {
         });
     });
 
-    describe('when not allowed for inner spans', () => {
+    describe('nested children', () => {
         function testUpsampling(samplingDecision) {
             spanContext._flags = 0;
             let mockSampler = sinon.mock(tracer._sampler);
@@ -213,11 +213,11 @@ describe('span upsampling', () => {
             assert.equal(samplingDecision, spanContext.upsamplingDecision.valueOf());
             assert.equal(samplingDecision, child1.context().isSampled());
 
-            let child2 = tracer.startSpan('blah', { childOf : span.context() });
+            let child2 = tracer.startSpan('blah', { childOf : child1.context() });
             mockSampler.verify();
             assert.equal(samplingDecision, child2.context().isSampled());
 
-            let child3 = tracer.startSpan('boom', { childOf : span.context() });
+            let child3 = tracer.startSpan('boom', { childOf : child2.context() });
             mockSampler.verify();
             assert.equal(samplingDecision, child3.context().isSampled());
         }
@@ -228,39 +228,6 @@ describe('span upsampling', () => {
 
         it('should reuse parent decision when sampling is false', () => {
             testUpsampling(false);
-        });
-    });
-
-    describe('when allowed for inner spans', () => {
-        it('should call sampler for each child span if configured', () => {
-            spanContext._flags = 0;
-            tracer._upsampling.allowOnInnerSpans = true;
-
-            let mockSampler = sinon.mock(tracer._sampler);
-            mockSampler.expects('isSampled')
-                .withExactArgs('operationName', {})
-                .returns(true);
-
-            mockSampler.expects('isSampled')
-                .withExactArgs('blah', {})
-                .returns(false);
-
-            mockSampler.expects('isSampled')
-                .withExactArgs('boom', {})
-                .returns(true);
-
-            let child1 = tracer.startSpan('operationName',
-                                          { childOf : span.context() });
-
-            let child2 = tracer.startSpan('blah',
-                                          { childOf : span.context() });
-
-            let child3 = tracer.startSpan('boom',
-                                          { childOf : span.context() });
-            mockSampler.verify();
-            assert.isOk(child1.context().isSampled());
-            assert.isNotOk(child2.context().isSampled());
-            assert.isOk(child3.context().isSampled());
         });
     });
 });

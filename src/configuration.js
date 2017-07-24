@@ -59,8 +59,7 @@ let jaegerSchema = {
         },
         'upsampling': {
             'properties' : {
-                'enabled' : 'boolean',
-                'allowOnInnerSpans': 'boolean',
+                'enabled' : 'boolean'
             }
         }
     }

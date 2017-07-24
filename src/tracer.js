@@ -77,14 +77,11 @@ export default class Tracer {
 
         if (options.upsampling) {
             this._upsampling = {
-                allowOnInnerSpans: options.upsampling.allowOnInnerSpans
-                    ? options.upsampling.allowOnInnerSpans : false,
                 enabled: options.upsampling.enabled ? options.upsampling.enabled : false
             };
         } else {
             this._upsampling = {
-                enabled: false,
-                allowOnInnerSpans: false
+                enabled: false
             };
         }
 
@@ -285,23 +282,17 @@ export default class Tracer {
             return
         }
 
-        // Run upsampler on every span
-        if (this._upsampling.allowOnInnerSpans) {
-            if (this._sampler.isSampled(operationName, tags)) {
-                ctx.samplingDecision = true;
-            }
-            return
-        }
-
         // Reuse upsampling decision, if one exists in parent
         if (parent.upsamplingDecision) {
             ctx.samplingDecision = parent.upsamplingDecision.valueOf();
+            ctx.upsamplingDecision = parent.upsamplingDecision;
             return
         }
 
         // Store upsampling decision in parent
         parent.upsamplingDecision = new Boolean(this._sampler.isSampled(operationName, tags));
         ctx.samplingDecision = parent.upsamplingDecision.valueOf();
+        ctx.upsamplingDecision = parent.upsamplingDecision;
     }
 
     /**

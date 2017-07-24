@@ -51,7 +51,7 @@ export default class SpanContext {
     _samplingFinalized: boolean;
     /**
      * Upsampling decision for the first in-process span. This is set on parent spans, and will be
-     * reused when `upsampling.allowOnInnerSpans` is set to false.
+     * reused.
      */
     _upsamplingDecision: ?Boolean;
 
@@ -75,7 +75,7 @@ export default class SpanContext {
         this._baggage = baggage;
         this._debugId = debugId;
         this._samplingFinalized = samplingFinalized;
-        this.upsamplingDecision = null;
+        this._upsamplingDecision = null;
     }
 
     get traceId(): any {
