@@ -75,15 +75,9 @@ export default class Tracer {
         this._injectors = {};
         this._extractors = {};
 
-        if (options.upsampling) {
-            this._upsampling = {
-                enabled: options.upsampling.enabled ? options.upsampling.enabled : false
-            };
-        } else {
-            this._upsampling = {
-                enabled: false
-            };
-        }
+        this._upsampling = {
+            enabled: !!(options.upsampling && options.upsampling.enabled)
+        };
 
 
         let textCodec = new TextMapCodec({
