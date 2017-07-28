@@ -145,7 +145,7 @@ describe('tracer should', () => {
             assert.deepEqual(span.context().parentId, spanId);
             assert.equal(span.context().flags, constants.SAMPLED_MASK);
             assert.equal(span._startTime, startTime);
-        }
+        };
 
         assertByStartSpanParameters(childOfParams);
         assertByStartSpanParameters(referenceParams);
@@ -177,7 +177,7 @@ describe('tracer should', () => {
             assert.equal(savedContext.flags, extractedContext.flags);
             assert.equal(savedContext.baggage[keyOne], extractedContext.baggage[keyOne]);
             assert.equal(savedContext.baggage[keyTwo], extractedContext.baggage[keyTwo]);
-        }
+        };
 
         assertByFormat(opentracing.FORMAT_TEXT_MAP);
         assertByFormat(opentracing.FORMAT_HTTP_HEADERS);

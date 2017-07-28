@@ -33,20 +33,11 @@ import sinon from 'sinon';
 import * as thrift from '../src/thrift.js';
 import Tracer from '../src/tracer.js';
 import Utils from '../src/util.js';
+import BaggageSetter from "../src/baggage/baggage_setter";
 
 describe('span should', () => {
     let reporter = new InMemoryReporter();
     let tracer, span, spanContext;
-
-    let assertBaggageLogs = function(log, key, value, override) {
-        assert.equal(log.fields.length, override ? 4 : 3);
-        assert.deepEqual(log.fields[0], {key: 'event', value: 'baggage'});
-        assert.deepEqual(log.fields[1], {key: 'key', value: key});
-        assert.deepEqual(log.fields[2], {key: 'value', value: value});
-        if (override) {
-            assert.deepEqual(log.fields[3], {key: 'override', value: 'true'});
-        }
-    };
 
     beforeEach(() => {
         tracer = new Tracer(
@@ -149,7 +140,7 @@ describe('span should', () => {
         assert.equal(span._logs[0].fields[0].value, event);
     });
 
-    it('add logs with paylaod', () => {
+    it('add logs with paylod', () => {
         let payload = {a: 1};
         span.log({payload});
 
@@ -174,10 +165,12 @@ describe('span should', () => {
         let key = 'some-key';
         let value = 'some-value';
 
+        let spy = sinon.spy(span._tracer.baggageRestrictionManager, 'getBaggageSetter');
         span.setBaggageItem(key, value);
         assert.equal(value, span.getBaggageItem(key));
-        assert.equal(span._logs.length, 1);
-        assertBaggageLogs(span._logs[0], key, value, false);
+        assert(spy.calledOnce);
+        assert(spy.calledWith('some-key'));
+        assert(spy.returned(new BaggageSetter(true, 2048, tracer._metrics)));
     });
 
     it ('inherit baggage from parent', () => {
@@ -187,20 +180,6 @@ describe('span should', () => {
         span.setBaggageItem(key, value);
         let child = tracer.startSpan('child', { childOf: span.context() });
         assert.equal(value, child.getBaggageItem(key));
-    });
-
-    it ('add override tag if baggage from parent is overwritten', () => {
-        let key = 'some-key';
-        let value = 'some-value';
-        let newValue = 'new-value';
-
-        span.setBaggageItem(key, value);
-        let child = tracer.startSpan('child', { childOf: span.context() });
-        assert.equal(value, child.getBaggageItem(key));
-
-        child.setBaggageItem(key, newValue);
-        assert.equal(child._logs.length, 1);
-        assertBaggageLogs(child._logs[0], key, newValue, true);
     });
 
     it ('normalized key correctly', () => {

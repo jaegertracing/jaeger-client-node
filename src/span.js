@@ -95,26 +95,16 @@ export default class Span {
      * @return {Span} - returns this span.
      **/
     setBaggageItem(key: string, value: string): Span {
-        // TODO emit a metric whenever baggage is updated
         let normalizedKey = this._normalizeBaggageKey(key);
-        if (this._spanContext.isSampled()) {
-            let logs: { [key: string]: string } = {
-                'event': 'baggage',
-                'key': key,
-                'value': value,
-            };
-            if (this.getBaggageItem(normalizedKey)) {
-                logs['override'] = 'true';
-            }
-            this.log(logs);
-        }
+        let setter = this._tracer.baggageRestrictionManager.getBaggageSetter(normalizedKey);
+
         // We create a new instance of the context here instead of just adding
         // another entry to the baggage dictionary. By doing so we keep the
         // baggage immutable so that it can be passed to children spans as is.
         // If it was mutable, we would have to make a copy of the dictionary
-        // for every child span, which on average we expect to occur more 
+        // for every child span, which on average we expect to occur more
         // frequently than items being added to the baggage.
-        this._spanContext = this._spanContext.withBaggageItem(normalizedKey, value);
+        this._spanContext = setter.setBaggage(this, normalizedKey, value);
         return this;
     }
 
