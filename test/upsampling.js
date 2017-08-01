@@ -47,7 +47,7 @@ describe('span upsampling', () => {
         spanContext = SpanContext.withBinaryIds(
             Utils.encodeInt64(1),
             Utils.encodeInt64(2),
-            Utils.encodeInt64(3),
+            null,
             constants.SAMPLED_MASK
         );
 
@@ -210,7 +210,6 @@ describe('span upsampling', () => {
                                           { childOf : span.context() });
 
             mockSampler.verify();
-            assert.equal(samplingDecision, spanContext.upsamplingDecision.valueOf());
             assert.equal(samplingDecision, child1.context().isSampled());
 
             let child2 = tracer.startSpan('blah', { childOf : child1.context() });

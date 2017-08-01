@@ -243,10 +243,11 @@ export default class Tracer {
             // reuse parent's baggage as we'll never change it
             ctx.baggage = parent.baggage;
 
-            parent.finalizeSampling();
-            if (parent.isSampled() || parent.isDebug()) {
+            if (parent.isDebug() || parent.isSampled()) {
+                // The sampled and debug flag may never go from 1 -> 0
+                parent.finalizeSampling();
                 ctx.finalizeSampling();
-            } else {
+            } else if (rpcServer || !parent.parentId) { // Check for first in process span
                 this.handleUpsampling(parent, ctx, operationName, internalTags);
             }
         }
@@ -264,7 +265,7 @@ export default class Tracer {
     }
 
     /**
-     * Reapplies sampling if the parent span isn't sampled
+     * Reapplies sampling and updates parent's sampling flag
      *
      * @param parent the parent span context
      * @param ctx the span context
@@ -276,17 +277,13 @@ export default class Tracer {
             return
         }
 
-        // Reuse upsampling decision, if one exists in parent
-        if (parent.upsamplingDecision) {
-            ctx.samplingDecision = parent.upsamplingDecision.valueOf();
-            ctx.upsamplingDecision = parent.upsamplingDecision;
-            return
-        }
+        let samplingDecision = this._sampler.isSampled(operationName, tags);
 
-        // Store upsampling decision in parent
-        parent.upsamplingDecision = new Boolean(this._sampler.isSampled(operationName, tags));
-        ctx.samplingDecision = parent.upsamplingDecision.valueOf();
-        ctx.upsamplingDecision = parent.upsamplingDecision;
+        parent.samplingDecision = samplingDecision;
+        parent.finalizeSampling();
+
+        // We do not finalize ctx' sampling decision because it may be modified once by setOperationName
+        ctx.samplingDecision = samplingDecision;
     }
 
     /**
