@@ -20,10 +20,10 @@
 // THE SOFTWARE.
 
 import * as constants from './constants.js';
-import NullLogger from './logger.js';
 import SpanContext from './span_context.js';
 import * as opentracing from 'opentracing';
 import Utils from './util.js';
+import BaggageSetter from './baggage/baggage_setter';
 
 export default class Span {
     _tracer: any;
@@ -36,6 +36,7 @@ export default class Span {
     _tags: Array<Tag>;
     static _baggageHeaderCache: any;
     _references: Array<Reference>;
+    _baggageSetter: BaggageSetter;
 
     constructor(tracer: any,
                 operationName: string,
@@ -49,6 +50,7 @@ export default class Span {
         this._startTime = startTime;
         this._logger = tracer._logger;
         this._references = references;
+        this._baggageSetter = tracer._baggageSetter;
         this._logs = [];
         this._tags = [];
     }
@@ -96,7 +98,6 @@ export default class Span {
      **/
     setBaggageItem(key: string, value: string): Span {
         let normalizedKey = this._normalizeBaggageKey(key);
-        let setter = this._tracer.baggageRestrictionManager.getBaggageSetter(normalizedKey);
 
         // We create a new instance of the context here instead of just adding
         // another entry to the baggage dictionary. By doing so we keep the
@@ -104,7 +105,7 @@ export default class Span {
         // If it was mutable, we would have to make a copy of the dictionary
         // for every child span, which on average we expect to occur more
         // frequently than items being added to the baggage.
-        this._spanContext = setter.setBaggage(this, normalizedKey, value);
+        this._spanContext = this._baggageSetter.setBaggage(this, normalizedKey, value);
         return this;
     }
 

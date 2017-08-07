@@ -33,7 +33,6 @@ import sinon from 'sinon';
 import * as thrift from '../src/thrift.js';
 import Tracer from '../src/tracer.js';
 import Utils from '../src/util.js';
-import BaggageSetter from "../src/baggage/baggage_setter";
 
 describe('span should', () => {
     let reporter = new InMemoryReporter();
@@ -165,12 +164,11 @@ describe('span should', () => {
         let key = 'some-key';
         let value = 'some-value';
 
-        let spy = sinon.spy(span._tracer.baggageRestrictionManager, 'getBaggageSetter');
+        let spy = sinon.spy(span._baggageSetter, 'setBaggage');
         span.setBaggageItem(key, value);
         assert.equal(value, span.getBaggageItem(key));
         assert(spy.calledOnce);
-        assert(spy.calledWith('some-key'));
-        assert(spy.returned(new BaggageSetter(true, 2048, tracer._metrics)));
+        assert(spy.calledWith(span, key, value));
     });
 
     it ('inherit baggage from parent', () => {

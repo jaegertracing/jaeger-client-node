@@ -24,55 +24,48 @@ import SpanContext from '../span_context.js';
 import Metrics from '../metrics/metrics.js'
 
 /**
- * BaggageSetter is a class that sets a valid baggage key:value and the associated
+ * BaggageSetter is a class that sets a baggage key:value and the associated
  * logs on a Span.
  */
 export default class BaggageSetter {
-    /**
-     * This flag represents whether the key is a valid baggage key. If valid
-     * the baggage key:value will be written to the span.
-     */
-    _valid: boolean;
-    _maxValueLength: number;
+    _restrictionManager: BaggageRestrictionManager;
     _metrics: Metrics;
 
-    constructor(valid: boolean, maxValueLength: number, metrics: Metrics) {
-        this._valid = valid;
-        this._maxValueLength = maxValueLength;
+    constructor(restrictionManager: BaggageRestrictionManager, metrics: Metrics) {
+        this._restrictionManager = restrictionManager;
         this._metrics = metrics;
     }
 
     /**
      * Sets the baggage key:value on the span and the corresponding logs.
-     * Whether the baggage is set on the span depends on if the key
-     * is valid.
-     * A SpanContext is returned with the new baggage key:value set
-     * if key is valid, else returns the existing SpanContext on the Span.
+     * A SpanContext is returned with the new baggage key:value set.
      *
      * @param {Span} span - The span to set the baggage on.
      * @param {string} key - The baggage key to set.
      * @param {string} value - The baggage value to set.
-     * @return {SpanContext} - The SpanContext with the baggage set.
+     * @return {SpanContext} - The SpanContext with the baggage set if applicable.
      */
     setBaggage(span: Span, key: string, value: string): SpanContext {
         let truncated = false;
-        let prevItem = span.getBaggageItem(key);
-        if (!this._valid) {
+        let prevItem = '';
+        let restriction = this._restrictionManager.getRestriction(key);
+        if (!restriction.keyAllowed) {
+            this._logFields(span, key, value, prevItem, truncated, restriction.keyAllowed);
             this._metrics.baggageUpdateFailure.increment(1);
-            this._logFields(span, key, value, prevItem, truncated);
             return span.context();
         }
-        if (value.length > this._maxValueLength) {
+        if (value.length > restriction.maxValueLength) {
             truncated = true;
-            value = value.substring(0, this._maxValueLength);
+            value = value.substring(0, restriction.maxValueLength);
             this._metrics.baggageTruncate.increment(1);
         }
-        this._logFields(span, key, value, prevItem, truncated);
+        prevItem = span.getBaggageItem(key);
+        this._logFields(span, key, value, prevItem, truncated, restriction.keyAllowed);
         this._metrics.baggageUpdateSuccess.increment(1);
         return span.context().withBaggageItem(key, value);
     }
 
-    _logFields(span: Span, key: string, value: string, prevItem: string, truncated: boolean) {
+    _logFields(span: Span, key: string, value: string, prevItem: string, truncated: boolean, valid: boolean) {
         if (!span.context().isSampled()) {
             return
         }
@@ -87,7 +80,7 @@ export default class BaggageSetter {
         if (truncated) {
             fields['truncated'] = 'true';
         }
-        if (!this._valid) {
+        if (!valid) {
             fields['invalid'] = 'true';
         }
         span.log(fields);

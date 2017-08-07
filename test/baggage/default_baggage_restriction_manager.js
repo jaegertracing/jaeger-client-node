@@ -19,17 +19,14 @@
 // THE SOFTWARE.
 
 import {assert} from 'chai';
-import Metrics from '../../src/metrics/metrics.js';
-import BaggageSetter from "../../src/baggage/baggage_setter.js";
 import DefaultBaggageRestrictionManager from "../../src/baggage/default_baggage_restriction_manager";
-import NoopMetricFactory from "../../src/metrics/noop/metric_factory";
+import Restriction from "../../src/baggage/restriction";
 
 describe('DefaultBaggageRestrictionManager should', () => {
 
-    it ('return a baggageSetter', (done) => {
-        let metrics = new Metrics(new NoopMetricFactory());
-        let mgr = new DefaultBaggageRestrictionManager(metrics);
-        assert.deepEqual(mgr.getBaggageSetter("key"), new BaggageSetter(true, 2048, metrics));
+    it ('return a Restriction', (done) => {
+        let mgr = new DefaultBaggageRestrictionManager();
+        assert.deepEqual(mgr.getRestriction("key"), new Restriction(true, 2048));
         done();
     });
 });

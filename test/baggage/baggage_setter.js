@@ -26,6 +26,9 @@ import BaggageSetter from "../../src/baggage/baggage_setter.js";
 import Tracer from '../../src/tracer.js';
 import InMemoryReporter from '../../src/reporters/in_memory_reporter.js';
 import ConstSampler from '../../src/samplers/const_sampler.js';
+import DefaultBaggageRestrictionManager from "../../src/baggage/default_baggage_restriction_manager.js";
+import Restriction from "../../src/baggage/restriction";
+import sinon from 'sinon';
 
 describe('BaggageSetter should', () => {
     let metrics: Metrics;
@@ -59,7 +62,7 @@ describe('BaggageSetter should', () => {
             reporter,
             new ConstSampler(true),
             {
-                options: metrics,
+                metrics: metrics,
             }
         );
 
@@ -71,7 +74,11 @@ describe('BaggageSetter should', () => {
     });
 
     it ('fail for invalid baggage key', (done) => {
-        let setter = new BaggageSetter(false, 10, metrics);
+        let mgr = new DefaultBaggageRestrictionManager();
+        let stub = sinon.stub(mgr, 'getRestriction', function(key) {
+            return new Restriction(false, 0);
+        });
+        let setter = new BaggageSetter(mgr, metrics);
         let key = "key";
         let value = "value";
         let ctx = setter.setBaggage(span, key, value);
@@ -82,7 +89,7 @@ describe('BaggageSetter should', () => {
     });
 
     it ('succeed for valid baggage key', (done) => {
-        let setter = new BaggageSetter(true, 5, metrics);
+        let setter = new BaggageSetter(new DefaultBaggageRestrictionManager(5), metrics);
         let key = "key";
         let value = "0123456789";
         let expected = "01234";
@@ -94,6 +101,28 @@ describe('BaggageSetter should', () => {
         assertBaggageLogs(span._logs[0], key, expected, true, true, false);
         assert.equal(LocalBackend.counterValue(metrics.baggageUpdateSuccess), 1);
         assert.equal(LocalBackend.counterValue(metrics.baggageTruncate), 1);
+        done();
+    });
+
+    it ('not set logs if span is not sampled', (done) => {
+        let mgr = new DefaultBaggageRestrictionManager();
+        tracer = new Tracer(
+            'test-service-name',
+            reporter,
+            new ConstSampler(false),
+            {
+                metrics: metrics,
+                baggageRestrictionManager: mgr,
+            }
+        );
+        span = tracer.startSpan('op-name');
+
+        let setter = new BaggageSetter(mgr, metrics);
+        let key = "key";
+        let value = "0123456789";
+        let ctx = setter.setBaggage(span, key, value);
+        assert.equal(ctx._baggage[key], value);
+        assert.lengthOf(span._logs, 0);
         done();
     });
 });

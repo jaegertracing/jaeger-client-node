@@ -19,14 +19,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import Restriction from '../baggage/restriction.js'
-
 /**
- * BaggageRestrictionManager is an interface for a class that manages baggage
- * restrictions for baggage keys. The manager will return a Restriction
- * for a specific baggage key which will determine whether the baggage key is
- * allowed and any other applicable restrictions on the baggage value.
+ * Restriction determines whether a baggage key is allowed and contains any
+ * restrictions on the baggage value.
  */
-declare interface BaggageRestrictionManager {
-    getRestriction(key: string): Restriction;
+export default class Restriction {
+    _keyAllowed: boolean;
+    _maxValueLength: number;
+
+    constructor(keyAllowed: boolean, maxValueLength: number) {
+        this._keyAllowed = keyAllowed;
+        this._maxValueLength = maxValueLength;
+    }
+
+    get keyAllowed(): boolean {
+        return this._keyAllowed;
+    }
+
+    get maxValueLength(): number {
+        return this._maxValueLength;
+    }
 }

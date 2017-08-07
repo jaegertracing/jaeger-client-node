@@ -19,8 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import BaggageSetter from '../baggage/baggage_setter.js'
-import Metrics from '../metrics/metrics.js'
+import Restriction from './restriction.js'
 
 export const DEFAULT_MAX_VALUE_LENGTH = 2048;
 
@@ -28,15 +27,14 @@ export const DEFAULT_MAX_VALUE_LENGTH = 2048;
  * Creates a BaggageRestrictionManager that allows any baggage key.
  */
 export default class DefaultBaggageRestrictionManager {
-    _baggageSetter: BaggageSetter;
+    _restriction: Restriction;
 
-    constructor(metrics: Metrics, maxValueLength: ?number) {
+    constructor(maxValueLength: ?number) {
         maxValueLength = maxValueLength || DEFAULT_MAX_VALUE_LENGTH;
-        this._baggageSetter = new BaggageSetter(true, maxValueLength, metrics);
+        this._restriction = new Restriction(true, maxValueLength);
     }
 
-    getBaggageSetter(key: string): BaggageSetter {
-        return this._baggageSetter;
+    getRestriction(key: string): Restriction {
+        return this._restriction;
     }
-
 }
