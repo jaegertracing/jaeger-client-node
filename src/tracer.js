@@ -75,11 +75,8 @@ export default class Tracer {
         this._reporter = reporter;
         this._sampler = sampler;
         this._logger = options.logger || new NullLogger();
-        if (options.baggageRestrictionManager) {
-            this._baggageSetter  = new BaggageSetter(options.baggageRestrictionManager, this._metrics);
-        } else {
-            this._baggageSetter  = new BaggageSetter(new DefaultBaggageRestrictionManager(), this._metrics);
-        }
+        this._baggageSetter  = new BaggageSetter(options.baggageRestrictionManager || new DefaultBaggageRestrictionManager(),
+            this._metrics);
         this._injectors = {};
         this._extractors = {};
 

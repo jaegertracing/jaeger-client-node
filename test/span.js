@@ -139,7 +139,7 @@ describe('span should', () => {
         assert.equal(span._logs[0].fields[0].value, event);
     });
 
-    it('add logs with paylod', () => {
+    it('add logs with payload', () => {
         let payload = {a: 1};
         span.log({payload});
 

@@ -75,14 +75,14 @@ describe('BaggageSetter should', () => {
 
     it ('fail for invalid baggage key', (done) => {
         let mgr = new DefaultBaggageRestrictionManager();
-        let stub = sinon.stub(mgr, 'getRestriction', function(key) {
+        sinon.stub(mgr, 'getRestriction', function(key) {
             return new Restriction(false, 0);
         });
         let setter = new BaggageSetter(mgr, metrics);
         let key = "key";
         let value = "value";
-        let ctx = setter.setBaggage(span, key, value);
-        assert.isUndefined(ctx._baggage[key]);
+        let spanContext = setter.setBaggage(span, key, value);
+        assert.isUndefined(spanContext._baggage[key]);
         assertBaggageLogs(span._logs[0], key, value, false, false, true);
         assert.equal(LocalBackend.counterValue(metrics.baggageUpdateFailure), 1);
         done();
@@ -96,8 +96,8 @@ describe('BaggageSetter should', () => {
         // Set pre existing baggage to context
         span._spanContext = span.context().withBaggageItem(key, value);
 
-        let ctx = setter.setBaggage(span, key, value);
-        assert.equal(ctx._baggage[key], expected);
+        let spanContext = setter.setBaggage(span, key, value);
+        assert.equal(spanContext._baggage[key], expected);
         assertBaggageLogs(span._logs[0], key, expected, true, true, false);
         assert.equal(LocalBackend.counterValue(metrics.baggageUpdateSuccess), 1);
         assert.equal(LocalBackend.counterValue(metrics.baggageTruncate), 1);
@@ -120,8 +120,8 @@ describe('BaggageSetter should', () => {
         let setter = new BaggageSetter(mgr, metrics);
         let key = "key";
         let value = "0123456789";
-        let ctx = setter.setBaggage(span, key, value);
-        assert.equal(ctx._baggage[key], value);
+        let spanContext = setter.setBaggage(span, key, value);
+        assert.equal(spanContext._baggage[key], value);
         assert.lengthOf(span._logs, 0);
         done();
     });
