@@ -30,8 +30,8 @@ export default class DefaultBaggageRestrictionManager {
     _restriction: Restriction;
 
     constructor(maxValueLength: ?number) {
-        maxValueLength = maxValueLength || DEFAULT_MAX_VALUE_LENGTH;
-        this._restriction = new Restriction(true, maxValueLength);
+        let length = maxValueLength || DEFAULT_MAX_VALUE_LENGTH;
+        this._restriction = new Restriction(true, length);
     }
 
     getRestriction(key: string): Restriction {

@@ -40,17 +40,17 @@ describe('BaggageSetter should', () => {
         log.fields.forEach((kv) => {
            fields[kv.key] = kv.value;
         });
-        assert.equal(fields['event'], 'baggage');
-        assert.equal(fields['key'], key);
-        assert.equal(fields['value'], value);
+        assert.equal(fields.event, 'baggage');
+        assert.equal(fields.key, key);
+        assert.equal(fields.value, value);
         if (truncated) {
-            assert.equal(fields['truncated'], 'true');
+            assert.equal(fields.truncated, 'true');
         }
         if (override) {
-            assert.equal(fields['override'], 'true');
+            assert.equal(fields.override, 'true');
         }
         if (invalid) {
-            assert.equal(fields['invalid'], 'true');
+            assert.equal(fields.invalid, 'true');
         }
     };
 
@@ -73,7 +73,7 @@ describe('BaggageSetter should', () => {
         tracer.close();
     });
 
-    it ('fail for invalid baggage key', (done) => {
+    it ('fail for invalid baggage key', () => {
         let mgr = new DefaultBaggageRestrictionManager();
         sinon.stub(mgr, 'getRestriction', function(key) {
             return new Restriction(false, 0);
@@ -85,10 +85,9 @@ describe('BaggageSetter should', () => {
         assert.isUndefined(spanContext._baggage[key]);
         assertBaggageLogs(span._logs[0], key, value, false, false, true);
         assert.equal(LocalBackend.counterValue(metrics.baggageUpdateFailure), 1);
-        done();
     });
 
-    it ('succeed for valid baggage key', (done) => {
+    it ('truncate valid baggage key using maxValueLength', () => {
         let setter = new BaggageSetter(new DefaultBaggageRestrictionManager(5), metrics);
         let key = "key";
         let value = "0123456789";
@@ -101,10 +100,9 @@ describe('BaggageSetter should', () => {
         assertBaggageLogs(span._logs[0], key, expected, true, true, false);
         assert.equal(LocalBackend.counterValue(metrics.baggageUpdateSuccess), 1);
         assert.equal(LocalBackend.counterValue(metrics.baggageTruncate), 1);
-        done();
     });
 
-    it ('not set logs if span is not sampled', (done) => {
+    it ('not set logs if span is not sampled', () => {
         let mgr = new DefaultBaggageRestrictionManager();
         tracer = new Tracer(
             'test-service-name',
@@ -123,6 +121,5 @@ describe('BaggageSetter should', () => {
         let spanContext = setter.setBaggage(span, key, value);
         assert.equal(spanContext._baggage[key], value);
         assert.lengthOf(span._logs, 0);
-        done();
     });
 });

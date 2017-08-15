@@ -42,10 +42,11 @@ export default class BaggageSetter {
      *
      * @param {Span} span - The span to set the baggage on.
      * @param {string} key - The baggage key to set.
-     * @param {string} value - The baggage value to set.
+     * @param {string} baggageValue - The baggage value to set.
      * @return {SpanContext} - The SpanContext with the baggage set if applicable.
      */
-    setBaggage(span: Span, key: string, value: string): SpanContext {
+    setBaggage(span: Span, key: string, baggageValue: string): SpanContext {
+        let value = baggageValue;
         let truncated = false;
         let prevItem = '';
         let restriction = this._restrictionManager.getRestriction(key);
@@ -70,18 +71,18 @@ export default class BaggageSetter {
             return
         }
         let fields: { [key: string]: string } = {
-            'event': 'baggage',
-            'key': key,
-            'value': value,
+            event: 'baggage',
+            key: key,
+            value: value,
         };
         if (prevItem) {
-            fields['override'] = 'true';
+            fields.override = 'true';
         }
         if (truncated) {
-            fields['truncated'] = 'true';
+            fields.truncated = 'true';
         }
         if (!valid) {
-            fields['invalid'] = 'true';
+            fields.invalid = 'true';
         }
         span.log(fields);
     }

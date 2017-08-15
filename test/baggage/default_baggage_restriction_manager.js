@@ -24,9 +24,8 @@ import Restriction from "../../src/baggage/restriction";
 
 describe('DefaultBaggageRestrictionManager should', () => {
 
-    it ('return a Restriction', (done) => {
+    it ('return a Restriction', () => {
         let mgr = new DefaultBaggageRestrictionManager();
         assert.deepEqual(mgr.getRestriction("key"), new Restriction(true, 2048));
-        done();
     });
 });
