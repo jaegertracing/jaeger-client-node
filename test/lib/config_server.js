@@ -21,38 +21,58 @@
 
 import express from 'express';
 
-export default class SamplingServer {
+export default class ConfigServer {
     _port: number;
     _app: any;
     _server: any;
-    _strategies: { [service: string]: SamplingStrategyResponse };
+    _strategies: Map<string, SamplingStrategyResponse>;
+    _restrictions : Map<string, Array<BaggageRestriction>>;
 
     constructor(port: number = 5778) {
         this._port = port;
         this._app = express();
-        this._strategies = Object.create(null);
-        this._app.get('/sampling', this._handle.bind(this));
+        this._strategies = new Map();
+        this._restrictions = new Map();
+        this._app.get('/sampling', this._handleSampling.bind(this));
+        this._app.get('/baggageRestrictions', this._handleRestrictions.bind(this));
     }
 
     addStrategy(serviceName: string, response: SamplingStrategyResponse): void {
-        this._strategies[serviceName] = response;
+        this._strategies.set(serviceName, response);
     }
 
-    clearStrategies(): void {
-        this._strategies = Object.create(null);
+    addRestrictions(serviceName: string, response: Array<BaggageRestriction>): void {
+        this._restrictions.set(serviceName, response);
     }
 
-    _handle(req: any, res: any) {
+    clearConfigs(): void {
+        this._strategies.clear();
+        this._restrictions.clear();
+    }
+
+    _handleSampling(req: any, res: any) {
+        this._handle(req, res, (service) => {
+            return this._strategies.get(service)
+        });
+    }
+
+    _handleRestrictions(req: any, res: any) {
+        this._handle(req, res, (service) => {
+            return this._restrictions.get(service)
+        })
+    }
+
+    _handle(req: any, res: any, getFunc: Function) {
         let service = req.query.service;
-        let strategy = this._strategies[service];
-        if (strategy) {
-            res.send(strategy);
+        let data = getFunc(service);
+        if (data) {
+            res.send(data);
         } else {
             res.status(404).send({err: `unknown service name '${service}'`});
         }
     }
 
-    start(): SamplingServer {
+    start(): ConfigServer {
         this._server = this._app.listen(this._port);
         return this;
     }

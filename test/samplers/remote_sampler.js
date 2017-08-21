@@ -26,18 +26,18 @@ import ProbabilisticSampler from '../../src/samplers/probabilistic_sampler.js';
 import PerOperationSampler from '../../src/samplers/per_operation_sampler';
 import RemoteSampler from '../../src/samplers/remote_sampler';
 import MockLogger from '../lib/mock_logger';
-import SamplingServer from '../lib/sampler_server';
+import ConfigServer from '../lib/config_server';
 import LocalMetricFactory from '../lib/metrics/local/metric_factory.js';
 import LocalBackend from '../lib/metrics/local/backend.js';
 
 describe('RemoteSampler', () => {
-    let server: SamplingServer;
+    let server: ConfigServer;
     let logger: MockLogger;
     let metrics: Metrics;
     let remoteSampler: RemoteSampler;
 
     before(() => {
-        server = new SamplingServer().start();
+        server = new ConfigServer().start();
     });
 
     after(() => {
@@ -45,7 +45,7 @@ describe('RemoteSampler', () => {
     });
 
     beforeEach(() => {
-        server.clearStrategies();
+        server.clearConfigs();
         logger = new MockLogger();
         metrics = new Metrics(new LocalMetricFactory());
         remoteSampler = new RemoteSampler('service1', {

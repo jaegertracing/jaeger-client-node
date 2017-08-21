@@ -22,6 +22,7 @@
 import xorshift from 'xorshift';
 import Int64 from 'node-int64';
 import os from 'os';
+import http from 'http';
 
 export default class Utils {
     /**
@@ -140,5 +141,28 @@ export default class Utils {
         }
 
         return tags;
+    }
+
+    static httpGet(host: string, port: number, path: string, success: Function, error: Function) {
+        http.get({
+            host: host,
+            port: port,
+            path: path
+        }, (res) => {
+            // explicitly treat incoming data as utf8 (avoids issues with multi-byte chars)
+            res.setEncoding('utf8');
+
+            // incrementally capture the incoming response body
+            let body = '';
+            res.on('data', (chunk) => {
+                body += chunk;
+            });
+
+            res.on('end', () => {
+                success(body);
+            });
+        }).on('error', (err) => {
+            error(err);
+        });
     }
 }

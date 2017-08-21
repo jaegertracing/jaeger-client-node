@@ -41,6 +41,8 @@ export default class Metrics {
     baggageUpdateSuccess: Counter;
     baggageUpdateFailure: Counter;
     baggageTruncate: Counter;
+    baggageRestrictionsUpdateSuccess: Counter;
+    baggageRestrictionsUpdateFailure: Counter;
 
     constructor(factory: MetricsFactory) {
         this._factory = factory;
@@ -128,5 +130,13 @@ export default class Metrics {
         });
 
         this.baggageTruncate = this._factory.createCounter('baggage-trucate');
+
+        this.baggageRestrictionsUpdateSuccess = this._factory.createCounter('baggage-restrictions-update', {
+            result: 'ok',
+        });
+
+        this.baggageRestrictionsUpdateFailure = this._factory.createCounter('baggage-restrictions-update', {
+            result: 'err',
+        });
     }
 }
