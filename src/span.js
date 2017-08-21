@@ -59,6 +59,10 @@ export default class Span {
         return this._operationName;
     }
 
+    get serviceName(): string {
+        return this._tracer._serviceName;
+    }
+
     static _getBaggageHeaderCache() {
         if (!Span._baggageHeaderCache) {
             Span._baggageHeaderCache = {};

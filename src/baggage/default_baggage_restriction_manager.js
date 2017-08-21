@@ -34,7 +34,7 @@ export default class DefaultBaggageRestrictionManager {
         this._restriction = new Restriction(true, length);
     }
 
-    getRestriction(key: string): Restriction {
+    getRestriction(service: string, key: string): Restriction {
         return this._restriction;
     }
 }

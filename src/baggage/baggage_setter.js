@@ -49,7 +49,7 @@ export default class BaggageSetter {
         let value = baggageValue;
         let truncated = false;
         let prevItem = '';
-        let restriction = this._restrictionManager.getRestriction(key);
+        let restriction = this._restrictionManager.getRestriction(span.serviceName, key);
         if (!restriction.keyAllowed) {
             this._logFields(span, key, value, prevItem, truncated, restriction.keyAllowed);
             this._metrics.baggageUpdateFailure.increment(1);

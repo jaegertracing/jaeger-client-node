@@ -28,5 +28,5 @@ import Restriction from '../baggage/restriction.js'
  * allowed and any other applicable restrictions on the baggage value.
  */
 declare interface BaggageRestrictionManager {
-    getRestriction(key: string): Restriction;
+    getRestriction(service: string, key: string): Restriction;
 }
