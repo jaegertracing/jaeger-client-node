@@ -38,16 +38,6 @@ describe('span should', () => {
     let reporter = new InMemoryReporter();
     let tracer, span, spanContext;
 
-    let assertBaggageLogs = function(log, key, value, override) {
-        assert.equal(log.fields.length, override ? 4 : 3);
-        assert.deepEqual(log.fields[0], {key: 'event', value: 'baggage'});
-        assert.deepEqual(log.fields[1], {key: 'key', value: key});
-        assert.deepEqual(log.fields[2], {key: 'value', value: value});
-        if (override) {
-            assert.deepEqual(log.fields[3], {key: 'override', value: 'true'});
-        }
-    };
-
     beforeEach(() => {
         tracer = new Tracer(
             'test-service-name',
@@ -149,7 +139,7 @@ describe('span should', () => {
         assert.equal(span._logs[0].fields[0].value, event);
     });
 
-    it('add logs with paylaod', () => {
+    it('add logs with payload', () => {
         let payload = {a: 1};
         span.log({payload});
 
@@ -174,10 +164,11 @@ describe('span should', () => {
         let key = 'some-key';
         let value = 'some-value';
 
+        let spy = sinon.spy(span._baggageSetter, 'setBaggage');
         span.setBaggageItem(key, value);
         assert.equal(value, span.getBaggageItem(key));
-        assert.equal(span._logs.length, 1);
-        assertBaggageLogs(span._logs[0], key, value, false);
+        assert(spy.calledOnce);
+        assert(spy.calledWith(span, key, value));
     });
 
     it ('inherit baggage from parent', () => {
@@ -187,20 +178,6 @@ describe('span should', () => {
         span.setBaggageItem(key, value);
         let child = tracer.startSpan('child', { childOf: span.context() });
         assert.equal(value, child.getBaggageItem(key));
-    });
-
-    it ('add override tag if baggage from parent is overwritten', () => {
-        let key = 'some-key';
-        let value = 'some-value';
-        let newValue = 'new-value';
-
-        span.setBaggageItem(key, value);
-        let child = tracer.startSpan('child', { childOf: span.context() });
-        assert.equal(value, child.getBaggageItem(key));
-
-        child.setBaggageItem(key, newValue);
-        assert.equal(child._logs.length, 1);
-        assertBaggageLogs(child._logs[0], key, newValue, true);
     });
 
     it ('normalized key correctly', () => {

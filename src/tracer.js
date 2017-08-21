@@ -33,7 +33,9 @@ import NullLogger from './logger';
 import Utils from './util';
 import Metrics from './metrics/metrics';
 import NoopMetricFactory from './metrics/noop/metric_factory';
+import DefaultBaggageRestrictionManager from './baggage/default_baggage_restriction_manager';
 import os from 'os';
+import BaggageSetter from './baggage/baggage_setter';
 
 export default class Tracer {
     _serviceName: string;
@@ -44,6 +46,7 @@ export default class Tracer {
     _injectors: any;
     _extractors: any;
     _metrics: any;
+    _baggageSetter: BaggageSetter;
 
     /**
      * @param {String} [serviceName] - name of the current service or application.
@@ -54,6 +57,8 @@ export default class Tracer {
      *        as process-level tags on the Tracer itself.
      * @param {Object} [options.metrics] - instance of the Metrics class from ./metrics/metrics.js.
      * @param {Object} [options.logger] - a logger matching NullLogger API from ./logger.js.
+     * @param {Object} [options.baggageRestrictionManager] - a baggageRestrictionManager matching
+     * BaggageRestrictionManager API from ./baggage.js.
      */
     constructor(serviceName: string,
             reporter: Reporter = new NoopReporter(),
@@ -70,6 +75,9 @@ export default class Tracer {
         this._reporter = reporter;
         this._sampler = sampler;
         this._logger = options.logger || new NullLogger();
+        this._baggageSetter = new BaggageSetter(
+            options.baggageRestrictionManager || new DefaultBaggageRestrictionManager(),
+            this._metrics);
         this._injectors = {};
         this._extractors = {};
 
