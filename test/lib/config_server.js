@@ -25,40 +25,40 @@ export default class ConfigServer {
     _port: number;
     _app: any;
     _server: any;
-    _strategies: Map<string, SamplingStrategyResponse>;
-    _restrictions : Map<string, Array<BaggageRestriction>>;
+    _strategies: { [service: string]: SamplingStrategyResponse };
+    _restrictions : { [service: string]: Array<BaggageRestriction> };
 
     constructor(port: number = 5778) {
         this._port = port;
         this._app = express();
-        this._strategies = new Map();
-        this._restrictions = new Map();
+        this._strategies = Object.create(null);
+        this._restrictions = Object.create(null);
         this._app.get('/sampling', this._handleSampling.bind(this));
         this._app.get('/baggageRestrictions', this._handleRestrictions.bind(this));
     }
 
     addStrategy(serviceName: string, response: SamplingStrategyResponse): void {
-        this._strategies.set(serviceName, response);
+        this._strategies[serviceName] = response;
     }
 
     addRestrictions(serviceName: string, response: Array<BaggageRestriction>): void {
-        this._restrictions.set(serviceName, response);
+        this._restrictions[serviceName] = response;
     }
 
     clearConfigs(): void {
-        this._strategies.clear();
-        this._restrictions.clear();
+        this._strategies = Object.create(null);
+        this._restrictions = Object.create(null);
     }
 
     _handleSampling(req: any, res: any) {
         this._handle(req, res, (service) => {
-            return this._strategies.get(service)
+            return this._strategies[service]
         });
     }
 
     _handleRestrictions(req: any, res: any) {
         this._handle(req, res, (service) => {
-            return this._restrictions.get(service)
+            return this._restrictions[service]
         })
     }
 
