@@ -261,20 +261,16 @@ describe('udp sender should', () => {
     });
 
     it ('flush gracefully handles errors emitted by socket.send', done => {
-        sender._host = 'foo.bar.com';
-        sender._port = 1234;
-        let errorLogs = 0;
+        sender._host = 'foo.bar.xyz';
         sender._logger = {
             info: (msg) => {
                 console.log('sender info: ' + msg);
             },
             error: (msg) => {
+                // Under Node.js 0.10 and 0.12 two error is logged twice: (1) from inline callback, (2) from on('error') handler.
+                // But we only check for at least one log, to be compatible with 4.x and above.
                 expect(msg).to.have.string('error sending spans over UDP: Error: getaddrinfo ENOTFOUND');
-                errorLogs++;
-                // expecting two error logs: (1) from inline callback, (2) from on('error') handler.
-                if (errorLogs == 2) {
-                    done();
-                }
+                done();
             }
         };
         let tracer = new Tracer(
