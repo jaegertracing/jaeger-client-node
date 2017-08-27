@@ -101,7 +101,9 @@ export default class Configuration {
     static _getReporter(config, options) {
         let reporterConfig = {};
         let reporters = [];
-        let senderConfig = {};
+        let senderConfig = {
+            'logger': config.logger
+        };
         if (config.reporter) {
             if (config.reporter.logSpans) {
                 reporters.push(new LoggingReporter(options.logger));
