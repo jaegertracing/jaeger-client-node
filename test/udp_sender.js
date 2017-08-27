@@ -24,6 +24,7 @@ import ConstSampler from '../src/samplers/const_sampler.js';
 import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
+import semver from 'semver';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import RemoteReporter from '../src/reporters/remote_reporter.js';
 import opentracing from 'opentracing';
@@ -31,6 +32,7 @@ import Tracer from '../src/tracer.js';
 import {Thrift} from 'thriftrw';
 import ThriftUtils from '../src/thrift.js';
 import UDPSender from '../src/reporters/udp_sender.js';
+import NullLogger from '../src/logger.js';
 
 const PORT = 6832;
 const HOST = '127.0.0.1';
@@ -262,15 +264,19 @@ describe('udp sender should', () => {
 
     it ('flush gracefully handles errors emitted by socket.send', done => {
         sender._host = 'foo.bar.xyz';
+        // In Node 0.10 and 0.12 the error is logged twice: (1) from inline callback, (2) from on('error') handler.
+        let node0_10_12 = semver.satisfies(process.version, '0.10.x || 0.12.x');
+        let expectedLogs = node0_10_12 ? 2 : 1;
         sender._logger = {
             info: (msg) => {
                 console.log('sender info: ' + msg);
             },
             error: (msg) => {
-                // Under Node.js 0.10 and 0.12 two error is logged twice: (1) from inline callback, (2) from on('error') handler.
-                // But we only check for at least one log, to be compatible with 4.x and above.
                 expect(msg).to.have.string('error sending spans over UDP: Error: getaddrinfo ENOTFOUND');
-                done();
+                expectedLogs--;
+                if (expectedLogs == 0) {
+                    done();
+                }
             }
         };
         let tracer = new Tracer(
