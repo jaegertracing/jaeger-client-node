@@ -23,6 +23,7 @@ import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
 import {Thrift} from 'thriftrw';
+import NullLogger from '../logger.js';
 
 const HOST = 'localhost';
 const PORT =  6832;
@@ -34,20 +35,24 @@ export default class UDPSender {
     _maxPacketSize: number;
     _process: Process;
     _emitSpanBatchOverhead: number;
-    _maxSpanBytes: number;
-    _client: any;
-    _byteBufferSize: number;
+    _logger: Logger;
+    _client: dgram$Socket;
     _agentThrift: Thrift;
     _jaegerThrift: Thrift;
     _batch: Batch;
     _thriftProcessMessage: any;
+    _maxSpanBytes: number;   // maxPacketSize - (batch + tags overhead)
+    _totalSpanBytes: number; // size of currently batched spans as Thrift bytes
 
     constructor(options: any = {}) {
         this._host = options.host || HOST;
         this._port = options.port || PORT;
         this._maxPacketSize = options.maxPacketSize || UDP_PACKET_MAX_LENGTH;
-        this._byteBufferSize = 0;
+        this._logger = options.logger || new NullLogger();
         this._client = dgram.createSocket('udp4');
+        this._client.on('error', err => {
+            this._logger.error(`error sending spans over UDP: ${err}`)
+        })
         this._agentThrift = new Thrift({
             source: fs.readFileSync(path.join(__dirname, '../thriftrw-idl/agent.thrift'), 'ascii'),
             allowOptionalArguments: true,
@@ -57,6 +62,7 @@ export default class UDPSender {
             source: fs.readFileSync(path.join(__dirname, '../jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
             allowOptionalArguments: true
         });
+        this._totalSpanBytes = 0;
     }
 
     _calcBatchSize(batch: Batch) {
@@ -99,10 +105,11 @@ export default class UDPSender {
             return { err: true, numSpans: 1 };
         }
 
-        this._byteBufferSize += spanSize;
-        if (this._byteBufferSize <= this._maxSpanBytes) {
+        if (this._totalSpanBytes + spanSize <= this._maxSpanBytes) {
             this._batch.spans.push(span);
-            if (this._byteBufferSize < this._maxSpanBytes) {
+            this._totalSpanBytes += spanSize;
+            if (this._totalSpanBytes < this._maxSpanBytes) {
+                // still have space in the buffer, don't flush it yet
                 return {err: false, numSpans: 0};
             }
             return this.flush();
@@ -110,7 +117,7 @@ export default class UDPSender {
 
         let flushResponse: SenderResponse = this.flush();
         this._batch.spans.push(span);
-        this._byteBufferSize = spanSize;
+        this._totalSpanBytes = spanSize;
         return flushResponse;
     }
 
@@ -120,23 +127,24 @@ export default class UDPSender {
             return {err: false, numSpans: 0}
         }
 
-        let bufferLen = this._byteBufferSize + this._emitSpanBatchOverhead;
+        let bufferLen = this._totalSpanBytes + this._emitSpanBatchOverhead;
         let thriftBuffer = new Buffer(bufferLen);
-        let bufferResult = this._agentThrift.Agent.emitBatch.argumentsMessageRW.writeInto(
+        let writeResult = this._agentThrift.Agent.emitBatch.argumentsMessageRW.writeInto(
             this._convertBatchToThriftMessage(this._batch), thriftBuffer, 0
         );
 
-        if (bufferResult.err) {
-            console.log('err', bufferResult.err);
+        if (writeResult.err) {
+            this._logger.error(`error writing Thrift object: ${writeResult.err}`);
             return {err: true, numSpans: numSpans};
         }
 
-        // https://nodejs.org/api/dgram.html#dgram_socket_send_msg_offset_length_port_address_callback
-        this._client.on('error', err => {
-            console.log(`error sending span: ${err}`)
-        })
-
-        this._client.send(thriftBuffer, 0, thriftBuffer.length, this._port, this._host);
+        // Having the error callback here does not prevent uncaught exception from being thrown,
+        // that's why in the constructor we also add a general on('error') handler.
+        this._client.send(thriftBuffer, 0, thriftBuffer.length, this._port, this._host, (err, sent) => {
+            if (err) {
+                this._logger.error(`error sending spans over UDP: ${err}, packet size: ${writeResult.offset}, bytes sent: ${sent}`);
+            }
+        });
         this._reset();
 
         return {err: false, numSpans: numSpans};
@@ -161,7 +169,7 @@ export default class UDPSender {
 
     _reset() {
         this._batch.spans = [];
-        this._byteBufferSize = 0;
+        this._totalSpanBytes = 0;
     }
 
     close(): void {

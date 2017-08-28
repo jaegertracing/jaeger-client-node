@@ -24,6 +24,7 @@ import ConstSampler from '../src/samplers/const_sampler.js';
 import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
+import semver from 'semver';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import RemoteReporter from '../src/reporters/remote_reporter.js';
 import opentracing from 'opentracing';
@@ -31,6 +32,7 @@ import Tracer from '../src/tracer.js';
 import {Thrift} from 'thriftrw';
 import ThriftUtils from '../src/thrift.js';
 import UDPSender from '../src/reporters/udp_sender.js';
+import NullLogger from '../src/logger.js';
 
 const PORT = 6832;
 const HOST = '127.0.0.1';
@@ -179,7 +181,6 @@ describe('udp sender should', () => {
         let spanOne = tracer.startSpan('operation-one');
         spanOne.finish(); // finish to set span duration
         spanOne = ThriftUtils.spanToThrift(spanOne);
-        sender._maxSpanBytes = 1;
         let spanSize = sender._calcSpanSize(spanOne);
         sender._maxSpanBytes = spanSize * 2;
 
@@ -192,7 +193,7 @@ describe('udp sender should', () => {
         assert.equal(responseTwo.numSpans, 2);
 
         assert.equal(sender._batch.spans.length, 0);
-        assert.equal(sender._byteBufferSize, 0);
+        assert.equal(sender._totalSpanBytes, 0);
     });
 
     it ('flush spans when just over capacity', () => {
@@ -212,14 +213,23 @@ describe('udp sender should', () => {
         let expectedBufferSize = sender._calcSpanSize(spanThatExceedsCapacity);
 
         assert.equal(sender._batch.spans.length, 1);
-        assert.equal(sender._byteBufferSize, expectedBufferSize);
+        assert.equal(sender._totalSpanBytes, expectedBufferSize);
         assert.equal(responseOne.err, false);
         assert.equal(responseOne.numSpans, 0);
         assert.equal(responseTwo.err, false);
         assert.equal(responseTwo.numSpans, 1);
     });
 
-    it('flush returns error, on failed buffer conversion', () => {
+    it('flush returns error, on failed buffer conversion', (done) => {
+        sender._logger = {
+            info: (msg) => {
+                console.log('sender info: ' + msg);
+            },
+            error: (msg) => {
+                expect(msg).to.have.string('error writing Thrift object:');
+                done();
+            }
+        };
         let span = tracer.startSpan('leela');
         span.finish(); // finish to set span duration
         span = ThriftUtils.spanToThrift(span);
@@ -252,19 +262,28 @@ describe('udp sender should', () => {
     });
 
     it ('flush gracefully handles errors emitted by socket.send', done => {
-        sender._host = 'foo.bar.com';
-        sender._port = 1234;
-        new Tracer(
+        sender._host = 'foo.bar.xyz';
+        // In Node 0.10 and 0.12 the error is logged twice: (1) from inline callback, (2) from on('error') handler.
+        let node0_10_12 = semver.satisfies(process.version, '0.10.x || 0.12.x');
+        let expectedLogs = node0_10_12 ? 2 : 1;
+        sender._logger = {
+            info: (msg) => {
+                console.log('sender info: ' + msg);
+            },
+            error: (msg) => {
+                expect(msg).to.have.string('error sending spans over UDP: Error: getaddrinfo ENOTFOUND');
+                expectedLogs--;
+                if (expectedLogs == 0) {
+                    done();
+                }
+            }
+        };
+        let tracer = new Tracer(
             'test-service-name',
             new RemoteReporter(sender),
             new ConstSampler(true)
-        ).startSpan('testSpan').finish();
-        let oldLog = console.log;
-        console.log = message =>  {
-            expect(message).to.have.string('error sending span: Error: getaddrinfo ENOTFOUND');
-            console.log = oldLog;
-            done();
-        };
+        );
+        tracer.startSpan('testSpan').finish();
         sender.flush();
     });
 });
