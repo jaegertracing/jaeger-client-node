@@ -181,7 +181,6 @@ describe('udp sender should', () => {
         let spanOne = tracer.startSpan('operation-one');
         spanOne.finish(); // finish to set span duration
         spanOne = ThriftUtils.spanToThrift(spanOne);
-        sender._maxSpanBytes = 1;
         let spanSize = sender._calcSpanSize(spanOne);
         sender._maxSpanBytes = spanSize * 2;
 
