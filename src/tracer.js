@@ -245,11 +245,12 @@ export default class Tracer {
 
             if (parent.isDebug() || parent.isSampled()) {
                 // The sampled and debug flag may never go from 1 -> 0
-                parent.finalizeSampling();
                 ctx.finalizeSampling();
             } else if (rpcServer || !parent.parentId) { // Check for first in process span
                 this.handleUpsampling(parent, ctx, operationName, internalTags);
             }
+
+            parent.finalizeSampling();
         }
 
         return this._startInternalSpan(
@@ -279,8 +280,9 @@ export default class Tracer {
 
         let samplingDecision = this._sampler.isSampled(operationName, tags);
 
+        // Store the sampling decision for the first in process span in the parent so that it may be reused by later
+        // spans
         parent.samplingDecision = samplingDecision;
-        parent.finalizeSampling();
 
         // We do not finalize ctx' sampling decision because it may be modified once by setOperationName
         ctx.samplingDecision = samplingDecision;
