@@ -7,11 +7,14 @@ Changes by Version
 New features:
 
 - Save baggage in span logs (#129)
+- Add BaggageRestrictionManager and BaggageSetter (#142)
 
 Bug fixes:
 
 - Trap exceptions from socket.send() (#137) - thanks @frankgreco
 - Use ip tag instead of peer.ipv4 in process (#125)
+- Log only span context (#153)
+- Fix buffer size counting bug and add logging to UDP sender (#151)
 
 
 3.5.3 (2017-04-24)
