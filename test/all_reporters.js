@@ -78,14 +78,22 @@ describe('All Reporters should', () => {
     });
 
     describe('Logging reporter', () => {
-        it('report span logs span as a stringified object', () => {
+        it('logs span as context().toString()', () => {
             let logger = new MockLogger();
             let reporter = new LoggingReporter(logger);
-            let spanMock = { key: 'some-span' };
+            let spanMock = {
+                context: function context() {
+                    return {
+                        toString: function toString() {
+                            return "span-as-string";
+                        }
+                    };
+                }
+            };
 
             reporter.report(spanMock);
 
-            assert.equal(logger._infoMsgs[0], 'Reporting span {"key":"some-span"}');
+            assert.equal(logger._infoMsgs[0], 'Reporting span span-as-string');
         });
     });
 
