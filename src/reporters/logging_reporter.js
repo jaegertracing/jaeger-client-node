@@ -30,7 +30,7 @@ export default class LoggingReporter {
     }
 
     report(span: Span): void {
-        this._logger.info(`Reporting span ${JSON.stringify(span)}`);
+        this._logger.info(`Reporting span ${span.context().toString()}`);
     }
 
     name(): string {

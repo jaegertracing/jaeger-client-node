@@ -44,7 +44,7 @@
     "lodash": "^4.15.0",
     "minimist": "1.2.0",
     "mocha": "^3.0.1",
-    "request": "^2.74.0",
+    "request": "2.74.0",
     "rsvp": "^3.3.1",
     "semver": "^5",
     "sinon": "^1.17.5",
