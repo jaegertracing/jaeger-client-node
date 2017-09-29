@@ -23,6 +23,7 @@ build-node: node_modules
 	cp package.json ./dist/
 	cp -R ./src/jaeger-idl ./dist/src/
 	rm -rf ./dist/src/jaeger-idl/.git
+	cp -R ./src/thriftrw-idl ./dist/src/
 
 .PHONY: node_modules
 node_modules:
