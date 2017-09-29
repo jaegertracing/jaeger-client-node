@@ -40,7 +40,7 @@ describe('Endtoend Handler should', () => {
         server = dgram.createSocket('udp4');
         server.bind(PORT, HOST);
         thrift = new Thrift({
-            source: fs.readFileSync(path.join(__dirname, '../../src/thriftrw-idl/agent.thrift'), 'ascii'),
+            entryPoint: path.join(__dirname, '../../src/thriftrw-idl/agent.thrift'),
             allowOptionalArguments: true,
             allowFilesystemAccess: true
         });

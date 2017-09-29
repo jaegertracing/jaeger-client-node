@@ -67,7 +67,7 @@ describe('udp sender should', () => {
         sender = new UDPSender();
         sender.setProcess(reporter._process);
         thrift = new Thrift({
-            source: fs.readFileSync(path.join(__dirname, '../src/thriftrw-idl/agent.thrift'), 'ascii'),
+            entryPoint: path.join(__dirname, '../src/thriftrw-idl/agent.thrift'),
             allowOptionalArguments: true,
             allowFilesystemAccess: true
         });

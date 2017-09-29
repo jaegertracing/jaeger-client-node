@@ -54,7 +54,7 @@ export default class UDPSender {
             this._logger.error(`error sending spans over UDP: ${err}`)
         })
         this._agentThrift = new Thrift({
-            source: fs.readFileSync(path.join(__dirname, '../thriftrw-idl/agent.thrift'), 'ascii'),
+            entryPoint: path.join(__dirname, '../thriftrw-idl/agent.thrift'),
             allowOptionalArguments: true,
             allowFilesystemAccess: true
         });
