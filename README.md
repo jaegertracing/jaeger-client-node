@@ -2,8 +2,12 @@
 
 # Jaeger Bindings for Javascript OpenTracing API
 
-This is [Jaeger](https://uber.github.io/jaeger/)'s client side instrumentation library for Node.js that implements
+This is [Jaeger](http://jaegertracing.io/)'s client side instrumentation library for Node.js that implements
 [Javascript OpenTracing API 1.0](https://github.com/opentracing/opentracing-javascript/).
+
+## Contributing and Developing
+
+Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Installation
 
@@ -14,7 +18,7 @@ This is [Jaeger](https://uber.github.io/jaeger/)'s client side instrumentation l
 ```javascript
 var initTracer = require('jaeger-client').initTracer;
 
-// See schema https://github.com/uber/jaeger-client-node/blob/master/src/configuration.js#L37
+// See schema https://github.com/jaegertracing/jaeger-client-node/blob/master/src/configuration.js#L37
 var config = {
   'serviceName': 'my-awesome-service'
 };
@@ -32,14 +36,6 @@ var tracer = initTracer(config, options);
 
 The Tracer instance created by `initTracer` is OpenTracing-1.0 compliant.
 See [opentracing-javascript](https://github.com/opentracing/opentracing-javascript) for usage examples.
-
-## Contributing
-
-Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
-
-## License
-
-[The MIT License](./LICENSE).
 
 ### TChannel Span Bridging
 
@@ -164,12 +160,17 @@ span.setTag("jaeger-debug-id", "some-correlation-id");
 This allows using Jaeger UI to find the trace by this tag.
 
 
-  [ci-img]: https://travis-ci.org/jaegertracing/jaeger-client-node.svg?branch=master
-  [ci]: https://travis-ci.org/jaegertracing/jaeger-client-node
-  [cov-img]: https://coveralls.io/repos/github/jaegertracing/jaeger-client-node/badge.svg?branch=master
-  [cov]: https://coveralls.io/github/jaegertracing/jaeger-client-node?branch=master
-  [npm-img]: https://badge.fury.io/js/jaeger-client.svg
-  [npm]: https://www.npmjs.com/package/jaeger-client
-  [ot-img]: https://img.shields.io/badge/OpenTracing--1.0-enabled-blue.svg
-  [ot-url]: http://opentracing.io
+## License
+
+[Apache 2.0 License](./LICENSE).
+
+
+[ci-img]: https://travis-ci.org/jaegertracing/jaeger-client-node.svg?branch=master
+[ci]: https://travis-ci.org/jaegertracing/jaeger-client-node
+[cov-img]: https://coveralls.io/repos/github/jaegertracing/jaeger-client-node/badge.svg?branch=master
+[cov]: https://coveralls.io/github/jaegertracing/jaeger-client-node?branch=master
+[npm-img]: https://badge.fury.io/js/jaeger-client.svg
+[npm]: https://www.npmjs.com/package/jaeger-client
+[ot-img]: https://img.shields.io/badge/OpenTracing--1.0-enabled-blue.svg
+[ot-url]: http://opentracing.io
 
