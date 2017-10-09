@@ -1,4 +1,5 @@
 {
+  "parser": "babel-eslint",
   "extends": "eslint-config-airbnb",
   "env": {
     "node": true
@@ -17,14 +18,15 @@
       "func-names": [0],
       "no-multi-spaces": [2, { "exceptions": {
           "AssignmentExpression": true,
-          "VariableDeclarator": true,
+          "VariableDeclarator": true
       }} ],
       "consistent-return": [0],
+      "sort-imports": [2, {"ignoreCase": true}],
 
       // Disabled as the "exceptions" clause does not seem to currently work
-      "spaced-comment": [0],
+      "spaced-comment": [0]
   },
-  "plugins": {
+  "plugins": [
     "flowtype"
-  }
+  ]
 }
