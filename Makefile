@@ -12,6 +12,7 @@ test: build-node
 	npm run flow
 	npm run lint
 	npm run test-all
+	npm run check-license
 
 .PHONY: build-node
 build-node: node_modules
