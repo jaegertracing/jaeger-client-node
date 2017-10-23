@@ -17,11 +17,19 @@ export default class RateLimiter {
     _maxBalance: number;
     _lastTick: number;
 
-    constructor(creditsPerSecond: number, maxBalance: number) {
+    constructor(creditsPerSecond: number, maxBalance: number, initBalance: ?number) {
         this._creditsPerSecond = creditsPerSecond;
-        this._balance = maxBalance;
+        this._balance = initBalance || Math.random() * maxBalance;
         this._maxBalance = maxBalance;
         this._lastTick = new Date().getTime();
+    }
+
+    update(creditsPerSecond: number, maxBalance: number) {
+        this._creditsPerSecond = creditsPerSecond;
+        this._maxBalance = maxBalance;
+        if (this._balance > maxBalance) {
+            this._balance = maxBalance;
+        }
     }
 
     checkCredit(itemCost: number): boolean {
