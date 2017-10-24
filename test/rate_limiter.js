@@ -18,7 +18,7 @@ describe ('leaky bucket ratelimiter should', () => {
     it('block after threshold is met', () => {
         let initialDate = new Date(2011,9,1).getTime();
         let clock = sinon.useFakeTimers(initialDate);
-        let limiter = new RateLimiter(10, 10);
+        let limiter = new RateLimiter(10, 10, 10);
         for (let i = 0; i < 10; i++) {
             assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
         }
@@ -54,12 +54,42 @@ describe ('leaky bucket ratelimiter should', () => {
     it('work with creditsPerSecond smaller than 1', () => {
         let initialDate = new Date(2011,9,1).getTime();
         let clock = sinon.useFakeTimers(initialDate);
-        let limiter = new RateLimiter(0.1, 1);
+        let limiter = new RateLimiter(0.1, 1, 1);
         assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
 
         clock.restore();
         // move time 20s forward, enough to accumulate credits for 2 messages, but it should still be capped at 1
         clock = sinon.useFakeTimers(initialDate + 20000);
+        assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
+        assert.equal(limiter.checkCredit(1), false, 'expected checkCredit to be false');
+        clock.restore();
+    });
+
+    it('update balance', () => {
+        let initialDate = new Date(2011,9,1).getTime();
+        let clock = sinon.useFakeTimers(initialDate);
+        let limiter = new RateLimiter(0.1, 1);
+        assert.equal(true, limiter._balance <= 1 && limiter._balance >= 0);
+        limiter._balance = 1.0;
+        assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
+
+        limiter.update(0.1, 3);
+        clock.restore();
+        // move time 20s forward, enough to accumulate credits for 2 messages
+        clock = sinon.useFakeTimers(initialDate + 20000);
+        assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
+        assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
+        assert.equal(limiter.checkCredit(1), false, 'expected checkCredit to be false');
+
+        // move time 30s forward, enough to accumulate credits for another message (should have
+        // enough credits for 3 at this point)
+        clock = sinon.useFakeTimers(initialDate + 50000);
+        assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
+        assert.equal(limiter._balance, 2, 'balance should be at 2 after spending 1');
+
+        // reduce the maxBalance so the limiter is capped at 1
+        limiter.update(0.1, 1);
+        assert.equal(limiter._balance, 1, 'balance should be at 1 after update');
         assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
         assert.equal(limiter.checkCredit(1), false, 'expected checkCredit to be false');
         clock.restore();

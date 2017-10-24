@@ -21,6 +21,7 @@ describe ('RateLimitingSampler should', () => {
         let initialDate = new Date(2011,9,1).getTime();
         let clock = sinon.useFakeTimers(initialDate);
         let sampler = new RateLimitingSampler(10);
+        sampler._rateLimiter._balance = 10;
         for (let i = 0; i < 10; i++) {
             assert.equal(sampler.isSampled('operation', {}), true, 'expected decision to be true');
         }
@@ -56,6 +57,7 @@ describe ('RateLimitingSampler should', () => {
         let initialDate = new Date(2011,9,1).getTime();
         let clock = sinon.useFakeTimers(initialDate);
         let sampler = new RateLimitingSampler(0.1);
+        sampler._rateLimiter._balance = 1;
 
         assert.equal(sampler.isSampled('operation', {}), true, 'expected decision to be true');
 
