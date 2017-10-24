@@ -81,9 +81,10 @@ describe ('leaky bucket ratelimiter should', () => {
         assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
         assert.equal(limiter.checkCredit(1), false, 'expected checkCredit to be false');
 
-        // move time 10s forward, enough to accumulate credits for another message (should have
-        // enough credits for 2 at this point)
-        clock = sinon.useFakeTimers(initialDate + 30000);
+        // move time 20s forward, enough to accumulate credits for another message (should have
+        // enough credits for 3 at this point)
+        clock = sinon.useFakeTimers(initialDate + 40000);
+        assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
 
         // reduce the maxBalance so the limiter is capped at 1
         limiter.update(0.1, 1);
