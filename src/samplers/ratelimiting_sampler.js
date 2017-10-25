@@ -18,8 +18,8 @@ export default class RateLimitingSampler {
     _rateLimiter: RateLimiter;
     _maxTracesPerSecond: number;
 
-    constructor(maxTracesPerSecond: number) {
-        this._init(maxTracesPerSecond);
+    constructor(maxTracesPerSecond: number, initBalance: ?number) {
+        this._init(maxTracesPerSecond, initBalance);
     }
 
     update(maxTracesPerSecond: number): boolean {
@@ -28,7 +28,7 @@ export default class RateLimitingSampler {
         return this._maxTracesPerSecond !== prevMaxTracesPerSecond;
     }
 
-    _init(maxTracesPerSecond: number) {
+    _init(maxTracesPerSecond: number, initBalance: ?number) {
         if (maxTracesPerSecond < 0) {
             throw new Error(`maxTracesPerSecond must be greater than 0.0.  Received ${maxTracesPerSecond}`);
         }
@@ -38,7 +38,7 @@ export default class RateLimitingSampler {
         if (this._rateLimiter) {
             this._rateLimiter.update(maxTracesPerSecond, maxBalance);
         } else {
-            this._rateLimiter = new RateLimiter(maxTracesPerSecond, maxBalance);
+            this._rateLimiter = new RateLimiter(maxTracesPerSecond, maxBalance, initBalance);
         }
     }
 

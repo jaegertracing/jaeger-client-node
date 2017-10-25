@@ -40,8 +40,10 @@ describe('GuaranteedThroughput sampler', () => {
     });
 
     it('should provide minimum throughput', () => {
+        let initialDate = new Date(2011,9,1).getTime();
+        let clock = sinon.useFakeTimers(initialDate);
         let sampler = new GuaranteedThroughputSampler(2, 0);
-        sampler._lowerBoundSampler._rateLimiter._balance = 2;
+        clock = sinon.useFakeTimers(initialDate + 20000);
 
         let expectedTags = {'sampler.type': 'lowerbound', 'sampler.param': 0};
         [true, true, false].forEach((expectedDecision) => {
@@ -59,6 +61,7 @@ describe('GuaranteedThroughput sampler', () => {
             }
         });
 
+        clock.restore();
         sampler.close();
     });
 
@@ -108,8 +111,10 @@ describe('GuaranteedThroughput sampler', () => {
     });
 
     it('should become probabilistic after minimum throughput', () => {
+        let initialDate = new Date(2011,9,1).getTime();
+        let clock = sinon.useFakeTimers(initialDate);
         let sampler = new GuaranteedThroughputSampler(2, 1.0);
-        sampler._lowerBoundSampler._rateLimiter._balance = 2;
+        clock = sinon.useFakeTimers(initialDate + 20000);
 
         let expectedTagsLB = {'sampler.type': 'lowerbound', 'sampler.param': 0.0};
         let expectedTagsProb = {'sampler.type': 'probabilistic', 'sampler.param': 1.0};
@@ -147,6 +152,7 @@ describe('GuaranteedThroughput sampler', () => {
             }
         });
 
+        clock.restore();
         sampler.close();
     });
 });

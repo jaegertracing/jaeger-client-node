@@ -20,8 +20,7 @@ describe ('RateLimitingSampler should', () => {
     it('block after threshold is met', () => {
         let initialDate = new Date(2011,9,1).getTime();
         let clock = sinon.useFakeTimers(initialDate);
-        let sampler = new RateLimitingSampler(10);
-        sampler._rateLimiter._balance = 10;
+        let sampler = new RateLimitingSampler(10, 10);
         for (let i = 0; i < 10; i++) {
             assert.isTrue(sampler.isSampled('operation', {}), 'expected decision to be true');
         }
@@ -56,8 +55,7 @@ describe ('RateLimitingSampler should', () => {
     it ('work with maxCreditsPerSecond smaller than 1', () => {
         let initialDate = new Date(2011,9,1).getTime();
         let clock = sinon.useFakeTimers(initialDate);
-        let sampler = new RateLimitingSampler(0.1);
-        sampler._rateLimiter._balance = 1;
+        let sampler = new RateLimitingSampler(0.1, 1);
 
         assert.isTrue(sampler.isSampled('operation', {}), 'expected decision to be true');
 
@@ -69,8 +67,7 @@ describe ('RateLimitingSampler should', () => {
     it ('should update successfully', () => {
         let initialDate = new Date(2011,9,1).getTime();
         let clock = sinon.useFakeTimers(initialDate);
-        let sampler = new RateLimitingSampler(1.0);
-        sampler._rateLimiter._balance = 1;
+        let sampler = new RateLimitingSampler(1.0, 1);
 
         assert.isTrue(sampler.isSampled('operation', {}), 'expected decision to be true');
 

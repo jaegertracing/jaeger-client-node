@@ -55,13 +55,11 @@ describe('All samplers', () => {
     });
 
     describe('should return correct tags', () => {
-        let rateLimitingSampler = new RateLimitingSampler(0.1)
-        rateLimitingSampler._rateLimiter._balance = 0;
         var samplers = [
             {sampler: new ConstSampler(true), 'type': constants.SAMPLER_TYPE_CONST, param: true, decision: true},
             {sampler: new ConstSampler(false), 'type': constants.SAMPLER_TYPE_CONST, param: false, decision: false},
             {sampler: new ProbabilisticSampler(1.0), 'type': constants.SAMPLER_TYPE_PROBABILISTIC, param: 1.0, decision: true},
-            {sampler: rateLimitingSampler, 'type': constants.SAMPLER_TYPE_RATE_LIMITING, param: 0.1, decision: false},
+            {sampler: new RateLimitingSampler(1.0, 1.0), 'type': constants.SAMPLER_TYPE_RATE_LIMITING, param: 1.0, decision: true},
             {
                 sampler: new RemoteSampler('some-caller-name', {sampler: new ProbabilisticSampler(1.0)}),
                 'type': constants.SAMPLER_TYPE_PROBABILISTIC,
