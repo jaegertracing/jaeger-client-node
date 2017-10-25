@@ -83,8 +83,7 @@ export default class GuaranteedThroughputSampler {
             updated = true;
         }
         if (this._lowerBoundSampler.maxTracesPerSecond != lowerBound) {
-            this._lowerBoundSampler = new RateLimitingSampler(lowerBound);
-            updated = true;
+            updated = this._lowerBoundSampler.update(lowerBound);
         }
         return updated;
     }

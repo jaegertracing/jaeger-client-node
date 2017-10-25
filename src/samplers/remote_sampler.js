@@ -158,7 +158,12 @@ export default class RemoteControlledSampler {
             newSampler = new ProbabilisticSampler(samplingRate);
         } else if (response.strategyType === RATELIMITING_STRATEGY_TYPE && response.rateLimitingSampling) {
             let maxTracesPerSecond = response.rateLimitingSampling.maxTracesPerSecond;
-            newSampler = new RateLimitingSampler(maxTracesPerSecond);
+            if (this._sampler instanceof RateLimitingSampler) {
+                let sampler: RateLimitingSampler = this._sampler;
+                return sampler.update(maxTracesPerSecond);
+            }
+            this._sampler = new RateLimitingSampler(maxTracesPerSecond);
+            return true;
         } else {
             throw 'Malformed response: ' + JSON.stringify(response);
         }
