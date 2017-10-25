@@ -90,7 +90,7 @@ describe('GuaranteedThroughput sampler', () => {
         let isUpdated: boolean = sampler.update(3, 1.0);
         assert.isTrue(isUpdated);
         assert.strictEqual(sampler._probabilisticSampler, p1);
-        assert.isNotOk(p2 === sampler._lowerBoundSampler);
+        assert.strictEqual(sampler._lowerBoundSampler, p2, 'lowerbound sampler should only be updated, not recreated');
         assertValues(sampler, 3, 1.0);
     });
 
