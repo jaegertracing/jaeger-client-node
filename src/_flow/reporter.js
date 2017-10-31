@@ -27,6 +27,6 @@ declare class Sender {
 };
 
 declare type SenderResponse = {
-    err: boolean,
+    err: boolean || string,
     numSpans: number
 };
