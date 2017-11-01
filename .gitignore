@@ -5,3 +5,5 @@ dist/
 
 .idea/
 *.iml
+
+crossdock/jaeger-docker-compose.yml
