@@ -53,6 +53,9 @@ services:
         image: jaegertracing/xdock-java
         ports:
             - "8080-8082"
+        links:
+    #        Udp sender needs to know agent's address
+            - jaeger-agent
 
     test_driver:
         image: jaegertracing/test-driver
