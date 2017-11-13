@@ -1,19 +1,18 @@
 {
   "name": "jaeger-client",
-  "version": "3.6.0dev4",
+  "version": "3.6.0",
   "description": "Jaeger binding for OpenTracing Node",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "keywords": [],
-  "author": "oibe <oibe@uber.com>",
+  "author": "Onwukike Ibe <oibe@uber.com>",
   "main": "./entrypoint.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/uber/jaeger-client-node.git"
+    "url": "git://github.com/jaegertracing/jaeger-client-node.git"
   },
   "contributors": [
-    {
-      "name": "oibe"
-    }
+    "Yuri Shkuro <ys@uber.com>",
+    "Won Jun Jang <wjang@uber.com>"
   ],
   "dependencies": {
     "node-int64": "^0.4.0",
