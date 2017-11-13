@@ -1,13 +1,14 @@
 Changes by Version
 ==================
 
-3.6.0 (unreleased)
+3.6.0 (2017-11-13)
 ------------------
 
 New features:
 
 - Save baggage in span logs (#129)
 - Add BaggageRestrictionManager and BaggageSetter (#142)
+- Randomize rate limiter balance on initialization (#161)
 
 Bug fixes:
 
