@@ -8,6 +8,7 @@ New features:
 
 - Save baggage in span logs (#129)
 - Add BaggageRestrictionManager and BaggageSetter (#142)
+- Migrate to Apache license v2 (#159)
 - Randomize rate limiter balance on initialization (#161)
 
 Bug fixes:
