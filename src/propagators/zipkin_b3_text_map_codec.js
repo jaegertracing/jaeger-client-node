@@ -53,6 +53,25 @@ export default class ZipkinB3TextMapCodec {
         return value;
     }
 
+    _isValidZipkinId(value: string): boolean {
+        // Validates a zipkin trace/spanID by attempting to parse it as a string of hex digits.
+        //
+        // Note: The Number type in JS cannot represent the full range of 64bit
+        // unsigned ints, so using parseInt() on strings representing 64bit hex
+        // numbers only returns an approximation of the actual value.
+        // Fortunately, we do not depend on the returned value, we are only
+        // using it to validate that the string is a valid hex number (which is
+        // faster than doing it manually).  We cannot use
+        // Int64(numberValue).toBuffer() because it throws exceptions on bad
+        // strings.
+        if (!value) {
+            return true
+        }
+
+        let v = parseInt(value, 16);
+        return !isNaN(v) && v.toString(16) === value;
+    }
+
     _decodeURIValue(value: string): string {
         // unfortunately, decodeURIComponent() can throw 'URIError: URI malformed' on bad strings
         try {
@@ -63,8 +82,12 @@ export default class ZipkinB3TextMapCodec {
     }
 
     extract(carrier: any): ?SpanContext {
-        let spanContext = new SpanContext();
         let baggage = {};
+        let flags = 0;
+        let debugId = '';
+        let parentId = '';
+        let spanId = '';
+        let traceId = '';
 
         for (let key in carrier) {
             if (carrier.hasOwnProperty(key)) {
@@ -72,16 +95,16 @@ export default class ZipkinB3TextMapCodec {
 
                 switch (lowerKey) {
                     case ZIPKIN_PARENTSPAN_HEADER:
-                        spanContext.parentId = this._decodeValue(carrier[ZIPKIN_PARENTSPAN_HEADER]);
+                        parentId = this._decodeValue(carrier[ZIPKIN_PARENTSPAN_HEADER]);
                         break;
                     case ZIPKIN_SPAN_HEADER:
-                        spanContext.spanId = this._decodeValue(carrier[ZIPKIN_SPAN_HEADER]);
+                        spanId = this._decodeValue(carrier[ZIPKIN_SPAN_HEADER]);
                         break;
                     case ZIPKIN_TRACE_HEADER:
-                        spanContext.traceId = this._decodeValue(carrier[ZIPKIN_TRACE_HEADER]);
+                        traceId = this._decodeValue(carrier[ZIPKIN_TRACE_HEADER]);
                         break;
                     case ZIPKIN_SAMPLED_HEADER:
-                        spanContext.flags = spanContext.flags | constants.SAMPLED_MASK;
+                        flags = flags | constants.SAMPLED_MASK;
                         break;
                     case ZIPKIN_FLAGS_HEADER:
                         // Per https://github.com/openzipkin/b3-propagation
@@ -89,11 +112,11 @@ export default class ZipkinB3TextMapCodec {
                         // and
                         //   "Debug implies Sampled."
                         if (carrier[key] === '1') {
-                            spanContext.flags = spanContext.flags | constants.SAMPLED_MASK | constants.DEBUG_MASK;
+                            flags = flags | constants.SAMPLED_MASK | constants.DEBUG_MASK;
                         }
                         break;
                     case constants.JAEGER_DEBUG_HEADER:
-                        spanContext.debugId = this._decodeValue(carrier[constants.JAEGER_DEBUG_HEADER]);
+                        debugId = this._decodeValue(carrier[constants.JAEGER_DEBUG_HEADER]);
                         break;
                     case constants.JAEGER_BAGGAGE_HEADER:
                         parseCommaSeparatedBaggage(baggage, this._decodeValue(carrier[key]));
@@ -107,8 +130,17 @@ export default class ZipkinB3TextMapCodec {
             }
         }
 
-        spanContext.baggage = baggage;
-        return spanContext;
+        if ((!this._isValidZipkinId(traceId)) ||
+            (!this._isValidZipkinId(spanId)) ||
+            (!this._isValidZipkinId(parentId))) {
+                // Use a context devoid of trace/span/parentSpan IDs (to be
+                // consistent with the default codec behavior), and increment a
+                // metric
+                traceId = spanId = parentId = '';
+                this._metrics.decodingErrors.increment(1);
+            }
+
+        return SpanContext.withStringIds(traceId, spanId, parentId, flags, baggage, debugId);
     }
 
     inject(spanContext: SpanContext, carrier: any): void {

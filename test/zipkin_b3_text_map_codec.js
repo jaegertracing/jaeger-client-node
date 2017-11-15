@@ -24,10 +24,10 @@ import ZipkinB3TextMapCodec from '../src/propagators/zipkin_b3_text_map_codec.js
 
 describe('Zipkin B3 Text Map Codec should', () => {
 
-    let tracer, codec;
+    let tracer, codec, metrics;
 
     beforeEach(() => {
-        let metrics = new Metrics(new LocalMetricFactory());
+        metrics = new Metrics(new LocalMetricFactory());
         tracer = new Tracer(
             'test-tracer',
             new InMemoryReporter(),
@@ -49,6 +49,47 @@ describe('Zipkin B3 Text Map Codec should', () => {
         tracer.close();
     });
 
+    it ('report a metric when failing to decode tracer state', () => {
+        let headers = {
+            'x-b3-traceid': 'bad-value'
+        };
+
+        let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
+
+        assert.isOk(context);
+        assert.isOk(LocalBackend.counterEquals(metrics.decodingErrors, 1));
+    });
+
+    it ('return a context devoid of trace/span ids if invalid ids are encountered in the headers', () => {
+
+        let testCases = [
+            {
+                'x-b3-traceid': 'bad-value',
+                'x-b3-spanid': '123abc',
+                'x-b3-parentspanid': '456def'
+            },
+            {
+                'x-b3-traceid': '123abc',
+                'x-b3-spanid': 'bad-value',
+                'x-b3-parentspanid': '456def'
+            },
+            {
+                'x-b3-traceid': '123abc',
+                'x-b3-spanid': '456def',
+                'x-b3-parentspanid': 'bad-value'
+            }
+        ];
+
+        testCases.forEach((testCase) => {
+            let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, testCase);
+
+            assert.isOk(context);
+            assert.isNotOk(context.spanIdStr);
+            assert.isNotOk(context.traceIdStr);
+            assert.isNotOk(context.parentIdStr);
+        });
+    });
+
     it ('set the sampled flag when the zipkin sampled header is received', () => {
         let headers = {
             'x-b3-sampled': '1'
@@ -59,7 +100,7 @@ describe('Zipkin B3 Text Map Codec should', () => {
         assert.isNotOk(context.isDebug());
     });
 
-    it ('set the debug and sampled flags with the zipkin flags header is recieved', () => {
+    it ('set the debug and sampled flags with the zipkin flags header is received', () => {
         let headers = {
             'x-b3-flags': '1'
         };
@@ -69,7 +110,7 @@ describe('Zipkin B3 Text Map Codec should', () => {
         assert.isOk(context.isDebug());
     });
 
-    it ('should set the sampled header to "1" if sampling', () => {
+    it ('should set the sampled header to "0" if not sampling', () => {
         let headers = {};
 
         let ctx = SpanContext.withStringIds('some-trace', 'some-span', 'some-parent');
@@ -82,13 +123,13 @@ describe('Zipkin B3 Text Map Codec should', () => {
     it ('should set the sampled header to "1" if sampling', () => {
         let headers = {};
 
-        let ctx = SpanContext.withStringIds('some-trace', 'some-span', 'some-parent');
+        let ctx = SpanContext.withStringIds('a', 'b', 'c');
         ctx.flags = constants.SAMPLED_MASK;
 
         codec.inject(ctx, headers);
 
         assert.isUndefined(headers['x-b3-flags']);
-        assert.isOk(headers['x-b3-sampled']);
+        assert.equal(headers['x-b3-sampled'], '1');
     });
 
     it ('should not send the sampled header if debug', () => {

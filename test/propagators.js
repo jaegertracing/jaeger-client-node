@@ -60,33 +60,52 @@ describe ('ZipkinB3TextMapCodec', () => {
         let codec = new ZipkinB3TextMapCodec({ urlEncoding: true });
 
         let carrier = {
-            'x-b3-parentspanid': 'some-parent',
-            'x-b3-spanid': 'some-span',
-            'x-b3-traceid': 'some-trace',
+            'x-b3-parentspanid': '123abc',
+            'x-b3-spanid': 'aaafff',
+            'x-b3-traceid': '789fed',
             'x-b3-sampled': '1',
             'x-b3-flags': '1',
             'foo': 'bar'
         };
 
         let ctx = codec.extract(carrier);
-        assert.equal(ctx.parentId, 'some-parent');
-        assert.equal(ctx.spanId, 'some-span');
-        assert.equal(ctx.traceId, 'some-trace');
+        assert.equal(ctx.parentIdStr, '123abc');
+        assert.equal(ctx.spanIdStr, 'aaafff');
+        assert.equal(ctx.traceIdStr, '789fed');
         assert.equal(ctx.isSampled(), true);
         assert.equal(ctx.isDebug(), true);
     });
 
+    it('use an empty context if the zipkin headers contain invalid ids', () => {
+        let codec = new ZipkinB3TextMapCodec({ urlEncoding: true });
+
+        let carrier = {
+            'x-b3-parentspanid': 'bad-value',
+            'x-b3-spanid': 'another-bad-value',
+            'x-b3-traceid': 'not-a-valid-traceid',
+            'x-b3-sampled': '1',
+            'x-b3-flags': '1',
+            'foo': 'bar'
+        };
+
+        let ctx = codec.extract(carrier);
+        assert.isNotOk(ctx.parentIdStr);
+        assert.isNotOk(ctx.spanIdStr);
+        assert.isNotOk(ctx.traceIdStr);
+        assert.equal(ctx.isSampled(), true);
+        assert.equal(ctx.isDebug(), true);
+    });
     it('correctly inject the zipkin headers into a span context', () => {
         let codec = new ZipkinB3TextMapCodec({ urlEncoding: true });
         let carrier = {};
 
-        let ctx = SpanContext.withStringIds('some-trace', 'some-span', 'some-parent');
+        let ctx = SpanContext.withStringIds('789fed', 'aaafff', '123abc');
         ctx.flags = constants.DEBUG_MASK | constants.SAMPLED_MASK;
 
         codec.inject(ctx, carrier);
-        assert.equal(carrier['x-b3-traceid'], 'some-trace');
-        assert.equal(carrier['x-b3-spanid'], 'some-span');
-        assert.equal(carrier['x-b3-parentspanid'], 'some-parent');
+        assert.equal(carrier['x-b3-traceid'], '789fed');
+        assert.equal(carrier['x-b3-spanid'], 'aaafff');
+        assert.equal(carrier['x-b3-parentspanid'], '123abc');
         assert.equal(carrier['x-b3-flags'], '1');
 
         // > Since Debug implies Sampled, so don't also send "X-B3-Sampled: 1"
@@ -115,9 +134,9 @@ describe ('ZipkinB3TextMapCodec', () => {
             baggagePrefix: 'baggage-'
         });
         let carrier = {
-            'x-b3-parentspanid': 'some-parent',
-            'x-b3-spanid': 'some-span',
-            'x-b3-traceid': 'some-trace',
+            'x-b3-parentspanid': '123abc',
+            'x-b3-spanid': 'aaafff',
+            'x-b3-traceid': '789fed',
             'baggage-some-key': 'some-value',
             'garbage-in': 'garbage-out'
         };
@@ -133,7 +152,7 @@ describe ('ZipkinB3TextMapCodec', () => {
         });
         let carrier = {};
 
-        let ctx = SpanContext.withStringIds('some-trace', 'some-span', 'some-parent');
+        let ctx = SpanContext.withStringIds('789fed', 'aaafff', '123abc');
         ctx = ctx.withBaggageItem('some-key', 'some-value');
         ctx = ctx.withBaggageItem('another-key', 'another-value');
 
