@@ -21,7 +21,7 @@ const ZIPKIN_PARENTSPAN_HEADER = 'x-b3-parentspanid';
 const ZIPKIN_SPAN_HEADER = 'x-b3-spanid';
 const ZIPKIN_TRACE_HEADER = 'x-b3-traceid';
 const ZIPKIN_SAMPLED_HEADER = 'x-b3-sampled';
-const ZIPKIN_DEBUG_HEADER = 'x-b3-flags';
+const ZIPKIN_FLAGS_HEADER = 'x-b3-flags';
 
 export default class ZipkinB3TextMapCodec {
     _urlEncoding: boolean;
@@ -82,7 +82,7 @@ export default class ZipkinB3TextMapCodec {
                     case ZIPKIN_SAMPLED_HEADER:
                         spanContext.flags = spanContext.flags | constants.SAMPLED_MASK;
                         break;
-                    case ZIPKIN_DEBUG_HEADER:
+                    case ZIPKIN_FLAGS_HEADER:
                         // "debug implies sampled"
                         // https://github.com/openzipkin/b3-propagation
                         spanContext.flags = spanContext.flags | constants.SAMPLED_MASK | constants.DEBUG_MASK;
@@ -115,7 +115,7 @@ export default class ZipkinB3TextMapCodec {
         // https://github.com/openzipkin/b3-propagation
 
         if (spanContext.isDebug()) {
-           carrier[ZIPKIN_DEBUG_HEADER] = '1';
+           carrier[ZIPKIN_FLAGS_HEADER] = '1';
         } else {
             if (spanContext.isSampled()) {
                 carrier[ZIPKIN_SAMPLED_HEADER] = '1';
