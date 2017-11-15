@@ -40,8 +40,8 @@ describe ('TextMapCodec', () => {
     });
 
     it('should decode baggage', () => {
-        let codec = new TextMapCodec({ 
-            urlEncoding: true, 
+        let codec = new TextMapCodec({
+            urlEncoding: true,
             contextKey: 'trace-context',
             baggagePrefix: 'baggage-'
         });
