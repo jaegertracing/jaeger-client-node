@@ -16,6 +16,7 @@ import Metrics from '../metrics/metrics.js';
 import NoopMetricFactory from '../metrics/noop/metric_factory';
 import SpanContext from '../span_context.js';
 import Utils from '../util.js';
+import { parseCommaSeparatedBaggage } from '../propagators/baggage';
 
 export default class TextMapCodec {
     _urlEncoding: boolean;
@@ -76,7 +77,7 @@ export default class TextMapCodec {
                 } else if (lowerKey === constants.JAEGER_DEBUG_HEADER) {
                     debugId = this._decodeValue(carrier[key]);
                 } else if (lowerKey === constants.JAEGER_BAGGAGE_HEADER) {
-                    this._parseCommaSeparatedBaggage(baggage, this._decodeValue(carrier[key]));
+                    parseCommaSeparatedBaggage(baggage, this._decodeValue(carrier[key]));
                 } else if (Utils.startsWith(lowerKey, this._baggagePrefix)) {
                     let keyWithoutPrefix = key.substring(this._baggagePrefix.length);
                     baggage[keyWithoutPrefix] = this._decodeValue(carrier[key]);
@@ -100,19 +101,5 @@ export default class TextMapCodec {
                 carrier[`${this._baggagePrefix}${key}`] = value;
             }
         }
-    }
-
-    // Parse comma separated key=value pair list and add to baggage.
-    // E.g. "key1=value1, key2=value2, key3 = value3"
-    // is converted to map[string]string { "key1" : "value1",
-    //                                     "key2" : "value2",
-    //                                     "key3" : "value3" }
-    _parseCommaSeparatedBaggage(baggage: any, values: string): void {
-        values.split(',').forEach((keyVal) => {
-            let splitKeyVal: Array<string> = keyVal.trim().split('=');
-            if (splitKeyVal.length == 2) {
-                baggage[splitKeyVal[0]] = splitKeyVal[1];
-            }
-        });
     }
 }

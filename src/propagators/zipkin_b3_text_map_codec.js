@@ -16,6 +16,7 @@ import Metrics from '../metrics/metrics.js';
 import NoopMetricFactory from '../metrics/noop/metric_factory';
 import SpanContext from '../span_context.js';
 import Utils from '../util.js';
+import { parseCommaSeparatedBaggage } from '../propagators/baggage';
 
 const ZIPKIN_PARENTSPAN_HEADER = 'x-b3-parentspanid';
 const ZIPKIN_SPAN_HEADER = 'x-b3-spanid';
@@ -95,7 +96,7 @@ export default class ZipkinB3TextMapCodec {
                         spanContext.debugId = this._decodeValue(carrier[constants.JAEGER_DEBUG_HEADER]);
                         break;
                     case constants.JAEGER_BAGGAGE_HEADER:
-                        this._parseCommaSeparatedBaggage(baggage, this._decodeValue(carrier[key]));
+                        parseCommaSeparatedBaggage(baggage, this._decodeValue(carrier[key]));
                         break;
                     default:
                         if (Utils.startsWith(lowerKey, this._baggagePrefix)) {
@@ -115,7 +116,6 @@ export default class ZipkinB3TextMapCodec {
         carrier[ZIPKIN_PARENTSPAN_HEADER] = spanContext.parentIdStr;
         carrier[ZIPKIN_SPAN_HEADER] = spanContext.spanIdStr;
 
-
         if (spanContext.isDebug()) {
            carrier[ZIPKIN_FLAGS_HEADER] = '1';
         } else {
@@ -132,19 +132,5 @@ export default class ZipkinB3TextMapCodec {
                 carrier[`${this._baggagePrefix}${key}`] = value;
             }
         }
-    }
-
-    // Parse comma separated key=value pair list and add to baggage.
-    // E.g. "key1=value1, key2=value2, key3 = value3"
-    // is converted to map[string]string { "key1" : "value1",
-    //                                     "key2" : "value2",
-    //                                     "key3" : "value3" }
-    _parseCommaSeparatedBaggage(baggage: any, values: string): void {
-        values.split(',').forEach((keyVal) => {
-            let splitKeyVal: Array<string> = keyVal.trim().split('=');
-            if (splitKeyVal.length == 2) {
-                baggage[splitKeyVal[0]] = splitKeyVal[1];
-            }
-        });
     }
 }
