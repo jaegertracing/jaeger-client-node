@@ -83,9 +83,13 @@ export default class ZipkinB3TextMapCodec {
                         spanContext.flags = spanContext.flags | constants.SAMPLED_MASK;
                         break;
                     case ZIPKIN_FLAGS_HEADER:
-                        // "debug implies sampled"
-                        // https://github.com/openzipkin/b3-propagation
-                        spanContext.flags = spanContext.flags | constants.SAMPLED_MASK | constants.DEBUG_MASK;
+                        // Per https://github.com/openzipkin/b3-propagation
+                        //   "Debug is encoded as X-B3-Flags: 1"
+                        // and
+                        //   "Debug implies Sampled."
+                        if (carrier[key] === '1') {
+                            spanContext.flags = spanContext.flags | constants.SAMPLED_MASK | constants.DEBUG_MASK;
+                        }
                         break;
                     case constants.JAEGER_DEBUG_HEADER:
                         spanContext.debugId = this._decodeValue(carrier[constants.JAEGER_DEBUG_HEADER]);
@@ -111,17 +115,14 @@ export default class ZipkinB3TextMapCodec {
         carrier[ZIPKIN_PARENTSPAN_HEADER] = spanContext.parentIdStr;
         carrier[ZIPKIN_SPAN_HEADER] = spanContext.spanIdStr;
 
-        // > Since Debug implies Sampled, so don't also send "X-B3-Sampled: 1"
-        // https://github.com/openzipkin/b3-propagation
 
         if (spanContext.isDebug()) {
            carrier[ZIPKIN_FLAGS_HEADER] = '1';
         } else {
-            if (spanContext.isSampled()) {
-                carrier[ZIPKIN_SAMPLED_HEADER] = '1';
-            } else {
-                carrier[ZIPKIN_SAMPLED_HEADER] = '0';
-            }
+            // Only set the zipkin sampled header if we're NOT using debug.
+            // Per https://github.com/openzipkin/b3-propagation
+            //   "Since Debug implies Sampled, so don't also send "X-B3-Sampled: 1"
+            carrier[ZIPKIN_SAMPLED_HEADER] = spanContext.isSampled() ? '1' : '0';
         }
 
         let baggage = spanContext.baggage;
