@@ -64,19 +64,19 @@ describe('Zipkin B3 Text Map Codec should', () => {
 
         let testCases = [
             {
-                'x-b3-traceid': 'bad-value',
+                'x-b3-traceid': 'zzzzzz',
                 'x-b3-spanid': '123abc',
                 'x-b3-parentspanid': '456def'
             },
             {
                 'x-b3-traceid': '123abc',
-                'x-b3-spanid': 'bad-value',
+                'x-b3-spanid': 'zzzzzz',
                 'x-b3-parentspanid': '456def'
             },
             {
                 'x-b3-traceid': '123abc',
                 'x-b3-spanid': '456def',
-                'x-b3-parentspanid': 'bad-value'
+                'x-b3-parentspanid': 'zzzzz'
             }
         ];
 

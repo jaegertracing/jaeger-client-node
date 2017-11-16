@@ -54,7 +54,16 @@ export default class ZipkinB3TextMapCodec {
     }
 
     _isValidZipkinId(value: string): boolean {
-        // Validates a zipkin trace/spanID by attempting to parse it as a string of hex digits.
+        // Validates a zipkin trace/spanID by attempting to parse it as a
+        // string of hex digits. This "validation" is not entirely rigorous,
+        // but equivalent to what is performed in the TextMapCodec.
+        //
+        // Note: due to the way parseInt works, this does not guarantee that
+        // the string is composed *entirely* of hex digits.
+        //
+        // > If parseInt encounters a character that is not a numeral in the
+        // > specified radix, it ignores it and all succeeding characters and
+        // > returns the integer value parsed up to that point.
         //
         // Note: The Number type in JS cannot represent the full range of 64bit
         // unsigned ints, so using parseInt() on strings representing 64bit hex
@@ -68,8 +77,7 @@ export default class ZipkinB3TextMapCodec {
             return true
         }
 
-        let v = parseInt(value, 16);
-        return !isNaN(v) && v.toString(16) === value;
+        return !isNaN(parseInt(value, 16));
     }
 
     _decodeURIValue(value: string): string {
