@@ -51,13 +51,21 @@ describe('Zipkin B3 Text Map Codec should', () => {
 
     it ('report a metric when failing to decode tracer state', () => {
         let headers = {
-            'x-b3-traceid': 'bad-value'
+            'x-b3-traceid': 'zzz-bad-value'
         };
 
         let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
 
         assert.isOk(context);
         assert.isOk(LocalBackend.counterEquals(metrics.decodingErrors, 1));
+    });
+
+    it ('set debug flag when debug-id-header is received', () => {
+        let headers = {};
+        headers[constants.JAEGER_DEBUG_HEADER] = encodeURIComponent('value1');
+
+        let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
+        assert.equal(context.debugId, 'value1');
     });
 
     it ('return a context devoid of trace/span ids if invalid ids are encountered in the headers', () => {
@@ -100,7 +108,7 @@ describe('Zipkin B3 Text Map Codec should', () => {
         assert.isNotOk(context.isDebug());
     });
 
-    it ('set the debug and sampled flags with the zipkin flags header is received', () => {
+    it ('set the debug and sampled flags when the zipkin flags header is received', () => {
         let headers = {
             'x-b3-flags': '1'
         };
@@ -108,6 +116,14 @@ describe('Zipkin B3 Text Map Codec should', () => {
         let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
         assert.isOk(context.isSampled());
         assert.isOk(context.isDebug());
+
+        headers = {
+            'x-b3-flags': '0'
+        };
+
+        context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
+        assert.isNotOk(context.isSampled());
+        assert.isNotOk(context.isDebug());
     });
 
     it ('should set the sampled header to "0" if not sampling', () => {
