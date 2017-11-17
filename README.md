@@ -45,7 +45,7 @@ An encoded channel is a channel wrapped in either a thrift encoder `TChannelAsTh
 or json encoder `TChannelAsJson`.  To wrap a server handler for thrift one can initialize
 a tchannel bridge, and wrap the encoded handler function with a `tracedHandler` decorator.
 The tchannel bridge takes an OpenTracing  tracer, and a context factory.  The context factory
-must be a function that returns a context with the methods 'getSpan', and 'setSpan' which retrieve 
+must be a function that returns a context with the methods 'getSpan', and 'setSpan' which retrieve
 and assign the span to the context respectively.
 
 ```javascript
@@ -159,6 +159,25 @@ span.setTag("jaeger-debug-id", "some-correlation-id");
 
 This allows using Jaeger UI to find the trace by this tag.
 
+### Zipkin Compatibility
+
+Support for [Zipkin's B3 Propagation HTTP
+headers](https://github.com/openzipkin/b3-propagation) is provided by the
+`ZipkinB3TextMapCodec`, which can be configured instead of the default
+`TextMapCodec`.
+
+The new codec can be used by registering it with a tracer instance as both an
+injector and an extractor:
+
+```
+let codec = new ZipkinB3TextMapCodec({ urlEncoding: true });
+
+tracer.registerInjector(opentracing.FORMAT_HTTP_HEADERS, codec);
+tracer.registerExtractor(opentracing.FORMAT_HTTP_HEADERS, codec);
+```
+
+This can prove useful when compatibility with existing Zipkin
+tracing/instrumentation is desired.
 
 ## License
 
