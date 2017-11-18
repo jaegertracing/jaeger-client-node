@@ -1,19 +1,18 @@
 {
   "name": "jaeger-client",
-  "version": "3.6.0dev3",
+  "version": "3.6.1dev0",
   "description": "Jaeger binding for OpenTracing Node",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "keywords": [],
-  "author": "oibe <oibe@uber.com>",
+  "author": "Onwukike Ibe <oibe@uber.com>",
   "main": "./entrypoint.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/uber/jaeger-client-node.git"
+    "url": "git://github.com/jaegertracing/jaeger-client-node.git"
   },
   "contributors": [
-    {
-      "name": "oibe"
-    }
+    "Yuri Shkuro <ys@uber.com>",
+    "Won Jun Jang <wjang@uber.com>"
   ],
   "dependencies": {
     "node-int64": "^0.4.0",
@@ -54,15 +53,14 @@
     "underscore": "^1.8.3"
   },
   "scripts": {
-    "check-license": "scripts/checkLicense.sh",
+    "check-license": "./scripts/check-license.sh",
     "check-ls": "npm ls --loglevel=http --parseable 1>/dev/null && echo '# npm is in a good state'",
     "cover": "babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/ test/samplers/ test/baggage/",
     "coveralls": "npm run cover && cat ./coverage/lcov.info | coveralls",
     "flow": "flow",
-    "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed'",
-    "lint-ci": "npm run lint && echo '# TODO: ADD npm run check-license'",
+    "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed' && npm run check-license",
     "test": "make test",
-    "test-ci": "npm run test && npm run lint-ci",
+    "test-ci": "npm run test && npm run lint",
     "test-all": "npm run test-core && npm run test-samplers && npm run test-crossdock && npm run test-baggage",
     "test-core": "mocha --compilers js:babel-core/register test",
     "test-samplers": "mocha --compilers js:babel-core/register test/samplers",

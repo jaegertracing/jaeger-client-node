@@ -129,6 +129,24 @@ describe('RemoteSampler', () => {
         remoteSampler._refreshSamplingStrategy();
     });
 
+    it('should update ratelimiting sampler', (done) => {
+        let rateLimitingSampler = new RateLimitingSampler(10);
+        remoteSampler._sampler = rateLimitingSampler;
+        let maxTracesPerSecond = 5;
+        remoteSampler._onSamplerUpdate = (s) => {
+            assert.strictEqual(rateLimitingSampler, remoteSampler._sampler);
+            assert.isOk(s.equal(new RateLimitingSampler(maxTracesPerSecond)));
+            done();
+        };
+        server.addStrategy('service1', {
+            strategyType: 'RATE_LIMITING',
+            rateLimitingSampling: {
+                maxTracesPerSecond: maxTracesPerSecond
+            }
+        });
+        remoteSampler._refreshSamplingStrategy();
+    });
+
     it('should set per-operation sampler', (done) => {
         server.addStrategy('service1', {
             strategyType: 'PROBABILISTIC',

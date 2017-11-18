@@ -53,15 +53,15 @@ services:
         image: jaegertracing/xdock-java
         ports:
             - "8080-8082"
-
-    cassandra:
-        image: "cassandra:3.9"
+        links:
+    #        Udp sender needs to know agent's address
+            - jaeger-agent
 
     test_driver:
         image: jaegertracing/test-driver
-        links:
-            - cassandra
         depends_on:
-            - cassandra
+            - jaeger-query
+            - jaeger-collector
+            - jaeger-agent
         ports:
             - "8080"

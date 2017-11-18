@@ -59,7 +59,7 @@ describe('All samplers', () => {
             {sampler: new ConstSampler(true), 'type': constants.SAMPLER_TYPE_CONST, param: true, decision: true},
             {sampler: new ConstSampler(false), 'type': constants.SAMPLER_TYPE_CONST, param: false, decision: false},
             {sampler: new ProbabilisticSampler(1.0), 'type': constants.SAMPLER_TYPE_PROBABILISTIC, param: 1.0, decision: true},
-            {sampler: new RateLimitingSampler(2), 'type': constants.SAMPLER_TYPE_RATE_LIMITING, param: 2, decision: true},
+            {sampler: new RateLimitingSampler(0.0001, 0), 'type': constants.SAMPLER_TYPE_RATE_LIMITING, param: 0.0001, decision: false},
             {
                 sampler: new RemoteSampler('some-caller-name', {sampler: new ProbabilisticSampler(1.0)}),
                 'type': constants.SAMPLER_TYPE_PROBABILISTIC,
@@ -101,14 +101,12 @@ describe('ConstSampler', () => {
 
     it ('does NOT equal another type of sampler', () => {
         let otherSampler = new ProbabilisticSampler(0.5);
-        let equals = sampler.equal(otherSampler);
-        assert.isNotOk(equals);
+        assert.isNotOk(sampler.equal(otherSampler));
     });
 
     it ('does equal the same type of sampler', () => {
         let otherSampler = new ConstSampler(true);
-        let equals = sampler.equal(otherSampler);
-        assert.isOk(equals);
+        assert.isOk(sampler.equal(otherSampler));
     });
 });
 
@@ -122,5 +120,11 @@ describe('ProbabilisticSampler', () => {
         let tags = {};
         assert.isNotOk(sampler.isSampled('operation', tags));
         assert.deepEqual(tags, {});
+    });
+
+    it ('does NOT equal another type of sampler', () => {
+        let sampler = new ProbabilisticSampler(0.0);
+        let otherSampler = new ConstSampler(true);
+        assert.isNotOk(sampler.equal(otherSampler));
     });
 });
