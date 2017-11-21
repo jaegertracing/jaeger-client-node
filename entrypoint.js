@@ -28,6 +28,9 @@ module.exports = {
     NoopReporter:      require('./dist/src/reporters/noop_reporter.js').default,
     RemoteReporter:    require('./dist/src/reporters/remote_reporter.js').default,
 
+    TextMapCodec:         require('./dist/src/propagators/text_map_codec.js').default,
+    ZipkinB3TextMapCodec: require('./dist/src/propagators/zipkin_b3_text_map_codec.js').default,
+
     TestUtils:      require('./dist/src/test_util.js').default,
     TChannelBridge: require('./dist/src/tchannel_bridge.js').default,
     opentracing:    require('opentracing')
