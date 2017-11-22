@@ -1,6 +1,12 @@
 Changes by Version
 ==================
 
+3.7.0 (2017-11-21)
+------------------
+
+- Add support for Zipkin B3 header propagation (#175)
+
+
 3.6.0 (2017-11-13)
 ------------------
 
