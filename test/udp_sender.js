@@ -78,7 +78,7 @@ describe('udp sender should', () => {
         spanTwo = ThriftUtils.spanToThrift(spanTwo);
 
         // make sure sender can fit both spans
-        let maxSpanBytes = sender._calcSpanSize(spanOne) + sender._calcSpanSize(spanTwo) + 30;
+        let maxSpanBytes = sender._calcSpanSize(spanOne).length + sender._calcSpanSize(spanTwo).length + 30;
         sender._maxSpanBytes = maxSpanBytes;
 
         server.on('message', (msg, remote) => {
@@ -172,7 +172,7 @@ describe('udp sender should', () => {
         let spanOne = tracer.startSpan('operation-one');
         spanOne.finish(); // finish to set span duration
         spanOne = ThriftUtils.spanToThrift(spanOne);
-        let spanSize = sender._calcSpanSize(spanOne);
+        let spanSize = sender._calcSpanSize(spanOne).length;
         sender._maxSpanBytes = spanSize * 2;
 
         let responseOne = sender.append(spanOne);
@@ -191,7 +191,7 @@ describe('udp sender should', () => {
         let spanOne = tracer.startSpan('operation-one');
         spanOne.finish(); // finish to set span duration
         spanOne = ThriftUtils.spanToThrift(spanOne);
-        let spanSize = sender._calcSpanSize(spanOne);
+        let spanSize = sender._calcSpanSize(spanOne).length;
         sender._maxSpanBytes = spanSize * 2;
 
         let spanThatExceedsCapacity = tracer.startSpan('bigger-span');
@@ -201,7 +201,7 @@ describe('udp sender should', () => {
 
         let responseOne = sender.append(spanOne);
         let responseTwo = sender.append(spanThatExceedsCapacity);
-        let expectedBufferSize = sender._calcSpanSize(spanThatExceedsCapacity);
+        let expectedBufferSize = sender._calcSpanSize(spanThatExceedsCapacity).length;
 
         assert.equal(sender._batch.spans.length, 1);
         assert.equal(sender._totalSpanBytes, expectedBufferSize);
