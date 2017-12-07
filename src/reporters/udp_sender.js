@@ -15,7 +15,6 @@ import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
 import {Thrift} from 'thriftrw';
-import {LengthResult} from 'bufrw';
 import NullLogger from '../logger.js';
 
 const HOST = 'localhost';
