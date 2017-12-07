@@ -24,7 +24,6 @@ import Tracer from '../src/tracer.js';
 import {Thrift} from 'thriftrw';
 import ThriftUtils from '../src/thrift.js';
 import UDPSender from '../src/reporters/udp_sender.js';
-import NullLogger from '../src/logger.js';
 
 const PORT = 6832;
 const HOST = '127.0.0.1';
@@ -79,7 +78,7 @@ describe('udp sender should', () => {
         spanTwo = ThriftUtils.spanToThrift(spanTwo);
 
         // make sure sender can fit both spans
-        let maxSpanBytes = sender._calcSpanSize(spanOne) + sender._calcSpanSize(spanTwo) + 30;
+        let maxSpanBytes = sender._calcSpanSize(spanOne).length + sender._calcSpanSize(spanTwo).length + 30;
         sender._maxSpanBytes = maxSpanBytes;
 
         server.on('message', (msg, remote) => {
@@ -173,7 +172,7 @@ describe('udp sender should', () => {
         let spanOne = tracer.startSpan('operation-one');
         spanOne.finish(); // finish to set span duration
         spanOne = ThriftUtils.spanToThrift(spanOne);
-        let spanSize = sender._calcSpanSize(spanOne);
+        let spanSize = sender._calcSpanSize(spanOne).length;
         sender._maxSpanBytes = spanSize * 2;
 
         let responseOne = sender.append(spanOne);
@@ -192,7 +191,7 @@ describe('udp sender should', () => {
         let spanOne = tracer.startSpan('operation-one');
         spanOne.finish(); // finish to set span duration
         spanOne = ThriftUtils.spanToThrift(spanOne);
-        let spanSize = sender._calcSpanSize(spanOne);
+        let spanSize = sender._calcSpanSize(spanOne).length;
         sender._maxSpanBytes = spanSize * 2;
 
         let spanThatExceedsCapacity = tracer.startSpan('bigger-span');
@@ -202,7 +201,7 @@ describe('udp sender should', () => {
 
         let responseOne = sender.append(spanOne);
         let responseTwo = sender.append(spanThatExceedsCapacity);
-        let expectedBufferSize = sender._calcSpanSize(spanThatExceedsCapacity);
+        let expectedBufferSize = sender._calcSpanSize(spanThatExceedsCapacity).length;
 
         assert.equal(sender._batch.spans.length, 1);
         assert.equal(sender._totalSpanBytes, expectedBufferSize);
@@ -230,6 +229,24 @@ describe('udp sender should', () => {
         let response = sender.flush();
         assert.isOk(response.err);
         assert.equal(response.numSpans, 1);
+    });
+
+    it ('return error response upon thrift conversion failure', (done) => {
+        sender._logger = {
+            error: (msg) => {
+                expect(msg).to.have.string('error converting span to Thrift:');
+                done();
+            }
+        };
+        let span = tracer.startSpan(undefined);
+        span.finish();
+
+        let response = sender.append(ThriftUtils.spanToThrift(span));
+        assert.isOk(response.err);
+        assert.equal(response.numSpans, 1);
+
+        // cleanup
+        sender.close();
     });
 
     it ('return error response on span too large', () => {
