@@ -44,7 +44,7 @@ export default class UDPSender {
         this._client = dgram.createSocket('udp4');
         this._client.on('error', err => {
             this._logger.error(`error sending spans over UDP: ${err}`)
-        })
+        });
         this._agentThrift = new Thrift({
             entryPoint: path.join(__dirname, '../thriftrw-idl/agent.thrift'),
             allowOptionalArguments: true,
@@ -93,6 +93,10 @@ export default class UDPSender {
 
     append(span: any): SenderResponse {
         let spanSize: number = this._calcSpanSize(span);
+        if (spanSize == undefined) {
+            this._logger.error(`error converting span to Thrift: ${JSON.stringify(span, null, 4)}`);
+            return { err: true, numSpans: 1 };
+        }
         if (spanSize > this._maxSpanBytes) {
             return { err: true, numSpans: 1 };
         }

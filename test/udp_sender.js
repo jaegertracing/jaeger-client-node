@@ -24,7 +24,6 @@ import Tracer from '../src/tracer.js';
 import {Thrift} from 'thriftrw';
 import ThriftUtils from '../src/thrift.js';
 import UDPSender from '../src/reporters/udp_sender.js';
-import NullLogger from '../src/logger.js';
 
 const PORT = 6832;
 const HOST = '127.0.0.1';
@@ -230,6 +229,24 @@ describe('udp sender should', () => {
         let response = sender.flush();
         assert.isOk(response.err);
         assert.equal(response.numSpans, 1);
+    });
+
+    it ('return error response upon thrift conversion failure', (done) => {
+        sender._logger = {
+            error: (msg) => {
+                expect(msg).to.have.string('error converting span to Thrift:');
+                done();
+            }
+        };
+        let span = tracer.startSpan(undefined);
+        span.finish();
+
+        let response = sender.append(ThriftUtils.spanToThrift(span));
+        assert.isOk(response.err);
+        assert.equal(response.numSpans, 1);
+
+        // cleanup
+        sender.close();
     });
 
     it ('return error response on span too large', () => {
