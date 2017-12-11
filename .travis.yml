@@ -44,7 +44,7 @@ before_install:
 - if [ "$CROSSDOCK" = "1" ]; then make install_docker_ci ; fi
 
 script:
-- if [ "$CROSSDOCK" != "1" ]; then npm run test-ci ; fi
+- if [ "$CROSSDOCK" != "1" ]; then make test ; fi
 - if [ "$COVER" = "1" ]; then npm run coveralls ; fi
 - if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh ; fi
 
