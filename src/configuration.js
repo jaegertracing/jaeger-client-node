@@ -153,20 +153,19 @@ export default class Configuration {
         }
         if (config.disable) {
             return new opentracing.Tracer();
-        } else if (!config.serviceName) {
+        }
+        if (!config.serviceName) {
             throw new Error(`config.serviceName must be provided`);
+        }
+        if (config.sampler) {
+            sampler = Configuration._getSampler(config);
         } else {
-            if (config.sampler) {
-                sampler = Configuration._getSampler(config);
-            } else {
-                sampler = new RemoteSampler(config.serviceName, options);
-            }
-
-            if (!options.reporter) {
-                reporter = Configuration._getReporter(config, options);
-            } else {
-                reporter = options.reporter;
-            }
+            sampler = new RemoteSampler(config.serviceName, options);
+        }
+        if (!options.reporter) {
+            reporter = Configuration._getReporter(config, options);
+        } else {
+            reporter = options.reporter;
         }
 
         if (options.logger) {
