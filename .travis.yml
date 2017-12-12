@@ -50,7 +50,7 @@ script:
 - if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh ; fi
 
 after_failure:
-- timeout 5 if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh ; fi
+- if [ "$CROSSDOCK" = "1" ]; then timeout 5 make crossdock-logs ; fi
 
 after_success:
 - export REPO=jaegertracing/xdock-node
