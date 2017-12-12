@@ -33,6 +33,18 @@ describe('initTracer', () => {
         expect(tracer).to.be.an.instanceof(opentracing.Tracer);
     });
 
+    it ('should throw error on invalid serviceName', () => {
+        let configs = [
+            { serviceName: ''},
+            { serviceName: null},
+            {},
+        ];
+
+        _.each(configs, (config) => {
+            expect(() => { initTracer(config); }).to.throw('config.serviceName must be provided');
+        });
+    });
+
     it ('should initialize normal tracer when only service name given', () => {
         let config = {
             serviceName: 'test-service'
@@ -44,10 +56,10 @@ describe('initTracer', () => {
     });
 
     it ('should initialize proper samplers', () => {
-        var config = {
+        let config = {
             serviceName: 'test-service'
         };
-        var options = [
+        let options = [
             { type: 'const', param: 1, expectedType: ConstSampler, expectedParam: 1 },
             { type: 'ratelimiting', param: 2, expectedType: RateLimitingSampler, expectedParam: 2 },
             { type: 'probabilistic', param: 0.5, expectedType: ProbabilisticSampler, expectedParam: 0.5 },
@@ -69,10 +81,10 @@ describe('initTracer', () => {
     });
 
     it ('should throw error on sampler incorrect type', () => {
-        var config = {
+        let config = {
             serviceName: 'test-service'
         };
-        var options = [
+        let options = [
             { type: 'const', param: 'bad-value' },
             { type: 'ratelimiting', param: 'bad-value' },
             { type: 'probabilistic', param: 'bad-value' },
@@ -108,7 +120,7 @@ describe('initTracer', () => {
                 agentPort: 4939,
                 flushIntervalMs: 2000
             }
-        }
+        };
         let tracer = initTracer(config);
 
         expect(tracer._reporter).to.be.an.instanceof(CompositeReporter);
@@ -127,10 +139,10 @@ describe('initTracer', () => {
     });
 
     it ('should pass options to tracer', () => {
-        var logger = {
+        let logger = {
             'info': function info(msg){}
         };
-        var metrics = {
+        let metrics = {
             'createCounter': function createCounter() { return {}; },
             'createGauge': function createGauge() { return {}; },
             'createTimer': function createTimer() { return {}; },
