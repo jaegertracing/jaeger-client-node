@@ -153,6 +153,8 @@ export default class Configuration {
         }
         if (config.disable) {
             return new opentracing.Tracer();
+        } else if (!config.serviceName) {
+            throw new Error(`config.serviceName must be provided`);
         } else {
             if (config.sampler) {
                 sampler = Configuration._getSampler(config);
@@ -171,10 +173,6 @@ export default class Configuration {
             options.logger.info(
                 `Initializing Jaeger Tracer with ${reporter.name()} and ${sampler.name()}`
             );
-        }
-
-        if (config.serviceName === undefined || config.serviceName === null) {
-            throw new Error(`config.serviceName must be provided`);
         }
 
         return new Tracer(

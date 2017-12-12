@@ -34,7 +34,15 @@ describe('initTracer', () => {
     });
 
     it ('should throw error on invalid serviceName', () => {
-        expect(() => { initTracer({}); }).to.throw('config.serviceName must be provided');
+        let configs = [
+            { serviceName: ''},
+            { serviceName: null},
+            {},
+        ];
+
+        _.each(configs, (config) => {
+            expect(() => { initTracer(config); }).to.throw('config.serviceName must be provided');
+        });
     });
 
     it ('should initialize normal tracer when only service name given', () => {
