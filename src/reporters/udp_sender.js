@@ -134,6 +134,7 @@ export default class UDPSender {
             );
         } catch(err) {
             this._logger.error(`error writing Thrift object: ${err}, batch: ${this._batch}, length: ${bufferLen}`);
+            console.log(`error writing Thrift object: ${err}, batch: ${this._batch}, length: ${bufferLen}`);
             this._reset();
             return {err: true, numSpans: numSpans};
         }
