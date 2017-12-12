@@ -173,6 +173,10 @@ export default class Configuration {
             );
         }
 
+        if (config.serviceName === undefined || config.serviceName === null) {
+            throw new Error(`config.serviceName must be provided`);
+        }
+
         return new Tracer(
             config.serviceName,
             reporter,
