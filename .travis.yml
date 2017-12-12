@@ -3,8 +3,9 @@ sudo: required
 language: node_js
 
 node_js:
+- 'node'
+- '8'
 - '6'
-- '5'
 - '4'
 - '0.12'
 
