@@ -3,19 +3,19 @@ sudo: required
 language: node_js
 
 node_js:
+- 'node'
+- '8'
 - '6'
-- '5'
 - '4'
-- '0.12'
 
 matrix:
   include:
-  - node_js: '0.10'
+  - node_js: 'node'
     env: COVER=1
     sudo: required
     services:
     - docker
-  - node_js: '0.10'
+  - node_js: 'node'
     env: CROSSDOCK=1
     sudo: required
     services:
