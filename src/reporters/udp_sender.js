@@ -126,9 +126,17 @@ export default class UDPSender {
 
         let bufferLen = this._totalSpanBytes + this._emitSpanBatchOverhead;
         let thriftBuffer = new Buffer(bufferLen);
-        let writeResult = this._agentThrift.Agent.emitBatch.argumentsMessageRW.writeInto(
-            this._convertBatchToThriftMessage(this._batch), thriftBuffer, 0
-        );
+        let writeResult;
+
+        try {
+            writeResult = this._agentThrift.Agent.emitBatch.argumentsMessageRW.writeInto(
+                this._convertBatchToThriftMessage(this._batch), thriftBuffer, 0
+            );
+        } catch(err) {
+            this._logger.error(`error writing Thrift object: ${err}, batch: ${this._batch}, length: ${bufferLen}`);
+            this._reset();
+            return {err: true, numSpans: numSpans};
+        }
 
         if (writeResult.err) {
             this._logger.error(`error writing Thrift object: ${writeResult.err}`);
