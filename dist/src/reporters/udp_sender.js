@@ -77,7 +77,11 @@ var UDPSender = function () {
     _createClass(UDPSender, [{
         key: '_calcBatchSize',
         value: function _calcBatchSize(batch) {
-            return this._agentThrift.Agent.emitBatch.argumentsMessageRW.byteLength(this._convertBatchToThriftMessage(this._batch)).length;
+            var lengthResult = this._agentThrift.Agent.emitBatch.argumentsMessageRW.byteLength(this._convertBatchToThriftMessage(this._batch));
+            if (lengthResult.err) {
+                console.log('error converting batch to Thrift: ' + lengthResult.err);
+            }
+            return lengthResult.length;
         }
     }, {
         key: '_calcSpanSize',
@@ -90,6 +94,7 @@ var UDPSender = function () {
             // This function is only called once during reporter construction, and thus will
             // give us the length of the batch before any spans have been added to the span
             // list in batch.
+            console.log('process is: ' + JSON.stringify(process, null, 4));
             this._process = process;
             this._batch = {
                 'process': this._process,
