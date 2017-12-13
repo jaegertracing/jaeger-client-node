@@ -115,4 +115,12 @@ describe('Composite and Remote Reporter should', () => {
         assert.equal(logger._errorMsgs[0], 'Failed to flush spans in reporter.');
         assert.isOk(LocalBackend.counterEquals(metrics.reporterFailure, 1));
     });
+
+    it ('not flush if process is not set', () => {
+        reporter = new RemoteReporter(sender, {
+            logger: logger,
+        });
+        reporter.flush();
+        assert.equal(logger._infoMsgs[0], 'Failed to flush since process is not set.');
+    });
 });

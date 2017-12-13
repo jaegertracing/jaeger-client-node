@@ -54,6 +54,10 @@ export default class RemoteReporter {
     }
 
     flush(callback: ?Function): void {
+        if (this._process === undefined) {
+            this._logger.info('Failed to flush since process is not set.');
+            return;
+        }
         let response: SenderResponse = this._sender.flush();
         if (response.err) {
             this._logger.error('Failed to flush spans in reporter.');
