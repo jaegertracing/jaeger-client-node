@@ -14,7 +14,6 @@ We gratefully welcome improvements to documentation as well as to code.
  1. `git submodule update --init`
  2. `npm install`
  3. `npm test`
- 4. `make build-node`
 
 ## Making A Change
 
@@ -22,7 +21,7 @@ We gratefully welcome improvements to documentation as well as to code.
 Discussing your proposed changes ahead of time will make the contribution process smooth for everyone.
 
 Once we've discussed your changes and you've got your code ready, make sure
-that tests are passing (`npm test`) and open your pull request. 
+that tests are passing (`npm test`) and open your pull request.
 Your pull request is most likely to be accepted if it:
 
 * Includes tests for new functionality.
@@ -115,4 +114,3 @@ If you want this to be automatic you can set up some aliases:
 git config --add alias.amend "commit -s --amend"
 git config --add alias.c "commit -s"
 ```
-
