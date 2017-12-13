@@ -88,6 +88,7 @@ export default class UDPSender {
             tags: tagMessages
         });
         this._emitSpanBatchOverhead = this._calcBatchSize(this._batch);
+        console.log(`jaeger emitSpanBatchOverhead: ${this._emitSpanBatchOverhead}, batch: ${JSON.stringify(this._batch, null, 4)}`);
         this._maxSpanBytes = this._maxPacketSize - this._emitSpanBatchOverhead;
     }
 
@@ -95,9 +96,11 @@ export default class UDPSender {
         let lengthResult: LengthResult = this._calcSpanSize(span);
         if (lengthResult.err) {
             this._logger.error(`error converting span to Thrift: ${lengthResult.err}`);
+            console.log(`error converting span to Thrift: ${lengthResult.err}`);
             return { err: true, numSpans: 1 };
         }
         let spanSize: number = lengthResult.length;
+        console.log(`spanSize: ${spanSize}`);
         if (spanSize > this._maxSpanBytes) {
             return { err: true, numSpans: 1 };
         }
@@ -124,6 +127,7 @@ export default class UDPSender {
             return {err: false, numSpans: 0}
         }
 
+        console.log(`jaeger _totalSpanBytes: ${this._totalSpanBytes}, this._emitSpanBatchOverhead: ${this._emitSpanBatchOverhead}`);
         let bufferLen = this._totalSpanBytes + this._emitSpanBatchOverhead;
         let thriftBuffer = new Buffer(bufferLen);
         let writeResult;
@@ -134,7 +138,7 @@ export default class UDPSender {
             );
         } catch(err) {
             this._logger.error(`error writing Thrift object: ${err}, batch: ${this._batch}, length: ${bufferLen}`);
-            console.log(`error writing Thrift object: ${err}, batch: ${this._batch}, length: ${bufferLen}`);
+            console.log(`error writing Thrift object: ${err}, batch: ${JSON.stringify(this._batch, null, 4)}, length: ${bufferLen}`);
             this._reset();
             return {err: true, numSpans: numSpans};
         }

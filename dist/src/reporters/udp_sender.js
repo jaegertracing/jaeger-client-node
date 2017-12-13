@@ -107,6 +107,7 @@ var UDPSender = function () {
                 tags: tagMessages
             });
             this._emitSpanBatchOverhead = this._calcBatchSize(this._batch);
+            console.log('jaeger emitSpanBatchOverhead: ' + this._emitSpanBatchOverhead + ', batch: ' + JSON.stringify(this._batch, null, 4));
             this._maxSpanBytes = this._maxPacketSize - this._emitSpanBatchOverhead;
         }
     }, {
@@ -115,9 +116,11 @@ var UDPSender = function () {
             var lengthResult = this._calcSpanSize(span);
             if (lengthResult.err) {
                 this._logger.error('error converting span to Thrift: ' + lengthResult.err);
+                console.log('error converting span to Thrift: ' + lengthResult.err);
                 return { err: true, numSpans: 1 };
             }
             var spanSize = lengthResult.length;
+            console.log('spanSize: ' + spanSize);
             if (spanSize > this._maxSpanBytes) {
                 return { err: true, numSpans: 1 };
             }
@@ -147,6 +150,7 @@ var UDPSender = function () {
                 return { err: false, numSpans: 0 };
             }
 
+            console.log('jaeger _totalSpanBytes: ' + this._totalSpanBytes + ', this._emitSpanBatchOverhead: ' + this._emitSpanBatchOverhead);
             var bufferLen = this._totalSpanBytes + this._emitSpanBatchOverhead;
             var thriftBuffer = new Buffer(bufferLen);
             var writeResult = void 0;
@@ -155,7 +159,7 @@ var UDPSender = function () {
                 writeResult = this._agentThrift.Agent.emitBatch.argumentsMessageRW.writeInto(this._convertBatchToThriftMessage(this._batch), thriftBuffer, 0);
             } catch (err) {
                 this._logger.error('error writing Thrift object: ' + err + ', batch: ' + this._batch + ', length: ' + bufferLen);
-                console.log('error writing Thrift object: ' + err + ', batch: ' + this._batch + ', length: ' + bufferLen);
+                console.log('error writing Thrift object: ' + err + ', batch: ' + JSON.stringify(this._batch, null, 4) + ', length: ' + bufferLen);
                 this._reset();
                 return { err: true, numSpans: numSpans };
             }
