@@ -324,8 +324,12 @@ export default class Tracer {
      * accuracy can be represented.
      */
     now(): number {
-        // TODO investigate process.hrtime; verify it is available in all Node versions.
-        // http://stackoverflow.com/questions/11725691/how-to-get-a-microtime-in-node-js
-        return Date.now();
+        if (Utils.hrTimeSupport()) {
+            const hrtime = process.hrtime();
+            const nowMicro = Math.floor(hrtime[0] * 10 ** 9 + hrtime[1]);
+            return nowMicro;
+        } else {
+            return Date.now() * 10 ** 6;
+        }
     }
 }

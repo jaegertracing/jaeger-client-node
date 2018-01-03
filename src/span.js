@@ -175,8 +175,7 @@ export default class Span {
      * otherwise leads to undefined behavior.
      *
      * @param  {number} finishTime
-     *         Optional finish time in milliseconds as a Unix timestamp. Decimal
-     *         values are supported for timestamps with sub-millisecond accuracy.
+     *         Optional finish time in nanoseconds.
      *         If not specified, the current time (as defined by the
      *         implementation) will be used.
      */
