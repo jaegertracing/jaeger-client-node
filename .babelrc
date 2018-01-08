@@ -1,13 +1,4 @@
 {
-  "presets": [
-    [
-      "env",
-      {
-        "targets": {
-          "node": "0.10"
-        }
-      }
-    ]
-  ],
+  "presets": ["env"],
   "plugins": ["transform-class-properties", "transform-flow-strip-types"]
 }
