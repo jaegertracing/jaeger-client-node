@@ -55,6 +55,7 @@
     "check-license": "./scripts/check-license.sh",
     "check-ls":
       "npm ls --loglevel=http --parseable 1>/dev/null && echo '# npm is in a good state'",
+    "compile:es2015": "babel ./source --out-dir ./es2015 --presets es2015",
     "cover":
       "babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/ test/samplers/ test/baggage/",
     "coveralls": "npm run cover && cat ./coverage/lcov.info | coveralls",
