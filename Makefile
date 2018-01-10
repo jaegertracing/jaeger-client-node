@@ -14,6 +14,13 @@ test: build-node
 	npm run test-all
 	npm run check-license
 
+.PHONY: test-without-build
+test-without-build:
+	npm run flow
+	npm run lint
+	npm run test-all
+	npm run check-license
+
 .PHONY: build-node
 build-node: node_modules
 	rm -rf ./dist/
