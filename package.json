@@ -64,10 +64,10 @@
     "test": "make test",
     "test-all":
       "npm run test-core && npm run test-samplers && npm run test-crossdock && npm run test-baggage",
-    "test-core": "mocha --compilers js:babel-core/register test",
-    "test-samplers": "mocha --compilers js:babel-core/register test/samplers",
-    "test-baggage": "mocha --compilers js:babel-core/register test/baggage",
-    "test-crossdock": "mocha --compilers js:babel-register crossdock/test",
+    "test-core": "mocha dist/test",
+    "test-samplers": "mocha dist/test/samplers",
+    "test-baggage": "mocha dist/test/baggage",
+    "test-crossdock": "mocha dist/crossdock/test",
     "show-cover": "open coverage/lcov-report/index.html"
   }
 }
