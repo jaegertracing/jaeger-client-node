@@ -57,6 +57,8 @@ script:
 -   make build-node
 -   nvm use $TEST_NODE_VERSION
 -   node --version
+-   rm -rf ./node_modules
+-   npm install
 -   make test-without-build
 -   nvm use $TRAVIS_NODE_VERSION
 - fi
