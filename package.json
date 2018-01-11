@@ -56,7 +56,7 @@
     "check-ls":
       "npm ls --loglevel=http --parseable 1>/dev/null && echo '# npm is in a good state'",
     "cover":
-      "babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- dist/test/ dist/test/samplers/ dist/test/baggage/",
+      "babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/ test/samplers/ test/baggage/",
     "coveralls": "npm run cover && cat ./coverage/lcov.info | coveralls",
     "flow": "flow",
     "lint":
