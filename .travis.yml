@@ -54,13 +54,14 @@ before_script:
 
 script:
 - if [ "$CROSSDOCK" != "1" ]; then
--   make build-node
--   nvm use $TEST_NODE_VERSION
--   node --version
--   rm -rf ./node_modules
--   npm install
--   make test-without-build
--   nvm use $TRAVIS_NODE_VERSION 
+    make build-node; 
+    nvm use $TEST_NODE_VERSION;
+    node --version;
+    rm -rf ./node_modules;
+    npm install;
+    make test-without-build;
+    nvm use $TRAVIS_NODE_VERSION;
+    fi
 - if [ "$COVER" = "1" ]; then npm run coveralls ; fi
 - if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh ; fi
 
