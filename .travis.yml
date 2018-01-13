@@ -3,24 +3,7 @@ sudo: required
 language: node_js
 
 node_js:
-- 'node'
-- '8'
-- '6'
 - '4'
-- '0.12'
-
-matrix:
-  include:
-  - node_js: '0.10'
-    env: COVER=1
-    sudo: required
-    services:
-    - docker
-  - node_js: '0.10'
-    env: CROSSDOCK=1
-    sudo: required
-    services:
-      - docker
 
 cache:
   directories:
@@ -30,6 +13,23 @@ services:
 - docker
 
 env:
+  matrix:
+  - TEST_NODE_VERSION=0.12
+  - TEST_NODE_VERSION=4
+  - TEST_NODE_VERSION=6
+  - TEST_NODE_VERSION=node
+  - env:
+      - COVER=1
+      - TEST_NODE_VERSION=0.10
+    sudo: required
+    services:
+    - docker
+  - env:
+      - CROSSDOCK=1
+      - TEST_NODE_VERSION=0.10
+    sudo: required
+    services:
+      - docker
   global:
   - DOCKER_VERSION=1.12.0-0~trusty
   - DOCKER_COMPOSE_VERSION=1.8.0
@@ -44,8 +44,21 @@ before_install:
 - npm install babel-cli
 - if [ "$CROSSDOCK" = "1" ]; then make install_docker_ci ; fi
 
+before_script:
+# Install the Node version to test against
+- nvm install $TEST_NODE_VERSION
+- nvm use $TRAVIS_NODE_VERSION
+
 script:
-- if [ "$CROSSDOCK" != "1" ]; then make test ; fi
+- if [ "$CROSSDOCK" != "1" ]; then
+    make build-node;
+    nvm use $TEST_NODE_VERSION;
+    node --version;
+    rm -rf ./node_modules;
+    npm install;
+    make test-without-build;
+    nvm use $TRAVIS_NODE_VERSION;
+    fi
 - if [ "$COVER" = "1" ]; then npm run coveralls ; fi
 - if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh ; fi
 

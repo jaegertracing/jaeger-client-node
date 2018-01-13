@@ -10,24 +10,24 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import {expect} from 'chai';
-import entrypoint from '../entrypoint';
+import { expect } from "chai";
+import entrypoint from "../../entrypoint";
 
-describe('entrypoint', () => {
-    it ('should import and create objects without error', () => {
-        expect(entrypoint.initTracer).to.be.a('function');
-        expect(entrypoint.ConstSampler).to.be.a('function');
-        expect(entrypoint.ProbabilisticSampler).to.be.a('function');
-        expect(entrypoint.RateLimitingSampler).to.be.a('function');
-        expect(entrypoint.RemoteSampler).to.be.a('function');
-        expect(entrypoint.CompositeReporter).to.be.a('function');
-        expect(entrypoint.InMemoryReporter).to.be.a('function');
-        expect(entrypoint.LoggingReporter).to.be.a('function');
-        expect(entrypoint.NoopReporter).to.be.a('function');
-        expect(entrypoint.RemoteReporter).to.be.a('function');
-        expect(entrypoint.TestUtils).to.be.a('function');
-        expect(entrypoint.SpanContext).to.be.a('function');
-        expect(entrypoint.TChannelBridge).to.be.a('function');
-        expect(entrypoint.opentracing).to.be.a('object');
-    });
+describe("entrypoint", () => {
+  it("should import and create objects without error", () => {
+    expect(entrypoint.initTracer).to.be.a("function");
+    expect(entrypoint.ConstSampler).to.be.a("function");
+    expect(entrypoint.ProbabilisticSampler).to.be.a("function");
+    expect(entrypoint.RateLimitingSampler).to.be.a("function");
+    expect(entrypoint.RemoteSampler).to.be.a("function");
+    expect(entrypoint.CompositeReporter).to.be.a("function");
+    expect(entrypoint.InMemoryReporter).to.be.a("function");
+    expect(entrypoint.LoggingReporter).to.be.a("function");
+    expect(entrypoint.NoopReporter).to.be.a("function");
+    expect(entrypoint.RemoteReporter).to.be.a("function");
+    expect(entrypoint.TestUtils).to.be.a("function");
+    expect(entrypoint.SpanContext).to.be.a("function");
+    expect(entrypoint.TChannelBridge).to.be.a("function");
+    expect(entrypoint.opentracing).to.be.a("object");
+  });
 });
