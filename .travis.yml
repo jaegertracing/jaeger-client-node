@@ -30,9 +30,9 @@ services:
 env:
   matrix:
   - TEST_NODE_VERSION=0.12
-  # - TEST_NODE_VERSION=4
-  # - TEST_NODE_VERSION=6
-  # - TEST_NODE_VERSION=node
+  - TEST_NODE_VERSION=4
+  - TEST_NODE_VERSION=6
+  - TEST_NODE_VERSION=node
   global:
   - DOCKER_VERSION=1.12.0-0~trusty
   - DOCKER_COMPOSE_VERSION=1.8.0
@@ -54,7 +54,7 @@ before_script:
 
 script:
 - if [ "$CROSSDOCK" != "1" ]; then
-    make build-node; 
+    make build-node;
     nvm use $TEST_NODE_VERSION;
     node --version;
     rm -rf ./node_modules;
