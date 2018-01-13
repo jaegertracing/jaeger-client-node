@@ -5,21 +5,6 @@ language: node_js
 node_js:
 - '4'
 
-# matrix:
-#   include:
-#   - env:
-#       - COVER=1
-#       - TEST_NODE_VERSION=0.10
-#     sudo: required
-#     services:
-#     - docker
-#   - env:
-#       - CROSSDOCK=1
-#       - TEST_NODE_VERSION=0.10
-#     sudo: required
-#     services:
-#       - docker
-
 cache:
   directories:
   - ~/.npm
