@@ -22,80 +22,81 @@ var ThriftUtils = require('../dist/src/thrift.js').default;
 var opentracing = require('opentracing');
 
 function benchmarkSpan() {
+  var constTracer = new Tracer('const-tracer', new InMemoryReporter(), new ConstSampler(true));
+  var probabilisticTracer = new Tracer(
+    'probabilistic-tracer',
+    new InMemoryReporter(),
+    new ProbabilisticSampler(0.1)
+  );
 
-    var constTracer = new Tracer('const-tracer', new InMemoryReporter(), new ConstSampler(true));
-    var probabilisticTracer = new Tracer('probabilistic-tracer', new InMemoryReporter(), new ProbabilisticSampler(0.1));
+  var params = [
+    { tracer: constTracer, description: ' with constant tracer' },
+    { tracer: probabilisticTracer, description: ' with probabilitic tracer' },
+  ];
 
-    var params = [
-        { 'tracer': constTracer, 'description': ' with constant tracer' },
-        { 'tracer': probabilisticTracer, 'description': ' with probabilitic tracer' }
-    ];
+  function createSpanFactory(tracer) {
+    return function() {
+      var span = tracer.startSpan('op-name');
+      span.setBaggageItem('key', 'value');
+      return span;
+    };
+  }
 
-    function createSpanFactory(tracer) {
-        return function() {
-            var span = tracer.startSpan('op-name');
-            span.setBaggageItem('key', 'value');
-            return span;
-        }
-    }
+  console.log('Beginning Span Benchmark...');
+  function run(createSpan, description) {
+    var span = createSpan();
+    var suite = new Benchmark.Suite()
+      .add('Span:setBaggageItem', function() {
+        span.setBaggageItem('key', 'value');
+      })
+      .add('Span:getBaggageItem', function() {
+        span.getBaggageItem('key');
+      })
+      .add('Span:setOperationName', function() {
+        span.setOperationName('op-name');
+      })
+      .add('Span:finish', function() {
+        span.finish();
+        span._duration = undefined;
+      })
+      .add('Span:addTags', function() {
+        span.addTags({
+          keyOne: 'one',
+          keyTwo: 'two',
+          keyThree: 'three',
+        });
+      })
+      .add('Span:setTag', function() {
+        span.setTag('key', 'value');
+      })
+      .add('Span.spanToThrift', function() {
+        Thrift.spanToThrift(span);
+      })
+      .add('Span.log', function() {
+        span.log({
+          event: 'event message',
+          payload: '{key: value}',
+        });
+      })
+      .on('cycle', function(event) {
+        benchmarks.add(event.target);
+        event.target.name = event.target.name + description;
+        span = createSpan();
+      })
+      .on('complete', function() {
+        benchmarks.log();
+      })
+      // run async
+      .run({ async: false });
+  }
 
-
-
-    console.log('Beginning Span Benchmark...');
-    function run(createSpan, description) {
-        var span = createSpan();
-        var suite = new Benchmark.Suite()
-            .add('Span:setBaggageItem', function() {
-                span.setBaggageItem('key', 'value');
-            })
-            .add('Span:getBaggageItem', function() {
-                span.getBaggageItem('key');
-            })
-            .add('Span:setOperationName', function() {
-                span.setOperationName('op-name');
-            })
-            .add('Span:finish', function() {
-                span.finish();
-                span._duration = undefined;
-            })
-            .add('Span:addTags', function() {
-                span.addTags({
-                    'keyOne': 'one',
-                    'keyTwo': 'two',
-                    'keyThree': 'three'
-                });
-            })
-            .add('Span:setTag', function() {
-                span.setTag('key', 'value');
-            })
-            .add('Span.spanToThrift', function() {
-                Thrift.spanToThrift(span);
-            })
-            .add('Span.log', function() {
-                span.log({
-                    'event': 'event message',
-                    'payload': '{key: value}'
-                });
-            })
-            .on('cycle', function(event) {
-                benchmarks.add(event.target);
-                event.target.name = event.target.name + description;
-                span = createSpan();
-            })
-            .on('complete', function() {
-                benchmarks.log();
-            })
-            // run async
-            .run({ 'async': false });
-    }
-
-    _.each(params, function(o) {
-        run(createSpanFactory(o['tracer']), o['description']);
-    });
+  _.each(params, function(o) {
+    run(createSpanFactory(o['tracer']), o['description']);
+  });
 }
 
 exports.benchmarkSpan = benchmarkSpan;
 
 if (require.main === module) {
-    benchmarkSpan();
+  benchmarkSpan();
 }

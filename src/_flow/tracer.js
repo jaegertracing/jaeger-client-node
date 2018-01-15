@@ -15,9 +15,9 @@ import SpanContext from '../span_context.js';
 
 // startSpanOptions is used to type-check Trace.startSpan() options.
 declare type startSpanOptions = {
-    operationName?: string,
-    childOf?: SpanContext,
-    references?: Array<Reference>,
-    tags?: any,
-    startTime?: number,
+  operationName?: string,
+  childOf?: SpanContext,
+  references?: Array<Reference>,
+  tags?: any,
+  startTime?: number,
 };

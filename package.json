@@ -10,10 +10,7 @@
     "type": "git",
     "url": "git://github.com/jaegertracing/jaeger-client-node.git"
   },
-  "contributors": [
-    "Yuri Shkuro <ys@uber.com>",
-    "Won Jun Jang <wjang@uber.com>"
-  ],
+  "contributors": ["Yuri Shkuro <ys@uber.com>", "Won Jun Jang <wjang@uber.com>"],
   "dependencies": {
     "node-int64": "^0.4.0",
     "thriftrw": "^3.5.0",
@@ -42,6 +39,7 @@
     "lodash": "^4.15.0",
     "minimist": "1.2.0",
     "mocha": "^3.0.1",
+    "prettier": "1.10.2",
     "request": "2.74.0",
     "rsvp": "^3.3.1",
     "semver": "^5",
@@ -54,12 +52,15 @@
   "scripts": {
     "check-license": "./scripts/check-license.sh",
     "check-ls": "npm ls --loglevel=http --parseable 1>/dev/null && echo '# npm is in a good state'",
-    "cover": "babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/ test/samplers/ test/baggage/",
+    "cover":
+      "babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/ test/samplers/ test/baggage/",
     "coveralls": "npm run cover && cat ./coverage/lcov.info | coveralls",
     "flow": "flow",
+    "format": "prettier --write '**/*.{js,json}'",
     "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed' && npm run check-license",
     "test": "make test",
-    "test-all": "npm run test-core && npm run test-samplers && npm run test-crossdock && npm run test-baggage",
+    "test-all":
+      "npm run test-core && npm run test-samplers && npm run test-crossdock && npm run test-baggage",
     "test-core": "mocha --compilers js:babel-core/register test",
     "test-samplers": "mocha --compilers js:babel-core/register test/samplers",
     "test-baggage": "mocha --compilers js:babel-core/register test/baggage",

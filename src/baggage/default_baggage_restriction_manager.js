@@ -11,7 +11,7 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import Restriction from './restriction.js'
+import Restriction from './restriction.js';
 
 export const DEFAULT_MAX_VALUE_LENGTH = 2048;
 
@@ -19,14 +19,14 @@ export const DEFAULT_MAX_VALUE_LENGTH = 2048;
  * Creates a BaggageRestrictionManager that allows any baggage key.
  */
 export default class DefaultBaggageRestrictionManager {
-    _restriction: Restriction;
+  _restriction: Restriction;
 
-    constructor(maxValueLength: ?number) {
-        let length = maxValueLength || DEFAULT_MAX_VALUE_LENGTH;
-        this._restriction = new Restriction(true, length);
-    }
+  constructor(maxValueLength: ?number) {
+    let length = maxValueLength || DEFAULT_MAX_VALUE_LENGTH;
+    this._restriction = new Restriction(true, length);
+  }
 
-    getRestriction(service: string, key: string): Restriction {
-        return this._restriction;
-    }
+  getRestriction(service: string, key: string): Restriction {
+    return this._restriction;
+  }
 }

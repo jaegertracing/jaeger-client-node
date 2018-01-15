@@ -17,40 +17,40 @@ import LocalTimer from './timer';
 import LocalBackend from './backend';
 
 export default class LocalFactory {
-    _backend: any;
+  _backend: any;
 
-    constructor() {
-        this._backend = new LocalBackend();
+  constructor() {
+    this._backend = new LocalBackend();
+  }
+
+  _uniqueNameWithTags(name: string, tags: any): string {
+    let kvPairs = [];
+    let sortedKeys = Object.keys(tags).sort();
+    for (let i = 0; i < sortedKeys.length; i++) {
+      let key = sortedKeys[i];
+      let value = tags[key];
+      if (tags.hasOwnProperty(key)) {
+        kvPairs.push(`${key}=${value}`);
+      }
     }
 
-    _uniqueNameWithTags(name: string, tags: any): string {
-        let kvPairs = [];
-        let sortedKeys = Object.keys(tags).sort();
-        for (let i = 0; i < sortedKeys.length; i++) {
-            let key = sortedKeys[i];
-            let value = tags[key];
-            if (tags.hasOwnProperty(key)) {
-                kvPairs.push(`${key}=${value}`);
-            }
-        }
+    let tagName = kvPairs.join();
+    let metricName = `${name}.${tagName}`;
+    return metricName;
+  }
 
-        let tagName = kvPairs.join();
-        let metricName = `${name}.${tagName}`;
-        return metricName;
-    }
+  createCounter(name: string, tags: any = {}): Counter {
+    let uniqueMetricName = this._uniqueNameWithTags(name, tags);
+    return new LocalCounter(uniqueMetricName, tags, this._backend);
+  }
 
-    createCounter(name: string, tags: any = {}): Counter {
-        let uniqueMetricName = this._uniqueNameWithTags(name, tags);
-        return new LocalCounter(uniqueMetricName, tags, this._backend);
-    }
+  createTimer(name: string, tags: any = {}): Timer {
+    let uniqueMetricName = this._uniqueNameWithTags(name, tags);
+    return new LocalTimer(uniqueMetricName, tags, this._backend);
+  }
 
-    createTimer(name: string, tags: any = {}): Timer {
-        let uniqueMetricName = this._uniqueNameWithTags(name, tags);
-        return new LocalTimer(uniqueMetricName, tags, this._backend);
-    }
-
-    createGauge(name: string, tags: any = {}): Gauge {
-        let uniqueMetricName = this._uniqueNameWithTags(name, tags);
-        return new LocalGauge(uniqueMetricName, tags, this._backend);
-    }
+  createGauge(name: string, tags: any = {}): Gauge {
+    let uniqueMetricName = this._uniqueNameWithTags(name, tags);
+    return new LocalGauge(uniqueMetricName, tags, this._backend);
+  }
 }

@@ -12,34 +12,34 @@
 // the License.
 
 declare type Downstream = {
-    serviceName: string,
-    serverRole: string,
-    host: string,
-    port: string,
-    transport: string,
-    downstream?: Downstream
+  serviceName: string,
+  serverRole: string,
+  host: string,
+  port: string,
+  transport: string,
+  downstream?: Downstream,
 };
 
 declare type StartTraceRequest = {
-    serverRole: string,
-    sampled: boolean,
-    baggage: string,
-    downstream: Downstream
+  serverRole: string,
+  sampled: boolean,
+  baggage: string,
+  downstream: Downstream,
 };
 
 declare type JoinTraceRequest = {
-    serverRole: string,
-    downstream?: Downstream
+  serverRole: string,
+  downstream?: Downstream,
 };
 
 declare type ObservedSpan = {
-    traceId: string,
-    sampled: boolean,
-    baggage: string
+  traceId: string,
+  sampled: boolean,
+  baggage: string,
 };
 
 declare type TraceResponse = {
-    span?: ObservedSpan,
-    downstream?: TraceResponse,
-    notImplementedError?: string
+  span?: ObservedSpan,
+  downstream?: TraceResponse,
+  notImplementedError?: string,
 };

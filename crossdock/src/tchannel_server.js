@@ -27,51 +27,51 @@ import Utils from '../../src/util.js';
 
 let DEFAULT_THRIFT_PATH = '/crossdock/tracetest.thrift';
 export default class TChannelServer {
-    _tracer: Tracer;
-    _helpers: any;
+  _tracer: Tracer;
+  _helpers: any;
 
-    constructor(crossdockSpecPath: string = DEFAULT_THRIFT_PATH) {
-        this._tracer = new Tracer('node', new InMemoryReporter(), new ConstSampler(false));
-        this._helpers = new Helpers(this._tracer);
+  constructor(crossdockSpecPath: string = DEFAULT_THRIFT_PATH) {
+    this._tracer = new Tracer('node', new InMemoryReporter(), new ConstSampler(false));
+    this._helpers = new Helpers(this._tracer);
 
-        let serverChannel = TChannel({'serviceName': 'node'});
-        let tchannelThrift = TChannelThrift({
-            'channel': serverChannel,
-            'entryPoint': crossdockSpecPath
-        });
-        let context = new DefaultContext();
+    let serverChannel = TChannel({ serviceName: 'node' });
+    let tchannelThrift = TChannelThrift({
+      channel: serverChannel,
+      entryPoint: crossdockSpecPath,
+    });
+    let context = new DefaultContext();
 
-        let bridge = new TChannelBridge(this._tracer);
-        let tracedHandler = bridge.tracedHandler(this.handleTChannelRequest.bind(this));
-        tchannelThrift.register(serverChannel, 'TracedService::joinTrace', context, tracedHandler);
+    let bridge = new TChannelBridge(this._tracer);
+    let tracedHandler = bridge.tracedHandler(this.handleTChannelRequest.bind(this));
+    tchannelThrift.register(serverChannel, 'TracedService::joinTrace', context, tracedHandler);
 
-        serverChannel.listen(8082, Utils.myIp(), () => {
-            Helpers.log('TChannel server listening on port 8082...');
-        });
-    }
+    serverChannel.listen(8082, Utils.myIp(), () => {
+      Helpers.log('TChannel server listening on port 8082...');
+    });
+  }
 
-    handleTChannelRequest(perProcessOptions: any, req: any, head: any, body: any, callback: Function) {
-        let isStartRequest: boolean = false;
-        let traceRequest = body.request;
-        let context = req.context;
-        Helpers.log('TChannel', traceRequest.serverRole, 'received joinTrace request', Helpers.json2str(traceRequest));
+  handleTChannelRequest(perProcessOptions: any, req: any, head: any, body: any, callback: Function) {
+    let isStartRequest: boolean = false;
+    let traceRequest = body.request;
+    let context = req.context;
+    Helpers.log(
+      'TChannel',
+      traceRequest.serverRole,
+      'received joinTrace request',
+      Helpers.json2str(traceRequest)
+    );
 
-        let promise = this._helpers.handleRequest(
-            isStartRequest,
-            traceRequest,
-            context.getSpan()
-        );
+    let promise = this._helpers.handleRequest(isStartRequest, traceRequest, context.getSpan());
 
-        promise.then((tchannelResp) => {
-            callback(null, {
-                'ok': true,
-                'body': tchannelResp
-                }
-            );
-        });
-    }
+    promise.then(tchannelResp => {
+      callback(null, {
+        ok: true,
+        body: tchannelResp,
+      });
+    });
+  }
 }
 
-if ((require:any).main === module) {
-    let tchannel = new TChannelServer();
+if ((require: any).main === module) {
+  let tchannel = new TChannelServer();
 }

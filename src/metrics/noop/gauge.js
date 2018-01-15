@@ -12,5 +12,5 @@
 // the License.
 
 export default class NoopGauge {
-    update(value: number): void {}
+  update(value: number): void {}
 }
