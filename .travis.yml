@@ -64,13 +64,15 @@ after_failure:
 - if [ "$CROSSDOCK" = "1" ]; then timeout 5 make crossdock-logs ; fi
 
 after_success:
-- export REPO=jaegertracing/xdock-node
-- export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
-- export TAG=`if [ "$BRANCH" == "master" ]; then echo "latest"; else echo $BRANCH; fi`
-- echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, REPO=$REPO, PR=$PR, BRANCH=$BRANCH, TAG=$TAG"
-- export DOCKER=$(if [ "$BRANCH" == "master" ] && [ "$CROSSDOCK" == "1" ]; then echo docker; else echo true; fi)
-- $DOCKER login -u $DOCKER_USER -p $DOCKER_PASS
-- $DOCKER build -f crossdock/Dockerfile -t $REPO:$COMMIT .
-- $DOCKER tag $REPO:$COMMIT $REPO:$TAG
-- $DOCKER tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
-- $DOCKER push $REPO
+- if [ "$CROSSDOCK" = "1"] && ["$TRAVIS_PULL_REQUEST" == false]; then
+    export REPO=jaegertracing/xdock-node;
+    export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi);
+    export TAG=`if [ "$BRANCH" == "master" ]; then echo "latest"; else echo $BRANCH; fi`;
+    echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, REPO=$REPO, PR=$PR, BRANCH=$BRANCH, TAG=$TAG";
+    export DOCKER=$(if [ "$BRANCH" == "master" ] && [ "$CROSSDOCK" == "1" ]; then echo docker; else echo true; fi);
+    $DOCKER login -u $DOCKER_USER -p $DOCKER_PASS;
+    $DOCKER build -f crossdock/Dockerfile -t $REPO:$COMMIT .;
+    $DOCKER tag $REPO:$COMMIT $REPO:$TAG;
+    $DOCKER tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER;
+    $DOCKER push $REPO;
+    fi
