@@ -9,10 +9,7 @@ publish: build-node
 
 .PHONY: test
 test: build-node
-	npm run flow
-	npm run lint
-	npm run test-all
-	npm run check-license
+	test-without-build
 
 .PHONY: test-without-build
 test-without-build:

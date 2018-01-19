@@ -41,34 +41,24 @@ before_install:
 - docker version
 - npm install babel-cli
 - if [ "$CROSSDOCK" = "1" ]; then make install_docker_ci ; fi
-
-before_script:
 # Install the Node version to test against
 - nvm install $TEST_NODE_VERSION
 - nvm use $TRAVIS_NODE_VERSION
 
+before_script:
+- make build-node
+- nvm use $TEST_NODE_VERSION
+- node --version
+- rm -rf ./node_modules package-lock.json
+- npm install
+
 script:
-- if [ "$CROSSDOCK" != "1" ]; then
-    set -e;
-    make build-node;
-    nvm use $TEST_NODE_VERSION;
-    node --version;
-    rm -rf ./node_modules package-lock.json;
-    npm install;
-    make test-without-build;
-    nvm use $TRAVIS_NODE_VERSION;
-    fi
-- if [ "$COVER" = "1" ]; then
-    set -e;
-    make build-node;
-    nvm use $TEST_NODE_VERSION;
-    node --version;
-    rm -rf ./node_modules package-lock.json;
-    npm install;
-    npm run coveralls;
-    nvm use $TRAVIS_NODE_VERSION;
-    fi
+- if [ "$CROSSDOCK" != "1" ]; then make test-without-build; fi
+- if [ "$COVER" = "1" ]; then npm run coveralls; fi
 - if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh ; fi
+
+after_script:
+- nvm use $TRAVIS_NODE_VERSION
 
 after_failure:
 - if [ "$CROSSDOCK" = "1" ]; then timeout 5 make crossdock-logs ; fi
