@@ -3,24 +3,7 @@ sudo: required
 language: node_js
 
 node_js:
-- 'node'
-- '8'
-- '6'
 - '4'
-- '0.12'
-
-matrix:
-  include:
-  - node_js: '0.10'
-    env: COVER=1
-    sudo: required
-    services:
-    - docker
-  - node_js: '0.10'
-    env: CROSSDOCK=1
-    sudo: required
-    services:
-      - docker
 
 cache:
   directories:
@@ -28,6 +11,21 @@ cache:
 
 services:
 - docker
+
+matrix:
+  include:
+  - env: TEST_NODE_VERSION=0.12
+  - env: TEST_NODE_VERSION=4
+  - env: TEST_NODE_VERSION=6
+  - env: TEST_NODE_VERSION=node
+  - env: COVER=1 TEST_NODE_VERSION=0.10
+    sudo: required
+    services:
+    - docker
+  - env: CROSSDOCK=1 TEST_NODE_VERSION=0.10
+    sudo: required
+    services:
+      - docker
 
 env:
   global:
@@ -43,23 +41,38 @@ before_install:
 - docker version
 - npm install babel-cli
 - if [ "$CROSSDOCK" = "1" ]; then make install_docker_ci ; fi
+# Install the Node version to test against
+- nvm install $TEST_NODE_VERSION
+- nvm use $TRAVIS_NODE_VERSION
+
+before_script:
+- make build-node
+- nvm use $TEST_NODE_VERSION
+- node --version
+- rm -rf ./node_modules package-lock.json
+- npm install
 
 script:
-- if [ "$CROSSDOCK" != "1" ]; then make test ; fi
-- if [ "$COVER" = "1" ]; then npm run coveralls ; fi
+- if [ "$CROSSDOCK" != "1" ]; then make test-without-build; fi
+- if [ "$COVER" = "1" ]; then npm run coveralls; fi
 - if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh ; fi
+
+after_script:
+- nvm use $TRAVIS_NODE_VERSION
 
 after_failure:
 - if [ "$CROSSDOCK" = "1" ]; then timeout 5 make crossdock-logs ; fi
 
 after_success:
-- export REPO=jaegertracing/xdock-node
-- export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
-- export TAG=`if [ "$BRANCH" == "master" ]; then echo "latest"; else echo $BRANCH; fi`
-- echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, REPO=$REPO, PR=$PR, BRANCH=$BRANCH, TAG=$TAG"
-- export DOCKER=$(if [ "$BRANCH" == "master" ] && [ "$CROSSDOCK" == "1" ]; then echo docker; else echo true; fi)
-- $DOCKER login -u $DOCKER_USER -p $DOCKER_PASS
-- $DOCKER build -f crossdock/Dockerfile -t $REPO:$COMMIT .
-- $DOCKER tag $REPO:$COMMIT $REPO:$TAG
-- $DOCKER tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
-- $DOCKER push $REPO
+- if [ "$CROSSDOCK" = "1" ]; then
+    export REPO=jaegertracing/xdock-node;
+    export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi);
+    export TAG=`if [ "$BRANCH" == "master" ]; then echo "latest"; else echo $BRANCH; fi`;
+    echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, REPO=$REPO, PR=$PR, BRANCH=$BRANCH, TAG=$TAG";
+    export DOCKER=$(if [ "$BRANCH" == "master" ] && [ "$CROSSDOCK" == "1" ]; then echo docker; else echo true; fi);
+    $DOCKER login -u $DOCKER_USER -p $DOCKER_PASS;
+    $DOCKER build -f crossdock/Dockerfile -t $REPO:$COMMIT .;
+    $DOCKER tag $REPO:$COMMIT $REPO:$TAG;
+    $DOCKER tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER;
+    $DOCKER push $REPO;
+    fi

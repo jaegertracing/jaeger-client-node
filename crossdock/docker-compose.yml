@@ -11,7 +11,7 @@ services:
             - node
         environment:
             - WAIT_FOR=test_driver,go,java,python,node
-            - WAIT_FOR_TIMEOUT=60s
+            - WAIT_FOR_TIMEOUT=240s
 
             - CALL_TIMEOUT=60s
 
