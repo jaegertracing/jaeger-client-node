@@ -64,7 +64,7 @@ after_failure:
 - if [ "$CROSSDOCK" = "1" ]; then timeout 5 make crossdock-logs ; fi
 
 after_success:
-- if [ "$CROSSDOCK" = "1"] && ["$TRAVIS_PULL_REQUEST" == false]; then
+- if [ "$CROSSDOCK" = "1" ]; then
     export REPO=jaegertracing/xdock-node;
     export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi);
     export TAG=`if [ "$BRANCH" == "master" ]; then echo "latest"; else echo $BRANCH; fi`;
