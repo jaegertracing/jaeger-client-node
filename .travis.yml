@@ -52,14 +52,14 @@ before_script:
 - rm -rf ./node_modules package-lock.json
 - npm install
 
-# Ensure linting occurs on an LTS node version
-before_script: >
-  if nvm ls-remote --lts | grep "$(nvm current)"; then
-    echo "running on a LTS node version, linting"
-    npm run lint
-  else
-    echo "running on a non-LTS node version, skipping linting"
-  fi
+# # Ensure linting occurs on an LTS node version
+# before_script: >
+#   if nvm ls-remote --lts | grep "$(nvm current)"; then
+#     echo "running on a LTS node version, linting"
+#     npm run lint
+#   else
+#     echo "running on a non-LTS node version, skipping linting"
+#   fi
 
 script:
 - if [ "$CROSSDOCK" != "1" ]; then make test-without-build; fi
