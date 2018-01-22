@@ -35,6 +35,7 @@
     "eslint": "^3.14.1",
     "eslint-config-airbnb": "^15.1.0",
     "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-jsx-a11y": "^5.1.1",
     "eslint-plugin-flowtype": "^2.4.0",
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-react": "^7.1.0",
