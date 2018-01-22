@@ -50,7 +50,8 @@ before_script:
 - nvm use $TEST_NODE_VERSION
 - node --version
 - rm -rf ./node_modules package-lock.json
-- HUSKY_IGNORE_CI=true npm install
+- HUSKY_IGNORE_CI=false
+- npm install
 
 script:
 - if [ "$CROSSDOCK" != "1" ]; then make test-without-build; fi
