@@ -9,7 +9,7 @@ publish: build-node
 
 .PHONY: test
 test: build-node
-	test-without-build
+	make test-without-build
 
 .PHONY: test-without-build
 test-without-build:
