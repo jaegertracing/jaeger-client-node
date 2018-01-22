@@ -50,7 +50,6 @@ before_script:
 - nvm use $TEST_NODE_VERSION
 - node --version
 - rm -rf ./node_modules package-lock.json
-- HUSKY_IGNORE_CI=false
 - npm install
 
 script:
