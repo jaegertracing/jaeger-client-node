@@ -12,5 +12,5 @@
 // the License.
 
 export default class NoopCounter {
-    increment(delta: number): void {}
+  increment(delta: number): void {}
 }

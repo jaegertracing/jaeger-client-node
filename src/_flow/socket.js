@@ -12,14 +12,14 @@
 // the License.
 
 declare class dgram$Socket {
-    on(event: string, listener: Function): this;
-    close(): void;
-    send(
-      msg: Buffer,
-      offset: number,
-      length: number,
-      port: number,
-      address: string,
-      callback?: (err: ?any, bytes: any) => mixed,
-    ): void;
-  };
+  on(event: string, listener: Function): this;
+  close(): void;
+  send(
+    msg: Buffer,
+    offset: number,
+    length: number,
+    port: number,
+    address: string,
+    callback?: (err: ?any, bytes: any) => mixed
+  ): void;
+}

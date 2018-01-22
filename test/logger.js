@@ -13,10 +13,10 @@
 
 import NullLogger from '../src/logger';
 
-describe ('NullLogger', () => {
-    it('should do nothing', () => {
-        let logger: Logger = new NullLogger();
-        logger.info('nothing');
-        logger.error('nothing');
-    });
+describe('NullLogger', () => {
+  it('should do nothing', () => {
+    let logger: Logger = new NullLogger();
+    logger.info('nothing');
+    logger.error('nothing');
+  });
 });

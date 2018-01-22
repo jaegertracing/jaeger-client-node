@@ -14,6 +14,6 @@
 import Span from '../span';
 
 declare interface Context {
-    getSpan(): Span;
-    setSpan(span: Span): void;
+  getSpan(): Span;
+  setSpan(span: Span): void;
 }

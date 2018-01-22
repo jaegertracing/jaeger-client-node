@@ -15,39 +15,39 @@ import Span from '../span.js';
 import ThriftUtils from '../thrift.js';
 
 export default class InMemoryReporter {
-    _spans: Array<Span>;
-    _process: Process;
+  _spans: Array<Span>;
+  _process: Process;
 
-    constructor() {
-        this._spans = [];
-    }
+  constructor() {
+    this._spans = [];
+  }
 
-    name(): string {
-        return 'InMemoryReporter';
-    }
+  name(): string {
+    return 'InMemoryReporter';
+  }
 
-    report(span: Span): void {
-        this._spans.push(span);
-    }
+  report(span: Span): void {
+    this._spans.push(span);
+  }
 
-    get spans(): Array<Span> {
-        return this._spans;
-    }
+  get spans(): Array<Span> {
+    return this._spans;
+  }
 
-    clear(): void {
-        this._spans = [];
-    }
+  clear(): void {
+    this._spans = [];
+  }
 
-    close(callback: ?Function): void {
-        if (callback) {
-            callback();
-        }
+  close(callback: ?Function): void {
+    if (callback) {
+      callback();
     }
+  }
 
-    setProcess(serviceName: string, tags: Array<Tag>): void {
-        this._process = {
-            'serviceName': serviceName,
-            'tags': ThriftUtils.getThriftTags(tags)
-        };
-    }
+  setProcess(serviceName: string, tags: Array<Tag>): void {
+    this._process = {
+      serviceName: serviceName,
+      tags: ThriftUtils.getThriftTags(tags),
+    };
+  }
 }

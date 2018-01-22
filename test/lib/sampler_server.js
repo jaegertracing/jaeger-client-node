@@ -14,42 +14,42 @@
 import express from 'express';
 
 export default class SamplingServer {
-    _port: number;
-    _app: any;
-    _server: any;
-    _strategies: { [service: string]: SamplingStrategyResponse };
+  _port: number;
+  _app: any;
+  _server: any;
+  _strategies: { [service: string]: SamplingStrategyResponse };
 
-    constructor(port: number = 5778) {
-        this._port = port;
-        this._app = express();
-        this._strategies = Object.create(null);
-        this._app.get('/sampling', this._handle.bind(this));
-    }
+  constructor(port: number = 5778) {
+    this._port = port;
+    this._app = express();
+    this._strategies = Object.create(null);
+    this._app.get('/sampling', this._handle.bind(this));
+  }
 
-    addStrategy(serviceName: string, response: SamplingStrategyResponse): void {
-        this._strategies[serviceName] = response;
-    }
+  addStrategy(serviceName: string, response: SamplingStrategyResponse): void {
+    this._strategies[serviceName] = response;
+  }
 
-    clearStrategies(): void {
-        this._strategies = Object.create(null);
-    }
+  clearStrategies(): void {
+    this._strategies = Object.create(null);
+  }
 
-    _handle(req: any, res: any) {
-        let service = req.query.service;
-        let strategy = this._strategies[service];
-        if (strategy) {
-            res.send(strategy);
-        } else {
-            res.status(404).send({err: `unknown service name '${service}'`});
-        }
+  _handle(req: any, res: any) {
+    let service = req.query.service;
+    let strategy = this._strategies[service];
+    if (strategy) {
+      res.send(strategy);
+    } else {
+      res.status(404).send({ err: `unknown service name '${service}'` });
     }
+  }
 
-    start(): SamplingServer {
-        this._server = this._app.listen(this._port);
-        return this;
-    }
+  start(): SamplingServer {
+    this._server = this._app.listen(this._port);
+    return this;
+  }
 
-    close(): void {
-        this._server.close();
-    }
+  close(): void {
+    this._server.close();
+  }
 }
