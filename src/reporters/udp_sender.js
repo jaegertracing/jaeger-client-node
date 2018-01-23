@@ -118,9 +118,12 @@ export default class UDPSender {
         return flushResponse;
     }
 
-    flush(): SenderResponse {
+    flush(callback: ?Function): SenderResponse {
         let numSpans: number = this._batch.spans.length;
         if (numSpans == 0) {
+          if (callback) {
+            callback({err: false, numSpans: 0});
+          }
             return {err: false, numSpans: 0}
         }
 
@@ -132,6 +135,9 @@ export default class UDPSender {
 
         if (writeResult.err) {
             this._logger.error(`error writing Thrift object: ${writeResult.err}`);
+            if (callback) {
+              callback({err: true, numSpans: numSpans});
+            }
             return {err: true, numSpans: numSpans};
         }
 
@@ -143,7 +149,9 @@ export default class UDPSender {
             }
         });
         this._reset();
-
+        if (callback) {
+          callback({err: false, numSpans: numSpans});
+        }
         return {err: false, numSpans: numSpans};
     }
 
