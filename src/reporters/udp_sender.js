@@ -118,13 +118,13 @@ export default class UDPSender {
         return flushResponse;
     }
 
-    flush(callback: ?Function): SenderResponse {
+    flush(callback: ?Function): void {
         let numSpans: number = this._batch.spans.length;
         if (numSpans == 0) {
           if (callback) {
             callback({err: false, numSpans: 0});
           }
-            return {err: false, numSpans: 0}
+            return;
         }
 
         let bufferLen = this._totalSpanBytes + this._emitSpanBatchOverhead;
@@ -138,21 +138,20 @@ export default class UDPSender {
             if (callback) {
               callback({err: true, numSpans: numSpans});
             }
-            return {err: true, numSpans: numSpans};
+            return;
         }
 
         // Having the error callback here does not prevent uncaught exception from being thrown,
         // that's why in the constructor we also add a general on('error') handler.
-        this._client.send(thriftBuffer, 0, thriftBuffer.length, this._port, this._host, (err, sent) => {
+        this._client.send(thriftBuffer, 0, thriftBuffer.length, this._port, this._host, (err) => {
             if (err) {
                 this._logger.error(`error sending spans over UDP: ${err}, packet size: ${writeResult.offset}, bytes sent: ${sent}`);
             }
+            if (callback) {
+              callback({err: err !== 0, numSpans: numSpans});
+            }
         });
         this._reset();
-        if (callback) {
-          callback({err: false, numSpans: numSpans});
-        }
-        return {err: false, numSpans: numSpans};
     }
 
     _convertBatchToThriftMessage() {
