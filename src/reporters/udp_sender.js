@@ -143,7 +143,7 @@ export default class UDPSender {
 
         // Having the error callback here does not prevent uncaught exception from being thrown,
         // that's why in the constructor we also add a general on('error') handler.
-        this._client.send(thriftBuffer, 0, thriftBuffer.length, this._port, this._host, (err) => {
+        this._client.send(thriftBuffer, 0, thriftBuffer.length, this._port, this._host, (err, sent) => {
             if (err) {
                 this._logger.error(`error sending spans over UDP: ${err}, packet size: ${writeResult.offset}, bytes sent: ${sent}`);
             }
