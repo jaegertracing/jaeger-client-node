@@ -50,7 +50,7 @@ before_script:
 - nvm use $TEST_NODE_VERSION
 - node --version
 - rm -rf ./node_modules package-lock.json
-- npm install
+- npm install --no-optional
 
 script:
 - if [ "$CROSSDOCK" != "1" ]; then make test-without-build; fi
