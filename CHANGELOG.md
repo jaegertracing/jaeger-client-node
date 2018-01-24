@@ -1,10 +1,12 @@
 Changes by Version
 ==================
 
-3.7.1 (2017-01-24)
+3.8.0 (2017-01-24)
 ------------------
 
-- UDP sender bug fixes (#184, #192, #195) 
+- Log error when Thrift conversion fails (#184)
+- Throw error if serviceName is not provided (#192)
+- Flush only if process is set (#195)
 - Change default flush interval to 1sec (#196)
 
 
