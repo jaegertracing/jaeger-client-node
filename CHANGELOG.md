@@ -1,10 +1,11 @@
 Changes by Version
 ==================
 
-3.7.1 (unreleased)
+3.7.1 (2017-01-24)
 ------------------
 
-- nothing yet
+- UDP sender bug fixes (#184, #192, #195) 
+- Change default flush interval to 1sec (#196)
 
 
 3.7.0 (2017-11-21)
