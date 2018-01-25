@@ -131,8 +131,8 @@ export default class UDPSender {
         );
 
         if (writeResult.err) {
-            this._logger.error(`error writing Thrift object: ${writeResult.err}`);
-            return {err: true, numSpans: numSpans};
+            let errMessage = this._logger.error(`error writing Thrift object: ${writeResult.err}`);
+            return {err: errMessage, numSpans: numSpans};
         }
 
         // Having the error callback here does not prevent uncaught exception from being thrown,
