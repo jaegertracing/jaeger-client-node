@@ -14,5 +14,5 @@
 import SpanContext from '../span_context.js';
 
 declare interface Injector {
-    inject(spanContext: SpanContext, carrier: any): void;
+  inject(spanContext: SpanContext, carrier: any): void;
 }

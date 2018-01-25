@@ -19,35 +19,35 @@ var SpanContext = require('../dist/src/span_context.js').default;
 var Tracer = require('../dist/src/tracer.js').default;
 
 function benchmarkSpanContext() {
-    console.log('Beginning Span Context Benchmark...');
+  console.log('Beginning Span Context Benchmark...');
 
-    var tracer = new Tracer('const-tracer', new NoopReporter(), new ConstSampler(true));
-    var span = tracer.startSpan('op-name');
-    var context = span.context();
+  var tracer = new Tracer('const-tracer', new NoopReporter(), new ConstSampler(true));
+  var span = tracer.startSpan('op-name');
+  var context = span.context();
 
-    function run() {
-        var suite = new Benchmark.Suite()
-            .add('SpanContext:fromString', function() {
-                SpanContext.fromString('ffffffffffffffff:ffffffffffffffff:5:1');
-            })
-            .add('SpanContext:toString', function() {
-                context.toString('ffffffffffffffff:ffffffffffffffff:5:1');
-            })
-            .on('cycle', function(event) {
-                benchmarks.add(event.target);
-            })
-            .on('complete', function() {
-                benchmarks.log();
-            })
-            // run async
-            .run({ 'async': false });
-    }
+  function run() {
+    var suite = new Benchmark.Suite()
+      .add('SpanContext:fromString', function() {
+        SpanContext.fromString('ffffffffffffffff:ffffffffffffffff:5:1');
+      })
+      .add('SpanContext:toString', function() {
+        context.toString('ffffffffffffffff:ffffffffffffffff:5:1');
+      })
+      .on('cycle', function(event) {
+        benchmarks.add(event.target);
+      })
+      .on('complete', function() {
+        benchmarks.log();
+      })
+      // run async
+      .run({ async: false });
+  }
 
-    run();
+  run();
 }
 
 exports.benchmarkSpanContext = benchmarkSpanContext;
 
 if (require.main === module) {
-    benchmarkSpanContext();
+  benchmarkSpanContext();
 }

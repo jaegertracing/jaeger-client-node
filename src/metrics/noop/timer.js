@@ -12,5 +12,5 @@
 // the License.
 
 export default class NoopTimer {
-    record(value: number): void {}
+  record(value: number): void {}
 }

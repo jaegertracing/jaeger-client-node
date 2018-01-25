@@ -16,19 +16,19 @@ import bodyParser from 'body-parser';
 import Helpers from './helpers';
 
 export default class HealthcheckServer {
-    constructor() {
-        let app: any = express();
-        app.use(bodyParser.json());
-        app.head('/', (req, res) => {
-            res.sendStatus(200);
-        });
+  constructor() {
+    let app: any = express();
+    app.use(bodyParser.json());
+    app.head('/', (req, res) => {
+      res.sendStatus(200);
+    });
 
-        app.listen(8080, () => {
-            Helpers.log('Healthcheck server on port 8080...');
-        });
-    }
+    app.listen(8080, () => {
+      Helpers.log('Healthcheck server on port 8080...');
+    });
+  }
 }
 
 if ((require: any).main === module) {
-    let healthcheck = new HealthcheckServer();
+  let healthcheck = new HealthcheckServer();
 }

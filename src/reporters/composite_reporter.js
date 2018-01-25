@@ -14,46 +14,46 @@
 import Span from '../span.js';
 
 export default class CompositeReporter {
-    _reporters: Array<Reporter>
+  _reporters: Array<Reporter>;
 
-    constructor(reporters: Array<Reporter>) {
-        this._reporters = reporters;
-    }
+  constructor(reporters: Array<Reporter>) {
+    this._reporters = reporters;
+  }
 
-    name(): string {
-        return 'CompositeReporter';
-    }
+  name(): string {
+    return 'CompositeReporter';
+  }
 
-    report(span: Span): void {
-        this._reporters.forEach((r) => {
-            r.report(span);
-        });
-    }
+  report(span: Span): void {
+    this._reporters.forEach(r => {
+      r.report(span);
+    });
+  }
 
-    compositeCallback(callback: ?Function): ?Function {
-        let count = 0;
-        return () => {
-            count++;
-            if (count >= this._reporters.length) {
-                if (callback) {
-                    callback();
-                }
-            }
+  compositeCallback(callback: ?Function): ?Function {
+    let count = 0;
+    return () => {
+      count++;
+      if (count >= this._reporters.length) {
+        if (callback) {
+          callback();
         }
-    }
+      }
+    };
+  }
 
-    close(callback: ?Function): void {
-        let modifiedCallback: ?Function  = this.compositeCallback(callback);
-        this._reporters.forEach((r) => {
-            r.close(modifiedCallback);
-        });
-    }
+  close(callback: ?Function): void {
+    let modifiedCallback: ?Function = this.compositeCallback(callback);
+    this._reporters.forEach(r => {
+      r.close(modifiedCallback);
+    });
+  }
 
-    setProcess(serviceName: string, tags: Array<Tag>): void {
-        this._reporters.forEach((r) => {
-            if (r.setProcess) {
-                r.setProcess(serviceName, tags);
-            }
-        });
-    }
+  setProcess(serviceName: string, tags: Array<Tag>): void {
+    this._reporters.forEach(r => {
+      if (r.setProcess) {
+        r.setProcess(serviceName, tags);
+      }
+    });
+  }
 }

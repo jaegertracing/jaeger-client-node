@@ -11,38 +11,38 @@
 // the License.
 
 export default class MockLogger {
-    _infoMsgs: Array<String>;
-    _debugMesgs: Array<String>;
-    _warnMsgs: Array<String>;
-    _errorMsgs: Array<String>;
+  _infoMsgs: Array<String>;
+  _debugMesgs: Array<String>;
+  _warnMsgs: Array<String>;
+  _errorMsgs: Array<String>;
 
-    constructor() {
-        this._infoMsgs = [];
-        this._debugMsgs = [];
-        this._warnMsgs = [];
-        this._errorMsgs = [];
-    }
+  constructor() {
+    this._infoMsgs = [];
+    this._debugMsgs = [];
+    this._warnMsgs = [];
+    this._errorMsgs = [];
+  }
 
-    info(msg: string): void {
-        this._infoMsgs.push(msg);
-    }
+  info(msg: string): void {
+    this._infoMsgs.push(msg);
+  }
 
-    debug(msg: string): void {
-        this._debugMsgs.push(msg);
-    }
+  debug(msg: string): void {
+    this._debugMsgs.push(msg);
+  }
 
-    warn(msg: string): void {
-        this._warnMsgs.push(msg);
-    }
+  warn(msg: string): void {
+    this._warnMsgs.push(msg);
+  }
 
-    error(msg: string): void {
-        this._errorMsgs.push(msg);
-    }
+  error(msg: string): void {
+    this._errorMsgs.push(msg);
+  }
 
-    clear(): void {
-        this._infoMsgs = [];
-        this._debugMsgs = [];
-        this._warnMsgs = [];
-        this._errorMsgs = [];
-    }
+  clear(): void {
+    this._infoMsgs = [];
+    this._debugMsgs = [];
+    this._warnMsgs = [];
+    this._errorMsgs = [];
+  }
 }

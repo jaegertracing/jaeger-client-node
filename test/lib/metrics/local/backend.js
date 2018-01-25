@@ -15,51 +15,51 @@ import _ from 'lodash';
 import LocalCounter from './counter';
 
 export default class LocalBackend {
-    _counterValues: any;
-    _counterTags: any;
-    _timerValues: any;
-    _timerTags: any;
-    _gaugeValues: any;
-    _gaugeTags: any;
+  _counterValues: any;
+  _counterTags: any;
+  _timerValues: any;
+  _timerTags: any;
+  _gaugeValues: any;
+  _gaugeTags: any;
 
-    constructor() {
-        this.reset();
-    }
+  constructor() {
+    this.reset();
+  }
 
-    static counterEquals(counter: LocalCounter, value: number): boolean {
-        let valueEqual = counter._backend._counterValues[counter._name] === value;
-        let tagsEqual =  _.isEqual(counter._backend._counterTags[counter._name], counter._tags);
-        return valueEqual && tagsEqual;
-    }
+  static counterEquals(counter: LocalCounter, value: number): boolean {
+    let valueEqual = counter._backend._counterValues[counter._name] === value;
+    let tagsEqual = _.isEqual(counter._backend._counterTags[counter._name], counter._tags);
+    return valueEqual && tagsEqual;
+  }
 
-    static counterValue(counter: LocalCounter): number {
-        return counter._backend._counterValues[counter._name];
-    }
+  static counterValue(counter: LocalCounter): number {
+    return counter._backend._counterValues[counter._name];
+  }
 
-    reset() {
-        this._counterValues = {};
-        this._counterTags = {};
-        this._timerValues = {};
-        this._timerTags = {};
-        this._gaugeValues = {};
-        this._gaugeTags = {};
-    }
+  reset() {
+    this._counterValues = {};
+    this._counterTags = {};
+    this._timerValues = {};
+    this._timerTags = {};
+    this._gaugeValues = {};
+    this._gaugeTags = {};
+  }
 
-    increment(name: string, delta: number, tags: any): void {
-        if (this._counterValues[name] === undefined) {
-            this._counterValues[name] = 0;
-        }
-        this._counterValues[name] += delta;
-        this._counterTags[name] = tags;
+  increment(name: string, delta: number, tags: any): void {
+    if (this._counterValues[name] === undefined) {
+      this._counterValues[name] = 0;
     }
+    this._counterValues[name] += delta;
+    this._counterTags[name] = tags;
+  }
 
-    record(name: string, value: number, tags: any): void {
-        this._timerValues[name] = value;
-        this._timerTags[name] = tags;
-    }
+  record(name: string, value: number, tags: any): void {
+    this._timerValues[name] = value;
+    this._timerTags[name] = tags;
+  }
 
-    gauge(name: string, value: number, tags: any): void {
-        this._gaugeValues[name] = value;
-        this._gaugeTags[name] = tags;
-    }
+  gauge(name: string, value: number, tags: any): void {
+    this._gaugeValues[name] = value;
+    this._gaugeTags[name] = tags;
+  }
 }

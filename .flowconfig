@@ -1,6 +1,9 @@
 [include]
 ./node_modules/
 
+[ignore]
+.*/node_modules/eslint-plugin-jsx-a11y/.*
+
 [libs]
 ./src/_flow/
 ./test/_flow/

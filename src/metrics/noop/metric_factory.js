@@ -16,15 +16,15 @@ import NoopTimer from './timer';
 import NoopGauge from './gauge';
 
 export default class NoopMetricFactory {
-    createCounter(name: string, tags: any): Counter {
-        return new NoopCounter();
-    }
+  createCounter(name: string, tags: any): Counter {
+    return new NoopCounter();
+  }
 
-    createTimer(name: string, tags: any): Timer {
-        return new NoopTimer();
-    }
+  createTimer(name: string, tags: any): Timer {
+    return new NoopTimer();
+  }
 
-    createGauge(name: string, tags: any): Gauge {
-        return new NoopGauge();
-    }
+  createGauge(name: string, tags: any): Gauge {
+    return new NoopGauge();
+  }
 }

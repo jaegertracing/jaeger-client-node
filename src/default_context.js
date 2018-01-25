@@ -12,13 +12,13 @@
 // the License.
 
 export default class DefaultContext {
-    _span: Span;
+  _span: Span;
 
-    setSpan(span: Span): void {
-        this._span = span;
-    }
+  setSpan(span: Span): void {
+    this._span = span;
+  }
 
-    getSpan(): Span {
-        return this._span;
-    }
+  getSpan(): Span {
+    return this._span;
+  }
 }

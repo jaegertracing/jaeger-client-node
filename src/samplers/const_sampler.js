@@ -14,43 +14,43 @@
 import * as constants from '../constants.js';
 
 export default class ConstSampler {
-    _decision: boolean;
+  _decision: boolean;
 
-    constructor(decision: boolean) {
-        this._decision = decision;
+  constructor(decision: boolean) {
+    this._decision = decision;
+  }
+
+  name(): string {
+    return 'ConstSampler';
+  }
+
+  toString(): string {
+    return `${this.name()}(${this._decision ? 'always' : 'never'})`;
+  }
+
+  get decision(): boolean {
+    return this._decision;
+  }
+
+  isSampled(operation: string, tags: any): boolean {
+    if (this._decision) {
+      tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_CONST;
+      tags[constants.SAMPLER_PARAM_TAG_KEY] = this._decision;
+    }
+    return this._decision;
+  }
+
+  equal(other: Sampler): boolean {
+    if (!(other instanceof ConstSampler)) {
+      return false;
     }
 
-    name(): string {
-        return 'ConstSampler';
-    }
+    return this.decision === other.decision;
+  }
 
-    toString(): string {
-        return `${this.name()}(${this._decision ? 'always' : 'never'})`;
+  close(callback: ?Function): void {
+    if (callback) {
+      callback();
     }
-
-    get decision(): boolean {
-        return this._decision;
-    }
-
-    isSampled(operation: string, tags: any): boolean {
-        if (this._decision) {
-            tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_CONST;
-            tags[constants.SAMPLER_PARAM_TAG_KEY] = this._decision;
-        }
-        return this._decision;
-    }
-
-    equal(other: Sampler): boolean {
-        if (!(other instanceof ConstSampler)) {
-            return false;
-        }
-
-        return this.decision === other.decision;
-    }
-
-    close(callback: ?Function): void {
-        if (callback) {
-            callback();
-        }
-    }
+  }
 }

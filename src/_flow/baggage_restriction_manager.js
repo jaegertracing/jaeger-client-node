@@ -11,7 +11,7 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import Restriction from '../baggage/restriction.js'
+import Restriction from '../baggage/restriction.js';
 
 /**
  * BaggageRestrictionManager is an interface for a class that manages baggage
@@ -20,5 +20,5 @@ import Restriction from '../baggage/restriction.js'
  * allowed and any other applicable restrictions on the baggage value.
  */
 declare interface BaggageRestrictionManager {
-    getRestriction(service: string, key: string): Restriction;
+  getRestriction(service: string, key: string): Restriction;
 }

@@ -12,30 +12,30 @@
 // the License.
 
 declare interface Sampler {
-    name(): string;
-    
-    /**
-     * Decides if a new trace starting with given operation name
-     * should be sampled or not. If the method returns true, it
-     * must populate the tags dictionary with tags that identify
-     * the sampler, namely sampler.type and sampler.param.
-     *
-     * This API is different from Python and Go, because Javascipt
-     * does not allow functions to return multiple values. We would
-     * have to return an object like {sampled: bool, tags: map},
-     * which would require heap allocation every time, and in most
-     * cases will have sampled=false where tags are irrelevant.
-     * By passing tags as an out parameter we can minimize the
-     * allocations.
-     *
-     * @param {string} operation - Operation name of the root span.
-     * @param {Object} tags - output dictionary to store sampler tags.
-     * @return {boolean} - returns whether the trace should be sampled.
-     * 
-     */
-    isSampled(operation: string, tags: any): boolean;
+  name(): string;
 
-    equal(other: Sampler): boolean;
+  /**
+   * Decides if a new trace starting with given operation name
+   * should be sampled or not. If the method returns true, it
+   * must populate the tags dictionary with tags that identify
+   * the sampler, namely sampler.type and sampler.param.
+   *
+   * This API is different from Python and Go, because Javascipt
+   * does not allow functions to return multiple values. We would
+   * have to return an object like {sampled: bool, tags: map},
+   * which would require heap allocation every time, and in most
+   * cases will have sampled=false where tags are irrelevant.
+   * By passing tags as an out parameter we can minimize the
+   * allocations.
+   *
+   * @param {string} operation - Operation name of the root span.
+   * @param {Object} tags - output dictionary to store sampler tags.
+   * @return {boolean} - returns whether the trace should be sampled.
+   *
+   */
+  isSampled(operation: string, tags: any): boolean;
 
-    close(callback: ?Function): void;
+  equal(other: Sampler): boolean;
+
+  close(callback: ?Function): void;
 }

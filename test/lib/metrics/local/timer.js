@@ -12,17 +12,17 @@
 // the License.
 
 export default class LocalTimer {
-    _name: string;
-    _tags: any;
-    _backend: any;
+  _name: string;
+  _tags: any;
+  _backend: any;
 
-    constructor(name: string, tags: any, backend: any) {
-        this._name = name;
-        this._tags = tags;
-        this._backend = backend;
-    }
+  constructor(name: string, tags: any, backend: any) {
+    this._name = name;
+    this._tags = tags;
+    this._backend = backend;
+  }
 
-    record(value: number): void {
-        this._backend.record(this._name, value, this._tags);
-    }
+  record(value: number): void {
+    this._backend.record(this._name, value, this._tags);
+  }
 }

@@ -12,17 +12,17 @@
 // the License.
 
 export default class LocalGauge {
-    _name: string;
-    _tags: any;
-    _backend: any;
+  _name: string;
+  _tags: any;
+  _backend: any;
 
-    constructor(name: string, tags: any, backend: any) {
-        this._name = name;
-        this._tags = tags;
-        this._backend = backend;
-    }
+  constructor(name: string, tags: any, backend: any) {
+    this._name = name;
+    this._tags = tags;
+    this._backend = backend;
+  }
 
-    update(value: number): void {
-        this._backend.gauge(this._name, value, this._tags);
-    }
+  update(value: number): void {
+    this._backend.gauge(this._name, value, this._tags);
+  }
 }

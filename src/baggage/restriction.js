@@ -16,19 +16,19 @@
  * restrictions on the baggage value.
  */
 export default class Restriction {
-    _keyAllowed: boolean;
-    _maxValueLength: number;
+  _keyAllowed: boolean;
+  _maxValueLength: number;
 
-    constructor(keyAllowed: boolean, maxValueLength: number) {
-        this._keyAllowed = keyAllowed;
-        this._maxValueLength = maxValueLength;
-    }
+  constructor(keyAllowed: boolean, maxValueLength: number) {
+    this._keyAllowed = keyAllowed;
+    this._maxValueLength = maxValueLength;
+  }
 
-    get keyAllowed(): boolean {
-        return this._keyAllowed;
-    }
+  get keyAllowed(): boolean {
+    return this._keyAllowed;
+  }
 
-    get maxValueLength(): number {
-        return this._maxValueLength;
-    }
+  get maxValueLength(): number {
+    return this._maxValueLength;
+  }
 }
