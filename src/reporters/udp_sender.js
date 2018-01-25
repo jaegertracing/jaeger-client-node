@@ -91,15 +91,21 @@ export default class UDPSender {
         this._maxSpanBytes = this._maxPacketSize - this._emitSpanBatchOverhead;
     }
 
-    append(span: any): SenderResponse {
+    append(span: any, callback: ?Function): void {
         let lengthResult: LengthResult = this._calcSpanSize(span);
         if (lengthResult.err) {
             this._logger.error(`error converting span to Thrift: ${lengthResult.err}`);
-            return { err: true, numSpans: 1 };
+            if (callback) {
+              callback({ err: true, numSpans: 1 });
+            }
+            return;
         }
         let spanSize: number = lengthResult.length;
         if (spanSize > this._maxSpanBytes) {
-            return { err: true, numSpans: 1 };
+          if (callback) {
+            callback({ err: true, numSpans: 1 });
+          }
+          return;
         }
 
         if (this._totalSpanBytes + spanSize <= this._maxSpanBytes) {
@@ -107,15 +113,17 @@ export default class UDPSender {
             this._totalSpanBytes += spanSize;
             if (this._totalSpanBytes < this._maxSpanBytes) {
                 // still have space in the buffer, don't flush it yet
-                return {err: false, numSpans: 0};
+                if (callback) {
+                  callback({err: false, numSpans: 0});
+                }
+                return;
             }
             return this.flush();
         }
-
-        let flushResponse: SenderResponse = this.flush();
-        this._batch.spans.push(span);
-        this._totalSpanBytes = spanSize;
-        return flushResponse;
+        this.flush(() => {
+          this._batch.spans.push(span);
+          this._totalSpanBytes = spanSize;
+        });
     }
 
     flush(callback: ?Function): void {
