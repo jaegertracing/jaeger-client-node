@@ -11,91 +11,94 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import NullLogger from '../logger.js';
-import ThriftUtils from '../thrift.js';
-import Metrics from '../metrics/metrics.js';
-import NoopMetricFactory from '../metrics/noop/metric_factory';
+import NullLogger from "../logger.js";
+import ThriftUtils from "../thrift.js";
+import Metrics from "../metrics/metrics.js";
+import NoopMetricFactory from "../metrics/noop/metric_factory";
 
 const DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS = 1000;
 
 export default class RemoteReporter {
-    _bufferFlushInterval: number;
-    _logger: Logger;
-    _sender: Sender;
-    _intervalHandle: any;
-    _process: Process;
-    _metrics: any;
+  _bufferFlushInterval: number;
+  _logger: Logger;
+  _sender: Sender;
+  _intervalHandle: any;
+  _process: Process;
+  _metrics: any;
 
-    constructor(sender: Sender,
-                options: any = {}) {
-        if (!sender) {
-            throw new Error('RemoteReporter must be given a Sender.');
+  constructor(sender: Sender, options: any = {}) {
+    if (!sender) {
+      throw new Error("RemoteReporter must be given a Sender.");
+    }
+
+    this._bufferFlushInterval =
+      options.bufferFlushInterval || DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS;
+    this._logger = options.logger || new NullLogger();
+    this._sender = sender;
+    this._intervalHandle = setInterval(() => {
+      this.flush();
+    }, this._bufferFlushInterval);
+    this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
+  }
+
+  name(): string {
+    return "RemoteReporter";
+  }
+
+  // report(span: Span): void {
+  //     let response: SenderResponse = this._sender.append(ThriftUtils.spanToThrift(span));
+  //     if (response.err) {
+  //         this._logger.error('Failed to append spans in reporter.');
+  //         this._metrics.reporterDropped.increment(response.numSpans);
+  //     }
+  // }
+
+  report(span: Span): void {
+    this._sender.append(
+      ThriftUtils.spanToThrift(span),
+      (error, response: SenderResponse) => {
+        if (error || response.err) {
+          this._logger.error("Failed to append spans in reporter.");
+          this._metrics.reporterDropped.increment(response.numSpans);
         }
+      },
+    );
+  }
 
-        this._bufferFlushInterval = options.bufferFlushInterval || DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS;
-        this._logger = options.logger || new NullLogger();
-        this._sender = sender;
-        this._intervalHandle = setInterval(() => {
-            this.flush();
-        }, this._bufferFlushInterval);
-        this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
+  flush(callback: ?Function): void {
+    if (this._process === undefined) {
+      this._logger.info("Failed to flush since process is not set.");
+      return;
     }
+    this._sender.flush(response => {
+      if (response.err) {
+        this._logger.error("Failed to flush spans in reporter.");
+        this._metrics.reporterFailure.increment(response.numSpans);
+      } else {
+        this._metrics.reporterSuccess.increment(response.numSpans);
+      }
+      if (callback) {
+        callback();
+      }
+    });
+  }
 
-    name(): string {
-        return 'RemoteReporter';
-    }
+  close(callback: ?Function): void {
+    clearInterval(this._intervalHandle);
+    this.flush(() => {
+      this._sender.close();
+      if (callback) {
+        callback();
+      }
+    });
+  }
 
-    report(span: Span): void {
-        let response: SenderResponse = this._sender.append(ThriftUtils.spanToThrift(span));
-        if (response.err) {
-            this._logger.error('Failed to append spans in reporter.');
-            this._metrics.reporterDropped.increment(response.numSpans);
-        }
-    }
+  setProcess(serviceName: string, tags: Array<Tag>): void {
+    this._process = {
+      serviceName: serviceName,
+      tags: ThriftUtils.getThriftTags(tags),
+    };
 
-    // report(span: Span): void {
-    //     this._sender.append(ThriftUtils.spanToThrift(span), (error, response: SenderResponse) => {
-    //       if (error || response.err) {
-    //           this._logger.error('Failed to append spans in reporter.');
-    //           this._metrics.reporterDropped.increment(response.numSpans);
-    //       }
-    //     }
-    // }
-
-    flush(callback: ?Function): void {
-        if (this._process === undefined) {
-            this._logger.info('Failed to flush since process is not set.');
-            return;
-        }
-        this._sender.flush(response => {
-          if (response.err) {
-              this._logger.error('Failed to flush spans in reporter.');
-              this._metrics.reporterFailure.increment(response.numSpans);
-          } else {
-              this._metrics.reporterSuccess.increment(response.numSpans);
-          }
-          if (callback) {
-              callback();
-          }
-        });
-    }
-
-    close(callback: ?Function): void {
-      clearInterval(this._intervalHandle);
-      this.flush(() => {
-        this._sender.close();
-        if (callback) {
-            callback();
-        }
-      });
-    }
-
-    setProcess(serviceName: string, tags: Array<Tag>): void {
-        this._process = {
-            'serviceName': serviceName,
-            'tags': ThriftUtils.getThriftTags(tags)
-        };
-
-        this._sender.setProcess(this._process);
-    }
+    this._sender.setProcess(this._process);
+  }
 }
