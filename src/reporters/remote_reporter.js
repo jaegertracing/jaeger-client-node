@@ -45,22 +45,22 @@ export default class RemoteReporter {
         return 'RemoteReporter';
     }
 
-    // report(span: Span): void {
-    //     let response: SenderResponse = this._sender.append(ThriftUtils.spanToThrift(span));
-    //     if (response.err) {
-    //         this._logger.error('Failed to append spans in reporter.');
-    //         this._metrics.reporterDropped.increment(response.numSpans);
-    //     }
-    // }
-
     report(span: Span): void {
-        this._sender.append(ThriftUtils.spanToThrift(span), (error, response: SenderResponse) => {
-          if (error || response.err) {
-              this._logger.error('Failed to append spans in reporter.');
-              this._metrics.reporterDropped.increment(response.numSpans);
-          }
+        let response: SenderResponse = this._sender.append(ThriftUtils.spanToThrift(span));
+        if (response.err) {
+            this._logger.error('Failed to append spans in reporter.');
+            this._metrics.reporterDropped.increment(response.numSpans);
         }
     }
+
+    // report(span: Span): void {
+    //     this._sender.append(ThriftUtils.spanToThrift(span), (error, response: SenderResponse) => {
+    //       if (error || response.err) {
+    //           this._logger.error('Failed to append spans in reporter.');
+    //           this._metrics.reporterDropped.increment(response.numSpans);
+    //       }
+    //     }
+    // }
 
     flush(callback: ?Function): void {
         if (this._process === undefined) {
