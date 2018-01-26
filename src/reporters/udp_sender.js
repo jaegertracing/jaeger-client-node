@@ -119,7 +119,7 @@ export default class UDPSender {
     }
 
     flush(): SenderResponse {
-        let numSpans: number = this._batch.spans.length;
+        let numSpans: number = this._batch ? this._batch.spans.length : 0;
         if (numSpans == 0) {
             return {err: false, numSpans: 0}
         }
