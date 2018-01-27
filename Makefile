@@ -14,7 +14,6 @@ test: build-node
 .PHONY: test-without-build
 test-without-build:
 	npm run flow
-	npm run lint
 	npm run test-all
 	npm run check-license
 

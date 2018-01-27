@@ -12,113 +12,113 @@
 // the License.
 
 export default class Metrics {
-    _factory: MetricsFactory;
-    tracesStartedSampled: Counter;
-    tracesStartedNotSampled: Counter;
-    tracesJoinedSampled: Counter;
-    tracesJoinedNotSampled: Counter;
-    spansStarted: Counter;
-    spansFinished: Counter;
-    spansSampled: Counter;
-    spansNotSampled: Counter;
-    decodingErrors: Counter;
-    reporterSuccess: Counter;
-    reporterFailure: Counter;
-    reporterDropped: Counter;
-    reporterQueueLength: Gauge;
-    samplerRetrieved: Counter;
-    samplerUpdated: Counter;
-    samplerQueryFailure: Counter;
-    samplerParsingFailure: Counter;
-    baggageUpdateSuccess: Counter;
-    baggageUpdateFailure: Counter;
-    baggageTruncate: Counter;
+  _factory: MetricsFactory;
+  tracesStartedSampled: Counter;
+  tracesStartedNotSampled: Counter;
+  tracesJoinedSampled: Counter;
+  tracesJoinedNotSampled: Counter;
+  spansStarted: Counter;
+  spansFinished: Counter;
+  spansSampled: Counter;
+  spansNotSampled: Counter;
+  decodingErrors: Counter;
+  reporterSuccess: Counter;
+  reporterFailure: Counter;
+  reporterDropped: Counter;
+  reporterQueueLength: Gauge;
+  samplerRetrieved: Counter;
+  samplerUpdated: Counter;
+  samplerQueryFailure: Counter;
+  samplerParsingFailure: Counter;
+  baggageUpdateSuccess: Counter;
+  baggageUpdateFailure: Counter;
+  baggageTruncate: Counter;
 
-    constructor(factory: MetricsFactory) {
-        this._factory = factory;
+  constructor(factory: MetricsFactory) {
+    this._factory = factory;
 
-        this.tracesStartedSampled = this._factory.createCounter('traces', {
-            state: 'started',
-            sampled: 'y'
-        });
+    this.tracesStartedSampled = this._factory.createCounter('traces', {
+      state: 'started',
+      sampled: 'y',
+    });
 
-        this.tracesStartedNotSampled = this._factory.createCounter('traces', {
-            state: 'started',
-            sampled: 'n'
-        });
+    this.tracesStartedNotSampled = this._factory.createCounter('traces', {
+      state: 'started',
+      sampled: 'n',
+    });
 
-        this.tracesJoinedSampled = this._factory.createCounter('traces', {
-            state: 'joined',
-            sampled: 'y'
-        });
+    this.tracesJoinedSampled = this._factory.createCounter('traces', {
+      state: 'joined',
+      sampled: 'y',
+    });
 
-        this.tracesJoinedNotSampled = this._factory.createCounter('traces', {
-            state: 'joined',
-            sampled: 'n'
-        });
+    this.tracesJoinedNotSampled = this._factory.createCounter('traces', {
+      state: 'joined',
+      sampled: 'n',
+    });
 
-        this.spansStarted = this._factory.createCounter('spans', {
-            group: 'lifecycle',
-            state: 'started'
-        });
+    this.spansStarted = this._factory.createCounter('spans', {
+      group: 'lifecycle',
+      state: 'started',
+    });
 
-        this.spansFinished = this._factory.createCounter('spans', {
-            group: 'lifecycle',
-            state: 'finished'
-        });
+    this.spansFinished = this._factory.createCounter('spans', {
+      group: 'lifecycle',
+      state: 'finished',
+    });
 
-        this.spansSampled = this._factory.createCounter('spans', {
-            group: 'sampling',
-            sampled: 'y'
-        });
+    this.spansSampled = this._factory.createCounter('spans', {
+      group: 'sampling',
+      sampled: 'y',
+    });
 
-        this.spansNotSampled = this._factory.createCounter('spans', {
-            group: 'sampling',
-            sampled: 'n'
-        });
+    this.spansNotSampled = this._factory.createCounter('spans', {
+      group: 'sampling',
+      sampled: 'n',
+    });
 
-        this.decodingErrors = this._factory.createCounter('decoding-errors');
+    this.decodingErrors = this._factory.createCounter('decoding-errors');
 
-        this.reporterSuccess = this._factory.createCounter('reporter-spans', {
-            state: 'success'
-        });
+    this.reporterSuccess = this._factory.createCounter('reporter-spans', {
+      state: 'success',
+    });
 
-        this.reporterFailure = this._factory.createCounter('reporter-spans', {
-            state: 'failure'
-        });
+    this.reporterFailure = this._factory.createCounter('reporter-spans', {
+      state: 'failure',
+    });
 
-        this.reporterDropped = this._factory.createCounter('reporter-spans', {
-            state: 'dropped'
-        });
+    this.reporterDropped = this._factory.createCounter('reporter-spans', {
+      state: 'dropped',
+    });
 
-        this.reporterQueueLength = this._factory.createGauge('reporter-queue');
+    this.reporterQueueLength = this._factory.createGauge('reporter-queue');
 
-        this.samplerRetrieved = this._factory.createCounter('sampler', {
-            state: 'retrieved'
-        });
+    this.samplerRetrieved = this._factory.createCounter('sampler', {
+      state: 'retrieved',
+    });
 
-        this.samplerUpdated = this._factory.createCounter('sampler', {
-            state: 'updated'
-        });
+    this.samplerUpdated = this._factory.createCounter('sampler', {
+      state: 'updated',
+    });
 
-        this.samplerQueryFailure = this._factory.createCounter('sampler', {
-            state: 'failure',
-            phase: 'query'
-        });
+    this.samplerQueryFailure = this._factory.createCounter('sampler', {
+      state: 'failure',
+      phase: 'query',
+    });
 
-        this.samplerParsingFailure = this._factory.createCounter('sampler', {
-            state: 'failure',
-            phase: 'parsing'
-        });
+    this.samplerParsingFailure = this._factory.createCounter('sampler', {
+      state: 'failure',
+      phase: 'parsing',
+    });
 
-        this.baggageUpdateSuccess = this._factory.createCounter('baggage-update', {
-            result: 'ok',
-        });
+    this.baggageUpdateSuccess = this._factory.createCounter('baggage-update', {
+      result: 'ok',
+    });
 
-        this.baggageUpdateFailure = this._factory.createCounter('baggage-update', {
-            result: 'err',
-        });
+    this.baggageUpdateFailure = this._factory.createCounter('baggage-update', {
+      result: 'err',
+    });
 
-        this.baggageTruncate = this._factory.createCounter('baggage-trucate');
-    }
+    this.baggageTruncate = this._factory.createCounter('baggage-trucate');
+  }
 }

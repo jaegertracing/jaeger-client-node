@@ -44,7 +44,7 @@ export const SAMPLER_TYPE_RATE_LIMITING = 'ratelimiting';
 
 // SAMPLER_TYPE_LOWER_BOUND is the type of sampler that samples
 // only up to a fixed number of traces per second.
-export const SAMPLER_TYPE_LOWER_BOUND = "lowerbound";
+export const SAMPLER_TYPE_LOWER_BOUND = 'lowerbound';
 
 // SAMPLER_TYPE_REMOTE is the type of sampler that polls Jaeger agent for sampling strategy.
 export const SAMPLER_TYPE_REMOTE = 'remote';
@@ -58,7 +58,7 @@ export const JAEGER_DEBUG_HEADER = 'jaeger-debug-id';
 // JaegerBaggageHeader is the name of the HTTP header that is used to submit baggage.
 // It differs from TraceBaggageHeaderPrefix in that it can be used only in cases where
 // a root span does not exist.
-export const JAEGER_BAGGAGE_HEADER = "jaeger-baggage";
+export const JAEGER_BAGGAGE_HEADER = 'jaeger-baggage';
 
 // TRACER_BAGGAGE_HEADER_PREFIX is the default prefix used for saving baggage to a carrier.
 export const TRACER_BAGGAGE_HEADER_PREFIX = 'uberctx-';

@@ -12,6 +12,6 @@
 // the License.
 
 declare interface Logger {
-    info(msg: string): void;
-    error(msg: string): void;
-};
+  info(msg: string): void;
+  error(msg: string): void;
+}

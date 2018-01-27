@@ -22,82 +22,87 @@ import LoggingReporter from '../src/reporters/logging_reporter';
 import sinon from 'sinon';
 
 describe('All Reporters should', () => {
-    let reporters;
-    beforeEach(() => {
-        let loggingReporter = new LoggingReporter();
-        let inMemoryReporter = new InMemoryReporter();
-        inMemoryReporter.setProcess('service-name', []);
-        let noopReporter = new NoopReporter();
-        let sender = new UDPSender();
-        sender.setProcess(inMemoryReporter._process);
-        let remoteReporter = new RemoteReporter(sender);
-        reporters = [
-            loggingReporter,
-            inMemoryReporter,
-            noopReporter,
-            remoteReporter
-        ];
+  let reporters;
+  beforeEach(() => {
+    let loggingReporter = new LoggingReporter();
+    let inMemoryReporter = new InMemoryReporter();
+    inMemoryReporter.setProcess('service-name', []);
+    let noopReporter = new NoopReporter();
+    let sender = new UDPSender();
+    sender.setProcess(inMemoryReporter._process);
+    let remoteReporter = new RemoteReporter(sender);
+    reporters = [loggingReporter, inMemoryReporter, noopReporter, remoteReporter];
+  });
+
+  it('have proper names', () => {
+    let loggingReporter = new LoggingReporter();
+    let inMemoryReporter = new InMemoryReporter();
+    inMemoryReporter.setProcess('service-name', []);
+    let noopReporter = new NoopReporter();
+    let remoteReporter = new RemoteReporter(new UDPSender());
+    let compositeReporter = new CompositeReporter();
+
+    assert.equal(loggingReporter.name(), 'LoggingReporter');
+    assert.equal(inMemoryReporter.name(), 'InMemoryReporter');
+    assert.equal(noopReporter.name(), 'NoopReporter');
+    assert.equal(remoteReporter.name(), 'RemoteReporter');
+    assert.equal(compositeReporter.name(), 'CompositeReporter');
+  });
+
+  let closeOptions = [
+    {
+      callback: sinon.spy(),
+      predicate: spy => {
+        return spy.calledOnce === true;
+      },
+    },
+    {
+      callback: null,
+      predicate: spy => {
+        return true;
+      },
+    },
+  ];
+
+  _.each(closeOptions, o => {
+    it('calls to close execute callback correctly', () => {
+      let reporter = new CompositeReporter(reporters);
+
+      reporter.close(o.callback);
+
+      assert.isOk(o.predicate(o.callback));
     });
+  });
 
-    it ('have proper names', () => {
-        let loggingReporter = new LoggingReporter();
-        let inMemoryReporter = new InMemoryReporter();
-        inMemoryReporter.setProcess('service-name', []);
-        let noopReporter = new NoopReporter();
-        let remoteReporter = new RemoteReporter(new UDPSender());
-        let compositeReporter = new CompositeReporter();
+  describe('Logging reporter', () => {
+    it('logs span as context().toString()', () => {
+      let logger = new MockLogger();
+      let reporter = new LoggingReporter(logger);
+      let spanMock = {
+        context: function context() {
+          return {
+            toString: function toString() {
+              return 'span-as-string';
+            },
+          };
+        },
+      };
 
-        assert.equal(loggingReporter.name(), 'LoggingReporter');
-        assert.equal(inMemoryReporter.name(), 'InMemoryReporter');
-        assert.equal(noopReporter.name(), 'NoopReporter');
-        assert.equal(remoteReporter.name(), 'RemoteReporter');
-        assert.equal(compositeReporter.name(), 'CompositeReporter');
+      reporter.report(spanMock);
+
+      assert.equal(logger._infoMsgs[0], 'Reporting span span-as-string');
     });
+  });
 
-    let closeOptions = [
-        { callback: sinon.spy(), predicate: (spy) => { return spy.calledOnce === true; }},
-        { callback: null, predicate: (spy) => { return true; }}
-    ];
+  describe('Composite reporter', () => {
+    it('should report spans', () => {
+      let mockReporter = {
+        report: sinon.spy(),
+      };
+      let reporter = new CompositeReporter([mockReporter]);
+      reporter.report();
 
-    _.each(closeOptions, (o) => {
-        it ('calls to close execute callback correctly', () => {
-            let reporter = new CompositeReporter(reporters);
-
-            reporter.close(o.callback);
-
-            assert.isOk(o.predicate(o.callback));
-        });
+      assert.isOk(mockReporter.report.calledOnce);
     });
-
-    describe('Logging reporter', () => {
-        it('logs span as context().toString()', () => {
-            let logger = new MockLogger();
-            let reporter = new LoggingReporter(logger);
-            let spanMock = {
-                context: function context() {
-                    return {
-                        toString: function toString() {
-                            return "span-as-string";
-                        }
-                    };
-                }
-            };
-
-            reporter.report(spanMock);
-
-            assert.equal(logger._infoMsgs[0], 'Reporting span span-as-string');
-        });
-    });
-
-    describe('Composite reporter', () => {
-        it ('should report spans', () => {
-            let mockReporter = {
-                report: sinon.spy()
-            };
-            let reporter = new CompositeReporter([mockReporter]);
-            reporter.report();
-
-            assert.isOk(mockReporter.report.calledOnce);
-        });
-    });
+  });
 });

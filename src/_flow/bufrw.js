@@ -12,6 +12,6 @@
 // the License.
 
 declare type LengthResult = {
-    err: ?string;
-    length: number;
-}
+  err: ?string,
+  length: number,
+};

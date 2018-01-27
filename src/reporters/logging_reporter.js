@@ -15,23 +15,23 @@ import Span from '../span.js';
 import NullLogger from '../logger.js';
 
 export default class LoggingReporter {
-    _logger: Logger;
+  _logger: Logger;
 
-    constructor(logger: Logger) {
-        this._logger = logger || new NullLogger();
-    }
+  constructor(logger: Logger) {
+    this._logger = logger || new NullLogger();
+  }
 
-    report(span: Span): void {
-        this._logger.info(`Reporting span ${span.context().toString()}`);
-    }
+  report(span: Span): void {
+    this._logger.info(`Reporting span ${span.context().toString()}`);
+  }
 
-    name(): string {
-        return 'LoggingReporter';
-    }
+  name(): string {
+    return 'LoggingReporter';
+  }
 
-    close(callback: ?Function): void {
-        if (callback) {
-            callback();
-        }
+  close(callback: ?Function): void {
+    if (callback) {
+      callback();
     }
+  }
 }

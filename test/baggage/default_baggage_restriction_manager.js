@@ -10,14 +10,13 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import {assert} from 'chai';
-import DefaultBaggageRestrictionManager from "../../src/baggage/default_baggage_restriction_manager";
-import Restriction from "../../src/baggage/restriction";
+import { assert } from 'chai';
+import DefaultBaggageRestrictionManager from '../../src/baggage/default_baggage_restriction_manager';
+import Restriction from '../../src/baggage/restriction';
 
 describe('DefaultBaggageRestrictionManager should', () => {
-
-    it ('return a Restriction', () => {
-        let mgr = new DefaultBaggageRestrictionManager();
-        assert.deepEqual(mgr.getRestriction("key"), new Restriction(true, 2048));
-    });
+  it('return a Restriction', () => {
+    let mgr = new DefaultBaggageRestrictionManager();
+    assert.deepEqual(mgr.getRestriction('key'), new Restriction(true, 2048));
+  });
 });
