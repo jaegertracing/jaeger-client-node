@@ -11,11 +11,10 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-
 export default class BinaryCodec {
-    extract(carrir: any): ?SpanContext {
-        return null;
-    }
+  extract(carrir: any): ?SpanContext {
+    return null;
+  }
 
-    inject(spanContext: SpanContext, carrier: any): void {}
+  inject(spanContext: SpanContext, carrier: any): void {}
 }

@@ -14,18 +14,17 @@
 import Span from '../span.js';
 
 export default class NoopReporter {
+  name(): string {
+    return 'NoopReporter';
+  }
 
-    name(): string {
-        return 'NoopReporter';
+  report(span: Span): void {}
+
+  close(callback: ?Function): void {
+    if (callback) {
+      callback();
     }
+  }
 
-    report(span: Span): void {}
-
-    close(callback: ?Function): void {
-        if (callback) {
-            callback();
-        }
-    }
-
-    setProcess(serviceName: string, tags: Array<Tag>): void {}
+  setProcess(serviceName: string, tags: Array<Tag>): void {}
 }

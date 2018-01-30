@@ -12,26 +12,26 @@
 // the License.
 
 declare type Tag = {
-    key: string,
-    value: any
+  key: string,
+  value: any,
 };
 
 declare type LogData = {
-    timestamp: number,
-    fields: Array<Tag>
+  timestamp: number,
+  fields: Array<Tag>,
 };
 
 declare type Process = {
-    serviceName: string,
-    tags: Array<Tag>
+  serviceName: string,
+  tags: Array<Tag>,
 };
 
 declare type Batch = {
-    process: Process,
-    spans: Array<any>
+  process: Process,
+  spans: Array<any>,
 };
 
 declare type Reference = {
-    type(): string;
-    referencedContext(): SpanContext;
+  type(): string,
+  referencedContext(): SpanContext,
 };

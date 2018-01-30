@@ -12,6 +12,6 @@
 // the License.
 
 export default class NullLogger {
-    info(msg: string): void {}
-    error(msg: string): void {}
+  info(msg: string): void {}
+  error(msg: string): void {}
 }

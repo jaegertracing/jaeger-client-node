@@ -12,17 +12,17 @@
 // the License.
 
 export default class LocalCounter {
-    _name: string;
-    _tags: any;
-    _backend: any;
+  _name: string;
+  _tags: any;
+  _backend: any;
 
-    constructor(name: string, tags: any, backend: any) {
-        this._name = name;
-        this._tags = tags;
-        this._backend = backend;
-    }
+  constructor(name: string, tags: any, backend: any) {
+    this._name = name;
+    this._tags = tags;
+    this._backend = backend;
+  }
 
-    increment(delta: number): void {
-        this._backend.increment(this._name, delta, this._tags);
-    }
+  increment(delta: number): void {
+    this._backend.increment(this._name, delta, this._tags);
+  }
 }

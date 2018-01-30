@@ -12,5 +12,5 @@
 // the License.
 
 declare interface Extractor {
-    extract(carrier: any): ?SpanContext;
+  extract(carrier: any): ?SpanContext;
 }
