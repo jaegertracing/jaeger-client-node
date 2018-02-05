@@ -121,10 +121,9 @@ export default class UDPSender {
       this.flush(callback);
       return;
     }
-    this.flush((data) => {
+    this.flush(() => {
       this._batch.spans.push(span);
       this._totalSpanBytes = spanSize;
-      callback(data);
     });
   }
 
