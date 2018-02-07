@@ -15,14 +15,14 @@ import Span from '../span.js';
 
 declare interface Reporter {
   report(span: Span): void;
-  close(callback: ?Function): void;
+  close(): Promise<void>;
   setProcess(serviceName: string, tags: Array<Tag>): void;
 }
 
 declare class Sender {
   append(span: Span): Promise<SenderResponse>;
   flush(): Promise<SenderResponse>;
-  close(): void;
+  close(): Promise<void>;
   setProcess(process: Process): void;
 }
 

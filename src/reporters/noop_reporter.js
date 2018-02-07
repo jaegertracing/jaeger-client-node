@@ -20,10 +20,8 @@ export default class NoopReporter {
 
   report(span: Span): void {}
 
-  close(callback: ?Function): void {
-    if (callback) {
-      callback();
-    }
+  close(): Promise<void> {
+    return Promise.resolve();
   }
 
   setProcess(serviceName: string, tags: Array<Tag>): void {}

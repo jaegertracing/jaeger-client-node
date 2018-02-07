@@ -45,9 +45,7 @@ export default class RemoteReporter {
   }
 
   report(span: Span): void {
-    let responsePromise: Promise<SenderResponse> = this._sender.append(ThriftUtils.spanToThrift(span));
-
-    responsePromise.then(response => {
+    this._sender.append(ThriftUtils.spanToThrift(span)).then(response => {
       this._sender.append(ThriftUtils.spanToThrift(span));
       if (response.err) {
         this._logger.error('Failed to append spans in reporter.');

@@ -29,9 +29,7 @@ export default class LoggingReporter {
     return 'LoggingReporter';
   }
 
-  close(callback: ?Function): void {
-    if (callback) {
-      callback();
-    }
+  close(): Promise<void> {
+    return Promise.resolve();
   }
 }

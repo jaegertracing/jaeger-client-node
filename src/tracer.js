@@ -307,11 +307,11 @@ export default class Tracer {
    *
    * @param {Function} [callback] - a callback that runs after the tracer has been closed.
    **/
-  close(callback: Function): void {
+  close(): Promise<void> {
     let reporter = this._reporter;
     this._reporter = new NoopReporter();
-    reporter.close(() => {
-      this._sampler.close(callback);
+    return reporter.close().then(() => {
+      return this._sampler.close();
     });
   }
 

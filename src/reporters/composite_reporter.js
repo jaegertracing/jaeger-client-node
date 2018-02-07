@@ -30,23 +30,9 @@ export default class CompositeReporter {
     });
   }
 
-  compositeCallback(callback: ?Function): ?Function {
-    let count = 0;
-    return () => {
-      count++;
-      if (count >= this._reporters.length) {
-        if (callback) {
-          callback();
-        }
-      }
-    };
-  }
-
-  close(callback: ?Function): void {
-    let modifiedCallback: ?Function = this.compositeCallback(callback);
-    this._reporters.forEach(r => {
-      r.close(modifiedCallback);
-    });
+  close(): Promise<void> {
+    let promises = this._reporters.map(r => r.close());
+    return Promise.all(promises).then(() => {});
   }
 
   setProcess(serviceName: string, tags: Array<Tag>): void {

@@ -38,10 +38,8 @@ export default class InMemoryReporter {
     this._spans = [];
   }
 
-  close(callback: ?Function): void {
-    if (callback) {
-      callback();
-    }
+  close(): Promise<void> {
+    return Promise.resolve();
   }
 
   setProcess(serviceName: string, tags: Array<Tag>): void {

@@ -131,6 +131,7 @@ export default class UDPSender {
       thriftBuffer,
       0
     );
+    this._reset();
 
     if (writeResult.err) {
       this._logger.error(`error writing Thrift object: ${writeResult.err}`);
@@ -139,7 +140,6 @@ export default class UDPSender {
 
     // Having the error callback here does not prevent uncaught exception from being thrown,
     // that's why in the constructor we also add a general on('error') handler.
-    this._reset();
     return new Promise(function(resolve, reject) {
       this._client.send(thriftBuffer, 0, thriftBuffer.length, this._port, this._host, (err, sent) => {
         if (err) {
