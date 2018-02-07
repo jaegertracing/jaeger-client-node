@@ -38,8 +38,9 @@ describe('tracer should', () => {
   });
 
   it('be able to override codec contextKey and extract context', () => {
+    let ck = "test-trace-id";
     let mytracer = new Tracer('test-service-name', reporter, new ConstSampler(true), {
-      contextKey: "test-trace-id"
+      contextKey: ck
     });
 
     let headers = {
@@ -47,8 +48,15 @@ describe('tracer should', () => {
     };
 
     let mycontext = mytracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
+    assert.equal(mycontext.toString(), headers[ck]);
 
-    assert.equal(mycontext.toString(), 'a:b:c:d');
+    let myspan = mytracer.startSpan('myspan', {childOf: mycontext});
+    assert.equal(myspan.context().traceIdStr, 'a');
+
+    let exheaders = {};
+
+    mytracer.inject(myspan.context(), opentracing.FORMAT_HTTP_HEADERS, exheaders);
+    assert.notEqual(exheaders[ck], null);
   });
 
   it('begin a new span given only baggage headers', () => {
