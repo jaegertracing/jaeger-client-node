@@ -91,15 +91,15 @@ export default class UDPSender {
     this._maxSpanBytes = this._maxPacketSize - this._emitSpanBatchOverhead;
   }
 
-  append(span: any): SenderResponse {
+  append(span: any): Promise<SenderResponse> {
     let lengthResult: LengthResult = this._calcSpanSize(span);
     if (lengthResult.err) {
       this._logger.error(`error converting span to Thrift: ${lengthResult.err}`);
-      return { err: true, numSpans: 1 };
+      return Promise.resolve({ err: true, numSpans: 1 });
     }
     let spanSize: number = lengthResult.length;
     if (spanSize > this._maxSpanBytes) {
-      return { err: true, numSpans: 1 };
+      return Promise.resolve({ err: true, numSpans: 1 });
     }
 
     if (this._totalSpanBytes + spanSize <= this._maxSpanBytes) {
@@ -107,21 +107,21 @@ export default class UDPSender {
       this._totalSpanBytes += spanSize;
       if (this._totalSpanBytes < this._maxSpanBytes) {
         // still have space in the buffer, don't flush it yet
-        return { err: false, numSpans: 0 };
+        return Promise.resolve({ err: false, numSpans: 0 });
       }
       return this.flush();
     }
 
-    let flushResponse: SenderResponse = this.flush();
+    let flushResponse: Promise<SenderResponse> = this.flush();
     this._batch.spans.push(span);
     this._totalSpanBytes = spanSize;
     return flushResponse;
   }
 
-  flush(): SenderResponse {
+  flush(): Promise<SenderResponse> {
     let numSpans: number = this._batch.spans.length;
     if (numSpans == 0) {
-      return { err: false, numSpans: 0 };
+      return Promise.resolve({ err: false, numSpans: 0 });
     }
 
     let bufferLen = this._totalSpanBytes + this._emitSpanBatchOverhead;
@@ -134,7 +134,7 @@ export default class UDPSender {
 
     if (writeResult.err) {
       this._logger.error(`error writing Thrift object: ${writeResult.err}`);
-      return { err: true, numSpans: numSpans };
+      return Promise.resolve({ err: true, numSpans: numSpans });
     }
 
     // Having the error callback here does not prevent uncaught exception from being thrown,
@@ -148,7 +148,7 @@ export default class UDPSender {
     });
     this._reset();
 
-    return { err: false, numSpans: numSpans };
+    return Promise.resolve({ err: false, numSpans: numSpans });
   }
 
   _convertBatchToThriftMessage() {

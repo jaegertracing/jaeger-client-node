@@ -45,29 +45,32 @@ export default class RemoteReporter {
   }
 
   report(span: Span): void {
-    let response: SenderResponse = this._sender.append(ThriftUtils.spanToThrift(span));
-    if (response.err) {
-      this._logger.error('Failed to append spans in reporter.');
-      this._metrics.reporterDropped.increment(response.numSpans);
-    }
+    let responsePromise: Promise<SenderResponse> = this._sender.append(ThriftUtils.spanToThrift(span));
+
+    responsePromise.then(response => {
+      this._sender.append(ThriftUtils.spanToThrift(span));
+      if (response.err) {
+        this._logger.error('Failed to append spans in reporter.');
+        this._metrics.reporterDropped.increment(response.numSpans);
+      }
+    });
   }
 
-  flush(callback: ?Function): void {
+  flush(): Promise<SenderResponse> {
     if (this._process === undefined) {
       this._logger.info('Failed to flush since process is not set.');
-      return;
+      return Promise.resolve({ err: true, numSpans: 0 }); // ???
     }
-    let response: SenderResponse = this._sender.flush();
-    if (response.err) {
-      this._logger.error('Failed to flush spans in reporter.');
-      this._metrics.reporterFailure.increment(response.numSpans);
-    } else {
-      this._metrics.reporterSuccess.increment(response.numSpans);
-    }
-
-    if (callback) {
-      callback();
-    }
+    let promisedResponse: Promise<SenderResponse> = this._sender.flush();
+    return promisedResponse.then(response => {
+      if (response.err) {
+        this._logger.error('Failed to flush spans in reporter.');
+        this._metrics.reporterFailure.increment(response.numSpans);
+      } else {
+        this._metrics.reporterSuccess.increment(response.numSpans);
+      }
+      return response;
+    });
   }
 
   close(callback: ?Function): void {

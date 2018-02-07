@@ -20,8 +20,8 @@ declare interface Reporter {
 }
 
 declare class Sender {
-  append(span: Span): SenderResponse;
-  flush(): SenderResponse;
+  append(span: Span): Promise<SenderResponse>;
+  flush(): Promise<SenderResponse>;
   close(): void;
   setProcess(process: Process): void;
 }
