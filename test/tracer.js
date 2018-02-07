@@ -37,6 +37,20 @@ describe('tracer should', () => {
     tracer.close();
   });
 
+  it('be able to override codec contextKey and extract context', () => {
+    let mytracer = new Tracer('test-service-name', reporter, new ConstSampler(true), {
+      contextKey: "test-trace-id"
+    });
+
+    let headers = {
+      'test-trace-id': "a:b:c:d"
+    };
+
+    let mycontext = mytracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
+
+    assert.equal(mycontext.toString(), 'a:b:c:d');
+  });
+
   it('begin a new span given only baggage headers', () => {
     // Users sometimes want to pass baggage even if there is no span.
     // In this case we must ensure a new root span is created.

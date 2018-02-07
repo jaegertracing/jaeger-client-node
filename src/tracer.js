@@ -76,17 +76,19 @@ export default class Tracer {
     this._injectors = {};
     this._extractors = {};
 
-    let textCodec = new TextMapCodec({
+    let codecOptions = {
+      contextKey: options.contextKey || null,
       urlEncoding: false,
       metrics: this._metrics,
-    });
+    };
+
+    let textCodec = new TextMapCodec(codecOptions);
     this.registerInjector(opentracing.FORMAT_TEXT_MAP, textCodec);
     this.registerExtractor(opentracing.FORMAT_TEXT_MAP, textCodec);
 
-    let httpCodec = new TextMapCodec({
-      urlEncoding: true,
-      metrics: this._metrics,
-    });
+    codecOptions.urlEncoding = true;
+
+    let httpCodec = new TextMapCodec(codecOptions);
     this.registerInjector(opentracing.FORMAT_HTTP_HEADERS, httpCodec);
     this.registerExtractor(opentracing.FORMAT_HTTP_HEADERS, httpCodec);
 
