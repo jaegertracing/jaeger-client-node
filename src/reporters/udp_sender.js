@@ -147,7 +147,7 @@ export default class UDPSender {
             `error sending spans over UDP: ${err}, packet size: ${writeResult.offset}, bytes sent: ${sent}`
           );
         }
-        resolve({ err: err, numSpans: sent });
+        resolve({ err: err !== 0, numSpans: numSpans });
       });
     });
   }
