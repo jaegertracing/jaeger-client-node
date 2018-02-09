@@ -70,14 +70,11 @@ export default class RemoteReporter {
     });
   }
 
-  close(callback: ?Function): void {
+  close(): void {
     clearInterval(this._intervalHandle);
-    this._sender.flush();
-    this._sender.close();
-
-    if (callback) {
-      callback();
-    }
+    this.flush().then(() => {
+      this._sender.close();
+    });
   }
 
   setProcess(serviceName: string, tags: Array<Tag>): void {
