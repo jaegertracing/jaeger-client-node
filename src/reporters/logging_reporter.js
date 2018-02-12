@@ -29,7 +29,7 @@ export default class LoggingReporter {
     return 'LoggingReporter';
   }
 
-  close(callback: ?Function): void {
+  close(callback?: () => void): void {
     if (callback) {
       callback();
     }

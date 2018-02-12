@@ -38,7 +38,7 @@ export default class InMemoryReporter {
     this._spans = [];
   }
 
-  close(callback: ?Function): void {
+  close(callback?: () => void): void {
     if (callback) {
       callback();
     }
