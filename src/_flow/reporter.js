@@ -27,8 +27,3 @@ declare class Sender {
 }
 
 declare type SenderCallback = (numSpans: number, err?: string) => void;
-
-declare type SenderResponse = {
-  err: boolean,
-  numSpans: number,
-};
