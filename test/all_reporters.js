@@ -65,10 +65,11 @@ describe('All Reporters should', () => {
   ];
 
   _.each(closeOptions, o => {
-    it('calls to close execute callback correctly', () => {
+    it('calls to close execute callback correctly', done => {
       let reporter = new CompositeReporter(reporters);
 
       reporter.close(o.callback);
+      done();
 
       assert.isOk(o.predicate(o.callback));
     });
