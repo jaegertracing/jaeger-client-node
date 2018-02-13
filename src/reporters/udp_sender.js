@@ -140,7 +140,7 @@ export default class UDPSender {
 
     // Having the error callback here does not prevent uncaught exception from being thrown,
     // that's why in the constructor we also add a general on('error') handler.
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
       this._client.send(thriftBuffer, 0, thriftBuffer.length, this._port, this._host, (err, sent) => {
         if (err) {
           this._logger.error(
