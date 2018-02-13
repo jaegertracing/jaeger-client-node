@@ -11,6 +11,7 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
+import 'babel-polyfill';
 import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';

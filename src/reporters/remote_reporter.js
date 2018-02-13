@@ -11,6 +11,7 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
+import 'babel-polyfill';
 import NullLogger from '../logger.js';
 import ThriftUtils from '../thrift.js';
 import Metrics from '../metrics/metrics.js';
