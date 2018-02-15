@@ -12,7 +12,8 @@
 
 module.exports = {
   initTracer: require('./dist/src/configuration.js').default.initTracer,
-
+  Configuration : require('./dist/src/configuration.js').default,
+  
   SpanContext: require('./dist/src/span_context.js').default,
   Span: require('./dist/src/span.js').default,
   Tracer: require('./dist/src/tracer.js').default,
