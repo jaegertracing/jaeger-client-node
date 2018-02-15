@@ -11,6 +11,7 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
+import 'babel-polyfill';
 import Span from '../span.js';
 
 export default class NoopReporter {
@@ -20,10 +21,8 @@ export default class NoopReporter {
 
   report(span: Span): void {}
 
-  close(callback: ?Function): void {
-    if (callback) {
-      callback();
-    }
+  close(): Promise<void> {
+    return Promise.resolve();
   }
 
   setProcess(serviceName: string, tags: Array<Tag>): void {}

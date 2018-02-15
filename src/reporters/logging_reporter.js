@@ -11,6 +11,8 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
+import 'babel-polyfill';
+
 import Span from '../span.js';
 import NullLogger from '../logger.js';
 
@@ -29,9 +31,7 @@ export default class LoggingReporter {
     return 'LoggingReporter';
   }
 
-  close(callback: ?Function): void {
-    if (callback) {
-      callback();
-    }
+  close(): Promise<void> {
+    return Promise.resolve();
   }
 }

@@ -11,6 +11,7 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
+import 'babel-polyfill';
 import BinaryCodec from './propagators/binary_codec';
 import ConstSampler from './samplers/const_sampler';
 import * as constants from './constants';
@@ -307,11 +308,11 @@ export default class Tracer {
    *
    * @param {Function} [callback] - a callback that runs after the tracer has been closed.
    **/
-  close(callback: Function): void {
+  close(): Promise<void> {
     let reporter = this._reporter;
     this._reporter = new NoopReporter();
-    reporter.close(() => {
-      this._sampler.close(callback);
+    return reporter.close().then(() => {
+      return this._sampler.close();
     });
   }
 
