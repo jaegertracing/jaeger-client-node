@@ -15,18 +15,15 @@ import Span from '../span.js';
 
 declare interface Reporter {
   report(span: Span): void;
-  close(callback: ?Function): void;
+  close(callback?: () => void): void;
   setProcess(serviceName: string, tags: Array<Tag>): void;
 }
 
 declare class Sender {
-  append(span: Span): SenderResponse;
-  flush(): SenderResponse;
+  append(span: Span, callback: SenderCallback): void;
+  flush(callback: SenderCallback): void;
   close(): void;
   setProcess(process: Process): void;
 }
 
-declare type SenderResponse = {
-  err: boolean,
-  numSpans: number,
-};
+declare type SenderCallback = (numSpans: number, err?: string) => void;
