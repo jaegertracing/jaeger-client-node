@@ -65,9 +65,7 @@ export default class RemoteReporter {
       } else {
         this._metrics.reporterSuccess.increment(response.numSpans);
       }
-      if (callback) {
-        callback();
-      }
+      if (callback) callback();
     });
   }
 
@@ -75,9 +73,7 @@ export default class RemoteReporter {
     clearInterval(this._intervalHandle);
     this.flush(() => {
       this._sender.close();
-      if (callback) {
-        callback();
-      }
+      if (callback) callback();
     });
   }
 
