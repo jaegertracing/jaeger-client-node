@@ -52,7 +52,7 @@ describe('Composite and Remote Reporter should', () => {
     reporter.close(callback);
   });
 
-  it('report span, and flush', () => {
+  it('report span, and flush', done => {
     let span = tracer.startSpan('operation-name');
 
     // add duration to span, and report it
@@ -60,6 +60,7 @@ describe('Composite and Remote Reporter should', () => {
     assert.equal(sender._batch.spans.length, 1);
 
     reporter.flush();
+    done();
     assert.equal(sender._batch.spans.length, 0);
     assert.isOk(LocalBackend.counterEquals(metrics.reporterSuccess, 1));
   });
@@ -96,7 +97,7 @@ describe('Composite and Remote Reporter should', () => {
     }).to.throw('RemoteReporter must be given a Sender.');
   });
 
-  it('failed to flush spans with reporter', () => {
+  it('failed to flush spans with reporter', done => {
     let mockSender = {
       flush: () => {
         return {
@@ -109,6 +110,7 @@ describe('Composite and Remote Reporter should', () => {
 
     reporter._sender = mockSender;
     reporter.flush();
+    done();
 
     assert.equal(logger._errorMsgs[0], 'Failed to flush spans in reporter.');
     assert.isOk(LocalBackend.counterEquals(metrics.reporterFailure, 1));

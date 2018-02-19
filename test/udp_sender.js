@@ -189,7 +189,7 @@ describe('udp sender should', () => {
     });
   });
 
-  it('flush spans when capacity is reached', () => {
+  it('flush spans when capacity is reached', done => {
     let spanOne = tracer.startSpan('operation-one');
     spanOne.finish(); // finish to set span duration
     spanOne = ThriftUtils.spanToThrift(spanOne);
@@ -198,6 +198,7 @@ describe('udp sender should', () => {
 
     let responseOne = sender.append(spanOne);
     let responseTwo = sender.append(spanOne);
+    done();
 
     assert.equal(responseOne.err, false);
     assert.equal(responseOne.numSpans, 0);
@@ -208,7 +209,7 @@ describe('udp sender should', () => {
     assert.equal(sender._totalSpanBytes, 0);
   });
 
-  it('flush spans when just over capacity', () => {
+  it('flush spans when just over capacity', done => {
     let spanOne = tracer.startSpan('operation-one');
     spanOne.finish(); // finish to set span duration
     spanOne = ThriftUtils.spanToThrift(spanOne);
@@ -223,6 +224,7 @@ describe('udp sender should', () => {
     let responseOne = sender.append(spanOne);
     let responseTwo = sender.append(spanThatExceedsCapacity);
     let expectedBufferSize = sender._calcSpanSize(spanThatExceedsCapacity).length;
+    done();
 
     assert.equal(sender._batch.spans.length, 1);
     assert.equal(sender._totalSpanBytes, expectedBufferSize);
@@ -270,12 +272,13 @@ describe('udp sender should', () => {
     sender.close();
   });
 
-  it('return error response on span too large', () => {
+  it('return error response on span too large', done => {
     let span = tracer.startSpan('op-name');
     span.finish(); // otherwise duration will be undefined
 
     sender._maxSpanBytes = 1;
     let response = sender.append(ThriftUtils.spanToThrift(span));
+    done();
     assert.isOk(response.err);
     assert.equal(response.numSpans, 1);
     sender.flush();
@@ -284,8 +287,9 @@ describe('udp sender should', () => {
     sender.close();
   });
 
-  it('flush with no spans returns false for error, and 0', () => {
+  it('flush with no spans returns false for error, and 0', done => {
     let response = sender.flush();
+    done();
 
     assert.equal(response.err, false);
     assert.equal(response.numSpans, 0);
