@@ -30,18 +30,19 @@ export default class CompositeReporter {
     });
   }
 
-  compositeCallback(callback: ?Function): ?Function {
+  _compositeCallback(callback: () => void): () => void {
     let count = 0;
     return () => {
       count++;
       if (count >= this._reporters.length) {
-        if (callback) callback();
+        callback();
       }
     };
   }
 
-  close(callback: ?Function): void {
-    let modifiedCallback: ?Function = this.compositeCallback(callback);
+  close(callback?: () => void): void {
+    callback = callback || function() {};
+    let modifiedCallback = this._compositeCallback(callback);
     this._reporters.forEach(r => {
       r.close(modifiedCallback);
     });
