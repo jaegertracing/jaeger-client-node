@@ -91,7 +91,7 @@ export default class UDPSender {
     this._maxSpanBytes = this._maxPacketSize - this._emitSpanBatchOverhead;
   }
 
-  _invokeCallback(callback?: SenderCallback, numSpans, error) {
+  _invokeCallback(callback?: SenderCallback, numSpans: number, error?: string) {
     if (callback) {
       callback(numSpans, error);
     }
@@ -158,11 +158,12 @@ export default class UDPSender {
     // Having the error callback here does not prevent uncaught exception from being thrown,
     // that's why in the constructor we also add a general on('error') handler.
     this._client.send(thriftBuffer, 0, thriftBuffer.length, this._port, this._host, (err, sent) => {
-      this._invokeCallback(
-        callback,
-        numSpans,
-        err && `error sending spans over UDP: ${err}, packet size: ${writeResult.offset}, bytes sent: ${sent}`
-      );
+      if (err) {
+        let error: string = err && `error sending spans over UDP: ${err}, packet size: ${writeResult.offset}, bytes sent: ${sent}`;
+        this._invokeCallback(callback, numSpans, error);
+      } else {
+        this._invokeCallback(callback, numSpans);
+      }
     });
   }
 
