@@ -35,9 +35,7 @@ export default class CompositeReporter {
     return () => {
       count++;
       if (count >= this._reporters.length) {
-        if (callback) {
-          callback();
-        }
+        if (callback) callback();
       }
     };
   }
