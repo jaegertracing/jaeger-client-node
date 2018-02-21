@@ -77,9 +77,9 @@ export default class UDPSender {
       spans: [],
     };
 
-    let tagMessages = [];
+    const tagMessages = [];
     for (let j = 0; j < this._batch.process.tags.length; j++) {
-      let tag = this._batch.process.tags[j];
+      const tag = this._batch.process.tags[j];
       tagMessages.push(new this._jaegerThrift.Tag(tag));
     }
 
@@ -91,20 +91,25 @@ export default class UDPSender {
     this._maxSpanBytes = this._maxPacketSize - this._emitSpanBatchOverhead;
   }
 
-  append(span: any, callback: ?Function): void {
-    let lengthResult: LengthResult = this._calcSpanSize(span);
-    if (lengthResult.err) {
-      this._logger.error(`error converting span to Thrift: ${lengthResult.err}`);
-      if (callback) {
-        callback({ err: true, numSpans: 1 });
-      }
+  _invokeCallback(callback?: SenderCallback, numSpans: number, error?: string) {
+    if (callback) {
+      callback(numSpans, error);
+    }
+  }
+
+  append(span: any, callback?: SenderCallback): void {
+    const { err, length } = this._calcSpanSize(span);
+    if (err) {
+      this._invokeCallback(callback, 1, `error converting span to Thrift: ${err}`);
       return;
     }
-    let spanSize: number = lengthResult.length;
+    const spanSize = length;
     if (spanSize > this._maxSpanBytes) {
-      if (callback) {
-        callback({ err: true, numSpans: 1 });
-      }
+      this._invokeCallback(
+        callback,
+        1,
+        `span size ${spanSize} is larger than maxSpanSize ${this._maxSpanBytes}`
+      );
       return;
     }
 
@@ -113,32 +118,32 @@ export default class UDPSender {
       this._totalSpanBytes += spanSize;
       if (this._totalSpanBytes < this._maxSpanBytes) {
         // still have space in the buffer, don't flush it yet
-        if (callback) {
-          callback({ err: false, numSpans: 0 });
-        }
+        this._invokeCallback(callback, 0);
         return;
       }
+      // buffer size === this._maxSpanBytes
       this.flush(callback);
       return;
     }
-    this.flush(result => {
+
+    this.flush((numSpans: number, err?: string) => {
+      // TODO theoretically we can have buffer overflow here too, if many spans were appended during flush()
       this._batch.spans.push(span);
       this._totalSpanBytes += spanSize;
+      this._invokeCallback(callback, numSpans, err);
     });
   }
 
-  flush(callback: ?Function): void {
-    let numSpans: number = this._batch.spans.length;
-    if (numSpans == 0) {
-      if (callback) {
-        callback({ err: false, numSpans: 0 });
-      }
+  flush(callback?: SenderCallback): void {
+    const numSpans = this._batch.spans.length;
+    if (!numSpans) {
+      this._invokeCallback(callback, 0);
       return;
     }
 
-    let bufferLen = this._totalSpanBytes + this._emitSpanBatchOverhead;
-    let thriftBuffer = new Buffer(bufferLen);
-    let writeResult = this._agentThrift.Agent.emitBatch.argumentsMessageRW.writeInto(
+    const bufferLen = this._totalSpanBytes + this._emitSpanBatchOverhead;
+    const thriftBuffer = new Buffer(bufferLen);
+    const writeResult = this._agentThrift.Agent.emitBatch.argumentsMessageRW.writeInto(
       this._convertBatchToThriftMessage(this._batch),
       thriftBuffer,
       0
@@ -146,10 +151,7 @@ export default class UDPSender {
     this._reset();
 
     if (writeResult.err) {
-      this._logger.error(`error writing Thrift object: ${writeResult.err}`);
-      if (callback) {
-        callback({ err: true, numSpans: numSpans });
-      }
+      this._invokeCallback(callback, numSpans, `error writing Thrift object: ${writeResult.err}`);
       return;
     }
 
@@ -157,20 +159,20 @@ export default class UDPSender {
     // that's why in the constructor we also add a general on('error') handler.
     this._client.send(thriftBuffer, 0, thriftBuffer.length, this._port, this._host, (err, sent) => {
       if (err) {
-        this._logger.error(
-          `error sending spans over UDP: ${err}, packet size: ${writeResult.offset}, bytes sent: ${sent}`
-        );
-      }
-      if (callback) {
-        callback({ err: err !== 0, numSpans: numSpans });
+        const error: string =
+          err &&
+          `error sending spans over UDP: ${err}, packet size: ${writeResult.offset}, bytes sent: ${sent}`;
+        this._invokeCallback(callback, numSpans, error);
+      } else {
+        this._invokeCallback(callback, numSpans);
       }
     });
   }
 
   _convertBatchToThriftMessage() {
-    let spanMessages = [];
+    const spanMessages = [];
     for (let i = 0; i < this._batch.spans.length; i++) {
-      let span = this._batch.spans[i];
+      const span = this._batch.spans[i];
       spanMessages.push(new this._jaegerThrift.Span(span));
     }
 

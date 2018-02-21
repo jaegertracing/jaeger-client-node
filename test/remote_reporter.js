@@ -22,7 +22,7 @@ import Metrics from '../src/metrics/metrics';
 import LocalMetricFactory from './lib/metrics/local/metric_factory';
 import LocalBackend from './lib/metrics/local/backend';
 
-describe('Composite and Remote Reporter should', () => {
+describe('Remote Reporter', () => {
   let tracer;
   let reporter;
   let sender;
@@ -52,30 +52,18 @@ describe('Composite and Remote Reporter should', () => {
     reporter.close(callback);
   });
 
-  it('report span, and flush', done => {
+  it('should report span, and flush', done => {
     let span = tracer.startSpan('operation-name');
 
     // add duration to span, and report it
     span.finish();
     assert.equal(sender._batch.spans.length, 1);
 
-    reporter.flush();
-    done();
-    assert.equal(sender._batch.spans.length, 0);
-    assert.isOk(LocalBackend.counterEquals(metrics.reporterSuccess, 1));
-  });
-
-  it('report and flush span that is causes an error to be logged', () => {
-    // make it so that all spans will be too large to be appended
-    sender._maxSpanBytes = 1;
-
-    let span = tracer.startSpan('operation-name');
-
-    span.finish();
-    assert.equal(logger._errorMsgs[0], 'Failed to append spans in reporter.');
-
-    // metrics
-    assert.isOk(LocalBackend.counterEquals(metrics.reporterDropped, 1));
+    reporter.flush(() => {
+      assert.equal(sender._batch.spans.length, 0);
+      assert.isOk(LocalBackend.counterEquals(metrics.reporterSuccess, 1));
+      done();
+    });
   });
 
   it('should have coverage for simple code paths', () => {
@@ -97,30 +85,29 @@ describe('Composite and Remote Reporter should', () => {
     }).to.throw('RemoteReporter must be given a Sender.');
   });
 
-  it('failed to flush spans with reporter', done => {
+  it('should fail to flush spans with bad sender', done => {
     let mockSender = {
-      flush: () => {
-        return {
-          err: true,
-          numSpans: 1,
-        };
+      flush: (callback) => {
+        callback(1, 'mock error');
       },
       close: () => {},
     };
 
     reporter._sender = mockSender;
-    reporter.flush();
-    done();
-
-    assert.equal(logger._errorMsgs[0], 'Failed to flush spans in reporter.');
-    assert.isOk(LocalBackend.counterEquals(metrics.reporterFailure, 1));
+    reporter.flush(() => {
+      expect(logger._errorMsgs[0]).to.have.string('Failed to flush spans in reporter');
+      assert.isOk(LocalBackend.counterEquals(metrics.reporterFailure, 1));
+      done();
+    });
   });
 
-  it('not flush if process is not set', () => {
+  it('should not flush if process is not set', done => {
     reporter = new RemoteReporter(sender, {
       logger: logger,
     });
-    reporter.flush();
-    assert.equal(logger._infoMsgs[0], 'Failed to flush since process is not set.');
+    reporter.flush(() => {
+      expect(logger._errorMsgs[0]).to.have.string('Failed to flush since process is not set');
+      done();
+    });
   });
 });

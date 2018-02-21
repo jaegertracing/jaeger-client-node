@@ -10,7 +10,6 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import _ from 'lodash';
 import { assert } from 'chai';
 import CompositeReporter from '../src/reporters/composite_reporter';
 import InMemoryReporter from '../src/reporters/in_memory_reporter';
@@ -64,12 +63,11 @@ describe('All Reporters should', () => {
     },
   ];
 
-  _.each(closeOptions, o => {
-    it('calls to close execute callback correctly', done => {
+  closeOptions.forEach(o => {
+    it('calls to close execute callback correctly', () => {
       let reporter = new CompositeReporter(reporters);
 
       reporter.close(o.callback);
-      done();
 
       assert.isOk(o.predicate(o.callback));
     });

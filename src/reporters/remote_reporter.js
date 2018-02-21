@@ -45,35 +45,47 @@ export default class RemoteReporter {
   }
 
   report(span: Span): void {
-    this._sender.append(ThriftUtils.spanToThrift(span), (response: SenderResponse) => {
-      if (response.err) {
-        this._logger.error('Failed to append spans in reporter.');
-        this._metrics.reporterDropped.increment(response.numSpans);
-      }
-    });
+    const thriftSpan = ThriftUtils.spanToThrift(span);
+    this._sender.append(thriftSpan, this._appendCallback);
   }
 
-  flush(callback: ?Function): void {
+  _appendCallback = (numSpans: number, err?: string) => {
+    if (err) {
+      this._logger.error(`Failed to append spans in reporter: ${err}`);
+      this._metrics.reporterDropped.increment(numSpans);
+    } else {
+      this._metrics.reporterSuccess.increment(numSpans);
+    }
+  };
+
+  _invokeCallback(callback?: () => void): void {
+    if (callback) {
+      callback();
+    }
+  }
+
+  flush(callback?: () => void): void {
     if (this._process === undefined) {
-      this._logger.info('Failed to flush since process is not set.');
+      this._logger.error('Failed to flush since process is not set.');
+      this._invokeCallback(callback);
       return;
     }
-    this._sender.flush(response => {
-      if (response.err) {
-        this._logger.error('Failed to flush spans in reporter.');
-        this._metrics.reporterFailure.increment(response.numSpans);
+    this._sender.flush((numSpans: number, err?: string) => {
+      if (err) {
+        this._logger.error(`Failed to flush spans in reporter: ${err}`);
+        this._metrics.reporterFailure.increment(numSpans);
       } else {
-        this._metrics.reporterSuccess.increment(response.numSpans);
+        this._metrics.reporterSuccess.increment(numSpans);
       }
-      if (callback) callback();
+      this._invokeCallback(callback);
     });
   }
 
-  close(callback: ?Function): void {
+  close(callback?: () => void): void {
     clearInterval(this._intervalHandle);
     this.flush(() => {
       this._sender.close();
-      if (callback) callback();
+      this._invokeCallback(callback);
     });
   }
 

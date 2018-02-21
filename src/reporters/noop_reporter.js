@@ -20,7 +20,7 @@ export default class NoopReporter {
 
   report(span: Span): void {}
 
-  close(callback: ?Function): void {
+  close(callback?: () => void): void {
     if (callback) {
       callback();
     }
