@@ -45,16 +45,18 @@ export default class RemoteReporter {
   }
 
   report(span: Span): void {
-    let thriftSpan = ThriftUtils.spanToThrift(span);
-    this._sender.append(thriftSpan, (numSpans: number, err?: string) => {
-      if (err) {
-        this._logger.error(`Failed to append spans in reporter: ${err}`);
-        this._metrics.reporterDropped.increment(numSpans);
-      } else {
-        this._metrics.reporterSuccess.increment(numSpans);
-      }
-    });
+    const thriftSpan = ThriftUtils.spanToThrift(span);
+    this._sender.append(thriftSpan, this._appendCallback);
   }
+
+  _appendCallback = (numSpans: number, err?: string) => {
+    if (err) {
+      this._logger.error(`Failed to append spans in reporter: ${err}`);
+      this._metrics.reporterDropped.increment(numSpans);
+    } else {
+      this._metrics.reporterSuccess.increment(numSpans);
+    }
+  };
 
   _invokeCallback(callback?: () => void): void {
     if (callback) {
