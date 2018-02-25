@@ -2,6 +2,9 @@
   "name": "jaeger-client",
   "version": "3.8.1dev0",
   "description": "Jaeger binding for OpenTracing Node",
+  "engines": {
+    "node": ">=0.10"
+  },
   "license": "Apache-2.0",
   "keywords": [],
   "author": "Onwukike Ibe <oibe@uber.com>",
