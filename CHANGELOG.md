@@ -1,8 +1,12 @@
 # Changes by Version
 
+## 3.9.1 (unreleased)
+
+* Nothing yet.
+
 ## 3.9.0 (2018-02-26)
 
-* RemoteReporter.close() now ensures that the buffer is flushed before invoking the callback (#224, #226) - thanks to <MarckK>
+* RemoteReporter.close() now ensures that the buffer is flushed before invoking the callback (#224, #226) - thanks @MarckK
   * Fix Possible race condition in UDPSender #214
   * Fix Support callback in udpSender.flush #157
   * Fix Change SenderResponse.err to be a message string #32
