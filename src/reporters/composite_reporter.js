@@ -30,20 +30,20 @@ export default class CompositeReporter {
     });
   }
 
-  compositeCallback(callback: ?Function): ?Function {
+  _compositeCallback(limit: number, callback: () => void): () => void {
     let count = 0;
     return () => {
       count++;
-      if (count >= this._reporters.length) {
-        if (callback) {
-          callback();
-        }
+      if (count >= limit) {
+        callback();
       }
     };
   }
 
-  close(callback: ?Function): void {
-    let modifiedCallback: ?Function = this.compositeCallback(callback);
+  close(callback?: () => void): void {
+    const modifiedCallback = callback
+      ? this._compositeCallback(this._reporters.length, callback)
+      : function() {};
     this._reporters.forEach(r => {
       r.close(modifiedCallback);
     });

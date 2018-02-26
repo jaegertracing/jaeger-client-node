@@ -45,39 +45,48 @@ export default class RemoteReporter {
   }
 
   report(span: Span): void {
-    let response: SenderResponse = this._sender.append(ThriftUtils.spanToThrift(span));
-    if (response.err) {
-      this._logger.error('Failed to append spans in reporter.');
-      this._metrics.reporterDropped.increment(response.numSpans);
+    const thriftSpan = ThriftUtils.spanToThrift(span);
+    this._sender.append(thriftSpan, this._appendCallback);
+  }
+
+  _appendCallback = (numSpans: number, err?: string) => {
+    if (err) {
+      this._logger.error(`Failed to append spans in reporter: ${err}`);
+      this._metrics.reporterDropped.increment(numSpans);
+    } else {
+      this._metrics.reporterSuccess.increment(numSpans);
+    }
+  };
+
+  _invokeCallback(callback?: () => void): void {
+    if (callback) {
+      callback();
     }
   }
 
-  flush(callback: ?Function): void {
+  flush(callback?: () => void): void {
     if (this._process === undefined) {
-      this._logger.info('Failed to flush since process is not set.');
+      this._logger.error('Failed to flush since process is not set.');
+      this._invokeCallback(callback);
       return;
     }
-    let response: SenderResponse = this._sender.flush();
-    if (response.err) {
-      this._logger.error('Failed to flush spans in reporter.');
-      this._metrics.reporterFailure.increment(response.numSpans);
-    } else {
-      this._metrics.reporterSuccess.increment(response.numSpans);
-    }
-
-    if (callback) {
-      callback();
-    }
+    this._sender.flush((numSpans: number, err?: string) => {
+      if (err) {
+        this._logger.error(`Failed to flush spans in reporter: ${err}`);
+        this._metrics.reporterFailure.increment(numSpans);
+      } else {
+        this._metrics.reporterSuccess.increment(numSpans);
+      }
+      this._invokeCallback(callback);
+    });
   }
 
-  close(callback: ?Function): void {
+  close(callback?: () => void): void {
     clearInterval(this._intervalHandle);
-    this._sender.flush();
-    this._sender.close();
-
-    if (callback) {
-      callback();
-    }
+    this.flush(() => {
+      this._sender.close();
+      this._invokeCallback(callback);
+    });
   }
 
   setProcess(serviceName: string, tags: Array<Tag>): void {

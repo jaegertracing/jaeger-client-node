@@ -28,7 +28,7 @@ import UDPSender from '../src/reporters/udp_sender.js';
 const PORT = 6832;
 const HOST = '127.0.0.1';
 
-describe('udp sender should', () => {
+describe('udp sender', () => {
   let server;
   let tracer;
   let thrift;
@@ -65,7 +65,14 @@ describe('udp sender should', () => {
     server.close();
   });
 
-  it('read and verify spans and process sent', done => {
+  function assertCallback(expectedNumSpans, expectedError): SenderCallback {
+    return (numSpans, error) => {
+      assert.equal(numSpans, expectedNumSpans);
+      assert.equal(error, expectedError);
+    };
+  }
+
+  it('should read and verify spans and process sent', done => {
     let spanOne = tracer.startSpan('operation-one');
     spanOne.finish(); // finish to set span duration
     spanOne = ThriftUtils.spanToThrift(spanOne);
@@ -99,9 +106,9 @@ describe('udp sender should', () => {
       done();
     });
 
-    sender.append(spanOne);
-    sender.append(spanTwo);
-    sender.flush();
+    sender.append(spanOne, assertCallback(0, undefined));
+    sender.append(spanTwo, assertCallback(0, undefined));
+    sender.flush(assertCallback(2, undefined));
   });
 
   describe('span reference tests', () => {
@@ -153,7 +160,7 @@ describe('udp sender should', () => {
     ];
 
     _.each(options, o => {
-      it('span references serialize', done => {
+      it('should serialize span references', done => {
         let span = tracer.startSpan('bender', {
           childOf: o.childOf,
           references: o.references,
@@ -189,26 +196,21 @@ describe('udp sender should', () => {
     });
   });
 
-  it('flush spans when capacity is reached', () => {
+  it('should flush spans when capacity is reached', () => {
     let spanOne = tracer.startSpan('operation-one');
     spanOne.finish(); // finish to set span duration
     spanOne = ThriftUtils.spanToThrift(spanOne);
     let spanSize = sender._calcSpanSize(spanOne).length;
     sender._maxSpanBytes = spanSize * 2;
 
-    let responseOne = sender.append(spanOne);
-    let responseTwo = sender.append(spanOne);
-
-    assert.equal(responseOne.err, false);
-    assert.equal(responseOne.numSpans, 0);
-    assert.equal(responseTwo.err, false);
-    assert.equal(responseTwo.numSpans, 2);
+    sender.append(spanOne, assertCallback(0, undefined));
+    sender.append(spanOne, assertCallback(2, undefined));
 
     assert.equal(sender._batch.spans.length, 0);
     assert.equal(sender._totalSpanBytes, 0);
   });
 
-  it('flush spans when just over capacity', () => {
+  it('should flush spans when just over capacity', done => {
     let spanOne = tracer.startSpan('operation-one');
     spanOne.finish(); // finish to set span duration
     spanOne = ThriftUtils.spanToThrift(spanOne);
@@ -219,40 +221,33 @@ describe('udp sender should', () => {
     spanThatExceedsCapacity.setTag('some-key', 'some-value');
     spanThatExceedsCapacity.finish(); // finish to set span duration
     spanThatExceedsCapacity = ThriftUtils.spanToThrift(spanThatExceedsCapacity);
+    let largeSpanSize = sender._calcSpanSize(spanThatExceedsCapacity).length;
 
-    let responseOne = sender.append(spanOne);
-    let responseTwo = sender.append(spanThatExceedsCapacity);
-    let expectedBufferSize = sender._calcSpanSize(spanThatExceedsCapacity).length;
+    sender.append(spanOne, assertCallback(0, undefined));
+    sender.append(spanThatExceedsCapacity, (numSpans, error) => {
+      assert.equal(numSpans, 1);
+      assert.equal(error, undefined);
 
-    assert.equal(sender._batch.spans.length, 1);
-    assert.equal(sender._totalSpanBytes, expectedBufferSize);
-    assert.equal(responseOne.err, false);
-    assert.equal(responseOne.numSpans, 0);
-    assert.equal(responseTwo.err, false);
-    assert.equal(responseTwo.numSpans, 1);
+      assert.equal(sender._batch.spans.length, 1);
+      assert.equal(sender._totalSpanBytes, largeSpanSize);
+      done();
+    });
   });
 
-  it('flush returns error, on failed buffer conversion', done => {
-    sender._logger = {
-      info: msg => {
-        console.log('sender info: ' + msg);
-      },
-      error: msg => {
-        expect(msg).to.have.string('error writing Thrift object:');
-        done();
-      },
-    };
+  it('should returns error from flush() on failed buffer conversion', done => {
     let span = tracer.startSpan('leela');
     span.finish(); // finish to set span duration
     span = ThriftUtils.spanToThrift(span);
     span.flags = 'string'; // malform the span to create a serialization error
     sender.append(span);
-    let response = sender.flush();
-    assert.isOk(response.err);
-    assert.equal(response.numSpans, 1);
+    sender.flush((numSpans, err) => {
+      assert.equal(numSpans, 1);
+      expect(err).to.have.string('error writing Thrift object:');
+      done();
+    });
   });
 
-  it('return error response upon thrift conversion failure', done => {
+  it('should return error upon thrift conversion failure', done => {
     sender._logger = {
       error: msg => {
         expect(msg).to.have.string('error converting span to Thrift:');
@@ -262,54 +257,51 @@ describe('udp sender should', () => {
     let span = tracer.startSpan(undefined);
     span.finish();
 
-    let response = sender.append(ThriftUtils.spanToThrift(span));
-    assert.isOk(response.err);
-    assert.equal(response.numSpans, 1);
-
-    // cleanup
-    sender.close();
+    sender.append(ThriftUtils.spanToThrift(span), (numSpans, err) => {
+      assert.equal(numSpans, 1);
+      expect(err).to.have.string('error converting span to Thrift:');
+      done();
+    });
   });
 
-  it('return error response on span too large', () => {
+  it('should return error on span too large', done => {
     let span = tracer.startSpan('op-name');
     span.finish(); // otherwise duration will be undefined
 
     sender._maxSpanBytes = 1;
-    let response = sender.append(ThriftUtils.spanToThrift(span));
-    assert.isOk(response.err);
-    assert.equal(response.numSpans, 1);
-    sender.flush();
-
-    // cleanup
-    sender.close();
+    sender.append(ThriftUtils.spanToThrift(span), (numSpans, err) => {
+      assert.equal(numSpans, 1);
+      expect(err).to.have.string('is larger than maxSpanSize');
+      done();
+    });
   });
 
-  it('flush with no spans returns false for error, and 0', () => {
-    let response = sender.flush();
-
-    assert.equal(response.err, false);
-    assert.equal(response.numSpans, 0);
+  it('should return 0,undefined on flush() with no spans', () => {
+    sender.flush(assertCallback(0, undefined));
   });
 
-  it('flush gracefully handles errors emitted by socket.send', done => {
+  it('should gracefully handle errors emitted by socket.send', done => {
     sender._host = 'foo.bar.xyz';
     // In Node 0.10 and 0.12 the error is logged twice: (1) from inline callback, (2) from on('error') handler.
-    let node0_10_12 = semver.satisfies(process.version, '0.10.x || 0.12.x');
-    let expectedLogs = node0_10_12 ? 2 : 1;
+    let expectLogs = semver.satisfies(process.version, '0.10.x || 0.12.x');
     sender._logger = {
       info: msg => {
         console.log('sender info: ' + msg);
       },
       error: msg => {
+        assert.isOk(expectLogs);
         expect(msg).to.have.string('error sending spans over UDP: Error: getaddrinfo ENOTFOUND');
-        expectedLogs--;
-        if (expectedLogs == 0) {
-          done();
-        }
+        done();
       },
     };
     let tracer = new Tracer('test-service-name', new RemoteReporter(sender), new ConstSampler(true));
     tracer.startSpan('testSpan').finish();
-    sender.flush();
+    sender.flush((numSpans, err) => {
+      assert.equal(numSpans, 1);
+      expect(err).to.have.string('error sending spans over UDP: Error: getaddrinfo ENOTFOUND');
+      if (!expectLogs) {
+        done();
+      }
+    });
   });
 });

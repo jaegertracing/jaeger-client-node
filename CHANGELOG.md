@@ -1,10 +1,25 @@
 # Changes by Version
 
-## 3.8.1 (unreleased)
+## 3.9.2 (unreleased)
 
 * Nothing yet
 
-## 3.8.0 (2017-01-24)
+## 3.9.1 (2018-02-26)
+
+* Remove husky dependency as a temporary fix for #232
+
+## 3.9.0 (2018-02-26)
+
+* RemoteReporter.close() now ensures that the buffer is flushed before invoking the callback (#224, #226) - thanks @MarckK
+  * Fix Possible race condition in UDPSender #214
+  * Fix Support callback in udpSender.flush #157
+  * Fix Change SenderResponse.err to be a message string #32
+* Node 6.x is recommended for development
+  * Add .nvmrc to tell husky precommit which Node version to use (#227)
+* Export Configuration class (#221)
+* Add engines field to package.json (#231)
+
+## 3.8.0 (2018-01-24)
 
 * Log error when Thrift conversion fails (#184)
 * Throw error if serviceName is not provided (#192)
