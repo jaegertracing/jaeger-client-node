@@ -3,7 +3,7 @@ sudo: required
 language: node_js
 
 node_js:
-- '4'
+- '6'
 
 cache:
   directories:
@@ -14,18 +14,18 @@ services:
 
 matrix:
   include:
-  - env: TEST_NODE_VERSION=0.12
-  - env: TEST_NODE_VERSION=4
-  - env: TEST_NODE_VERSION=6
-  - env: TEST_NODE_VERSION=node
-  - env: COVER=1 TEST_NODE_VERSION=0.10
+  - env: TEST_NODE_VERSION=0.10 COVER=1
     sudo: required
     services:
     - docker
-  - env: CROSSDOCK=1 TEST_NODE_VERSION=0.10
+  - env: TEST_NODE_VERSION=0.10 CROSSDOCK=1
     sudo: required
     services:
       - docker
+  - env: TEST_NODE_VERSION=6 LINT=1
+  - env: TEST_NODE_VERSION=4
+  - env: TEST_NODE_VERSION=node
+  - env: TEST_NODE_VERSION=0.12
 
 env:
   global:
@@ -43,6 +43,7 @@ before_install:
 - if [ "$CROSSDOCK" = "1" ]; then make install_docker_ci ; fi
 # Install the Node version to test against
 - nvm install $TEST_NODE_VERSION
+# Switch back to build-time Node version
 - nvm use $TRAVIS_NODE_VERSION
 
 before_script:
@@ -52,10 +53,9 @@ before_script:
 - rm -rf ./node_modules package-lock.json
 - npm uninstall -D husky lint-staged
 - npm install
-- if nvm ls-remote --lts | grep "$(nvm current)"; then echo "running on a LTS node version, linting"; npm run lint; else echo "running on a non-LTS node version, skipping linting"; fi
-
 
 script:
+- if [ "$LINT" = "1" ]; then npm run lint; fi
 - if [ "$CROSSDOCK" != "1" ]; then make test-without-build; fi
 - if [ "$COVER" = "1" ]; then npm run coveralls; fi
 - if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh ; fi

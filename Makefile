@@ -1,5 +1,12 @@
 -include crossdock/rules.mk
 
+NODE_VER=$(shell node -v)
+ifeq ($(patsubst v6.%,v6,$(NODE_VER)), v6)
+	NODE_6=true
+else
+	NODE_6=false
+endif
+
 .PHONY: publish
 publish: build-node
 	npm version $(shell ./scripts/version_prompt.sh)
@@ -17,8 +24,13 @@ test-without-build:
 	npm run test-all
 	npm run check-license
 
+.PHONY: check-node-6
+check-node-6:
+	@$(NODE_6) || echo Build requires Node 6.x
+	@$(NODE_6) && echo Building using Node 6.x
+
 .PHONY: build-node
-build-node: node_modules
+build-node: check-node-6 node_modules
 	rm -rf ./dist/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/src/ src/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/test/ test/
