@@ -28,6 +28,7 @@ module.exports = {
   LoggingReporter: require('./dist/src/reporters/logging_reporter.js').default,
   NoopReporter: require('./dist/src/reporters/noop_reporter.js').default,
   RemoteReporter: require('./dist/src/reporters/remote_reporter.js').default,
+  Constants: require('./dist/src/constants'),
 
   TextMapCodec: require('./dist/src/propagators/text_map_codec.js').default,
   ZipkinB3TextMapCodec: require('./dist/src/propagators/zipkin_b3_text_map_codec.js').default,
