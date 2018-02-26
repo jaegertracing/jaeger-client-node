@@ -50,7 +50,7 @@ before_script:
 - nvm use $TEST_NODE_VERSION
 - node --version
 - rm -rf ./node_modules package-lock.json
-- npm install --no-optional
+- npm uninstall husky lint-staged
 - if nvm ls-remote --lts | grep "$(nvm current)"; then echo "running on a LTS node version, linting"; npm run lint; else echo "running on a non-LTS node version, skipping linting"; fi
 
 
