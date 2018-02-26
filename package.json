@@ -56,9 +56,6 @@
     "uber-licence": "^2.0.2",
     "underscore": "^1.8.3"
   },
-  "optionalDependencies": {
-    "husky": "^0.14.3"
-  },
   "scripts": {
     "check-license": "./scripts/check-license.sh",
     "check-ls": "npm ls --loglevel=http --parseable 1>/dev/null && echo '# npm is in a good state'",
