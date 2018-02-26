@@ -41,7 +41,7 @@
     "eslint-plugin-react": "^7.1.0",
     "express": "^4.14.0",
     "flow-bin": "^0.30.0",
-    "gulp-sourcemaps": "1.7.x",
+    "husky": "^0.14.3",
     "lint-staged": "^6.0.0",
     "lodash": "^4.15.0",
     "minimist": "1.2.0",
@@ -55,9 +55,6 @@
     "tchannel": "^3.9.0",
     "uber-licence": "^2.0.2",
     "underscore": "^1.8.3"
-  },
-  "optionalDependencies": {
-    "husky": "^0.14.3"
   },
   "scripts": {
     "check-license": "./scripts/check-license.sh",
