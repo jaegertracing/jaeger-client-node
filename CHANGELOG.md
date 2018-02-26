@@ -1,8 +1,8 @@
 # Changes by Version
 
-## 3.9.1 (unreleased)
+## 3.9.1 (2018-02-26)
 
-* Nothing yet.
+* Remove husky dependency as a temporary fix for #232
 
 ## 3.9.0 (2018-02-26)
 
