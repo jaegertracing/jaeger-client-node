@@ -17,6 +17,7 @@ module.exports = {
   SpanContext: require('./dist/src/span_context.js').default,
   Span: require('./dist/src/span.js').default,
   Tracer: require('./dist/src/tracer.js').default,
+  Formats: require('./dist/src/formats.js'),
 
   ConstSampler: require('./dist/src/samplers/const_sampler.js').default,
   ProbabilisticSampler: require('./dist/src/samplers/probabilistic_sampler.js').default,
