@@ -30,7 +30,7 @@ check-node-6:
 	@$(NODE_6) && echo Building using Node 6.x
 
 .PHONY: build-node
-build-node: check-node-6 node_modules
+build-node: check-node-6 node-modules
 	rm -rf ./dist/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/src/ src/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/test/ test/
@@ -41,8 +41,8 @@ build-node: check-node-6 node_modules
 	rm -rf ./dist/src/jaeger-idl/.git
 	cp -R ./src/thriftrw-idl ./dist/src/
 
-.PHONY: node_modules
-node_modules:
+.PHONY: node-modules
+node-modules:
 	git submodule init -- ./src/jaeger-idl
 	git submodule update
 	npm install
