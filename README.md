@@ -31,6 +31,10 @@ var options = {
 var tracer = initTracer(config, options);
 ```
 
+### Metrics and Logging
+
+The `metrics` and `logger` objects shown in the above example must satisfy the [MetricsFactory](./src/_flow/metrics.js#L34) and [Logger](./src/_flow/logger.js) APIs respectively.
+
 ## Usage
 
 The Tracer instance created by `initTracer` is OpenTracing-1.0 compliant. See [opentracing-javascript](https://github.com/opentracing/opentracing-javascript) for usage examples.
