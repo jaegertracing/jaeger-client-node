@@ -21,7 +21,10 @@ test: build-node
 .PHONY: test-without-build
 test-without-build:
 	npm run flow
+ifeq ($(NODE_6),true)
 	npm run test-all
+endif
+	npm run test-dist
 	npm run check-license
 
 .PHONY: check-node-6

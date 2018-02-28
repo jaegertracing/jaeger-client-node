@@ -69,6 +69,7 @@
     "test": "make test",
     "test-all": "npm run test-core && npm run test-samplers && npm run test-crossdock && npm run test-baggage",
     "test-core": "mocha --compilers js:babel-core/register test",
+    "test-dist": "mocha dist/test/ dist/test/baggage/ dist/test/samplers/",
     "test-samplers": "mocha --compilers js:babel-core/register test/samplers",
     "test-baggage": "mocha --compilers js:babel-core/register test/baggage",
     "test-crossdock": "mocha --compilers js:babel-register crossdock/test",

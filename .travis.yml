@@ -47,12 +47,12 @@ before_install:
 - nvm use $TRAVIS_NODE_VERSION
 
 before_script:
+- npm uninstall -D husky lint-staged
 - travis_retry make node-modules
 - make build-node
 - nvm use $TEST_NODE_VERSION
 - node --version
 - rm -rf ./node_modules package-lock.json
-- npm uninstall -D husky lint-staged
 - travis_retry npm install
 
 script:
