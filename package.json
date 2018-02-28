@@ -8,7 +8,7 @@
   "license": "Apache-2.0",
   "keywords": [],
   "author": "Onwukike Ibe <oibe@uber.com>",
-  "main": "./entrypoint.js",
+  "main": "./dist/src/index.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/jaegertracing/jaeger-client-node.git"
