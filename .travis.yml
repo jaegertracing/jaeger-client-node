@@ -45,9 +45,9 @@ before_install:
 - nvm install $TEST_NODE_VERSION
 # Switch back to build-time Node version
 - nvm use $TRAVIS_NODE_VERSION
+- npm uninstall -D husky lint-staged
 
 before_script:
-- npm uninstall -D husky lint-staged
 - travis_retry make node-modules
 - make build-node
 - nvm use $TEST_NODE_VERSION
