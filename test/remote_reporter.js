@@ -87,7 +87,7 @@ describe('Remote Reporter', () => {
 
   it('should fail to flush spans with bad sender', done => {
     let mockSender = {
-      flush: (callback) => {
+      flush: callback => {
         callback(1, 'mock error');
       },
       close: () => {},
