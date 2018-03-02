@@ -1,8 +1,10 @@
 # Changes by Version
 
-## 3.9.2 (unreleased)
+## 3.10.0 (2018-03-02)
 
-* Nothing yet
+* Made tracing headers configurable (#217) - thanks @astub
+* Add husky as a dev-dependency (#234)
+* Require Node 6.x for building (#235)
 
 ## 3.9.1 (2018-02-26)
 
