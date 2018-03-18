@@ -25,7 +25,6 @@ matrix:
   - env: TEST_NODE_VERSION=6 LINT=1
   - env: TEST_NODE_VERSION=4
   - env: TEST_NODE_VERSION=node
-  - env: TEST_NODE_VERSION=0.12
 
 env:
   global:
