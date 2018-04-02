@@ -50,7 +50,7 @@ export default class RemoteThrottler {
   _onCreditsUpdate: ?Function;
 
   /**
-   * Creates a BaggageRestrictionManager that fetches baggage restrictions remotely from jaeger-agent.
+   * Creates a RemoteThrottler that fetches credits remotely from jaeger-agent.
    *
    * @param {string} [serviceName] - name of the current service / application, same as given to Tracer
    * @param {object} [options] - optional settings
