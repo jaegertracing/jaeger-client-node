@@ -13,38 +13,57 @@
 
 import express from 'express';
 
-export default class SamplingServer {
+export default class ConfigServer {
   _port: number;
   _app: any;
   _server: any;
   _strategies: { [service: string]: SamplingStrategyResponse };
+  _credits: { [service: string]: Array<CreditResponse> };
 
   constructor(port: number = 5778) {
     this._port = port;
     this._app = express();
     this._strategies = Object.create(null);
-    this._app.get('/sampling', this._handle.bind(this));
+    this._app.get('/sampling', this._handleSampling.bind(this));
+    this._app.get('/credits', this._handleThrottling.bind(this));
   }
 
   addStrategy(serviceName: string, response: SamplingStrategyResponse): void {
     this._strategies[serviceName] = response;
   }
 
-  clearStrategies(): void {
-    this._strategies = Object.create(null);
+  addCredits(serviceName: string, response: Array<CreditResponse>): void {
+    this._credits[serviceName] = response;
   }
 
-  _handle(req: any, res: any) {
+  clearConfigs(): void {
+    this._strategies = Object.create(null);
+    this._credits = Object.create(null);
+  }
+
+  _handleSampling(req: any, res: any) {
+    this._handle(req, res, service => {
+      return this._strategies[service];
+    });
+  }
+
+  _handleThrottling(req: any, res: any) {
+    this._handle(req, res, service => {
+      return this._credits[service];
+    });
+  }
+
+  _handle(req: any, res: any, getFunc: Function) {
     let service = req.query.service;
-    let strategy = this._strategies[service];
-    if (strategy) {
-      res.send(strategy);
+    let resp = getFunc(service);
+    if (resp) {
+      res.send(resp);
     } else {
       res.status(404).send({ err: `unknown service name '${service}'` });
     }
   }
 
-  start(): SamplingServer {
+  start(): ConfigServer {
     this._server = this._app.listen(this._port);
     return this;
   }
