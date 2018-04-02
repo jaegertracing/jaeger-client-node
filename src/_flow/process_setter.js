@@ -12,15 +12,6 @@
 // the License.
 
 /**
- * Process holds process specific metadata that's relevant to this client.
- */
-declare type Process = {
-  service: string,
-  uuid: string,
-  tags: Map<string, any>,
-};
-
-/**
  * ProcessSetter sets a process. This can be used by any class that requires
  * the process to be set as part of initialization.
  * See src/throttler/remote_throttler.js for an example.

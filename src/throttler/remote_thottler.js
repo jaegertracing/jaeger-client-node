@@ -87,7 +87,7 @@ export default class RemoteThrottler {
   }
 
   setProcess(process: Process): void {
-    this._uuid = process.uuid;
+    this._uuid = process.uuid || '';
   }
 
   isAllowed(operation: string): boolean {
@@ -133,7 +133,7 @@ export default class RemoteThrottler {
     });
   }
 
-  _fetchCredits(operations: Symbol.iterator) {
+  _fetchCredits(operations: any) {
     let serviceName: string = encodeURIComponent(this._serviceName);
     let uuid: string = encodeURIComponent(this._uuid);
     let url: string = `/credits?service=${serviceName}&uuid=${uuid}`;
