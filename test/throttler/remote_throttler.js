@@ -146,8 +146,8 @@ describe('RemoteThrottler should', () => {
   it('refresh periodically', done => {
     server.addCredits(serviceName, [{ operation: operation, credits: 5 }]);
     throttler = new RemoteThrottler(serviceName, {
-      refreshIntervalMs: 5,
-      initialDelayMs: 5,
+      refreshIntervalMs: 20,
+      initialDelayMs: 10,
       metrics: metrics,
       logger: logger,
       onCreditsUpdate: _throttler => {
