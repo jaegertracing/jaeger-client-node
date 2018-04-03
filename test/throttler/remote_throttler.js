@@ -144,23 +144,15 @@ describe('RemoteThrottler should', () => {
   });
 
   it('refresh periodically', done => {
-    server.addCredits(serviceName, [{ operation: operation, credits: 5 }]);
+    logger.error = function(msg) {
+      console.log('error called');
+      assert.equal(msg, 'UUID must be set to fetch credits');
+      done();
+    };
     throttler = new RemoteThrottler(serviceName, {
-      refreshIntervalMs: 20,
-      initialDelayMs: 10,
+      initialDelayMs: 1,
       metrics: metrics,
       logger: logger,
-      onCreditsUpdate: _throttler => {
-        console.log('on credits update');
-        assert.notEqual(LocalBackend.counterValue(metrics.throttlerUpdateSuccess), 0);
-        assert.equal(logger._errorMsgs.length, 0);
-        assert.isOk(_throttler.isAllowed(operation));
-        done();
-      },
     });
-    console.log('set operation');
-    throttler._credits.set(operation, 0);
-    console.log('set process');
-    throttler.setProcess({ uuid: uuid });
   });
 });

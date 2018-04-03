@@ -63,7 +63,7 @@
     "cover": "babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/ test/samplers/ test/baggage/ test/throttler/",
     "coveralls": "npm run cover && cat ./coverage/lcov.info | coveralls",
     "flow": "flow",
-    "format": "prettier --write '**/*.{js,json,md}'",
+    "format": "prettier --write '**/*.{js,json,md}' '!src/jaeger-idl/**'",
     "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed' && npm run check-license",
     "precommit": "lint-staged",
     "test": "make test",
