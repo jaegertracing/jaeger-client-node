@@ -150,7 +150,7 @@ describe('RemoteThrottler should', () => {
       done();
     };
     throttler = new RemoteThrottler(serviceName, {
-      initialDelayMs: 0,
+      initialDelayMs: 1,
       metrics: metrics,
       logger: logger,
     });
