@@ -158,5 +158,5 @@ describe('RemoteThrottler should', () => {
       metrics: metrics,
       logger: logger,
     });
-  }).timeout(20000); // This is needed so that travis has time to run the async function _afterInitialDelay
+  }).timeout(600000); // This is needed so that travis has time to run the async function _afterInitialDelay
 });
