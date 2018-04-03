@@ -65,7 +65,7 @@ describe('RemoteThrottler should', () => {
     server.addCredits(serviceName, [{ operation: operation, credits: 3 }]);
     throttler._onCreditsUpdate = _throttler => {
       assert.isOk(_throttler.isAllowed(operation));
-      assert.equal(_throttler._credits.get(operation), 2);
+      assert.equal(_throttler._credits[operation], 2);
       assert.equal(LocalBackend.counterValue(metrics.throttlerUpdateSuccess), 1);
       done();
     };
@@ -77,12 +77,17 @@ describe('RemoteThrottler should', () => {
     assert.equal(logger._errorMsgs.length, 1);
   });
 
-  it("return false for _isAllowed if operation isn't in _credits", () => {
-    assert.isNotOk(throttler._isAllowed(operation));
+  it("return false for _isAllowed if operation isn't in _credits or operation has no credits", () => {
+    assert.isNotOk(
+      throttler._isAllowed(operation),
+      'operation is not set so operation should not be allowed'
+    );
+    throttler._credits[operation] = 0;
+    assert.isNotOk(throttler._isAllowed(operation), 'operation is set but lacks credit');
   });
 
   it("return false for isAllowed if operation doesn't have enough credits", () => {
-    throttler._credits.set(operation, 0.5);
+    throttler._credits[operation] = 0.5;
     assert.isNotOk(throttler._isAllowed(operation));
   });
 
@@ -92,13 +97,13 @@ describe('RemoteThrottler should', () => {
       { operation: operation, credits: 5 },
       { operation: other_operation, credits: 3 },
     ]);
-    throttler._credits.set(operation, 0);
-    throttler._credits.set(other_operation, 0);
+    throttler._credits[operation] = 0;
+    throttler._credits[other_operation] = 0;
     throttler._onCreditsUpdate = _throttler => {
       assert.isOk(_throttler.isAllowed(operation));
-      assert.equal(_throttler._credits.get(operation), 4);
+      assert.equal(_throttler._credits[operation], 4);
       assert.isOk(_throttler.isAllowed(other_operation));
-      assert.equal(_throttler._credits.get(other_operation), 2);
+      assert.equal(_throttler._credits[other_operation], 2);
       assert.equal(LocalBackend.counterValue(metrics.throttlerUpdateSuccess), 1);
       done();
     };
@@ -107,7 +112,7 @@ describe('RemoteThrottler should', () => {
 
   it('emit failure metric on failing to query for credits', done => {
     throttler.setProcess({ uuid: uuid });
-    throttler._credits.set(operation, 0);
+    throttler._credits[operation] = 0;
     metrics.throttlerUpdateFailure.increment = function() {
       assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
       done();
@@ -118,7 +123,7 @@ describe('RemoteThrottler should', () => {
 
   it('emit failure metric on failing to parse bad http response', done => {
     throttler.setProcess({ uuid: uuid });
-    throttler._credits.set(operation, 0);
+    throttler._credits[operation] = 0;
     metrics.throttlerUpdateFailure.increment = function() {
       assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
       done();
@@ -129,7 +134,7 @@ describe('RemoteThrottler should', () => {
 
   it('emit failure metric when server returns an invalid response', done => {
     throttler.setProcess({ uuid: uuid });
-    throttler._credits.set(operation, 0);
+    throttler._credits[operation] = 0;
     metrics.throttlerUpdateFailure.increment = function() {
       assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
       done();
@@ -140,6 +145,6 @@ describe('RemoteThrottler should', () => {
   it('not fetch credits if no operations have been seen', () => {
     throttler.setProcess({ uuid: uuid });
     throttler._refreshCredits();
-    assert.equal(throttler._credits.size, 0);
+    assert.equal(Object.keys(throttler._credits).length, 0);
   });
 });

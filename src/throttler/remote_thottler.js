@@ -33,6 +33,8 @@ const DEFAULT_THROTTLER_PORT = 5778;
 // i.e. if currentCredits > MINIMUM_CREDITS, then the operation will not be throttled.
 const MINIMUM_CREDITS = 1.0;
 
+type CreditsPerOperation = { [key: string]: number };
+
 export default class RemoteThrottler {
   _serviceName: string;
   _logger: Logger;
@@ -43,7 +45,7 @@ export default class RemoteThrottler {
   _port: number;
 
   _uuid: string;
-  _credits: Map<string, number>;
+  _credits: CreditsPerOperation;
 
   _initialDelayTimeoutHandle: any;
   _refreshIntervalHandle: any;
@@ -72,7 +74,7 @@ export default class RemoteThrottler {
     this._host = options.host || DEFAULT_THROTTLER_HOST;
     this._port = options.port || DEFAULT_THROTTLER_PORT;
 
-    this._credits = new Map();
+    this._credits = Object.create(null);
     this._onCreditsUpdate = options.onCreditsUpdate;
 
     this._initialDelayTimeoutHandle = setTimeout(
@@ -91,27 +93,25 @@ export default class RemoteThrottler {
   }
 
   isAllowed(operation: string): boolean {
-    if (!this._credits.has(operation)) {
-      this._credits.set(operation, 0);
-      // If seen for the first time, async fetch credits
-      this._refreshCredits();
-      return false;
+    if (operation in this._credits) {
+      // TODO if credits is 0, is this false? Do I need to do an explicit check on undefined?
+      return this._isAllowed(operation);
     }
-    return this._isAllowed(operation);
+    this._credits[operation] = 0;
+    // If seen for the first time, async fetch credits
+    this._refreshCredits();
+    return false;
   }
 
   _isAllowed(operation: string): boolean {
     // N.B. The -1 assignment is necessary, otherwise we need to type credits as ?number which
     // becomes a bit of a headache in this function because flow will throw errors on credits
     // being null even if I explicitly check it's not before continuing.
-    let credits: number = this._credits.get(operation) || -1;
-    if (credits == -1) {
-      return false;
-    }
+    let credits: number = operation in this._credits ? this._credits[operation] : 0;
     if (credits < MINIMUM_CREDITS) {
       return false;
     }
-    this._credits.set(operation, credits - MINIMUM_CREDITS);
+    this._credits[operation] = credits - MINIMUM_CREDITS;
     return true;
   }
 
@@ -120,16 +120,16 @@ export default class RemoteThrottler {
       this._logger.error(`UUID must be set to fetch credits`);
       return;
     }
-    if (this._credits.size == 0) {
+    if (Object.keys(this._credits).length == 0) {
       // No point fetching credits if there's no operations to fetch
       return;
     }
-    this._fetchCredits(this._credits.keys());
+    this._fetchCredits(Object.keys(this._credits));
   }
 
   _incrementCredits(creditResponses: Array<CreditResponse>) {
     creditResponses.forEach(r => {
-      this._credits.set(r.operation, this._credits.get(r.operation) + r.credits);
+      this._credits[r.operation] = this._credits[r.operation] + r.credits;
     });
   }
 
@@ -138,9 +138,9 @@ export default class RemoteThrottler {
     let uuid: string = encodeURIComponent(this._uuid);
     let url: string = `/credits?service=${serviceName}&uuid=${uuid}`;
 
-    for (let operation of operations) {
+    operations.forEach(operation => {
       url = url + `&operation=${encodeURIComponent(operation)}`;
-    }
+    });
 
     let success: Function = body => {
       this._parseCreditResponse(body);
