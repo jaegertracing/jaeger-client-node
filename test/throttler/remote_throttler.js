@@ -151,13 +151,16 @@ describe('RemoteThrottler should', () => {
       metrics: metrics,
       logger: logger,
       onCreditsUpdate: _throttler => {
+        console.log('on credits update');
         assert.notEqual(LocalBackend.counterValue(metrics.throttlerUpdateSuccess), 0);
         assert.equal(logger._errorMsgs.length, 0);
         assert.isOk(_throttler.isAllowed(operation));
         done();
       },
     });
+    console.log('set operation');
     throttler._credits.set(operation, 0);
+    console.log('set process');
     throttler.setProcess({ uuid: uuid });
   });
 });
