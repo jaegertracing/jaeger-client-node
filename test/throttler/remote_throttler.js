@@ -142,17 +142,4 @@ describe('RemoteThrottler should', () => {
     throttler._refreshCredits();
     assert.equal(throttler._credits.size, 0);
   });
-
-  it('refresh periodically', done => {
-    logger.error = function(msg) {
-      console.log('error called');
-      assert.equal(msg, 'UUID must be set to fetch credits');
-      done();
-    };
-    throttler = new RemoteThrottler(serviceName, {
-      initialDelayMs: 1,
-      metrics: metrics,
-      logger: logger,
-    });
-  }).timeout(10000); // WTF?
 });

@@ -82,9 +82,7 @@ export default class RemoteThrottler {
   }
 
   _afterInitialDelay(): void {
-    console.log('after initial delay called');
     this._refreshCredits();
-    console.log('refresh credits added to handler');
     this._refreshIntervalHandle = setInterval(this._refreshCredits.bind(this), this._refreshIntervalMs);
   }
 
@@ -118,7 +116,6 @@ export default class RemoteThrottler {
   }
 
   _refreshCredits() {
-    console.log('refresh credits called');
     if (!this._uuid) {
       this._logger.error(`UUID must be set to fetch credits`);
       return;
