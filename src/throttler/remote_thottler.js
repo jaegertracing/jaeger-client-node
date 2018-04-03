@@ -156,9 +156,6 @@ export default class RemoteThrottler {
     let creditResponses;
     try {
       creditResponses = JSON.parse(body);
-      if (!creditResponses) {
-        throw 'Malformed response: ' + body;
-      }
     } catch (error) {
       this._logger.error(`Error in parsing credit response: ${error}.`);
       this._metrics.throttlerUpdateFailure.increment(1);

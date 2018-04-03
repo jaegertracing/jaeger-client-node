@@ -121,7 +121,7 @@ describe('RemoteThrottler should', () => {
     throttler._refreshCredits();
   });
 
-  it('emit failure metric on failing to parse bad http response', done => {
+  it('emit failure metric on failing to parse bad http json response', done => {
     throttler.setProcess({ uuid: uuid });
     throttler._credits[operation] = 0;
     metrics.throttlerUpdateFailure.increment = function() {
@@ -147,4 +147,16 @@ describe('RemoteThrottler should', () => {
     throttler._refreshCredits();
     assert.equal(Object.keys(throttler._credits).length, 0);
   });
+
+  it('refresh periodically', done => {
+    logger.error = function(msg) {
+      assert.equal(msg, 'UUID must be set to fetch credits');
+      done();
+    };
+    throttler = new RemoteThrottler(serviceName, {
+      initialDelayMs: 1,
+      metrics: metrics,
+      logger: logger,
+    });
+  }).timeout(20000); // This is needed so that travis has time to run the async function _afterInitialDelay
 });
