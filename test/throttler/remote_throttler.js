@@ -148,15 +148,16 @@ describe('RemoteThrottler should', () => {
     assert.equal(Object.keys(throttler._credits).length, 0);
   });
 
-  it('refresh periodically', done => {
-    logger.error = function(msg) {
-      assert.equal(msg, 'UUID must be set to fetch credits');
+  it('refresh credits after _afterInitialDelay is called', done => {
+    throttler.setProcess({ uuid: uuid });
+    throttler._credits[operation] = 0;
+    server.addCredits(serviceName, [{ operation: operation, credits: 5 }]);
+    throttler._onCreditsUpdate = _throttler => {
+      assert.isOk(_throttler.isAllowed(operation));
+      assert.equal(_throttler._credits[operation], 4);
+      assert.equal(LocalBackend.counterValue(metrics.throttlerUpdateSuccess), 1);
       done();
     };
-    throttler = new RemoteThrottler(serviceName, {
-      initialDelayMs: 1,
-      metrics: metrics,
-      logger: logger,
-    });
-  }).timeout(600000); // This is needed so that travis has time to run the async function _afterInitialDelay
+    throttler._afterInitialDelay();
+  });
 });
