@@ -88,6 +88,7 @@ export default class RemoteControlledSampler {
       this._refreshSamplingStrategy.bind(this),
       this._refreshInterval
     );
+    this._initialDelayTimeoutHandle = null;
   }
 
   _refreshSamplingStrategy() {

@@ -24,7 +24,7 @@ import MockLogger from '../lib/mock_logger';
 import ConfigServer from '../lib/config_server';
 import LocalMetricFactory from '../lib/metrics/local/metric_factory.js';
 import LocalBackend from '../lib/metrics/local/backend.js';
-import RemoteThrottler from '../../src/throttler/remote_thottler';
+import RemoteThrottler from '../../src/throttler/remote_throttler';
 
 describe('RemoteThrottler should', () => {
   let server: ConfigServer;
