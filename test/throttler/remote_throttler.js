@@ -70,11 +70,18 @@ describe('RemoteThrottler should', () => {
       done();
     };
     assert.isNotOk(throttler.isAllowed(operation));
+    throttler._refreshCredits();
   });
 
   it('log an error if _refreshCredits is called prior to UUID being set', () => {
     throttler._refreshCredits();
     assert.equal(logger._errorMsgs.length, 1);
+  });
+
+  it('not fetch credits if uuid is invalid', () => {
+    throttler = new RemoteThrottler(serviceName);
+    throttler.setProcess({ uuid: null });
+    throttler._refreshCredits();
   });
 
   it("return false for _isAllowed if operation isn't in _credits or operation has no credits", () => {

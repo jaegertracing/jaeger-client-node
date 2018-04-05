@@ -59,9 +59,9 @@ export default class RemoteThrottler {
    * @param {object} [options.logger] - optional logger, see _flow/logger.js
    * @param {object} [options.metrics] - instance of Metrics object
    * @param {number} [options.refreshIntervalMs] - interval in milliseconds that determines how often credits
-   * are fetched (0 to not refresh, NOT RECOMMENDED!)
+   * are fetched
    * @param {number} [options.initialDelayMs] - interval in milliseconds that determines how soon after initialization
-   * credits are first fetched (0 to not refresh, NOT RECOMMENDED!).
+   * credits are first fetched
    * @param {string} [options.host] - host for jaeger-agent, defaults to 'localhost'
    * @param {number} [options.port] - port for jaeger-agent for /credits endpoint
    * @param {function} [options.onCreditsUpdate] - callback function once credits are updated. Used for testing.
@@ -74,7 +74,7 @@ export default class RemoteThrottler {
     this._host = options.host || DEFAULT_THROTTLER_HOST;
     this._port = options.port || DEFAULT_THROTTLER_PORT;
 
-    this._credits = Object.create(null);
+    this._credits = {};
     this._onCreditsUpdate = options.onCreditsUpdate;
 
     this._initialDelayTimeoutHandle = setTimeout(
@@ -97,9 +97,8 @@ export default class RemoteThrottler {
     if (operation in this._credits) {
       return this._isAllowed(operation);
     }
+    // Credits for the operation will be asynchronously fetched
     this._credits[operation] = 0;
-    // If seen for the first time, async fetch credits
-    this._refreshCredits();
     return false;
   }
 
@@ -118,7 +117,7 @@ export default class RemoteThrottler {
       return;
     }
     const keys = Object.keys(this._credits);
-    if (keys.length == 0) {
+    if (keys.length === 0) {
       // No point fetching credits if there's no operations to fetch
       return;
     }
@@ -132,15 +131,15 @@ export default class RemoteThrottler {
   }
 
   _fetchCredits(operations: any) {
-    let serviceName: string = encodeURIComponent(this._serviceName);
-    let uuid: string = encodeURIComponent(this._uuid);
-    let ops = operations.map(encodeURIComponent).join('&operation=');
-    let url = `/credits?service=${serviceName}&uuid=${uuid}&operation=${ops}`;
+    const serviceName: string = encodeURIComponent(this._serviceName);
+    const uuid: string = encodeURIComponent(this._uuid);
+    const ops: string = operations.map(encodeURIComponent).join('&operation=');
+    const url: string = `/credits?service=${serviceName}&uuid=${uuid}&operation=${ops}`;
 
-    let success: Function = body => {
+    const success: Function = body => {
       this._parseCreditResponse(body);
     };
-    let error: Function = err => {
+    const error: Function = err => {
       this._logger.error(`Error in fetching credits: ${err}.`);
       this._metrics.throttlerUpdateFailure.increment(1);
     };
