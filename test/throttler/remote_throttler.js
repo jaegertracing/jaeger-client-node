@@ -79,9 +79,9 @@ describe('RemoteThrottler should', () => {
   });
 
   it('not fetch credits if uuid is invalid', () => {
-    throttler = new RemoteThrottler(serviceName);
     throttler.setProcess({ uuid: null });
     throttler._refreshCredits();
+    assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
   });
 
   it("return false for _isAllowed if operation isn't in _credits or operation has no credits", () => {
@@ -150,6 +150,10 @@ describe('RemoteThrottler should', () => {
   });
 
   it('not fetch credits if no operations have been seen', () => {
+    throttler = new RemoteThrottler(serviceName, {
+      refreshIntervalMs: 0,
+      initialDelayMs: 60000,
+    });
     throttler.setProcess({ uuid: uuid });
     throttler._refreshCredits();
     assert.equal(Object.keys(throttler._credits).length, 0);
