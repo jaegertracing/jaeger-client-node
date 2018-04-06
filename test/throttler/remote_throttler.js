@@ -150,10 +150,7 @@ describe('RemoteThrottler should', () => {
   });
 
   it('not fetch credits if no operations have been seen', () => {
-    throttler = new RemoteThrottler(serviceName, {
-      refreshIntervalMs: 0,
-      initialDelayMs: 60000,
-    });
+    throttler = new RemoteThrottler(serviceName);
     throttler.setProcess({ uuid: uuid });
     throttler._refreshCredits();
     assert.equal(Object.keys(throttler._credits).length, 0);
