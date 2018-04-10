@@ -93,10 +93,10 @@ export default class RemoteControlledSampler {
 
   _refreshSamplingStrategy() {
     let serviceName: string = encodeURIComponent(this._serviceName);
-    let success: Function = body => {
+    const success: Function = body => {
       this._parseSamplingServerResponse(body);
     };
-    let error: Function = err => {
+    const error: Function = err => {
       this._logger.error(`Error in fetching sampling strategy: ${err}.`);
       this._metrics.samplerQueryFailure.increment(1);
     };

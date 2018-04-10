@@ -168,7 +168,7 @@ export default class RemoteThrottler {
     }
   }
 
-  close(callback: ?Function): void {
+  close(callback?: Function): void {
     clearTimeout(this._initialDelayTimeoutHandle);
     clearInterval(this._refreshIntervalHandle);
 

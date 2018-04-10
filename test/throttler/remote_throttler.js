@@ -35,6 +35,7 @@ describe('RemoteThrottler should', () => {
   let operation = 'op';
   let other_operation = 'oop';
   let uuid = 'uuid';
+  let creditsUpdatedHook;
 
   before(() => {
     server = new ConfigServer().start();
@@ -53,6 +54,7 @@ describe('RemoteThrottler should', () => {
       initialDelayMs: 60000,
       metrics: metrics,
       logger: logger,
+      onCreditsUpdate: (...args) => creditsUpdatedHook(...args),
     });
   });
 
@@ -63,7 +65,7 @@ describe('RemoteThrottler should', () => {
   it('return false for isAllowed on initial call and return true once credits are initialized', done => {
     throttler.setProcess({ uuid: uuid });
     server.addCredits(serviceName, [{ operation: operation, credits: 3 }]);
-    throttler._onCreditsUpdate = _throttler => {
+    creditsUpdatedHook = _throttler => {
       assert.isOk(_throttler.isAllowed(operation));
       assert.equal(_throttler._credits[operation], 2);
       assert.equal(LocalBackend.counterValue(metrics.throttlerUpdateSuccess), 1);
@@ -106,7 +108,7 @@ describe('RemoteThrottler should', () => {
     ]);
     throttler._credits[operation] = 0;
     throttler._credits[other_operation] = 0;
-    throttler._onCreditsUpdate = _throttler => {
+    creditsUpdatedHook = _throttler => {
       assert.isOk(_throttler.isAllowed(operation));
       assert.equal(_throttler._credits[operation], 4);
       assert.isOk(_throttler.isAllowed(other_operation));
@@ -160,7 +162,7 @@ describe('RemoteThrottler should', () => {
     throttler.setProcess({ uuid: uuid });
     throttler._credits[operation] = 0;
     server.addCredits(serviceName, [{ operation: operation, credits: 5 }]);
-    throttler._onCreditsUpdate = _throttler => {
+    creditsUpdatedHook = _throttler => {
       assert.isOk(_throttler.isAllowed(operation));
       assert.equal(_throttler._credits[operation], 4);
       assert.equal(LocalBackend.counterValue(metrics.throttlerUpdateSuccess), 1);

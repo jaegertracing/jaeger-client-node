@@ -17,7 +17,7 @@
 export default class DefaultThrottler {
   _throttleAll: boolean;
 
-  constructor(throttleAll: ?boolean) {
+  constructor(throttleAll?: boolean) {
     this._throttleAll = throttleAll || false;
   }
 

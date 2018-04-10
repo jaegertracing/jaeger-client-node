@@ -23,7 +23,7 @@ export default class ConfigServer {
   constructor(port: number = 5778) {
     this._port = port;
     this._app = express();
-    this._strategies = Object.create(null);
+    this._strategies = {};
     this._app.get('/sampling', this._handleSampling.bind(this));
     this._app.get('/credits', this._handleThrottling.bind(this));
   }
@@ -37,8 +37,8 @@ export default class ConfigServer {
   }
 
   clearConfigs(): void {
-    this._strategies = Object.create(null);
-    this._credits = Object.create(null);
+    this._strategies = {};
+    this._credits = {};
   }
 
   _handleSampling(req: any, res: any) {
@@ -54,8 +54,8 @@ export default class ConfigServer {
   }
 
   _handle(req: any, res: any, getFunc: Function) {
-    let service = req.query.service;
-    let resp = getFunc(service);
+    const service = req.query.service;
+    const resp = getFunc(service);
     if (resp) {
       res.send(resp);
     } else {
