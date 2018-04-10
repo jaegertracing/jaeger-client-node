@@ -133,7 +133,7 @@ describe('RemoteThrottler should', () => {
       setTimeout(() => {
         sinon.assert.notCalled(creditsUpdatedHook);
         done();
-      }, 25);
+      }, 0);
     };
     throttler._host = 'Llanfair­pwllgwyngyll­gogery­chwyrn­drobwll­llan­tysilio­gogo­goch';
     throttler._refreshCredits();
@@ -147,7 +147,7 @@ describe('RemoteThrottler should', () => {
       setTimeout(() => {
         sinon.assert.notCalled(creditsUpdatedHook);
         done();
-      }, 25);
+      }, 0);
     };
     server.addCredits(serviceName, 'not-json');
     throttler._refreshCredits();
@@ -161,7 +161,7 @@ describe('RemoteThrottler should', () => {
       setTimeout(() => {
         sinon.assert.notCalled(creditsUpdatedHook);
         done();
-      }, 25);
+      }, 0);
     };
     throttler._refreshCredits();
   });
