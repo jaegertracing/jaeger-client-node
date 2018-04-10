@@ -25,6 +25,7 @@ import ConfigServer from '../lib/config_server';
 import LocalMetricFactory from '../lib/metrics/local/metric_factory.js';
 import LocalBackend from '../lib/metrics/local/backend.js';
 import RemoteThrottler from '../../src/throttler/remote_throttler';
+import sinon from 'sinon';
 
 describe('RemoteThrottler should', () => {
   let server: ConfigServer;
@@ -49,6 +50,7 @@ describe('RemoteThrottler should', () => {
     server.clearConfigs();
     logger = new MockLogger();
     metrics = new Metrics(new LocalMetricFactory());
+    creditsUpdatedHook = sinon.spy();
     throttler = new RemoteThrottler(serviceName, {
       refreshIntervalMs: 0,
       initialDelayMs: 60000,
@@ -76,14 +78,18 @@ describe('RemoteThrottler should', () => {
   });
 
   it('log an error if _refreshCredits is called prior to UUID being set', () => {
+    throttler._fetchCredits = sinon.spy();
     throttler._refreshCredits();
     assert.equal(logger._errorMsgs.length, 1);
+    sinon.assert.notCalled(throttler._fetchCredits);
   });
 
   it('not fetch credits if uuid is invalid', () => {
+    throttler._fetchCredits = sinon.spy();
     throttler.setProcess({ uuid: null });
     throttler._refreshCredits();
     assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
+    sinon.assert.notCalled(throttler._fetchCredits);
   });
 
   it("return false for _isAllowed if operation isn't in _credits or operation has no credits", () => {
@@ -124,7 +130,10 @@ describe('RemoteThrottler should', () => {
     throttler._credits[operation] = 0;
     metrics.throttlerUpdateFailure.increment = function() {
       assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
-      done();
+      setTimeout(() => {
+        sinon.assert.notCalled(creditsUpdatedHook);
+        done();
+      }, 25);
     };
     throttler._host = 'Llanfair­pwllgwyngyll­gogery­chwyrn­drobwll­llan­tysilio­gogo­goch';
     throttler._refreshCredits();
@@ -135,7 +144,10 @@ describe('RemoteThrottler should', () => {
     throttler._credits[operation] = 0;
     metrics.throttlerUpdateFailure.increment = function() {
       assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
-      done();
+      setTimeout(() => {
+        sinon.assert.notCalled(creditsUpdatedHook);
+        done();
+      }, 25);
     };
     server.addCredits(serviceName, 'not-json');
     throttler._refreshCredits();
@@ -146,16 +158,20 @@ describe('RemoteThrottler should', () => {
     throttler._credits[operation] = 0;
     metrics.throttlerUpdateFailure.increment = function() {
       assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
-      done();
+      setTimeout(() => {
+        sinon.assert.notCalled(creditsUpdatedHook);
+        done();
+      }, 25);
     };
     throttler._refreshCredits();
   });
 
   it('not fetch credits if no operations have been seen', () => {
     throttler = new RemoteThrottler(serviceName);
+    throttler._fetchCredits = sinon.spy();
     throttler.setProcess({ uuid: uuid });
     throttler._refreshCredits();
-    assert.equal(Object.keys(throttler._credits).length, 0);
+    sinon.assert.notCalled(throttler._fetchCredits);
   });
 
   it('refresh credits after _afterInitialDelay is called', done => {
