@@ -130,10 +130,7 @@ describe('RemoteThrottler should', () => {
     throttler._credits[operation] = 0;
     metrics.throttlerUpdateFailure.increment = function() {
       assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
-      setTimeout(() => {
-        sinon.assert.notCalled(creditsUpdatedHook);
-        done();
-      }, 0);
+      done();
     };
     throttler._host = 'Llanfair­pwllgwyngyll­gogery­chwyrn­drobwll­llan­tysilio­gogo­goch';
     throttler._refreshCredits();
@@ -144,10 +141,7 @@ describe('RemoteThrottler should', () => {
     throttler._credits[operation] = 0;
     metrics.throttlerUpdateFailure.increment = function() {
       assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
-      setTimeout(() => {
-        sinon.assert.notCalled(creditsUpdatedHook);
-        done();
-      }, 0);
+      done();
     };
     server.addCredits(serviceName, 'not-json');
     throttler._refreshCredits();
@@ -158,10 +152,7 @@ describe('RemoteThrottler should', () => {
     throttler._credits[operation] = 0;
     metrics.throttlerUpdateFailure.increment = function() {
       assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
-      setTimeout(() => {
-        sinon.assert.notCalled(creditsUpdatedHook);
-        done();
-      }, 0);
+      done();
     };
     throttler._refreshCredits();
   });
