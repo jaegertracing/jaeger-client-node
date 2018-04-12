@@ -33,6 +33,8 @@ export default class Metrics {
   baggageUpdateSuccess: Counter;
   baggageUpdateFailure: Counter;
   baggageTruncate: Counter;
+  throttlerUpdateSuccess: Counter;
+  throttlerUpdateFailure: Counter;
 
   constructor(factory: MetricsFactory) {
     this._factory = factory;
@@ -120,5 +122,13 @@ export default class Metrics {
     });
 
     this.baggageTruncate = this._factory.createCounter('baggage-trucate');
+
+    this.throttlerUpdateSuccess = this._factory.createCounter('throttler-update', {
+      result: 'ok',
+    });
+
+    this.throttlerUpdateFailure = this._factory.createCounter('throttler-update', {
+      result: 'err',
+    });
   }
 }

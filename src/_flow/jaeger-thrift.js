@@ -24,6 +24,11 @@ declare type LogData = {
 declare type Process = {
   serviceName: string,
   tags: Array<Tag>,
+  // N.B. uuid uniquely identifies this instance of the client. This variable is not defined
+  // in the jaeger thrift process; it is only used inside this code base to facilitate passing
+  // the uuid around to different objects. The uuid will be propagated via process tags, not
+  // as a first class citizen of thrift process.
+  uuid?: string,
 };
 
 declare type Batch = {

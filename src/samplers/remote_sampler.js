@@ -11,13 +11,13 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import http from 'http';
 import ProbabilisticSampler from './probabilistic_sampler.js';
 import RateLimitingSampler from './ratelimiting_sampler.js';
 import PerOperationSampler from './per_operation_sampler.js';
 import Metrics from '../metrics/metrics.js';
 import NullLogger from '../logger.js';
 import NoopMetricFactory from '../metrics/noop/metric_factory';
+import Utils from '../util';
 
 const DEFAULT_INITIAL_SAMPLING_RATE = 0.001;
 const DEFAULT_REFRESH_INTERVAL = 60000;
@@ -88,36 +88,19 @@ export default class RemoteControlledSampler {
       this._refreshSamplingStrategy.bind(this),
       this._refreshInterval
     );
+    this._initialDelayTimeoutHandle = null;
   }
 
   _refreshSamplingStrategy() {
     let serviceName: string = encodeURIComponent(this._serviceName);
-    http
-      .get(
-        {
-          host: this._host,
-          port: this._port,
-          path: `/sampling?service=${serviceName}`,
-        },
-        res => {
-          // explicitly treat incoming data as utf8 (avoids issues with multi-byte chars)
-          res.setEncoding('utf8');
-
-          // incrementally capture the incoming response body
-          let body = '';
-          res.on('data', chunk => {
-            body += chunk;
-          });
-
-          res.on('end', () => {
-            this._parseSamplingServerResponse(body);
-          });
-        }
-      )
-      .on('error', err => {
-        this._logger.error(`Error in fetching sampling strategy: ${err}.`);
-        this._metrics.samplerQueryFailure.increment(1);
-      });
+    const success: Function = body => {
+      this._parseSamplingServerResponse(body);
+    };
+    const error: Function = err => {
+      this._logger.error(`Error in fetching sampling strategy: ${err}.`);
+      this._metrics.samplerQueryFailure.increment(1);
+    };
+    Utils.httpGet(this._host, this._port, `/sampling?service=${serviceName}`, success, error);
   }
 
   _parseSamplingServerResponse(body: string) {
