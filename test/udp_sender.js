@@ -97,10 +97,11 @@ describe('udp sender', () => {
       let actualTags = _.sortBy(batch.process.tags, o => {
         return o.key;
       });
-      assert.equal(actualTags.length, 3);
-      assert.equal(actualTags[0].key, 'ip');
-      assert.equal(actualTags[1].key, 'jaeger.hostname');
-      assert.equal(actualTags[2].key, 'jaeger.version');
+      assert.equal(actualTags.length, 4);
+      assert.equal(actualTags[0].key, 'client-id');
+      assert.equal(actualTags[1].key, 'ip');
+      assert.equal(actualTags[2].key, 'jaeger.hostname');
+      assert.equal(actualTags[3].key, 'jaeger.version');
 
       sender.close();
       done();

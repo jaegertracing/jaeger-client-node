@@ -24,4 +24,14 @@ export default class DefaultThrottler {
   isAllowed(operation: string): boolean {
     return !this._throttleAll;
   }
+
+  setProcess(process: Process): void {
+    // NOP
+  }
+
+  close(callback?: Function): void {
+    if (callback) {
+      callback();
+    }
+  }
 }

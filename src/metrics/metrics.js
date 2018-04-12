@@ -32,6 +32,7 @@ export default class Metrics {
   baggageUpdateSuccess: Counter;
   baggageUpdateFailure: Counter;
   baggageTruncate: Counter;
+  throttledDebugSpans: Counter;
   throttlerUpdateSuccess: Counter;
   throttlerUpdateFailure: Counter;
 
@@ -110,7 +111,9 @@ export default class Metrics {
 
     this.baggageTruncate = this._factory.createCounter('jaeger:baggage_truncations');
 
-    this.throttlerUpdateSuccess = this._factory.createCounter('jaeger:throttler_updates', {
+    this.throttledDebugSpans = this._factory.createCounter('jaeger:throttled_debug_spans');
+
+    this.throttlerUpdateSuccess = this._factory.createCounter('jaeger:throttler-update', {
       result: 'ok',
     });
 
