@@ -113,7 +113,7 @@ export default class RemoteControlledSampler {
       }
     } catch (error) {
       this._logger.error(`Error in parsing sampling strategy: ${error}.`);
-      this._metrics.samplerParsingFailure.increment(1);
+      this._metrics.samplerUpdateFailure.increment(1);
       return;
     }
     try {
@@ -122,7 +122,7 @@ export default class RemoteControlledSampler {
       }
     } catch (error) {
       this._logger.error(`Error in updating sampler: ${error}.`);
-      this._metrics.samplerParsingFailure.increment(1);
+      this._metrics.samplerUpdateFailure.increment(1);
       return;
     }
     if (this._onSamplerUpdate) {

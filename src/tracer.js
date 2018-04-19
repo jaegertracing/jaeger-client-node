@@ -116,16 +116,15 @@ export default class Tracer {
     span.addTags(internalTags);
 
     // emit metrics
-    this._metrics.spansStarted.increment(1);
     if (span.context().isSampled()) {
-      this._metrics.spansSampled.increment(1);
+      this._metrics.spansStartedSampled.increment(1);
       if (!hadParent) {
         this._metrics.tracesStartedSampled.increment(1);
       } else if (rpcServer) {
         this._metrics.tracesJoinedSampled.increment(1);
       }
     } else {
-      this._metrics.spansNotSampled.increment(1);
+      this._metrics.spansStartedNotSampled.increment(1);
       if (!hadParent) {
         this._metrics.tracesStartedNotSampled.increment(1);
       } else if (rpcServer) {
