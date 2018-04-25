@@ -1,22 +1,14 @@
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+// in compliance with the License. You may obtain a copy of the License at
 //
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
+// http://www.apache.org/licenses/LICENSE-2.0
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// Unless required by applicable law or agreed to in writing, software distributed under the License
+// is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+// or implied. See the License for the specific language governing permissions and limitations under
+// the License.
 
 // SAMPLED_MASK is the bit mask indicating that a span has been sampled.
 export const SAMPLED_MASK = 0x1;
@@ -52,7 +44,7 @@ export const SAMPLER_TYPE_RATE_LIMITING = 'ratelimiting';
 
 // SAMPLER_TYPE_LOWER_BOUND is the type of sampler that samples
 // only up to a fixed number of traces per second.
-export const SAMPLER_TYPE_LOWER_BOUND = "lowerbound";
+export const SAMPLER_TYPE_LOWER_BOUND = 'lowerbound';
 
 // SAMPLER_TYPE_REMOTE is the type of sampler that polls Jaeger agent for sampling strategy.
 export const SAMPLER_TYPE_REMOTE = 'remote';
@@ -66,7 +58,7 @@ export const JAEGER_DEBUG_HEADER = 'jaeger-debug-id';
 // JaegerBaggageHeader is the name of the HTTP header that is used to submit baggage.
 // It differs from TraceBaggageHeaderPrefix in that it can be used only in cases where
 // a root span does not exist.
-export const JAEGER_BAGGAGE_HEADER = "jaeger-baggage";
+export const JAEGER_BAGGAGE_HEADER = 'jaeger-baggage';
 
 // TRACER_BAGGAGE_HEADER_PREFIX is the default prefix used for saving baggage to a carrier.
 export const TRACER_BAGGAGE_HEADER_PREFIX = 'uberctx-';

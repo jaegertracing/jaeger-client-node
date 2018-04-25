@@ -2,6 +2,6 @@ instrumentation:
   root: src
   include-all-sources: true
   verbose: true
-  excludes: ["./dist"]
+  excludes: ["./dist", "**/_flow/**"]
 reporting:
   dir: "coverage"

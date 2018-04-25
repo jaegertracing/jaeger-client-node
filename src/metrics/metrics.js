@@ -1,119 +1,134 @@
 // @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+// in compliance with the License. You may obtain a copy of the License at
 //
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
+// http://www.apache.org/licenses/LICENSE-2.0
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// Unless required by applicable law or agreed to in writing, software distributed under the License
+// is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+// or implied. See the License for the specific language governing permissions and limitations under
+// the License.
 
 export default class Metrics {
-    _factory: MetricsFactory;
-    tracesStartedSampled: Counter;
-    tracesStartedNotSampled: Counter;
-    tracesJoinedSampled: Counter;
-    tracesJoinedNotSampled: Counter;
-    spansStarted: Counter;
-    spansFinished: Counter;
-    spansSampled: Counter;
-    spansNotSampled: Counter;
-    decodingErrors: Counter;
-    reporterSuccess: Counter;
-    reporterFailure: Counter;
-    reporterDropped: Counter;
-    reporterQueueLength: Gauge;
-    samplerRetrieved: Counter;
-    samplerUpdated: Counter;
-    samplerQueryFailure: Counter;
-    samplerParsingFailure: Counter;
+  _factory: MetricsFactory;
+  tracesStartedSampled: Counter;
+  tracesStartedNotSampled: Counter;
+  tracesJoinedSampled: Counter;
+  tracesJoinedNotSampled: Counter;
+  spansStarted: Counter;
+  spansFinished: Counter;
+  spansSampled: Counter;
+  spansNotSampled: Counter;
+  decodingErrors: Counter;
+  reporterSuccess: Counter;
+  reporterFailure: Counter;
+  reporterDropped: Counter;
+  reporterQueueLength: Gauge;
+  samplerRetrieved: Counter;
+  samplerUpdated: Counter;
+  samplerQueryFailure: Counter;
+  samplerParsingFailure: Counter;
+  baggageUpdateSuccess: Counter;
+  baggageUpdateFailure: Counter;
+  baggageTruncate: Counter;
+  throttlerUpdateSuccess: Counter;
+  throttlerUpdateFailure: Counter;
 
-    constructor(factory: MetricsFactory) {
-        this._factory = factory;
+  constructor(factory: MetricsFactory) {
+    this._factory = factory;
 
-        this.tracesStartedSampled = this._factory.createCounter('traces', {
-            state: 'started',
-            sampled: 'y'
-        });
+    this.tracesStartedSampled = this._factory.createCounter('traces', {
+      state: 'started',
+      sampled: 'y',
+    });
 
-        this.tracesStartedNotSampled = this._factory.createCounter('traces', {
-            state: 'started',
-            sampled: 'n'
-        });
+    this.tracesStartedNotSampled = this._factory.createCounter('traces', {
+      state: 'started',
+      sampled: 'n',
+    });
 
-        this.tracesJoinedSampled = this._factory.createCounter('traces', {
-            state: 'joined',
-            sampled: 'y'
-        });
+    this.tracesJoinedSampled = this._factory.createCounter('traces', {
+      state: 'joined',
+      sampled: 'y',
+    });
 
-        this.tracesJoinedNotSampled = this._factory.createCounter('traces', {
-            state: 'joined',
-            sampled: 'n'
-        });
+    this.tracesJoinedNotSampled = this._factory.createCounter('traces', {
+      state: 'joined',
+      sampled: 'n',
+    });
 
-        this.spansStarted = this._factory.createCounter('spans', {
-            group: 'lifecycle',
-            state: 'started'
-        });
+    this.spansStarted = this._factory.createCounter('spans', {
+      group: 'lifecycle',
+      state: 'started',
+    });
 
-        this.spansFinished = this._factory.createCounter('spans', {
-            group: 'lifecycle',
-            state: 'finished'
-        });
+    this.spansFinished = this._factory.createCounter('spans', {
+      group: 'lifecycle',
+      state: 'finished',
+    });
 
-        this.spansSampled = this._factory.createCounter('spans', {
-            group: 'sampling',
-            sampled: 'y'
-        });
+    this.spansSampled = this._factory.createCounter('spans', {
+      group: 'sampling',
+      sampled: 'y',
+    });
 
-        this.spansNotSampled = this._factory.createCounter('spans', {
-            group: 'sampling',
-            sampled: 'n'
-        });
+    this.spansNotSampled = this._factory.createCounter('spans', {
+      group: 'sampling',
+      sampled: 'n',
+    });
 
-        this.decodingErrors = this._factory.createCounter('decoding-errors');
+    this.decodingErrors = this._factory.createCounter('decoding-errors');
 
-        this.reporterSuccess = this._factory.createCounter('reporter-spans', {
-            state: 'success'
-        });
+    this.reporterSuccess = this._factory.createCounter('reporter-spans', {
+      state: 'success',
+    });
 
-        this.reporterFailure = this._factory.createCounter('reporter-spans', {
-            state: 'failure'
-        });
+    this.reporterFailure = this._factory.createCounter('reporter-spans', {
+      state: 'failure',
+    });
 
-        this.reporterDropped = this._factory.createCounter('reporter-spans', {
-            state: 'dropped'
-        });
+    this.reporterDropped = this._factory.createCounter('reporter-spans', {
+      state: 'dropped',
+    });
 
-        this.reporterQueueLength = this._factory.createGauge('reporter-queue');
+    this.reporterQueueLength = this._factory.createGauge('reporter-queue');
 
-        this.samplerRetrieved = this._factory.createCounter('sampler', {
-            state: 'retrieved'
-        });
+    this.samplerRetrieved = this._factory.createCounter('sampler', {
+      state: 'retrieved',
+    });
 
-        this.samplerUpdated = this._factory.createCounter('sampler', {
-            state: 'updated'
-        });
+    this.samplerUpdated = this._factory.createCounter('sampler', {
+      state: 'updated',
+    });
 
-        this.samplerQueryFailure = this._factory.createCounter('sampler', {
-            state: 'failure',
-            phase: 'query'
-        });
+    this.samplerQueryFailure = this._factory.createCounter('sampler', {
+      state: 'failure',
+      phase: 'query',
+    });
 
-        this.samplerParsingFailure = this._factory.createCounter('sampler', {
-            state: 'failure',
-            phase: 'parsing'
-        });
-    }
+    this.samplerParsingFailure = this._factory.createCounter('sampler', {
+      state: 'failure',
+      phase: 'parsing',
+    });
+
+    this.baggageUpdateSuccess = this._factory.createCounter('baggage-update', {
+      result: 'ok',
+    });
+
+    this.baggageUpdateFailure = this._factory.createCounter('baggage-update', {
+      result: 'err',
+    });
+
+    this.baggageTruncate = this._factory.createCounter('baggage-trucate');
+
+    this.throttlerUpdateSuccess = this._factory.createCounter('throttler-update', {
+      result: 'ok',
+    });
+
+    this.throttlerUpdateFailure = this._factory.createCounter('throttler-update', {
+      result: 'err',
+    });
+  }
 }

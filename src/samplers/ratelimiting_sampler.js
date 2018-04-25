@@ -1,73 +1,79 @@
 // @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+// in compliance with the License. You may obtain a copy of the License at
 //
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
+// http://www.apache.org/licenses/LICENSE-2.0
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// Unless required by applicable law or agreed to in writing, software distributed under the License
+// is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+// or implied. See the License for the specific language governing permissions and limitations under
+// the License.
 
 import * as constants from '../constants.js';
 import RateLimiter from '../rate_limiter.js';
 
 export default class RateLimitingSampler {
-    _rateLimiter: RateLimiter;
-    _maxTracesPerSecond: number;
+  _rateLimiter: RateLimiter;
+  _maxTracesPerSecond: number;
 
-    constructor(maxTracesPerSecond: number) {
-        if (maxTracesPerSecond < 0) {
-            throw new Error(`maxTracesPerSecond must be greater than 0.0.  Received ${maxTracesPerSecond}`);
-        }
-        let maxBalance = maxTracesPerSecond < 1.0 ? 1.0 : maxTracesPerSecond;
+  constructor(maxTracesPerSecond: number, initBalance: ?number) {
+    this._init(maxTracesPerSecond, initBalance);
+  }
 
-        this._maxTracesPerSecond = maxTracesPerSecond;
-        this._rateLimiter = new RateLimiter(maxTracesPerSecond, maxBalance);
+  update(maxTracesPerSecond: number): boolean {
+    let prevMaxTracesPerSecond = this._maxTracesPerSecond;
+    this._init(maxTracesPerSecond);
+    return this._maxTracesPerSecond !== prevMaxTracesPerSecond;
+  }
+
+  _init(maxTracesPerSecond: number, initBalance: ?number) {
+    if (maxTracesPerSecond < 0) {
+      throw new Error(`maxTracesPerSecond must be greater than 0.0.  Received ${maxTracesPerSecond}`);
+    }
+    let maxBalance = maxTracesPerSecond < 1.0 ? 1.0 : maxTracesPerSecond;
+
+    this._maxTracesPerSecond = maxTracesPerSecond;
+    if (this._rateLimiter) {
+      this._rateLimiter.update(maxTracesPerSecond, maxBalance);
+    } else {
+      this._rateLimiter = new RateLimiter(maxTracesPerSecond, maxBalance, initBalance);
+    }
+  }
+
+  name(): string {
+    return 'RateLimitingSampler';
+  }
+
+  toString(): string {
+    return `${this.name()}(maxTracesPerSecond=${this._maxTracesPerSecond})`;
+  }
+
+  get maxTracesPerSecond(): number {
+    return this._maxTracesPerSecond;
+  }
+
+  isSampled(operation: string, tags: any): boolean {
+    let decision = this._rateLimiter.checkCredit(1.0);
+    if (decision) {
+      tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_RATE_LIMITING;
+      tags[constants.SAMPLER_PARAM_TAG_KEY] = this._maxTracesPerSecond;
+    }
+    return decision;
+  }
+
+  equal(other: Sampler): boolean {
+    if (!(other instanceof RateLimitingSampler)) {
+      return false;
     }
 
-    name(): string {
-        return 'RateLimitingSampler';
-    }
+    return this.maxTracesPerSecond === other.maxTracesPerSecond;
+  }
 
-    toString(): string {
-        return `${this.name()}(maxTracesPerSecond=${this._maxTracesPerSecond})`;
+  close(callback: ?Function): void {
+    if (callback) {
+      callback();
     }
-
-    get maxTracesPerSecond(): number {
-        return this._maxTracesPerSecond;
-    }
-
-    isSampled(operation: string, tags: any): boolean {
-        let decision = this._rateLimiter.checkCredit(1.0);
-        if (decision) {
-            tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_RATE_LIMITING;
-            tags[constants.SAMPLER_PARAM_TAG_KEY] = this._maxTracesPerSecond;
-        }
-        return decision;
-    }
-
-    equal(other: Sampler): boolean {
-        if (!(other instanceof RateLimitingSampler)) {
-            return false;
-        }
-
-        return this.maxTracesPerSecond === other.maxTracesPerSecond;
-    }
-
-    close(callback: ?Function): void {
-        if (callback) {
-            callback();
-        }
-    }
+  }
 }

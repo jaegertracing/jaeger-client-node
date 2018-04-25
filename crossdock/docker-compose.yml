@@ -11,7 +11,7 @@ services:
             - node
         environment:
             - WAIT_FOR=test_driver,go,java,python,node
-            - WAIT_FOR_TIMEOUT=60s
+            - WAIT_FOR_TIMEOUT=240s
 
             - CALL_TIMEOUT=60s
 
@@ -19,9 +19,9 @@ services:
             - AXIS_S1NAME=go,java,node
             - AXIS_SAMPLED=true
             - AXIS_S2NAME=go,java,node
-            - AXIS_S2TRANSPORT=http,tchannel
+            - AXIS_S2TRANSPORT=http
             - AXIS_S3NAME=go,java,node,python
-            - AXIS_S3TRANSPORT=http,tchannel
+            - AXIS_S3TRANSPORT=http
 
             - BEHAVIOR_TRACE=client,s1name,sampled,s2name,s2transport,s3name,s3transport
 
@@ -53,15 +53,15 @@ services:
         image: jaegertracing/xdock-java
         ports:
             - "8080-8082"
-
-    cassandra:
-        image: "cassandra:3.9"
+        links:
+    #        Udp sender needs to know agent's address
+            - jaeger-agent
 
     test_driver:
         image: jaegertracing/test-driver
-        links:
-            - cassandra
         depends_on:
-            - cassandra
+            - jaeger-query
+            - jaeger-collector
+            - jaeger-agent
         ports:
             - "8080"

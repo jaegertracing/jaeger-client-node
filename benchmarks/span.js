@@ -1,22 +1,14 @@
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+// in compliance with the License. You may obtain a copy of the License at
 //
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
+// http://www.apache.org/licenses/LICENSE-2.0
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// Unless required by applicable law or agreed to in writing, software distributed under the License
+// is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+// or implied. See the License for the specific language governing permissions and limitations under
+// the License.
 
 var _ = require('lodash');
 var Benchmark = require('benchmark');
@@ -30,80 +22,81 @@ var ThriftUtils = require('../dist/src/thrift.js').default;
 var opentracing = require('opentracing');
 
 function benchmarkSpan() {
+  var constTracer = new Tracer('const-tracer', new InMemoryReporter(), new ConstSampler(true));
+  var probabilisticTracer = new Tracer(
+    'probabilistic-tracer',
+    new InMemoryReporter(),
+    new ProbabilisticSampler(0.1)
+  );
 
-    var constTracer = new Tracer('const-tracer', new InMemoryReporter(), new ConstSampler(true));
-    var probabilisticTracer = new Tracer('probabilistic-tracer', new InMemoryReporter(), new ProbabilisticSampler(0.1));
+  var params = [
+    { tracer: constTracer, description: ' with constant tracer' },
+    { tracer: probabilisticTracer, description: ' with probabilitic tracer' },
+  ];
 
-    var params = [
-        { 'tracer': constTracer, 'description': ' with constant tracer' },
-        { 'tracer': probabilisticTracer, 'description': ' with probabilitic tracer' }
-    ];
+  function createSpanFactory(tracer) {
+    return function() {
+      var span = tracer.startSpan('op-name');
+      span.setBaggageItem('key', 'value');
+      return span;
+    };
+  }
 
-    function createSpanFactory(tracer) {
-        return function() {
-            var span = tracer.startSpan('op-name');
-            span.setBaggageItem('key', 'value');
-            return span;
-        }
-    }
+  console.log('Beginning Span Benchmark...');
+  function run(createSpan, description) {
+    var span = createSpan();
+    var suite = new Benchmark.Suite()
+      .add('Span:setBaggageItem', function() {
+        span.setBaggageItem('key', 'value');
+      })
+      .add('Span:getBaggageItem', function() {
+        span.getBaggageItem('key');
+      })
+      .add('Span:setOperationName', function() {
+        span.setOperationName('op-name');
+      })
+      .add('Span:finish', function() {
+        span.finish();
+        span._duration = undefined;
+      })
+      .add('Span:addTags', function() {
+        span.addTags({
+          keyOne: 'one',
+          keyTwo: 'two',
+          keyThree: 'three',
+        });
+      })
+      .add('Span:setTag', function() {
+        span.setTag('key', 'value');
+      })
+      .add('Span.spanToThrift', function() {
+        Thrift.spanToThrift(span);
+      })
+      .add('Span.log', function() {
+        span.log({
+          event: 'event message',
+          payload: '{key: value}',
+        });
+      })
+      .on('cycle', function(event) {
+        benchmarks.add(event.target);
+        event.target.name = event.target.name + description;
+        span = createSpan();
+      })
+      .on('complete', function() {
+        benchmarks.log();
+      })
+      // run async
+      .run({ async: false });
+  }
 
-
-
-    console.log('Beginning Span Benchmark...');
-    function run(createSpan, description) {
-        var span = createSpan();
-        var suite = new Benchmark.Suite()
-            .add('Span:setBaggageItem', function() {
-                span.setBaggageItem('key', 'value');
-            })
-            .add('Span:getBaggageItem', function() {
-                span.getBaggageItem('key');
-            })
-            .add('Span:setOperationName', function() {
-                span.setOperationName('op-name');
-            })
-            .add('Span:finish', function() {
-                span.finish();
-                span._duration = undefined;
-            })
-            .add('Span:addTags', function() {
-                span.addTags({
-                    'keyOne': 'one',
-                    'keyTwo': 'two',
-                    'keyThree': 'three'
-                });
-            })
-            .add('Span:setTag', function() {
-                span.setTag('key', 'value');
-            })
-            .add('Span.spanToThrift', function() {
-                Thrift.spanToThrift(span);
-            })
-            .add('Span.log', function() {
-                span.log({
-                    'event': 'event message',
-                    'payload': '{key: value}'
-                });
-            })
-            .on('cycle', function(event) {
-                benchmarks.add(event.target);
-                event.target.name = event.target.name + description;
-                span = createSpan();
-            })
-            .on('complete', function() {
-                benchmarks.log();
-            })
-            // run async
-            .run({ 'async': false });
-    }
-
-    _.each(params, function(o) {
-        run(createSpanFactory(o['tracer']), o['description']);
-    });
+  _.each(params, function(o) {
+    run(createSpanFactory(o['tracer']), o['description']);
+  });
 }
 
 exports.benchmarkSpan = benchmarkSpan;
 
 if (require.main === module) {
-    benchmarkSpan();
+  benchmarkSpan();
 }

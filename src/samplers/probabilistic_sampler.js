@@ -1,73 +1,67 @@
 // @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+// in compliance with the License. You may obtain a copy of the License at
 //
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
+// http://www.apache.org/licenses/LICENSE-2.0
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// Unless required by applicable law or agreed to in writing, software distributed under the License
+// is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+// or implied. See the License for the specific language governing permissions and limitations under
+// the License.
 
 import * as constants from '../constants.js';
 
 export default class ProbabilisticSampler {
-    _samplingRate: number;
+  _samplingRate: number;
 
-    constructor(samplingRate: number) {
-        if (samplingRate < 0.0 || samplingRate > 1.0) {
-            throw new Error(`The sampling rate must be less than 0.0 and greater than 1.0. Received ${samplingRate}`);
-        }
-
-        this._samplingRate = samplingRate;
+  constructor(samplingRate: number) {
+    if (samplingRate < 0.0 || samplingRate > 1.0) {
+      throw new Error(
+        `The sampling rate must be less than 0.0 and greater than 1.0. Received ${samplingRate}`
+      );
     }
 
-    name(): string {
-        return 'ProbabilisticSampler';
+    this._samplingRate = samplingRate;
+  }
+
+  name(): string {
+    return 'ProbabilisticSampler';
+  }
+
+  toString(): string {
+    return `${this.name()}(samplingRate=${this._samplingRate})`;
+  }
+
+  get samplingRate(): number {
+    return this._samplingRate;
+  }
+
+  isSampled(operation: string, tags: any): boolean {
+    let decision = this.random() < this._samplingRate;
+    if (decision) {
+      tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_PROBABILISTIC;
+      tags[constants.SAMPLER_PARAM_TAG_KEY] = this._samplingRate;
+    }
+    return decision;
+  }
+
+  random(): number {
+    return Math.random();
+  }
+
+  equal(other: Sampler): boolean {
+    if (!(other instanceof ProbabilisticSampler)) {
+      return false;
     }
 
-    toString(): string {
-        return `${this.name()}(samplingRate=${this._samplingRate})`;
-    }
+    return this.samplingRate === other.samplingRate;
+  }
 
-    get samplingRate(): number {
-        return this._samplingRate;
+  close(callback: ?Function): void {
+    if (callback) {
+      callback();
     }
-
-    isSampled(operation: string, tags: any): boolean {
-        let decision = this.random() < this._samplingRate;
-        if (decision) {
-            tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_PROBABILISTIC;
-            tags[constants.SAMPLER_PARAM_TAG_KEY] = this._samplingRate;
-        }
-        return decision;
-    }
-
-    random(): number {
-        return Math.random();
-    }
-
-    equal(other: Sampler): boolean {
-        if (!(other instanceof ProbabilisticSampler)) {
-            return false;
-        }
-
-        return this.samplingRate === other.samplingRate;
-    }
-
-    close(callback: ?Function): void {
-        if (callback) {
-            callback();
-        }
-    }
+  }
 }

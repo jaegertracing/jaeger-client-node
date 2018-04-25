@@ -1,20 +1,19 @@
 {
   "name": "jaeger-client",
-  "version": "3.5.4",
+  "version": "3.10.0",
   "description": "Jaeger binding for OpenTracing Node",
-  "license": "MIT",
+  "engines": {
+    "node": ">=0.10"
+  },
+  "license": "Apache-2.0",
   "keywords": [],
-  "author": "oibe <oibe@uber.com>",
-  "main": "./entrypoint.js",
+  "author": "Onwukike Ibe <oibe@uber.com>",
+  "main": "./dist/src/index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/uber/jaeger-client-node.git"
+    "url": "git://github.com/jaegertracing/jaeger-client-node.git"
   },
-  "contributors": [
-    {
-      "name": "oibe"
-    }
-  ],
+  "contributors": ["Yuri Shkuro <ys@uber.com>", "Won Jun Jang <wjang@uber.com>"],
   "dependencies": {
     "node-int64": "^0.4.0",
     "thriftrw": "^3.5.0",
@@ -24,28 +23,34 @@
   "devDependencies": {
     "babel-cli": "^6.11.4",
     "babel-istanbul": "^0.11.0",
-    "babel-node-debug": "^2.0.0",
     "babel-plugin-transform-class-properties": "^6.11.5",
     "babel-plugin-transform-flow-strip-types": "^6.8.0",
-    "babel-preset-es2015": "^6.13.2",
+    "babel-preset-env": "^1.6.1",
     "babel-register": "^6.11.6",
     "beautify-benchmark": "^0.2.4",
     "benchmark": "^2.1.1",
     "body-parser": "^1.15.2",
     "chai": "^3.5.0",
     "coveralls": "^2.11.14",
-    "eslint": "^2.4.0",
-    "eslint-config-airbnb": "^6.2.0",
+    "eslint": "^3.14.1",
+    "eslint-config-airbnb": "^15.1.0",
+    "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-flowtype": "^2.4.0",
-    "eslint-plugin-react": "^4.3.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jsx-a11y": "^5.1.1",
+    "eslint-plugin-react": "^7.1.0",
     "express": "^4.14.0",
     "flow-bin": "^0.30.0",
     "gulp-sourcemaps": "1.7.x",
+    "husky": "^0.14.3",
+    "lint-staged": "^6.0.0",
     "lodash": "^4.15.0",
     "minimist": "1.2.0",
     "mocha": "^3.0.1",
-    "request": "^2.74.0",
+    "prettier": "1.10.2",
+    "request": "2.74.0",
     "rsvp": "^3.3.1",
+    "semver": "^5",
     "sinon": "^1.17.5",
     "source-map-support": "^0.4.5",
     "tchannel": "^3.9.0",
@@ -53,20 +58,25 @@
     "underscore": "^1.8.3"
   },
   "scripts": {
-    "add-license": "./node_modules/.bin/uber-licence",
-    "check-license": "./node_modules/.bin/uber-licence --dry",
+    "check-license": "./scripts/check-license.sh",
     "check-ls": "npm ls --loglevel=http --parseable 1>/dev/null && echo '# npm is in a good state'",
-    "cover": "babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/ test/samplers/",
-    "coveralls": "cat ./coverage/lcov.info | coveralls",
+    "cover": "babel-node ./node_modules/.bin/babel-istanbul cover ./node_modules/.bin/_mocha -- test/ test/samplers/ test/baggage/ test/throttler/",
+    "coveralls": "npm run cover && cat ./coverage/lcov.info | coveralls",
     "flow": "flow",
-    "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed'",
-    "lint-ci": "npm run lint && echo '# TODO: ADD npm run check-license'",
+    "format": "prettier --write '**/*.{js,json,md}' '!src/jaeger-idl/**'",
+    "lint": "eslint $(ls src/ | grep '.js$') && echo '# linter passed' && npm run check-license",
+    "precommit": "lint-staged",
     "test": "make test",
-    "test-ci": "npm run test && npm run lint-ci && npm run cover",
-    "test-all": "npm run test-core && npm run test-samplers && npm run test-crossdock",
+    "test-all": "npm run test-core && npm run test-samplers && npm run test-crossdock && npm run test-baggage && npm run test-throttler",
     "test-core": "mocha --compilers js:babel-core/register test",
+    "test-dist": "mocha dist/test/ dist/test/baggage/ dist/test/throttler dist/test/samplers/",
     "test-samplers": "mocha --compilers js:babel-core/register test/samplers",
+    "test-baggage": "mocha --compilers js:babel-core/register test/baggage",
+    "test-throttler": "mocha --compilers js:babel-core/register test/throttler",
     "test-crossdock": "mocha --compilers js:babel-register crossdock/test",
     "show-cover": "open coverage/lcov-report/index.html"
+  },
+  "lint-staged": {
+    "*.{js,json,md}": ["prettier --write", "git add"]
   }
 }

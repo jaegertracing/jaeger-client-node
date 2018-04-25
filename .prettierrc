@@ -1,0 +1,14 @@
+{
+  "printWidth": 110,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "proseWrap": "never",
+  "overrides": [
+    {
+      "files": "*.json",
+      "options": {
+        "printWidth": 200
+      }
+    }
+  ]
+}
