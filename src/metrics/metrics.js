@@ -17,10 +17,9 @@ export default class Metrics {
   tracesStartedNotSampled: Counter;
   tracesJoinedSampled: Counter;
   tracesJoinedNotSampled: Counter;
-  spansStarted: Counter;
   spansFinished: Counter;
-  spansSampled: Counter;
-  spansNotSampled: Counter;
+  spansStartedSampled: Counter;
+  spansStartedNotSampled: Counter;
   decodingErrors: Counter;
   reporterSuccess: Counter;
   reporterFailure: Counter;
@@ -29,7 +28,7 @@ export default class Metrics {
   samplerRetrieved: Counter;
   samplerUpdated: Counter;
   samplerQueryFailure: Counter;
-  samplerParsingFailure: Counter;
+  samplerUpdateFailure: Counter;
   baggageUpdateSuccess: Counter;
   baggageUpdateFailure: Counter;
   baggageTruncate: Counter;
@@ -39,95 +38,83 @@ export default class Metrics {
   constructor(factory: MetricsFactory) {
     this._factory = factory;
 
-    this.tracesStartedSampled = this._factory.createCounter('traces', {
+    this.tracesStartedSampled = this._factory.createCounter('jaeger:traces', {
       state: 'started',
       sampled: 'y',
     });
 
-    this.tracesStartedNotSampled = this._factory.createCounter('traces', {
+    this.tracesStartedNotSampled = this._factory.createCounter('jaeger:traces', {
       state: 'started',
       sampled: 'n',
     });
 
-    this.tracesJoinedSampled = this._factory.createCounter('traces', {
+    this.tracesJoinedSampled = this._factory.createCounter('jaeger:traces', {
       state: 'joined',
       sampled: 'y',
     });
 
-    this.tracesJoinedNotSampled = this._factory.createCounter('traces', {
+    this.tracesJoinedNotSampled = this._factory.createCounter('jaeger:traces', {
       state: 'joined',
       sampled: 'n',
     });
 
-    this.spansStarted = this._factory.createCounter('spans', {
-      group: 'lifecycle',
-      state: 'started',
-    });
+    this.spansFinished = this._factory.createCounter('jaeger:finished_spans');
 
-    this.spansFinished = this._factory.createCounter('spans', {
-      group: 'lifecycle',
-      state: 'finished',
-    });
-
-    this.spansSampled = this._factory.createCounter('spans', {
-      group: 'sampling',
+    this.spansStartedSampled = this._factory.createCounter('jaeger:started_spans', {
       sampled: 'y',
     });
 
-    this.spansNotSampled = this._factory.createCounter('spans', {
-      group: 'sampling',
+    this.spansStartedNotSampled = this._factory.createCounter('jaeger:started_spans', {
       sampled: 'n',
     });
 
-    this.decodingErrors = this._factory.createCounter('decoding-errors');
+    this.decodingErrors = this._factory.createCounter('jaeger:span_context_decoding_errors');
 
-    this.reporterSuccess = this._factory.createCounter('reporter-spans', {
-      state: 'success',
-    });
-
-    this.reporterFailure = this._factory.createCounter('reporter-spans', {
-      state: 'failure',
-    });
-
-    this.reporterDropped = this._factory.createCounter('reporter-spans', {
-      state: 'dropped',
-    });
-
-    this.reporterQueueLength = this._factory.createGauge('reporter-queue');
-
-    this.samplerRetrieved = this._factory.createCounter('sampler', {
-      state: 'retrieved',
-    });
-
-    this.samplerUpdated = this._factory.createCounter('sampler', {
-      state: 'updated',
-    });
-
-    this.samplerQueryFailure = this._factory.createCounter('sampler', {
-      state: 'failure',
-      phase: 'query',
-    });
-
-    this.samplerParsingFailure = this._factory.createCounter('sampler', {
-      state: 'failure',
-      phase: 'parsing',
-    });
-
-    this.baggageUpdateSuccess = this._factory.createCounter('baggage-update', {
+    this.reporterSuccess = this._factory.createCounter('jaeger:reporter_spans', {
       result: 'ok',
     });
 
-    this.baggageUpdateFailure = this._factory.createCounter('baggage-update', {
+    this.reporterFailure = this._factory.createCounter('jaeger:reporter_spans', {
       result: 'err',
     });
 
-    this.baggageTruncate = this._factory.createCounter('baggage-trucate');
+    this.reporterDropped = this._factory.createCounter('jaeger:reporter_spans', {
+      result: 'dropped',
+    });
 
-    this.throttlerUpdateSuccess = this._factory.createCounter('throttler-update', {
+    this.reporterQueueLength = this._factory.createGauge('jaeger:reporter_queue_length');
+
+    this.samplerRetrieved = this._factory.createCounter('jaeger:sampler_queries', {
       result: 'ok',
     });
 
-    this.throttlerUpdateFailure = this._factory.createCounter('throttler-update', {
+    this.samplerQueryFailure = this._factory.createCounter('jaeger:sampler_queries', {
+      result: 'err',
+    });
+
+    this.samplerUpdated = this._factory.createCounter('jaeger:sampler_updates', {
+      result: 'ok',
+    });
+
+    this.samplerUpdateFailure = this._factory.createCounter('jaeger:sampler_updates', {
+      result: 'err',
+    });
+
+    this.baggageUpdateSuccess = this._factory.createCounter('jaeger:baggage_updates', {
+      result: 'ok',
+    });
+
+    this.baggageUpdateFailure = this._factory.createCounter('jaeger:baggage_updates', {
+      result: 'err',
+    });
+
+    this.baggageTruncate = this._factory.createCounter('jaeger:baggage_truncations');
+
+    this.throttlerUpdateSuccess = this._factory.createCounter('jaeger:throttler_updates', {
+      result: 'ok',
+    });
+
+    this.throttlerUpdateFailure = this._factory.createCounter('jaeger:throttler_updates', {
       result: 'err',
     });
   }

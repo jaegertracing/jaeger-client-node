@@ -63,7 +63,7 @@ describe('RemoteSampler', () => {
   let badResponses: Array<any> = ['junk', '0', 'false', {}];
   badResponses.forEach(resp => {
     it(`should log metric on failing to parse bad http response ${resp}`, done => {
-      metrics.samplerParsingFailure.increment = function() {
+      metrics.samplerUpdateFailure.increment = function() {
         assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
         done();
       };
@@ -73,7 +73,7 @@ describe('RemoteSampler', () => {
   });
 
   it('should throw error on bad sampling strategy', done => {
-    metrics.samplerParsingFailure.increment = function() {
+    metrics.samplerUpdateFailure.increment = function() {
       assert.equal(logger._errorMsgs.length, 1);
       done();
     };

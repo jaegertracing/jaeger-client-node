@@ -251,25 +251,25 @@ describe('tracer should', () => {
           rpcServer: false,
           context: null,
           sampled: true,
-          metrics: ['spansStarted', 'spansSampled', 'tracesStartedSampled'],
+          metrics: ['spansStartedSampled', 'tracesStartedSampled'],
         },
         {
           rpcServer: true,
           context: '1:2:100:1',
           sampled: true,
-          metrics: ['spansStarted', 'spansSampled', 'tracesJoinedSampled'],
+          metrics: ['spansStartedSampled', 'tracesJoinedSampled'],
         },
         {
           rpcServer: false,
           context: null,
           sampled: false,
-          metrics: ['spansStarted', 'spansNotSampled', 'tracesStartedNotSampled'],
+          metrics: ['spansStartedNotSampled', 'tracesStartedNotSampled'],
         },
         {
           rpcServer: true,
           context: '1:2:100:0',
           sampled: false,
-          metrics: ['spansStarted', 'spansNotSampled', 'tracesJoinedNotSampled'],
+          metrics: ['spansStartedNotSampled', 'tracesJoinedNotSampled'],
         },
       ];
 
