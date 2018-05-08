@@ -53,7 +53,7 @@ let jaegerSchema = {
 };
 
 export default class Configuration {
-  static _getSampler(config) {
+  static _getSampler(config, options) {
     let type = config.sampler.type;
     let param = config.sampler.param;
     let host = config.sampler.host;
@@ -83,6 +83,8 @@ export default class Configuration {
         host: host,
         port: port,
         refreshInterval: refreshIntervalMs,
+        metrics: options.metrics,
+        logger: options.logger,
       });
     }
 
@@ -112,6 +114,8 @@ export default class Configuration {
         senderConfig['port'] = config.reporter.agentPort;
       }
     }
+    reporterConfig['metrics'] = options.metrics;
+    reporterConfig['logger'] = options.logger;
     let sender = new UDPSender(senderConfig);
     let remoteReporter = new RemoteReporter(sender, reporterConfig);
     if (reporters.length == 0) {
@@ -157,7 +161,7 @@ export default class Configuration {
       throw new Error(`config.serviceName must be provided`);
     }
     if (config.sampler) {
-      sampler = Configuration._getSampler(config);
+      sampler = Configuration._getSampler(config, options);
     } else {
       sampler = new RemoteSampler(config.serviceName, options);
     }
