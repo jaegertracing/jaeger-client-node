@@ -20,7 +20,7 @@ declare interface Sampler {
    * must populate the tags dictionary with tags that identify
    * the sampler, namely sampler.type and sampler.param.
    *
-   * This API is different from Python and Go, because Javascipt
+   * This API is different from Python and Go, because Javascript
    * does not allow functions to return multiple values. We would
    * have to return an object like {sampled: bool, tags: map},
    * which would require heap allocation every time, and in most
