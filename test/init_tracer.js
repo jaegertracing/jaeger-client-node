@@ -167,4 +167,38 @@ describe('initTracer', () => {
     assert.equal(tracer._metrics._factory, metrics);
     assert.equal(tracer._tags['x'], 'y');
   });
+
+it('should pass options to remote sampler and reporter', () => {
+    let logger = {
+      info: function info(msg) {},
+    };
+    let metrics = {
+      createCounter: function createCounter() {
+        return {};
+      },
+      createGauge: function createGauge() {
+        return {};
+      },
+      createTimer: function createTimer() {
+        return {};
+      },
+    };
+    let tracer = initTracer(
+      {
+        serviceName: 'test-service',
+        sampler: {
+          type: 'remote',
+          param: 0,
+        }
+      },
+      {
+        logger: logger,
+        metrics: metrics,
+      }
+    );
+    assert.equal(tracer._reporter._metrics._factory, metrics);
+    assert.equal(tracer._reporter._logger, logger);
+    assert.equal(tracer._sampler._metrics._factory, metrics);
+    assert.equal(tracer._sampler._logger, logger);
+  });
 });
