@@ -12,7 +12,7 @@
 // the License.
 
 export default class BinaryCodec {
-  extract(carrir: any): ?SpanContext {
+  extract(carrier: any): ?SpanContext {
     return null;
   }
 

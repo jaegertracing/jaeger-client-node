@@ -12,8 +12,8 @@
 // the License.
 
 /**
- * Parses a comma separated key=value pair list and add the reuslts to `baggage`.
- * E.g. "key1=value1, key2=value2, key3 = value3"
+ * Parses a comma separated key=value pair list and add the results to `baggage`.
+ * E.g. "key1=value1, key2=value2, key3=value3"
  * is converted to map[string]string { "key1" : "value1",
  *                                     "key2" : "value2",
  *                                     "key3" : "value3" }

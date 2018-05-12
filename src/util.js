@@ -22,7 +22,7 @@ export default class Utils {
    *
    * @param {string} text - the string for to search for a prefix
    * @param {string} prefix - the prefix to search for in the text given.
-   * @return {boolean} - boolean representing whehter or not the
+   * @return {boolean} - boolean representing whether or not the
    * string contains the prefix.
    **/
   static startsWith(text: string, prefix: string): boolean {

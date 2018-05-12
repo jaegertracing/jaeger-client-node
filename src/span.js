@@ -127,10 +127,10 @@ export default class Span {
   }
 
   /**
-     * Returns the tracer associated with this span.
-        this._duration;
-     * @return {Tracer} - returns the tracer associated witht this span.
-     **/
+   *  Returns the tracer associated with this span.
+   *
+   * @return {Tracer} - returns the tracer associated with this span.
+   **/
   tracer(): any {
     return this._tracer;
   }
