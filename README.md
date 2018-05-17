@@ -35,6 +35,25 @@ var tracer = initTracer(config, options);
 
 The `metrics` and `logger` objects shown in the above example must satisfy the [MetricsFactory](./src/_flow/metrics.js#L34) and [Logger](./src/_flow/logger.js) APIs respectively.
 
+#### Prometheus metrics
+
+This module brings a [Prometheus(prom-client)](https://www.npmjs.com/package/prom-client) integration to the internal Jaeger metrics.  
+The way to initialize the tracer with Prometheus metrics:
+
+```javascript
+var PrometheusMetricsFactory = require('jaeger-client').PrometheusMetricsFactory;
+
+var config = {
+  serviceName: 'my-awesome-service',
+};
+var namespace = config.serviceName;
+var metrics = new PrometheusMetricsFactory(namespace);
+var options = {
+  metrics: metrics,
+};
+var tracer = initTracer(config, options);
+```
+
 ## Usage
 
 The Tracer instance created by `initTracer` is OpenTracing-1.0 compliant. See [opentracing-javascript](https://github.com/opentracing/opentracing-javascript) for usage examples.
