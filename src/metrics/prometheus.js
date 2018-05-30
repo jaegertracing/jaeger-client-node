@@ -49,7 +49,7 @@ export default class PrometheusMetricsFactory {
     this._namespace = namespace;
   }
 
-  _getLabelsKeyList(tags: any = {}): Array<string> {
+  _getLabelsKeyList(tags: any): Array<string> {
     let tagKeyList = [];
     for (let key in tags) {
       tagKeyList.push(key);

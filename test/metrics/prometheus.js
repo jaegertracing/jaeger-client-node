@@ -14,6 +14,34 @@ import { assert } from 'chai';
 import PrometheusMetricsFactory from '../../src/metrics/prometheus';
 import { register as globalRegistry } from 'prom-client';
 
+describe('Prometheus metrics without namespace', () => {
+  let metrics;
+
+  beforeEach(() => {
+    try {
+      metrics = new PrometheusMetricsFactory();
+    } catch (e) {
+      console.log('beforeEach failed', e);
+      console.log(e.stack);
+    }
+  });
+
+  afterEach(() => {
+    globalRegistry.clear();
+  });
+
+  it('should increment a counter with a provided value', () => {
+    let name = 'jaeger:counter';
+
+    metrics.createCounter(name).increment(1);
+
+    let metric = globalRegistry.getSingleMetric(name).get();
+    assert.equal(metric.type, 'counter');
+    assert.equal(metric.name, name);
+    assert.equal(metric.values[0].value, 1);
+  });
+});
+
 describe('Prometheus metrics', () => {
   let metrics;
   let namespace = 'test';
