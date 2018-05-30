@@ -55,7 +55,7 @@ describe('Prometheus metrics', () => {
     let counter2 = metrics.createCounter(name, tags2);
     counter2.increment(); // increment by 1
 
-    assert.equal(globalRegistry.getMetricsAsArray().length, 1);
+    assert.equal(globalRegistry.getMetricsAsJSON().length, 1);
     name = namespace + '_' + name;
     let metric = globalRegistry.getSingleMetric(name).get();
     assert.equal(metric.values.length, 2);
@@ -88,7 +88,7 @@ describe('Prometheus metrics', () => {
     let gauge2 = metrics.createGauge(name, tags2);
     gauge2.update(10);
 
-    assert.equal(globalRegistry.getMetricsAsArray().length, 1);
+    assert.equal(globalRegistry.getMetricsAsJSON().length, 1);
     name = namespace + '_' + name;
     let metric = globalRegistry.getSingleMetric(name).get();
     assert.equal(metric.values.length, 2);
@@ -103,6 +103,6 @@ describe('Prometheus metrics', () => {
     metrics.createCounter('jaeger:counter', { result: 'err' }).increment(1);
     metrics.createGauge('jaeger:gauge', { result: 'ok' }).update(1);
     metrics.createGauge('jaeger:gauge', { result: 'err' }).update(1);
-    assert.equal(globalRegistry.getMetricsAsArray().length, 2);
+    assert.equal(globalRegistry.getMetricsAsJSON().length, 2);
   });
 });
