@@ -30,9 +30,6 @@ export default class RateLimiter {
     // The new balance should be proportional to the old balance.
     this._balance = maxBalance * this._balance / this._maxBalance;
     this._maxBalance = maxBalance;
-    if (this._balance > maxBalance) {
-      this._balance = maxBalance;
-    }
   }
 
   checkCredit(itemCost: number): boolean {
