@@ -294,7 +294,7 @@ describe('udp sender', () => {
         done();
       },
     };
-    let tracer = new Tracer('test-service-name', new RemoteReporter(sender), new ConstSampler(true));
+    tracer = new Tracer('test-service-name', new RemoteReporter(sender), new ConstSampler(true));
     tracer.startSpan('testSpan').finish();
     sender.flush((numSpans, err) => {
       assert.equal(numSpans, 1);
