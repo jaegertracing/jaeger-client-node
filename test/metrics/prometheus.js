@@ -87,9 +87,9 @@ describe('Prometheus metrics', () => {
     name = namespace + '_' + name;
     let metric = globalRegistry.getSingleMetric(name).get();
     assert.equal(metric.values.length, 2);
-    assert.equal(metric.values[0].labels, tags1);
+    assert.deepEqual(metric.values[0].labels, tags1);
     assert.equal(metric.values[0].value, 2);
-    assert.equal(metric.values[1].labels, tags2);
+    assert.deepEqual(metric.values[1].labels, tags2);
     assert.equal(metric.values[1].value, 1);
   });
 
@@ -120,9 +120,9 @@ describe('Prometheus metrics', () => {
     name = namespace + '_' + name;
     let metric = globalRegistry.getSingleMetric(name).get();
     assert.equal(metric.values.length, 2);
-    assert.equal(metric.values[0].labels, tags1);
+    assert.deepEqual(metric.values[0].labels, tags1);
     assert.equal(metric.values[0].value, 20);
-    assert.equal(metric.values[1].labels, tags2);
+    assert.deepEqual(metric.values[1].labels, tags2);
     assert.equal(metric.values[1].value, 10);
   });
 

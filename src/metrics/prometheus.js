@@ -13,31 +13,27 @@
 
 import { Counter as PromCounter, Gauge as PromGauge } from 'prom-client';
 
-let CounterPromWrapper = class {
+class CounterPromWrapper {
   _counter: PromCounter;
-  _labels: any;
 
-  constructor(counter: PromCounter, labels: any) {
+  constructor(counter: PromCounter) {
     this._counter = counter;
-    this._labels = labels;
   }
 
   increment(delta: number): void {
-    this._counter.inc(this._labels, delta);
+    this._counter.inc(delta);
   }
 };
 
-let GaugePromWrapper = class {
+class GaugePromWrapper {
   _gauge: PromGauge;
-  _labels: any;
 
-  constructor(gauge: PromGauge, labels: any) {
+  constructor(gauge: PromGauge) {
     this._gauge = gauge;
-    this._labels = labels;
   }
 
   update(value: number): void {
-    this._gauge.set(this._labels, value);
+    this._gauge.set(value);
   }
 };
 
@@ -49,16 +45,13 @@ export default class PrometheusMetricsFactory {
     this._namespace = namespace;
   }
 
-  _getLabelsKeyList(tags: any): Array<string> {
-    let tagKeyList = [];
-    for (let key in tags) {
-      tagKeyList.push(key);
+  _createMetric(metric: any, name: string, labels: {}): any {
+    let labelNames = [];
+    let labelValues = [];
+    for (let key in labels) {
+      labelNames.push(key);
+      labelValues.push(labels[key]);
     }
-    return tagKeyList;
-  }
-
-  _createMetric(metric: any, name: string, labels: any): any {
-    let labelNames = this._getLabelsKeyList(labels);
     let key = name + ',' + labelNames.toString();
     let help = name;
     if (this._namespace != null) {
@@ -67,7 +60,7 @@ export default class PrometheusMetricsFactory {
     if (!(key in this._cache)) {
       this._cache[key] = new metric(name, help, labelNames);
     }
-    return this._cache[key];
+    return labelValues.length > 0 ? this._cache[key].labels(...labelValues) : this._cache[key];
   }
 
   /**
@@ -76,9 +69,8 @@ export default class PrometheusMetricsFactory {
    * @param {any} tags - labels
    * @returns {Counter} - created counter metric
    */
-  createCounter(name: string, tags: any): Counter {
-    tags = tags || {};
-    return new CounterPromWrapper(this._createMetric(PromCounter, name, tags), tags);
+  createCounter(name: string, tags: {}): Counter {
+    return new CounterPromWrapper(this._createMetric(PromCounter, name, tags));
   }
 
   /**
@@ -87,8 +79,7 @@ export default class PrometheusMetricsFactory {
    * @param {any} tags - labels
    * @returns {Gauge} - created gauge metric
    */
-  createGauge(name: string, tags: any): Gauge {
-    tags = tags || {};
-    return new GaugePromWrapper(this._createMetric(PromGauge, name, tags), tags);
+  createGauge(name: string, tags: {}): Gauge {
+    return new GaugePromWrapper(this._createMetric(PromGauge, name, tags));
   }
 }
