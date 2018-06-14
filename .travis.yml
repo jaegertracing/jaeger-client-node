@@ -22,9 +22,9 @@ matrix:
     sudo: required
     services:
       - docker
-  - env: TEST_NODE_VERSION=6 LINT=1
+  - env: TEST_NODE_VERSION=6 LINT=1 PROM_METRICS_TEST=1
   - env: TEST_NODE_VERSION=4
-  - env: TEST_NODE_VERSION=node
+  - env: TEST_NODE_VERSION=node PROM_METRICS_TEST=1
 
 env:
   global:
@@ -53,10 +53,12 @@ before_script:
 - node --version
 - rm -rf ./node_modules package-lock.json
 - travis_retry npm install
+- if [ "$PROM_METRICS_TEST" = "1" ]; then npm install prom-client@11.0.0; fi
 
 script:
 - if [ "$LINT" = "1" ]; then npm run lint; fi
 - if [ "$CROSSDOCK" != "1" ]; then make test-without-build; fi
+- if [ "$PROM_METRICS_TEST" = "1" ]; then npm run test-prom-metrics; fi
 - if [ "$COVER" = "1" ]; then npm run coveralls; fi
 - if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh ; fi
 

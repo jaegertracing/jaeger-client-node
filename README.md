@@ -41,13 +41,14 @@ This module brings a [Prometheus(prom-client)](https://www.npmjs.com/package/pro
 The way to initialize the tracer with Prometheus metrics:
 
 ```javascript
-var PrometheusMetricsFactory = require('jaeger-client').PrometheusMetricsFactory;
+var prometheusMetricsFactory = require('jaeger-client').PrometheusMetricsFactory;
+var promClient = require('prom-client');
 
 var config = {
   serviceName: 'my-awesome-service',
 };
 var namespace = config.serviceName;
-var metrics = new PrometheusMetricsFactory(namespace);
+var metrics = new prometheusMetricsFactory(promClient, namespace);
 var options = {
   metrics: metrics,
 };
