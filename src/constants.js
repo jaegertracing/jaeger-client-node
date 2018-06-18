@@ -20,7 +20,7 @@ export const DEBUG_MASK = 0x2;
 export const JAEGER_CLIENT_VERSION_TAG_KEY = 'jaeger.version';
 
 // TRACER_HOSTNAME_TAG_KEY used to report host name of the process.
-export const TRACER_HOSTNAME_TAG_KEY = 'jaeger.hostname';
+export const TRACER_HOSTNAME_TAG_KEY = 'hostname';
 
 // PROCESS_IP used to report ip of the process.
 export const PROCESS_IP = 'ip';
