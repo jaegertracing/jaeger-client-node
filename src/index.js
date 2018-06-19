@@ -33,9 +33,11 @@ import ZipkinB3TextMapCodec from './propagators/zipkin_b3_text_map_codec';
 import TestUtils from './test_util';
 import TChannelBridge from './tchannel_bridge';
 
+import PrometheusMetricsFactory from './metrics/prometheus';
+
 import * as opentracing from 'opentracing';
 
-var modules = {
+module.exports = {
   Configuration,
   initTracer: Configuration.initTracer,
   SpanContext,
@@ -58,19 +60,6 @@ var modules = {
 
   TestUtils,
   TChannelBridge,
+  PrometheusMetricsFactory,
   opentracing,
 };
-
-function promClientInstalled() {
-  try {
-    require.resolve('prom-client');
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-if(promClientInstalled()) {
-  modules.PrometheusMetricsFactory = require('./metrics/prometheus').default;
-}
-
-module.exports = modules;
