@@ -38,13 +38,13 @@ class GaugePromWrapper {
 export default class PrometheusMetricsFactory {
   _cache: any = {};
   _namespace: ?string;
-  _prom_client: any;
+  _promClient: any;
 
-  constructor(prom_client: {}, namespace: ?string) {
-    if(!prom_client.Counter || !prom_client.Gauge) {
+  constructor(promClient: {}, namespace: ?string) {
+    if(!promClient.Counter || !promClient.Gauge) {
       throw new Error('prom-client must be provided');
     }
-    this._prom_client = prom_client;
+    this._promClient = promClient;
     this._namespace = namespace;
   }
 
@@ -73,7 +73,7 @@ export default class PrometheusMetricsFactory {
    * @returns {Counter} - created counter metric
    */
   createCounter(name: string, tags: {}): Counter {
-    return new CounterPromWrapper(this._createMetric(this._prom_client.Counter, name, tags));
+    return new CounterPromWrapper(this._createMetric(this._promClient.Counter, name, tags));
   }
 
   /**
@@ -83,6 +83,6 @@ export default class PrometheusMetricsFactory {
    * @returns {Gauge} - created gauge metric
    */
   createGauge(name: string, tags: {}): Gauge {
-    return new GaugePromWrapper(this._createMetric(this._prom_client.Gauge, name, tags));
+    return new GaugePromWrapper(this._createMetric(this._promClient.Gauge, name, tags));
   }
 }
