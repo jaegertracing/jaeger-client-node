@@ -57,8 +57,8 @@ before_script:
 script:
 - if [ "$LINT" = "1" ]; then npm run lint; fi
 - if [ "$CROSSDOCK" != "1" ]; then make test-without-build; fi
-- if [ "$COVER" = "1" ]; then npm run coveralls; fi
-- if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh ; fi
+- if [ "$COVER" = "1" ]; then npm run cover && bash <(curl -s https://codecov.io/bash); fi
+- if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh; fi
 
 after_script:
 - nvm use $TRAVIS_NODE_VERSION
