@@ -11,7 +11,7 @@
 // the License.
 
 import { assert } from 'chai';
-import PrometheusMetricsFactory from '../../src/metrics/prometheus';
+import { PrometheusMetricsFactory } from '../../src/index.js';
 import PromClient from 'prom-client';
 
 describe('Prometheus metrics without namespace', () => {
