@@ -40,6 +40,20 @@ export default class PrometheusMetricsFactory {
   _namespace: ?string;
   _promClient: any;
 
+  /**
+   * Construct metrics factory for Prometheus
+   *
+   * To instantiate, prom-client needs to be passed like this:
+   *
+   *    var PrometheusMetricsFactory = require('jaeger-client').PrometheusMetricsFactory;
+   *    var promClient = require('prom-client');
+   *
+   *    var namespace = 'your-namespace';
+   *    var metrics = new PrometheusMetricsFactory(promClient, namespace);
+   *
+   * @param {Object} promClient - prom-client object.
+   * @param {String} namespace - Optional a namespace that prepends to each metric name.
+   */
   constructor(promClient: {}, namespace: ?string) {
     if(!promClient.Counter || !promClient.Gauge) {
       throw new Error('prom-client must be provided');
