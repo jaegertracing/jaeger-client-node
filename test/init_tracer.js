@@ -168,7 +168,7 @@ describe('initTracer', () => {
     assert.equal(tracer._tags['x'], 'y');
   });
 
-it('should pass options to remote sampler and reporter', () => {
+  it('should pass options to remote sampler and reporter', () => {
     let logger = {
       info: function info(msg) {},
     };
@@ -189,7 +189,7 @@ it('should pass options to remote sampler and reporter', () => {
         sampler: {
           type: 'remote',
           param: 0,
-        }
+        },
       },
       {
         logger: logger,
