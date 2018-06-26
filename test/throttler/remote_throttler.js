@@ -163,6 +163,7 @@ describe('RemoteThrottler should', () => {
     throttler.setProcess({ uuid: uuid });
     throttler._refreshCredits();
     sinon.assert.notCalled(throttler._fetchCredits);
+    throttler.close();
   });
 
   it('refresh credits after _afterInitialDelay is called', done => {

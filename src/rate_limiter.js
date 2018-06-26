@@ -25,14 +25,23 @@ export default class RateLimiter {
   }
 
   update(creditsPerSecond: number, maxBalance: number) {
+    this._updateBalance();
     this._creditsPerSecond = creditsPerSecond;
+    // The new balance should be proportional to the old balance.
+    this._balance = maxBalance * this._balance / this._maxBalance;
     this._maxBalance = maxBalance;
-    if (this._balance > maxBalance) {
-      this._balance = maxBalance;
-    }
   }
 
   checkCredit(itemCost: number): boolean {
+    this._updateBalance();
+    if (this._balance >= itemCost) {
+      this._balance -= itemCost;
+      return true;
+    }
+    return false;
+  }
+
+  _updateBalance() {
     let currentTime: number = new Date().getTime();
     let elapsedTime: number = (currentTime - this._lastTick) / 1000;
     this._lastTick = currentTime;
@@ -41,10 +50,5 @@ export default class RateLimiter {
     if (this._balance > this._maxBalance) {
       this._balance = this._maxBalance;
     }
-    if (this._balance >= itemCost) {
-      this._balance -= itemCost;
-      return true;
-    }
-    return false;
   }
 }
