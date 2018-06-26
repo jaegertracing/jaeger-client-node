@@ -69,7 +69,11 @@ describe('leaky bucket ratelimiter should', () => {
     let initialDate = new Date(2011, 9, 1).getTime();
     let clock = sinon.useFakeTimers(initialDate);
     let limiter = new RateLimiter(0.1, 1);
-    assert.equal(true, limiter._balance <= 1 && limiter._balance >= 0);
+    assert.equal(
+      true,
+      limiter._balance <= 1 && limiter._balance >= 0,
+      'balance should be initialized to a random value between [0:1]'
+    );
     limiter._balance = 1.0;
     assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
 
@@ -87,10 +91,11 @@ describe('leaky bucket ratelimiter should', () => {
     assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
     assert.equal(limiter._balance, 2, 'balance should be at 2 after spending 1');
 
+    // move time 5s forward, not enough to accumulate credits for another message
+    clock = sinon.useFakeTimers(initialDate + 55000);
     // reduce the maxBalance so the limiter is capped at 1
     limiter.update(0.1, 1);
-    assert.equal(limiter._balance, 1, 'balance should be at 1 after update');
-    assert.equal(limiter.checkCredit(1), true, 'expected checkCredit to be true');
+    assert.equal(limiter._balance, 2.5 / 3.0, 'balance should be proportional to the original range');
     assert.equal(limiter.checkCredit(1), false, 'expected checkCredit to be false');
     clock.restore();
   });
