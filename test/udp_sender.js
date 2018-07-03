@@ -280,28 +280,31 @@ describe('udp sender', () => {
     sender.flush(assertCallback(0, undefined));
   });
 
-  // it('should gracefully handle errors emitted by socket.send', done => {
-  //   let tracer = new Tracer('test-service-name', new RemoteReporter(sender), new ConstSampler(true));
-  //   sender._host = 'foo.bar.xyz';
-  //   // In Node 0.10 and 0.12 the error is logged twice: (1) from inline callback, (2) from on('error') handler.
-  //   let expectLogs = semver.satisfies(process.version, '0.10.x || 0.12.x');
-  //   sender._logger = {
-  //     info: msg => {
-  //       console.log('sender info: ' + msg);
-  //     },
-  //     error: msg => {
-  //       assert.isOk(expectLogs);
-  //       expect(msg).to.have.string('error sending spans over UDP: Error: getaddrinfo ENOTFOUND');
-  //       tracer.close(done);
-  //     },
-  //   };
-  //   tracer.startSpan('testSpan').finish();
-  //   sender.flush((numSpans, err) => {
-  //     assert.equal(numSpans, 1);
-  //     expect(err).to.have.string('error sending spans over UDP: Error: getaddrinfo ENOTFOUND');
-  //     if (!expectLogs) {
-  //       tracer.close(done);
-  //     }
-  //   });
-  // });
+  it('should gracefully handle errors emitted by socket.send', done => {
+    let tracer = new Tracer('test-service-name', new RemoteReporter(sender), new ConstSampler(true));
+    sender._host = 'foo.bar.xys'; // Nothing running on this port, should error
+    // In Node 0.10 and 0.12 the error is logged twice: (1) from inline callback, (2) from on('error') handler.
+    let expectLogs = semver.satisfies(process.version, '0.10.x || 0.12.x');
+    sender._logger = {
+      info: msg => {
+        console.log('sender info: ' + msg);
+      },
+      error: msg => {
+        console.log('here first');
+        assert.isOk(expectLogs);
+        expect(msg).to.have.string('error sending spans over UDP: Error: getaddrinfo ENOTFOUND');
+        tracer.close(done);
+      },
+    };
+    tracer.startSpan('testSpan').finish();
+    sender.flush((numSpans, err) => {
+      console.log('flush');
+      assert.equal(numSpans, 1);
+      expect(err).to.have.string('error sending spans over UDP: Error: getaddrinfo ENOTFOUND');
+      if (!expectLogs) {
+        console.log('expected logs');
+        tracer.close(done);
+      }
+    });
+  });
 });
