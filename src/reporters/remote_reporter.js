@@ -70,7 +70,9 @@ export default class RemoteReporter {
       this._invokeCallback(callback);
       return;
     }
+    console.log('REPORTER: flush called');
     this._sender.flush((numSpans: number, err?: string) => {
+      console.log('REPORTER: POST sender flush');
       if (err) {
         this._logger.error(`Failed to flush spans in reporter: ${err}`);
         this._metrics.reporterFailure.increment(numSpans);
@@ -82,8 +84,10 @@ export default class RemoteReporter {
   }
 
   close(callback?: () => void): void {
+    console.log('REPORTER: remote reporter closing');
     clearInterval(this._intervalHandle);
     this.flush(() => {
+      console.log('REPORTER: POST flush');
       this._sender.close();
       this._invokeCallback(callback);
     });

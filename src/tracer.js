@@ -312,6 +312,7 @@ export default class Tracer {
     let reporter = this._reporter;
     this._reporter = new NoopReporter();
     reporter.close(() => {
+      console.log('TRACER: remote reporter closed');
       this._sampler.close(callback);
     });
   }
