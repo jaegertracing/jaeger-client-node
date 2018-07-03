@@ -35,6 +35,7 @@ export default class RemoteReporter {
     this._logger = options.logger || new NullLogger();
     this._sender = sender;
     this._intervalHandle = setInterval(() => {
+      console.log('COULD THIS REALLY BE?');
       this.flush();
     }, this._bufferFlushInterval);
     this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
