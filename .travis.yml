@@ -14,12 +14,15 @@ services:
 
 matrix:
   include:
-  - env: TEST_NODE_VERSION=0.10
+  - env: TEST_NODE_VERSION=0.10 COVER=1
+    sudo: required
+    services:
+    - docker
   - env: TEST_NODE_VERSION=0.10 CROSSDOCK=1
     sudo: required
     services:
       - docker
-  - env: TEST_NODE_VERSION=6 LINT=1 COVER=1
+  - env: TEST_NODE_VERSION=6 LINT=1 COVER=1 PROM_METRICS_TEST=1
   - env: TEST_NODE_VERSION=4
   - env: TEST_NODE_VERSION=node
 
@@ -75,4 +78,4 @@ after_success:
     $DOCKER tag $REPO:$COMMIT $REPO:$TAG;
     $DOCKER tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER;
     $DOCKER push $REPO;
-  fi
+    fi

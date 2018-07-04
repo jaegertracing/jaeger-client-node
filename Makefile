@@ -1,15 +1,10 @@
 -include crossdock/rules.mk
 
 NODE_VER=$(shell node -v)
-ifeq ($(patsubst v6.%,matched,$(NODE_VER)), matched)
+ifeq ($(patsubst v6.%,v6,$(NODE_VER)), v6)
 	NODE_6=true
 else
 	NODE_6=false
-endif
-ifeq ($(patsubst v0.10%,matched,$(NODE_VER)), matched)
-	NODE_0_10=true
-else
-	NODE_0_10=false
 endif
 
 .PHONY: publish
@@ -34,7 +29,7 @@ endif
 
 .PHONY: install-test-deps
 install-test-deps:
-ifeq ($(NODE_0_10), false)
+ifeq ($(PROM_METRICS_TEST), 1)
 	npm install prom-client@11.0.0
 endif
 
