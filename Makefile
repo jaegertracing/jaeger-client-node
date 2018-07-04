@@ -19,13 +19,19 @@ test: build-node
 	make test-without-build
 
 .PHONY: test-without-build
-test-without-build:
+test-without-build: install-test-deps
 	npm run flow
 ifeq ($(NODE_6),true)
 	npm run test-all
 endif
 	npm run test-dist
 	npm run check-license
+
+.PHONY: install-test-deps
+install-test-deps:
+ifeq ($(PROM_METRICS_TEST), 1)
+	npm install prom-client@11.0.0
+endif
 
 .PHONY: check-node-6
 check-node-6:

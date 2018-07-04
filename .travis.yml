@@ -22,7 +22,7 @@ matrix:
     sudo: required
     services:
       - docker
-  - env: TEST_NODE_VERSION=6 LINT=1
+  - env: TEST_NODE_VERSION=6 LINT=1 COVER=1 PROM_METRICS_TEST=1
   - env: TEST_NODE_VERSION=4
   - env: TEST_NODE_VERSION=node
 
@@ -58,7 +58,7 @@ script:
 - if [ "$LINT" = "1" ]; then npm run lint; fi
 - if [ "$CROSSDOCK" != "1" ]; then make test-without-build; fi
 - if [ "$COVER" = "1" ]; then npm run cover && bash <(curl -s https://codecov.io/bash); fi
-- if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh; fi
+- if [ "$CROSSDOCK" = "1" ]; then make crossdock-fresh ; fi
 
 after_script:
 - nvm use $TRAVIS_NODE_VERSION
