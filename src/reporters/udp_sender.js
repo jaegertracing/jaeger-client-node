@@ -59,7 +59,7 @@ export default class UDPSender {
 
   _calcBatchSize(batch: Batch) {
     return this._agentThrift.Agent.emitBatch.argumentsMessageRW.byteLength(
-      this._convertBatchToThriftMessage(this._batch)
+      this._convertBatchToThriftMessage()
     ).length;
   }
 
@@ -144,7 +144,7 @@ export default class UDPSender {
     const bufferLen = this._totalSpanBytes + this._emitSpanBatchOverhead;
     const thriftBuffer = new Buffer(bufferLen);
     const writeResult = this._agentThrift.Agent.emitBatch.argumentsMessageRW.writeInto(
-      this._convertBatchToThriftMessage(this._batch),
+      this._convertBatchToThriftMessage(),
       thriftBuffer,
       0
     );

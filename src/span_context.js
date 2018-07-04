@@ -134,7 +134,7 @@ export default class SpanContext {
     this._spanIdStr = null;
   }
 
-  set parentId(parentId: Buffer): void {
+  set parentId(parentId: Buffer | null): void {
     this._parentId = parentId;
     this._parentIdStr = null;
   }
@@ -219,7 +219,7 @@ export default class SpanContext {
     // Int64(numberValue).toBuffer() because it throws exceptions on bad strings.
     let approxTraceId = parseInt(headers[0], 16);
     let NaNDetected =
-      isNaN(approxTraceId, 16) ||
+      isNaN(approxTraceId) ||
       approxTraceId === 0 ||
       isNaN(parseInt(headers[1], 16)) ||
       isNaN(parseInt(headers[2], 16)) ||
