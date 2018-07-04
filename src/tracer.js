@@ -261,7 +261,7 @@ export default class Tracer {
    * @param  {any} carrier - see the documentation for the chosen `format`
    *         for a description of the carrier object.
    **/
-  inject(spanContext: SpanContext, format: string, carrier: any): void {
+  inject(spanContext: SpanContext | Span, format: string, carrier: any): void {
     if (!spanContext) {
       return;
     }
@@ -271,7 +271,7 @@ export default class Tracer {
       throw new Error(`Unsupported format: ${format}`);
     }
 
-    if (spanContext.context) {
+    if (spanContext instanceof Span) {
       spanContext = spanContext.context();
     }
 

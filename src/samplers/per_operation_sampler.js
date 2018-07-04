@@ -16,7 +16,7 @@ import * as constants from '../constants.js';
 import ProbabilisticSampler from './probabilistic_sampler.js';
 import GuaranteedThroughputSampler from './guaranteed_throughput_sampler.js';
 
-type SamplersByOperation = { [key: string]: GuaranteedThroughputSampler };
+type SamplersByOperation = { [key: string]: GuaranteedThroughputSampler, __proto__: null };
 
 // PerOperationSampler keeps track of all operation names it is asked to sample
 // and uses GuaranteedThroughputSampler for each operation name to ensure
