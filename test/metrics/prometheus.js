@@ -10,41 +10,51 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 import { PrometheusMetricsFactory } from '../../src/index.js';
-import PromClient from 'prom-client';
-
-describe('Prometheus metrics without namespace', () => {
-  let metrics;
-
-  beforeEach(() => {
-    try {
-      metrics = new PrometheusMetricsFactory(PromClient);
-    } catch (e) {
-      console.log('beforeEach failed', e);
-      console.log(e.stack);
-    }
-  });
-
-  afterEach(() => {
-    PromClient.register.clear();
-  });
-
-  it('should increment a counter with a provided value', () => {
-    let name = 'jaeger:counter';
-
-    metrics.createCounter(name).increment(1);
-
-    let metric = PromClient.register.getSingleMetric(name).get();
-    assert.equal(metric.type, 'counter');
-    assert.equal(metric.name, name);
-    assert.equal(metric.values[0].value, 1);
-  });
-});
+if(process.env.PROM_METRICS_TEST == "1") {
+  var PromClient = require('prom-client');
+}
 
 describe('Prometheus metrics', () => {
   let metrics;
+
+  before(function () {
+    if(process.env.PROM_METRICS_TEST != "1") {
+      this.skip();
+    }
+  });
+
+  it('should initialize without namespace', () => {
+    metrics = new PrometheusMetricsFactory(PromClient);
+    let name = 'jaeger:gauge';
+
+    metrics.createGauge(name).update(1);
+
+    let singleMetric = PromClient.register.getSingleMetric(name).get();
+    assert.equal(singleMetric.type, 'gauge');
+    assert.equal(singleMetric.name, name);
+    assert.equal(singleMetric.values[0].value, 1);
+    PromClient.register.clear();
+  });
+
+  it('should throw exception when initialized without prom-client object', () => {
+    expect(() => {
+      let fakePromClient = {};
+      metrics = new PrometheusMetricsFactory(fakePromClient);
+    }).to.throw("prom-client must be provided");
+  });
+});
+
+describe('Prometheus metrics with namespace', () => {
+  let metrics;
   let namespace = 'test';
+
+  before(function () {
+    if(process.env.PROM_METRICS_TEST != "1") {
+      this.skip();
+    }
+  });
 
   beforeEach(() => {
     try {
@@ -65,10 +75,10 @@ describe('Prometheus metrics', () => {
     metrics.createCounter(name).increment(1);
 
     name = namespace + '_' + name;
-    let metric = PromClient.register.getSingleMetric(name).get();
-    assert.equal(metric.type, 'counter');
-    assert.equal(metric.name, name);
-    assert.equal(metric.values[0].value, 1);
+    let singleMetric = PromClient.register.getSingleMetric(name).get();
+    assert.equal(singleMetric.type, 'counter');
+    assert.equal(singleMetric.name, name);
+    assert.equal(singleMetric.values[0].value, 1);
   });
 
   it('should increment a tagged counter with a provided value', () => {
@@ -85,45 +95,12 @@ describe('Prometheus metrics', () => {
 
     assert.equal(PromClient.register.getMetricsAsJSON().length, 1);
     name = namespace + '_' + name;
-    let metric = PromClient.register.getSingleMetric(name).get();
-    assert.equal(metric.values.length, 2);
-    assert.deepEqual(metric.values[0].labels, tags1);
-    assert.equal(metric.values[0].value, 2);
-    assert.deepEqual(metric.values[1].labels, tags2);
-    assert.equal(metric.values[1].value, 1);
-  });
-
-  it('should update a gauge to a provided value', () => {
-    let name = 'jaeger:gauge';
-
-    metrics.createGauge(name).update(10);
-
-    name = namespace + '_' + name;
-    let metric = PromClient.register.getSingleMetric(name).get();
-    assert.equal(metric.type, 'gauge');
-    assert.equal(metric.name, name);
-    assert.equal(metric.values[0].value, 10);
-  });
-
-  it('should update a tagged gauge to a provided value', () => {
-    let name = 'jaeger:gauge';
-
-    let tags1 = { result: 'ok' };
-    let gauge1 = metrics.createGauge(name, tags1);
-    gauge1.update(10);
-    gauge1.update(20);
-    let tags2 = { result: 'err' };
-    let gauge2 = metrics.createGauge(name, tags2);
-    gauge2.update(10);
-
-    assert.equal(PromClient.register.getMetricsAsJSON().length, 1);
-    name = namespace + '_' + name;
-    let metric = PromClient.register.getSingleMetric(name).get();
-    assert.equal(metric.values.length, 2);
-    assert.deepEqual(metric.values[0].labels, tags1);
-    assert.equal(metric.values[0].value, 20);
-    assert.deepEqual(metric.values[1].labels, tags2);
-    assert.equal(metric.values[1].value, 10);
+    let singleMetric = PromClient.register.getSingleMetric(name).get();
+    assert.equal(singleMetric.values.length, 2);
+    assert.deepEqual(singleMetric.values[0].labels, tags1);
+    assert.equal(singleMetric.values[0].value, 2);
+    assert.deepEqual(singleMetric.values[1].labels, tags2);
+    assert.equal(singleMetric.values[1].value, 1);
   });
 
   it('should update counter and gauge', () => {

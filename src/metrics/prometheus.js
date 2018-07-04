@@ -55,7 +55,7 @@ export default class PrometheusMetricsFactory {
    * @param {String} namespace - Optional a namespace that prepends to each metric name.
    */
   constructor(promClient: {}, namespace: ?string) {
-    if(!promClient.Counter || !promClient.Gauge) {
+    if(!promClient || !promClient.Counter || !promClient.Gauge) {
       throw new Error('prom-client must be provided');
     }
     this._promClient = promClient;
