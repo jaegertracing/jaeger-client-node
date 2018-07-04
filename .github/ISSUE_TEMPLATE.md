@@ -17,6 +17,7 @@ Welcome to the Jaeger project! 👋🎉
 ## Problem - what in Jaeger blocks you from solving the requirement?
 
 <!-- required section -->
+
 <!-- If possible, describe the impact of the problem. -->
 
 ## Proposal - what do you suggest to solve the problem or improve the existing situation?
