@@ -12,15 +12,23 @@
 
 import { assert, expect } from 'chai';
 import { PrometheusMetricsFactory } from '../../src/index.js';
-if(process.env.PROM_METRICS_TEST == "1") {
-  var PromClient = require('prom-client');
+
+function importPromClient() {
+  try {
+    return require('prom-client');
+  } catch (error) {
+    console.log("cannot import 'prom-client', skipping tests");
+    return null;
+  }
 }
 
 describe('Prometheus metrics', () => {
   let metrics;
+  let PromClient;
 
-  before(function () {
-    if(process.env.PROM_METRICS_TEST != "1") {
+  before(function() {
+    PromClient = importPromClient();
+    if (!PromClient) {
       this.skip();
     }
   });
@@ -42,16 +50,18 @@ describe('Prometheus metrics', () => {
     expect(() => {
       let fakePromClient = {};
       metrics = new PrometheusMetricsFactory(fakePromClient);
-    }).to.throw("prom-client must be provided");
+    }).to.throw('prom-client must be provided');
   });
 });
 
 describe('Prometheus metrics with namespace', () => {
   let metrics;
+  let PromClient;
   let namespace = 'test';
 
-  before(function () {
-    if(process.env.PROM_METRICS_TEST != "1") {
+  before(function() {
+    PromClient = importPromClient();
+    if (!PromClient) {
       this.skip();
     }
   });

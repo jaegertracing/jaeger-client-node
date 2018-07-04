@@ -21,7 +21,7 @@ class CounterPromWrapper {
   increment(delta: number): void {
     this._counter.inc(delta);
   }
-};
+}
 
 class GaugePromWrapper {
   _gauge: any;
@@ -33,7 +33,7 @@ class GaugePromWrapper {
   update(value: number): void {
     this._gauge.set(value);
   }
-};
+}
 
 export default class PrometheusMetricsFactory {
   _cache: any = {};
@@ -55,7 +55,7 @@ export default class PrometheusMetricsFactory {
    * @param {String} namespace - Optional a namespace that prepends to each metric name.
    */
   constructor(promClient: {}, namespace: ?string) {
-    if(!promClient || !promClient.Counter || !promClient.Gauge) {
+    if (!promClient || !promClient.Counter || !promClient.Gauge) {
       throw new Error('prom-client must be provided');
     }
     this._promClient = promClient;
