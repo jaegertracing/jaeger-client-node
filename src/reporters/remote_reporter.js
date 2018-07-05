@@ -25,21 +25,16 @@ export default class RemoteReporter {
   _intervalHandle: any;
   _process: Process;
   _metrics: any;
-  _id: number;
 
   constructor(sender: Sender, options: any = {}) {
     if (!sender) {
       throw new Error('RemoteReporter must be given a Sender.');
     }
-    this._id = Date.now();
-
-    console.log(`starting remote reporter with id: ${this._id}`);
 
     this._bufferFlushInterval = options.bufferFlushInterval || DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS;
     this._logger = options.logger || new NullLogger();
     this._sender = sender;
     this._intervalHandle = setInterval(() => {
-      console.log(`${this._id} COULD THIS REALLY BE?`);
       this.flush();
     }, this._bufferFlushInterval);
     this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
@@ -75,9 +70,7 @@ export default class RemoteReporter {
       this._invokeCallback(callback);
       return;
     }
-    console.log(`${this._id} REPORTER: flush called`);
     this._sender.flush((numSpans: number, err?: string) => {
-      console.log(`${this._id} REPORTER: POST sender flush`);
       if (err) {
         this._logger.error(`Failed to flush spans in reporter: ${err}`);
         this._metrics.reporterFailure.increment(numSpans);
@@ -89,10 +82,8 @@ export default class RemoteReporter {
   }
 
   close(callback?: () => void): void {
-    console.log(`${this._id} REPORTER: remote reporter closing`);
     clearInterval(this._intervalHandle);
     this.flush(() => {
-      console.log(`${this._id} REPORTER: POST flush`);
       this._sender.close();
       this._invokeCallback(callback);
     });
