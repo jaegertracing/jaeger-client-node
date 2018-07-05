@@ -23,12 +23,16 @@ import DefaultThrottler from '../../src/throttler/default_throttler';
 
 describe('DefaultThrottler should', () => {
   it('throttle everything', () => {
-    let throttler = new DefaultThrottler(true);
+    const throttler = new DefaultThrottler(true);
+    throttler.setProcess({});
     assert.isNotOk(throttler.isAllowed('key'));
+    throttler.close();
   });
 
-  it('throttle nothing', () => {
-    let throttler = new DefaultThrottler();
+  it('throttle nothing', done => {
+    const throttler = new DefaultThrottler();
+    throttler.setProcess({});
     assert.isOk(throttler.isAllowed('key'));
+    throttler.close(done);
   });
 });

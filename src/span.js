@@ -204,15 +204,16 @@ export default class Span {
    * @return {Span} - returns this span.
    **/
   addTags(keyValuePairs: any): Span {
-    if (opentracing.Tags.SAMPLING_PRIORITY in keyValuePairs) {
-      this._setSamplingPriority(keyValuePairs[opentracing.Tags.SAMPLING_PRIORITY]);
-      delete keyValuePairs[opentracing.Tags.SAMPLING_PRIORITY];
-    }
-
+    const samplingKey = opentracing.Tags.SAMPLING_PRIORITY;
+    const samplingPriority = keyValuePairs[samplingKey];
+    const samplingPriorityWasSet = samplingPriority != null && this._setSamplingPriority(samplingPriority);
     if (this._isWriteable()) {
       for (let key in keyValuePairs) {
         if (keyValuePairs.hasOwnProperty(key)) {
-          let value = keyValuePairs[key];
+          if (key === samplingKey && !samplingPriorityWasSet) {
+            continue;
+          }
+          const value = keyValuePairs[key];
           this._tags.push({ key: key, value: value });
         }
       }
@@ -229,8 +230,7 @@ export default class Span {
    * @return {Span} - returns this span.
    * */
   setTag(key: string, value: any): Span {
-    if (key === opentracing.Tags.SAMPLING_PRIORITY) {
-      this._setSamplingPriority(value);
+    if (key === opentracing.Tags.SAMPLING_PRIORITY && !this._setSamplingPriority(value)) {
       return this;
     }
 
@@ -277,12 +277,27 @@ export default class Span {
     });
   }
 
-  _setSamplingPriority(priority: number): void {
-    if (priority > 0) {
-      this._spanContext.flags = this._spanContext.flags | constants.SAMPLED_MASK | constants.DEBUG_MASK;
-    } else {
-      this._spanContext.flags = this._spanContext.flags & ~constants.SAMPLED_MASK;
-    }
+  /**
+   * Returns true if the flag was updated successfully, false otherwise
+   *
+   * @param priority - 0 to disable sampling, 1 to enable
+   * @returns {boolean} - true if the flag was updated successfully
+   * @private
+   */
+  _setSamplingPriority(priority: number): boolean {
     this._spanContext.finalizeSampling();
+    if (priority > 0) {
+      if (this._spanContext.isDebug()) {
+        // If the span is already in debug, no need to set it again
+        return false;
+      }
+      if (this._tracer._isDebugAllowed(this._operationName)) {
+        this._spanContext.flags = this._spanContext.flags | constants.SAMPLED_MASK | constants.DEBUG_MASK;
+        return true;
+      }
+      return false;
+    }
+    this._spanContext.flags = this._spanContext.flags & ~constants.SAMPLED_MASK;
+    return true;
   }
 }

@@ -16,13 +16,14 @@ import ConstSampler from '../src/samplers/const_sampler.js';
 import * as constants from '../src/constants.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import * as opentracing from 'opentracing';
-import { Tags as opentracing_tags } from 'opentracing';
 import SpanContext from '../src/span_context.js';
 import Tracer from '../src/tracer.js';
 import Utils from '../src/util.js';
 import Metrics from '../src/metrics/metrics.js';
 import LocalMetricFactory from './lib/metrics/local/metric_factory.js';
 import LocalBackend from './lib/metrics/local/backend.js';
+import sinon from 'sinon';
+import DefaultThrottler from '../src/throttler/default_throttler';
 
 describe('tracer should', () => {
   let tracer;
@@ -242,6 +243,27 @@ describe('tracer should', () => {
     tracer._report(span);
 
     assert.equal(reporter.spans.length, 1);
+  });
+
+  it('set _process on initialization', () => {
+    const throttler = new DefaultThrottler();
+    throttler.setProcess = sinon.spy();
+    tracer = new Tracer('x', reporter, new ConstSampler(true), {
+      debugThrottler: throttler,
+    });
+    assert.equal(tracer._process.serviceName, 'x');
+    assert.isString(tracer._process.uuid);
+    sinon.assert.calledWith(throttler.setProcess, tracer._process);
+  });
+
+  it('close _debugThrottler on close', () => {
+    const throttler = new DefaultThrottler();
+    throttler.close = sinon.spy();
+    tracer = new Tracer('x', reporter, new ConstSampler(true), {
+      debugThrottler: throttler,
+    });
+    tracer.close();
+    sinon.assert.calledOnce(throttler.close);
   });
 
   describe('Metrics', () => {
