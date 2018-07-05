@@ -286,7 +286,9 @@ describe('udp sender', () => {
     // In Node 0.10 and 0.12 the error is logged twice: (1) from inline callback, (2) from on('error') handler.
     let expectLogs = semver.satisfies(process.version, '0.10.x || 0.12.x');
     sender._logger = {
-      info: msg => {},
+      info: msg => {
+        console.log('sender info: ' + msg);
+      },
       error: msg => {
         assert.isOk(expectLogs);
         expect(msg).to.have.string('error sending spans over UDP: Error: getaddrinfo ENOTFOUND');
