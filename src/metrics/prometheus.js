@@ -75,7 +75,7 @@ export default class PrometheusMetricsFactory {
       name = this._namespace + '_' + name;
     }
     if (!(key in this._cache)) {
-      this._cache[key] = new metric(name, help, labelNames);
+      this._cache[key] = new metric({ name, help, labelNames });
     }
     return labelValues.length > 0 ? this._cache[key].labels(...labelValues) : this._cache[key];
   }
