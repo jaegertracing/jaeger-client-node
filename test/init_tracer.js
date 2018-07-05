@@ -158,7 +158,7 @@ describe('initTracer', () => {
     tracer.close(done);
   });
 
-  it('should pass options to tracer', () => {
+  it('should pass options to tracer', done => {
     let tracer = initTracer(
       {
         serviceName: 'test-service',
