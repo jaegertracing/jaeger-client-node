@@ -139,13 +139,15 @@ describe('initTracer', () => {
     tracer.close(done);
   });
 
-  it('should pass options to tracer', () => {
+  it('should pass options to tracer', done => {
     let logger = {
       info: function info(msg) {},
     };
     let metrics = {
       createCounter: function createCounter() {
-        return {};
+        return {
+          increment: function() {},
+        };
       },
       createGauge: function createGauge() {
         return {};
@@ -169,6 +171,7 @@ describe('initTracer', () => {
     assert.equal(tracer._logger, logger);
     assert.equal(tracer._metrics._factory, metrics);
     assert.equal(tracer._tags['x'], 'y');
+    tracer.close(done);
   });
 
   it('should pass options to remote sampler and reporter', () => {
