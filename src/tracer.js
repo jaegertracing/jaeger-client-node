@@ -102,7 +102,7 @@ export default class Tracer {
     this.registerExtractor(opentracing.FORMAT_BINARY, binaryCodec);
 
     const uuid = uuidv4();
-    this._tags[constants.TRACER_CLIENT_UUID_TAG_KEY] = uuid;
+    this._tags[constants.TRACER_CLIENT_ID_TAG_KEY] = uuid;
     this._process = {
       serviceName: serviceName,
       tags: Utils.convertObjectToTags(this._tags),
