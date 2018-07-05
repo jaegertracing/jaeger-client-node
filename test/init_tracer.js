@@ -43,7 +43,7 @@ describe('initTracer', () => {
     });
   });
 
-  it('should initialize normal tracer when only service name given', () => {
+  it('should initialize normal tracer when only service name given', done => {
     let config = {
       serviceName: 'test-service',
     };
@@ -51,6 +51,7 @@ describe('initTracer', () => {
 
     expect(tracer._sampler).to.be.an.instanceof(RemoteSampler);
     expect(tracer._reporter).to.be.an.instanceof(RemoteReporter);
+    tracer.close(done);
   });
 
   it('should initialize proper samplers', () => {
@@ -74,6 +75,7 @@ describe('initTracer', () => {
       let tracer = initTracer(config);
 
       expect(tracer._sampler).to.be.an.instanceof(expectedType);
+      tracer.close();
       // TODO(oibe:head) test utils for expectedParam here?
     });
   });
@@ -105,7 +107,7 @@ describe('initTracer', () => {
     assert.equal(count, 4);
   });
 
-  it('should respect reporter options', () => {
+  it('should respect reporter options', done => {
     let config = {
       serviceName: 'test-service',
       sampler: {
@@ -134,15 +136,18 @@ describe('initTracer', () => {
     assert.equal(remoteReporter._bufferFlushInterval, 2000);
     assert.equal(remoteReporter._sender._host, '127.0.0.1');
     assert.equal(remoteReporter._sender._port, 4939);
+    tracer.close(done);
   });
 
-  it('should pass options to tracer', () => {
+  it('should pass options to tracer', done => {
     let logger = {
       info: function info(msg) {},
     };
     let metrics = {
       createCounter: function createCounter() {
-        return {};
+        return {
+          increment: function() {},
+        };
       },
       createGauge: function createGauge() {
         return {};
@@ -166,15 +171,18 @@ describe('initTracer', () => {
     assert.equal(tracer._logger, logger);
     assert.equal(tracer._metrics._factory, metrics);
     assert.equal(tracer._tags['x'], 'y');
+    tracer.close(done);
   });
 
-  it('should pass options to remote sampler and reporter', () => {
+  it('should pass options to remote sampler and reporter', done => {
     let logger = {
       info: function info(msg) {},
     };
     let metrics = {
       createCounter: function createCounter() {
-        return {};
+        return {
+          increment: function() {},
+        };
       },
       createGauge: function createGauge() {
         return {};
@@ -200,5 +208,6 @@ describe('initTracer', () => {
     assert.equal(tracer._reporter._logger, logger);
     assert.equal(tracer._sampler._metrics._factory, metrics);
     assert.equal(tracer._sampler._logger, logger);
+    tracer.close(done);
   });
 });

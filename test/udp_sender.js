@@ -292,8 +292,7 @@ describe('udp sender', () => {
       error: msg => {
         assert.isOk(expectLogs);
         expect(msg).to.have.string('error sending spans over UDP: Error: getaddrinfo ENOTFOUND');
-        tracer.close();
-        done();
+        tracer.close(done);
       },
     };
     tracer.startSpan('testSpan').finish();
@@ -301,8 +300,7 @@ describe('udp sender', () => {
       assert.equal(numSpans, 1);
       expect(err).to.have.string('error sending spans over UDP: Error: getaddrinfo ENOTFOUND');
       if (!expectLogs) {
-        tracer.close();
-        done();
+        tracer.close(done);
       }
     });
   });
