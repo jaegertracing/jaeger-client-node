@@ -99,12 +99,14 @@ export default class RemoteThrottler {
     }
     // Credits for the operation will be asynchronously fetched
     this._credits[operation] = 0;
+    this._metrics.throttledDebugSpans.increment(1);
     return false;
   }
 
   _isAllowed(operation: string): boolean {
     const credits = this._credits[operation] || 0;
     if (credits < UNIT_CREDIT) {
+      this._metrics.throttledDebugSpans.increment(1);
       return false;
     }
     this._credits[operation] = credits - UNIT_CREDIT;
@@ -133,8 +135,8 @@ export default class RemoteThrottler {
   _fetchCredits(operations: any) {
     const serviceName: string = encodeURIComponent(this._serviceName);
     const uuid: string = encodeURIComponent(this._uuid);
-    const ops: string = operations.map(encodeURIComponent).join('&operation=');
-    const url: string = `/credits?service=${serviceName}&uuid=${uuid}&operation=${ops}`;
+    const ops: string = operations.map(encodeURIComponent).join('&operations=');
+    const url: string = `/credits?service=${serviceName}&uuid=${uuid}&operations=${ops}`;
 
     const success: Function = body => {
       this._parseCreditResponse(body);

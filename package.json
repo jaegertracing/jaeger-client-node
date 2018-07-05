@@ -18,7 +18,8 @@
     "node-int64": "^0.4.0",
     "thriftrw": "^3.5.0",
     "xorshift": "^0.2.0",
-    "opentracing": "^0.13.0"
+    "opentracing": "^0.13.0",
+    "uuid": "^3.2.1"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",

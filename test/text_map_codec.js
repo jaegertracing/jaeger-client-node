@@ -19,6 +19,7 @@ import Tracer from '../src/tracer.js';
 import Metrics from '../src/metrics/metrics.js';
 import LocalMetricFactory from './lib/metrics/local/metric_factory.js';
 import LocalBackend from './lib/metrics/local/backend.js';
+import DefaultThrottler from '../src/throttler/default_throttler';
 
 describe('Text Map Codec should', () => {
   it('report metric when failing to decode tracer state', () => {
@@ -67,5 +68,25 @@ describe('Text Map Codec should', () => {
 
     // metrics
     assert.isOk(LocalBackend.counterEquals(metrics.tracesStartedSampled, 1));
+  });
+
+  it('not set debug flag when debug-id-header is received but operation is throttled', () => {
+    let tracer = new Tracer('test-tracer', new InMemoryReporter(), new ConstSampler(false), {
+      debugThrottler: new DefaultThrottler(true),
+    });
+    let headers = {};
+    headers[constants.JAEGER_DEBUG_HEADER] = encodeURIComponent('value1');
+
+    let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
+    assert.isOk(context.isDebugIDContainerOnly());
+
+    let span = tracer.startSpan('root', { childOf: context });
+    let prevTagLength = span._tags.length;
+    assert.isNotOk(span.context().isDebug());
+    assert.equal(
+      prevTagLength,
+      span._tags.length,
+      'The sampling.priority tag should not be set if throttled'
+    );
   });
 });

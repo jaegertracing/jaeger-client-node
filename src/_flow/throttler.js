@@ -18,6 +18,7 @@
  */
 declare interface Throttler {
   isAllowed(operation: string): boolean;
+  close(callback?: Function): void;
 }
 
 declare type CreditResponse = {
