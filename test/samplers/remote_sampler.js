@@ -56,7 +56,7 @@ describe('RemoteSampler', () => {
       assert.equal(logger._errorMsgs.length, 1, `errors=${logger._errorMsgs}`);
       done();
     };
-    remoteSampler._host = 'fake-host';
+    remoteSampler._port = 1; // Nothing running on this port, should error
     remoteSampler._refreshSamplingStrategy();
   });
 
