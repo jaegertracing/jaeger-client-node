@@ -128,7 +128,7 @@ export default class RemoteThrottler {
 
   _incrementCredits(creditResponses: Array<CreditResponse>) {
     creditResponses.forEach(r => {
-      this._credits[r.operation] = this._credits[r.operation] + r.credits;
+      this._credits[r.operation] = this._credits[r.operation] + r.balance;
     });
   }
 
@@ -158,7 +158,7 @@ export default class RemoteThrottler {
       return;
     }
     try {
-      this._incrementCredits(creditResponses);
+      this._incrementCredits(creditResponses.balances);
       this._metrics.throttlerUpdateSuccess.increment(1);
     } catch (error) {
       this._logger.error(`Error in updating credits: ${error}.`);

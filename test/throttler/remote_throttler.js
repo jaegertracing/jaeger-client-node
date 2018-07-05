@@ -66,7 +66,7 @@ describe('RemoteThrottler should', () => {
 
   it('return false for isAllowed on initial call and return true once credits are initialized', done => {
     throttler.setProcess({ uuid: uuid });
-    server.addCredits(serviceName, [{ operation: operation, credits: 3 }]);
+    server.addCredits(serviceName, [{ operation: operation, balance: 3 }]);
     creditsUpdatedHook = _throttler => {
       assert.isOk(_throttler.isAllowed(operation));
       assert.equal(_throttler._credits[operation], 2);
@@ -112,8 +112,8 @@ describe('RemoteThrottler should', () => {
   it('succeed when we retrieve credits for multiple operations', done => {
     throttler.setProcess({ uuid: uuid });
     server.addCredits(serviceName, [
-      { operation: operation, credits: 5 },
-      { operation: other_operation, credits: 3 },
+      { operation: operation, balance: 5 },
+      { operation: other_operation, balance: 3 },
     ]);
     throttler._credits[operation] = 0;
     throttler._credits[other_operation] = 0;
@@ -172,7 +172,7 @@ describe('RemoteThrottler should', () => {
   it('refresh credits after _afterInitialDelay is called', done => {
     throttler.setProcess({ uuid: uuid });
     throttler._credits[operation] = 0;
-    server.addCredits(serviceName, [{ operation: operation, credits: 5 }]);
+    server.addCredits(serviceName, [{ operation: operation, balance: 5 }]);
     creditsUpdatedHook = _throttler => {
       assert.isOk(_throttler.isAllowed(operation));
       assert.equal(_throttler._credits[operation], 4);

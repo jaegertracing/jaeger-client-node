@@ -23,5 +23,5 @@ declare interface Throttler {
 
 declare type CreditResponse = {
   operation: string,
-  credits: number,
+  balance: number,
 };

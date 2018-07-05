@@ -49,7 +49,7 @@ export default class ConfigServer {
 
   _handleThrottling(req: any, res: any) {
     this._handle(req, res, service => {
-      return this._credits[service];
+      return { balances: this._credits[service] };
     });
   }
 
