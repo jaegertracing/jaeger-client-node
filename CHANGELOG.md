@@ -1,5 +1,17 @@
 # Changes by Version
 
+## 3.11.0 (2018-07-09)
+
+* Add throttler (#246)
+* Use throttler for rate limiting (#248)
+* Make metrics consistent with Go/Java clients (#255) - thanks @eundoosong
+* Pass logger/metrics option to remote sampler, reporter (#257) - thanks @eundoosong
+* Update RateLimiter to scale credits on update (#264)
+* Replace Coveralls by Codecov (#269) - thanks @eundoosong
+* Add PrometheusMetricsFactory (#262) - thanks @eundoosong
+* Upgrade flow to v0.75 (#272) - thanks @TLadd
+* Pass object to prom-client metric to fix warning (#274) - thanks @eundoosong
+
 ## 3.10.0 (2018-03-02)
 
 * Made tracing headers configurable (#217) - thanks @astub
