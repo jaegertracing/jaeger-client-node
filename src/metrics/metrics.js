@@ -113,7 +113,7 @@ export default class Metrics {
 
     this.throttledDebugSpans = this._factory.createCounter('jaeger:throttled_debug_spans');
 
-    this.throttlerUpdateSuccess = this._factory.createCounter('jaeger:throttler-update', {
+    this.throttlerUpdateSuccess = this._factory.createCounter('jaeger:throttler_update', {
       result: 'ok',
     });
 
