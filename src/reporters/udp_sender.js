@@ -16,6 +16,7 @@ import fs from 'fs';
 import path from 'path';
 import { Thrift } from 'thriftrw';
 import NullLogger from '../logger.js';
+import SenderUtils from './sender_utils.js';
 
 const HOST = 'localhost';
 const PORT = 6832;
@@ -91,21 +92,15 @@ export default class UDPSender {
     this._maxSpanBytes = this._maxPacketSize - this._emitSpanBatchOverhead;
   }
 
-  _invokeCallback(callback?: SenderCallback, numSpans: number, error?: string) {
-    if (callback) {
-      callback(numSpans, error);
-    }
-  }
-
   append(span: any, callback?: SenderCallback): void {
     const { err, length } = this._calcSpanSize(span);
     if (err) {
-      this._invokeCallback(callback, 1, `error converting span to Thrift: ${err}`);
+      SenderUtils.invokeCallback(callback, 1, `error converting span to Thrift: ${err}`);
       return;
     }
     const spanSize = length;
     if (spanSize > this._maxSpanBytes) {
-      this._invokeCallback(
+      SenderUtils.invokeCallback(
         callback,
         1,
         `span size ${spanSize} is larger than maxSpanSize ${this._maxSpanBytes}`
@@ -118,7 +113,7 @@ export default class UDPSender {
       this._totalSpanBytes += spanSize;
       if (this._totalSpanBytes < this._maxSpanBytes) {
         // still have space in the buffer, don't flush it yet
-        this._invokeCallback(callback, 0);
+        SenderUtils.invokeCallback(callback, 0);
         return;
       }
       // buffer size === this._maxSpanBytes
@@ -130,14 +125,14 @@ export default class UDPSender {
       // TODO theoretically we can have buffer overflow here too, if many spans were appended during flush()
       this._batch.spans.push(span);
       this._totalSpanBytes += spanSize;
-      this._invokeCallback(callback, numSpans, err);
+      SenderUtils.invokeCallback(callback, numSpans, err);
     });
   }
 
   flush(callback?: SenderCallback): void {
     const numSpans = this._batch.spans.length;
     if (!numSpans) {
-      this._invokeCallback(callback, 0);
+      SenderUtils.invokeCallback(callback, 0);
       return;
     }
 
@@ -151,7 +146,7 @@ export default class UDPSender {
     this._reset();
 
     if (writeResult.err) {
-      this._invokeCallback(callback, numSpans, `error writing Thrift object: ${writeResult.err}`);
+      SenderUtils.invokeCallback(callback, numSpans, `error writing Thrift object: ${writeResult.err}`);
       return;
     }
 
@@ -162,9 +157,9 @@ export default class UDPSender {
         const error: string =
           err &&
           `error sending spans over UDP: ${err}, packet size: ${writeResult.offset}, bytes sent: ${sent}`;
-        this._invokeCallback(callback, numSpans, error);
+        SenderUtils.invokeCallback(callback, numSpans, error);
       } else {
-        this._invokeCallback(callback, numSpans);
+        SenderUtils.invokeCallback(callback, numSpans);
       }
     });
   }

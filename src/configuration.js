@@ -20,6 +20,7 @@ import RemoteSampler from './samplers/remote_sampler';
 import Metrics from './metrics/metrics';
 import Tracer from './tracer';
 import UDPSender from './reporters/udp_sender';
+import HTTPSender from './reporters/http_sender';
 import opentracing from 'opentracing';
 import * as constants from './constants.js';
 import RemoteThrottler from './throttler/remote_throttler';
@@ -45,8 +46,12 @@ let jaegerSchema = {
     reporter: {
       properties: {
         logSpans: { type: 'boolean' },
+        agentProtocol: { type: 'string' },
         agentHost: { type: 'string' },
         agentPort: { type: 'number' },
+        agentPath: { type: 'string' },
+        username: { type: 'string' },
+        password: { type: 'string' },
         flushIntervalMs: { type: 'number' },
       },
       additionalProperties: false,
@@ -104,6 +109,7 @@ export default class Configuration {
   static _getReporter(config, options) {
     let reporterConfig = {};
     let reporters = [];
+    let senderCls = UDPSender;
     let senderConfig = {
       logger: options.logger,
     };
@@ -116,6 +122,20 @@ export default class Configuration {
         reporterConfig['bufferFlushInterval'] = config.reporter.flushIntervalMs;
       }
 
+      if (config.reporter.agentProtocol === 'http' || config.reporter.agentProtocol === 'https') {
+        senderCls = HTTPSender;
+        senderConfig['useHTTPS'] = config.reporter.agentProtocol === 'https';
+
+        if (config.reporter.agentPath) {
+          senderConfig['path'] = config.reporter.agentPath;
+        }
+        if (config.reporter.username) {
+          senderConfig['username'] = config.reporter.username;
+        }
+        if (config.reporter.password) {
+          senderConfig['password'] = config.reporter.password;
+        }
+      }
       if (config.reporter.agentHost) {
         senderConfig['host'] = config.reporter.agentHost;
       }
@@ -126,7 +146,7 @@ export default class Configuration {
     }
     reporterConfig['metrics'] = options.metrics;
     reporterConfig['logger'] = options.logger;
-    let sender = new UDPSender(senderConfig);
+    let sender = new senderCls(senderConfig);
     let remoteReporter = new RemoteReporter(sender, reporterConfig);
     if (reporters.length == 0) {
       return remoteReporter;
