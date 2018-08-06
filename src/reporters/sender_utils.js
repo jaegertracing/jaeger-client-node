@@ -11,10 +11,25 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
+import { Thrift } from 'thriftrw';
+
 export default class SenderUtils {
   static invokeCallback(callback?: SenderCallback, numSpans: number, error?: string) {
     if (callback) {
       callback(numSpans, error);
     }
+  }
+
+  static convertProcessToThrift(t: Thrift, process: Process) {
+    const tagMessages = [];
+    for (let j = 0; j < process.tags.length; j++) {
+      const tag = process.tags[j];
+      tagMessages.push(new t.Tag(tag));
+    }
+
+    return new t.Process({
+      serviceName: process.serviceName,
+      tags: tagMessages,
+    });
   }
 }

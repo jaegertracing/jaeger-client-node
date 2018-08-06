@@ -12,7 +12,7 @@
 
 import _ from 'lodash';
 import express from 'express';
-import * as url from 'url';
+import * as URL from 'url';
 import { raw } from 'body-parser';
 import { assert, expect } from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
@@ -34,6 +34,8 @@ describe('http sender', () => {
   let server;
   let tracer;
   let thrift;
+  let serverEndpoint;
+  let reporter;
   let sender;
 
   function assertThriftSpanEqual(assert, spanOne, spanTwo) {
@@ -70,11 +72,12 @@ describe('http sender', () => {
       res.status(202).send('');
     });
     server = app.listen(0);
+    serverEndpoint = `http://localhost:${server.address().port}/api/traces`;
 
-    let reporter = new InMemoryReporter();
+    reporter = new InMemoryReporter();
     tracer = new Tracer('test-service-name', reporter, new ConstSampler(true));
     sender = new HTTPSender({
-      port: server.address().port,
+      endpoint: serverEndpoint,
       maxSpanBatchSize: batchSize,
     });
     sender.setProcess(reporter._process);
@@ -196,8 +199,13 @@ describe('http sender', () => {
   });
 
   it('should use basic auth if username/password provided', done => {
-    sender._username = 'me';
-    sender._password = 's3cr3t';
+    sender = new HTTPSender({
+      endpoint: serverEndpoint,
+      username: 'me',
+      password: 's3cr3t',
+      maxSpanBatchSize: batchSize,
+    });
+    sender.setProcess(reporter._process);
 
     const s = tracer.startSpan('operation-one');
     s.finish();
@@ -230,7 +238,12 @@ describe('http sender', () => {
   });
 
   it('should gracefully handle errors emitted by socket.send', done => {
-    sender._url = url.parse('http://foo.bar.xyz');
+    sender = new HTTPSender({
+      endpoint: 'http://foo.bar.xyz',
+      maxSpanBatchSize: batchSize,
+    });
+    sender.setProcess(reporter._process);
+
     let tracer = new Tracer('test-service-name', new RemoteReporter(sender), new ConstSampler(true));
 
     tracer.startSpan('testSpan').finish();

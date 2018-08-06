@@ -46,10 +46,9 @@ let jaegerSchema = {
     reporter: {
       properties: {
         logSpans: { type: 'boolean' },
-        agentProtocol: { type: 'string' },
         agentHost: { type: 'string' },
         agentPort: { type: 'number' },
-        agentPath: { type: 'string' },
+        collectorEndpoint: { type: 'string' },
         username: { type: 'string' },
         password: { type: 'string' },
         flushIntervalMs: { type: 'number' },
@@ -122,13 +121,11 @@ export default class Configuration {
         reporterConfig['bufferFlushInterval'] = config.reporter.flushIntervalMs;
       }
 
-      if (config.reporter.agentProtocol === 'http' || config.reporter.agentProtocol === 'https') {
+      if (config.reporter.collectorEndpoint) {
         isHTTPSender = true;
-        senderConfig['useHTTPS'] = config.reporter.agentProtocol === 'https';
 
-        if (config.reporter.agentPath) {
-          senderConfig['path'] = config.reporter.agentPath;
-        }
+        senderConfig['endpoint'] = config.reporter.collectorEndpoint;
+
         if (config.reporter.username) {
           senderConfig['username'] = config.reporter.username;
         }

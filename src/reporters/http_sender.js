@@ -14,8 +14,9 @@
 import fs from 'fs';
 import http from 'http';
 import path from 'path';
-import * as url from 'url';
+import * as URL from 'url';
 import { Thrift } from 'thriftrw';
+
 import NullLogger from '../logger.js';
 import SenderUtils from './sender_utils.js';
 
@@ -37,12 +38,10 @@ export default class HTTPSender {
   _batch: Batch;
   _thriftProcessMessage: any;
   _maxSpanBatchSize: number;
+  _httpOptions: Object;
 
   constructor(options: any = {}) {
-    this._url = url.parse(
-      `${options.useHTTPS ? 'https' : 'http'}://${options.host || 'localhost'}:${options.port ||
-        DEFAULT_PORT}${options.path || DEFAULT_PATH}`
-    );
+    this._url = URL.parse(options.endpoint);
     this._username = options.username;
     this._password = options.password;
     this._timeoutMS = options.timeoutMS || DEFAULT_TIMEOUT_MS;
@@ -55,22 +54,28 @@ export default class HTTPSender {
       source: fs.readFileSync(path.join(__dirname, '../jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
       allowOptionalArguments: true,
     });
+
+    this._httpOptions = {
+      protocol: this._url.protocol,
+      hostname: this._url.hostname,
+      port: this._url.port,
+      path: this._url.pathname,
+      method: 'POST',
+      auth: this._username && this._password ? `${this._username}:${this._password}` : undefined,
+      headers: {
+        'Content-Type': 'application/x-thrift',
+        Connection: 'keep-alive',
+      },
+      agent: this._httpAgent,
+      timeout: this._timeoutMS,
+    };
   }
 
   setProcess(process: Process): void {
-    const tagMessages = [];
-    for (let j = 0; j < process.tags.length; j++) {
-      const tag = process.tags[j];
-      tagMessages.push(new this._jaegerThrift.Tag(tag));
-    }
-
     // Go ahead and initialize the Thrift batch that we will reuse for each
     // flush.
     this._batch = new this._jaegerThrift.Batch({
-      process: new this._jaegerThrift.Process({
-        serviceName: process.serviceName,
-        tags: tagMessages,
-      }),
+      process: SenderUtils.convertProcessToThrift(this._jaegerThrift, process),
       spans: [],
     });
   }
@@ -100,21 +105,7 @@ export default class HTTPSender {
 
     this._reset();
 
-    const options = {
-      protocol: this._url.protocol,
-      hostname: this._url.hostname,
-      port: this._url.port,
-      path: this._url.pathname,
-      method: 'POST',
-      auth: this._username && this._password ? `${this._username}:${this._password}` : undefined,
-      headers: {
-        'Content-Type': 'application/x-thrift',
-        Connection: 'keep-alive',
-      },
-      agent: this._httpAgent,
-      timeout: this._timeoutMS,
-    };
-    const req = http.request(options, resp => {
+    const req = http.request(this._httpOptions, resp => {
       SenderUtils.invokeCallback(callback, numSpans);
     });
 

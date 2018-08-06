@@ -173,10 +173,7 @@ describe('initTracer', () => {
           },
           reporter: {
             logSpans: true,
-            agentProtocol: protocol,
-            agentHost: '127.0.0.1',
-            agentPort: 4939,
-            agentPath: '/my/path',
+            collectorEndpoint: `${protocol}://127.0.0.1:4939/my/path`,
             username: protocol === 'https' ? 'test' : undefined,
             password: protocol === 'https' ? 'mypass' : undefined,
             flushIntervalMs: 2000,

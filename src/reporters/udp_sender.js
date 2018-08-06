@@ -78,16 +78,7 @@ export default class UDPSender {
       spans: [],
     };
 
-    const tagMessages = [];
-    for (let j = 0; j < this._batch.process.tags.length; j++) {
-      const tag = this._batch.process.tags[j];
-      tagMessages.push(new this._jaegerThrift.Tag(tag));
-    }
-
-    this._thriftProcessMessage = new this._jaegerThrift.Process({
-      serviceName: this._batch.process.serviceName,
-      tags: tagMessages,
-    });
+    this._thriftProcessMessage = SenderUtils.convertProcessToThrift(this._jaegerThrift, process);
     this._emitSpanBatchOverhead = this._calcBatchSize(this._batch);
     this._maxSpanBytes = this._maxPacketSize - this._emitSpanBatchOverhead;
   }
