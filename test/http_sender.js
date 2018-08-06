@@ -1,4 +1,4 @@
-// Copyright (c) 2016 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -11,9 +11,11 @@
 // the License.
 
 import _ from 'lodash';
+import express from 'express';
+import * as URL from 'url';
+import { raw } from 'body-parser';
 import { assert, expect } from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
-import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
@@ -23,15 +25,17 @@ import opentracing from 'opentracing';
 import Tracer from '../src/tracer.js';
 import { Thrift } from 'thriftrw';
 import ThriftUtils from '../src/thrift.js';
-import UDPSender from '../src/reporters/udp_sender.js';
+import HTTPSender from '../src/reporters/http_sender.js';
 
-const PORT = 6832;
-const HOST = '127.0.0.1';
+const batchSize = 100;
 
-describe('udp sender', () => {
+describe('http sender', () => {
+  let app;
   let server;
   let tracer;
   let thrift;
+  let serverEndpoint;
+  let reporter;
   let sender;
 
   function assertThriftSpanEqual(assert, spanOne, spanTwo) {
@@ -47,17 +51,36 @@ describe('udp sender', () => {
   }
 
   beforeEach(() => {
-    server = dgram.createSocket('udp4');
-    server.bind(PORT, HOST);
-    let reporter = new InMemoryReporter();
-    tracer = new Tracer('test-service-name', reporter, new ConstSampler(true));
-    sender = new UDPSender();
-    sender.setProcess(reporter._process);
     thrift = new Thrift({
-      entryPoint: path.join(__dirname, '../src/thriftrw-idl/agent.thrift'),
+      source: fs.readFileSync(path.join(__dirname, '../src/jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
       allowOptionalArguments: true,
-      allowFilesystemAccess: true,
     });
+
+    app = express();
+    app.use(raw({ type: 'application/x-thrift' }));
+    app.post('/api/traces', (req, res) => {
+      if (req.headers.authorization) {
+        const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+        const [username, password] = new Buffer(b64auth, 'base64').toString().split(':');
+        server.emit('authReceived', [username, password]);
+      }
+      let thriftObj = thrift.Batch.rw.readFrom(req.body, 0);
+      let batch = thriftObj.value;
+      if (batch) {
+        server.emit('batchReceived', batch);
+      }
+      res.status(202).send('');
+    });
+    server = app.listen(0);
+    serverEndpoint = `http://localhost:${server.address().port}/api/traces`;
+
+    reporter = new InMemoryReporter();
+    tracer = new Tracer('test-service-name', reporter, new ConstSampler(true));
+    sender = new HTTPSender({
+      endpoint: serverEndpoint,
+      maxSpanBatchSize: batchSize,
+    });
+    sender.setProcess(reporter._process);
   });
 
   afterEach(() => {
@@ -80,13 +103,7 @@ describe('udp sender', () => {
     spanTwo.finish(); // finish to set span duration
     spanTwo = ThriftUtils.spanToThrift(spanTwo);
 
-    // make sure sender can fit both spans
-    let maxSpanBytes = sender._calcSpanSize(spanOne).length + sender._calcSpanSize(spanTwo).length + 30;
-    sender._maxSpanBytes = maxSpanBytes;
-
-    server.on('message', (msg, remote) => {
-      let thriftObj = thrift.Agent.emitBatch.argumentsMessageRW.readFrom(msg, 0);
-      let batch = thriftObj.value.body.batch;
+    server.on('batchReceived', batch => {
       assert.isOk(batch);
       assert.equal(batch.spans.length, 2);
 
@@ -102,14 +119,14 @@ describe('udp sender', () => {
       assert.equal(actualTags[1].key, 'ip');
       assert.equal(actualTags[2].key, 'jaeger.hostname');
       assert.equal(actualTags[3].key, 'jaeger.version');
-
-      sender.close();
-      done();
     });
 
     sender.append(spanOne, assertCallback(0, undefined));
     sender.append(spanTwo, assertCallback(0, undefined));
-    sender.flush(assertCallback(2, undefined));
+    sender.flush((numSpans, error) => {
+      assertCallback(2, undefined)(numSpans, error);
+      done();
+    });
   });
 
   describe('span reference tests', () => {
@@ -123,28 +140,26 @@ describe('udp sender', () => {
     let options = [
       { childOf: null, references: [], expectedTraceId: null, expectedParentId: null },
       {
-        childOf: null,
+        childOf: parentContext,
         references: [childOfRef, followsFromRef],
-        expectedTraceId: childOfContext.traceId,
-        expectedParentId: childOfContext.parentId,
+        expectedTraceId: parentContext.traceId,
+        expectedParentId: parentContext.parentId,
       },
     ];
 
     _.each(options, o => {
       it('should serialize span references', done => {
-        let span = tracer.startSpan('bender', {
+        const span = tracer.startSpan('bender', {
           childOf: o.childOf,
           references: o.references,
         });
         span.finish();
         const tSpan = ThriftUtils.spanToThrift(span);
 
-        server.on('message', function(msg, remote) {
-          let thriftObj = thrift.Agent.emitBatch.argumentsMessageRW.readFrom(msg, 0);
-          let batch = thriftObj.value.body.batch;
-
+        server.on('batchReceived', function(batch) {
           assert.isOk(batch);
           assertThriftSpanEqual(assert, tSpan, batch.spans[0]);
+
           if (o.expectedTraceId) {
             assert.deepEqual(batch.spans[0].traceIdLow, o.expectedTraceId);
           }
@@ -155,7 +170,6 @@ describe('udp sender', () => {
             assert.isNotOk(batch.spans[0].parentId);
           }
 
-          sender.close();
           done();
         });
 
@@ -165,40 +179,42 @@ describe('udp sender', () => {
     });
   });
 
-  it('should flush spans when capacity is reached', () => {
-    let spanOne = tracer.startSpan('operation-one');
-    spanOne.finish(); // finish to set span duration
-    spanOne = ThriftUtils.spanToThrift(spanOne);
-    let spanSize = sender._calcSpanSize(spanOne).length;
-    sender._maxSpanBytes = spanSize * 2;
+  it('should flush spans when capacity is reached', done => {
+    const spans = [];
+    for (let i = 0; i < batchSize; i++) {
+      let s = tracer.startSpan(`operation-${i}`);
+      s.finish();
+      spans.push(ThriftUtils.spanToThrift(s));
+    }
 
-    sender.append(spanOne, assertCallback(0, undefined));
-    sender.append(spanOne, assertCallback(2, undefined));
+    for (let i = 0; i < batchSize - 1; i++) {
+      sender.append(spans[i], assertCallback(0, undefined));
+    }
 
-    assert.equal(sender._batch.spans.length, 0);
-    assert.equal(sender._totalSpanBytes, 0);
+    sender.append(spans[batchSize - 1], assertCallback(batchSize, undefined));
+
+    server.on('batchReceived', batch => {
+      done();
+    });
   });
 
-  it('should flush spans when just over capacity', done => {
-    let spanOne = tracer.startSpan('operation-one');
-    spanOne.finish(); // finish to set span duration
-    spanOne = ThriftUtils.spanToThrift(spanOne);
-    let spanSize = sender._calcSpanSize(spanOne).length;
-    sender._maxSpanBytes = spanSize * 2;
+  it('should use basic auth if username/password provided', done => {
+    sender = new HTTPSender({
+      endpoint: serverEndpoint,
+      username: 'me',
+      password: 's3cr3t',
+      maxSpanBatchSize: batchSize,
+    });
+    sender.setProcess(reporter._process);
 
-    let spanThatExceedsCapacity = tracer.startSpan('bigger-span');
-    spanThatExceedsCapacity.setTag('some-key', 'some-value');
-    spanThatExceedsCapacity.finish(); // finish to set span duration
-    spanThatExceedsCapacity = ThriftUtils.spanToThrift(spanThatExceedsCapacity);
-    let largeSpanSize = sender._calcSpanSize(spanThatExceedsCapacity).length;
+    const s = tracer.startSpan('operation-one');
+    s.finish();
+    sender.append(ThriftUtils.spanToThrift(s), assertCallback(0, undefined));
+    sender.flush();
 
-    sender.append(spanOne, assertCallback(0, undefined));
-    sender.append(spanThatExceedsCapacity, (numSpans, error) => {
-      assert.equal(numSpans, 1);
-      assert.equal(error, undefined);
-
-      assert.equal(sender._batch.spans.length, 1);
-      assert.equal(sender._totalSpanBytes, largeSpanSize);
+    server.on('authReceived', creds => {
+      expect(creds[0]).to.equal('me');
+      expect(creds[1]).to.equal('s3cr3t');
       done();
     });
   });
@@ -208,39 +224,11 @@ describe('udp sender', () => {
     span.finish(); // finish to set span duration
     span = ThriftUtils.spanToThrift(span);
     span.flags = 'string'; // malform the span to create a serialization error
+
     sender.append(span);
     sender.flush((numSpans, err) => {
       assert.equal(numSpans, 1);
-      expect(err).to.have.string('error writing Thrift object:');
-      done();
-    });
-  });
-
-  it('should return error upon thrift conversion failure', done => {
-    sender._logger = {
-      error: msg => {
-        expect(msg).to.have.string('error converting span to Thrift:');
-        done();
-      },
-    };
-    let span = tracer.startSpan(undefined);
-    span.finish();
-
-    sender.append(ThriftUtils.spanToThrift(span), (numSpans, err) => {
-      assert.equal(numSpans, 1);
-      expect(err).to.have.string('error converting span to Thrift:');
-      done();
-    });
-  });
-
-  it('should return error on span too large', done => {
-    let span = tracer.startSpan('op-name');
-    span.finish(); // otherwise duration will be undefined
-
-    sender._maxSpanBytes = 1;
-    sender.append(ThriftUtils.spanToThrift(span), (numSpans, err) => {
-      assert.equal(numSpans, 1);
-      expect(err).to.have.string('is larger than maxSpanSize');
+      expect(err).to.have.string('Error encoding Thrift batch:');
       done();
     });
   });
@@ -250,27 +238,19 @@ describe('udp sender', () => {
   });
 
   it('should gracefully handle errors emitted by socket.send', done => {
+    sender = new HTTPSender({
+      endpoint: 'http://foo.bar.xyz',
+      maxSpanBatchSize: batchSize,
+    });
+    sender.setProcess(reporter._process);
+
     let tracer = new Tracer('test-service-name', new RemoteReporter(sender), new ConstSampler(true));
-    sender._host = 'foo.bar.xyz';
-    // In Node 0.10 and 0.12 the error is logged twice: (1) from inline callback, (2) from on('error') handler.
-    let expectLogs = semver.satisfies(process.version, '0.10.x || 0.12.x');
-    sender._logger = {
-      info: msg => {
-        console.log('sender info: ' + msg);
-      },
-      error: msg => {
-        assert.isOk(expectLogs);
-        expect(msg).to.have.string('error sending spans over UDP: Error: getaddrinfo ENOTFOUND');
-        tracer.close(done);
-      },
-    };
+
     tracer.startSpan('testSpan').finish();
     sender.flush((numSpans, err) => {
       assert.equal(numSpans, 1);
-      expect(err).to.have.string('error sending spans over UDP: Error: getaddrinfo ENOTFOUND');
-      if (!expectLogs) {
-        tracer.close(done);
-      }
+      expect(err).to.have.string('error sending spans over HTTP: Error: getaddrinfo ENOTFOUND');
+      tracer.close(done);
     });
   });
 });

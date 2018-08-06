@@ -11,6 +11,7 @@
 // the License.
 
 import _ from 'lodash';
+import * as url from 'url';
 import { assert, expect } from 'chai';
 import CompositeReporter from '../src/reporters/composite_reporter';
 import RemoteReporter from '../src/reporters/remote_reporter';
@@ -22,6 +23,8 @@ import { initTracer } from '../src/index.js';
 import opentracing from 'opentracing';
 import RemoteThrottler from '../src/throttler/remote_throttler';
 import DefaultThrottler from '../src/throttler/default_throttler';
+import HTTPSender from '../src/reporters/http_sender.js';
+import UDPSender from '../src/reporters/udp_sender.js';
 
 const logger = {
   info: function info(msg) {},
@@ -126,36 +129,73 @@ describe('initTracer', () => {
     assert.equal(count, 4);
   });
 
-  it('should respect reporter options', done => {
-    let config = {
-      serviceName: 'test-service',
-      sampler: {
-        type: 'const',
-        param: 0,
-      },
-      reporter: {
-        logSpans: true,
-        agentHost: '127.0.0.1',
-        agentPort: 4939,
-        flushIntervalMs: 2000,
-      },
-    };
-    let tracer = initTracer(config);
+  describe('reporter options', () => {
+    it('should respect reporter options', done => {
+      let config = {
+        serviceName: 'test-service',
+        sampler: {
+          type: 'const',
+          param: 0,
+        },
+        reporter: {
+          logSpans: true,
+          agentHost: '127.0.0.1',
+          agentPort: 4939,
+          flushIntervalMs: 2000,
+        },
+      };
+      let tracer = initTracer(config);
 
-    expect(tracer._reporter).to.be.an.instanceof(CompositeReporter);
-    let remoteReporter;
-    for (let i = 0; i < tracer._reporter._reporters.length; i++) {
-      let reporter = tracer._reporter._reporters[i];
-      if (reporter instanceof RemoteReporter) {
-        remoteReporter = reporter;
-        break;
+      expect(tracer._reporter).to.be.an.instanceof(CompositeReporter);
+      let remoteReporter;
+      for (let i = 0; i < tracer._reporter._reporters.length; i++) {
+        let reporter = tracer._reporter._reporters[i];
+        if (reporter instanceof RemoteReporter) {
+          remoteReporter = reporter;
+          break;
+        }
       }
-    }
 
-    assert.equal(remoteReporter._bufferFlushInterval, 2000);
-    assert.equal(remoteReporter._sender._host, '127.0.0.1');
-    assert.equal(remoteReporter._sender._port, 4939);
-    tracer.close(done);
+      assert.equal(remoteReporter._bufferFlushInterval, 2000);
+      assert.equal(remoteReporter._sender._host, '127.0.0.1');
+      assert.equal(remoteReporter._sender._port, 4939);
+      assert.instanceOf(remoteReporter._sender, UDPSender);
+      tracer.close(done);
+    });
+
+    _.each(['http', 'https'], protocol => {
+      it(`should create an HTTPSender if protocol is ${protocol}`, done => {
+        let config = {
+          serviceName: 'test-service',
+          sampler: {
+            type: 'const',
+            param: 0,
+          },
+          reporter: {
+            logSpans: true,
+            collectorEndpoint: `${protocol}://127.0.0.1:4939/my/path`,
+            username: protocol === 'https' ? 'test' : undefined,
+            password: protocol === 'https' ? 'mypass' : undefined,
+            flushIntervalMs: 2000,
+          },
+        };
+        let tracer = initTracer(config);
+
+        expect(tracer._reporter).to.be.an.instanceof(CompositeReporter);
+        let remoteReporter;
+        for (let i = 0; i < tracer._reporter._reporters.length; i++) {
+          let reporter = tracer._reporter._reporters[i];
+          if (reporter instanceof RemoteReporter) {
+            remoteReporter = reporter;
+            break;
+          }
+        }
+
+        assert.equal(url.format(remoteReporter._sender._url), `${protocol}://127.0.0.1:4939/my/path`);
+        assert.instanceOf(remoteReporter._sender, HTTPSender);
+        tracer.close(done);
+      });
+    });
   });
 
   it('should pass options to tracer', done => {

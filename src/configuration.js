@@ -20,6 +20,7 @@ import RemoteSampler from './samplers/remote_sampler';
 import Metrics from './metrics/metrics';
 import Tracer from './tracer';
 import UDPSender from './reporters/udp_sender';
+import HTTPSender from './reporters/http_sender';
 import opentracing from 'opentracing';
 import * as constants from './constants.js';
 import RemoteThrottler from './throttler/remote_throttler';
@@ -47,6 +48,9 @@ let jaegerSchema = {
         logSpans: { type: 'boolean' },
         agentHost: { type: 'string' },
         agentPort: { type: 'number' },
+        collectorEndpoint: { type: 'string' },
+        username: { type: 'string' },
+        password: { type: 'string' },
         flushIntervalMs: { type: 'number' },
       },
       additionalProperties: false,
@@ -104,6 +108,7 @@ export default class Configuration {
   static _getReporter(config, options) {
     let reporterConfig = {};
     let reporters = [];
+    let isHTTPSender = false;
     let senderConfig = {
       logger: options.logger,
     };
@@ -116,6 +121,18 @@ export default class Configuration {
         reporterConfig['bufferFlushInterval'] = config.reporter.flushIntervalMs;
       }
 
+      if (config.reporter.collectorEndpoint) {
+        isHTTPSender = true;
+
+        senderConfig['endpoint'] = config.reporter.collectorEndpoint;
+
+        if (config.reporter.username) {
+          senderConfig['username'] = config.reporter.username;
+        }
+        if (config.reporter.password) {
+          senderConfig['password'] = config.reporter.password;
+        }
+      }
       if (config.reporter.agentHost) {
         senderConfig['host'] = config.reporter.agentHost;
       }
@@ -126,7 +143,7 @@ export default class Configuration {
     }
     reporterConfig['metrics'] = options.metrics;
     reporterConfig['logger'] = options.logger;
-    let sender = new UDPSender(senderConfig);
+    let sender = isHTTPSender ? new HTTPSender(senderConfig) : new UDPSender(senderConfig);
     let remoteReporter = new RemoteReporter(sender, reporterConfig);
     if (reporters.length == 0) {
       return remoteReporter;
