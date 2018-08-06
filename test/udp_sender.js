@@ -123,36 +123,6 @@ describe('udp sender', () => {
     let options = [
       { childOf: null, references: [], expectedTraceId: null, expectedParentId: null },
       {
-        childOf: parentContext,
-        references: [],
-        expectedTraceId: parentContext.traceId,
-        expectedParentId: parentContext.parentId,
-      },
-      {
-        childOf: parentContext,
-        references: [followsFromRef],
-        expectedTraceId: parentContext.traceId,
-        expectedParentId: parentContext.parentId,
-      },
-      {
-        childOf: parentContext,
-        references: [childOfRef, followsFromRef],
-        expectedTraceId: parentContext.traceId,
-        expectedParentId: parentContext.parentId,
-      },
-      {
-        childOf: null,
-        references: [childOfRef],
-        expectedTraceId: childOfContext.traceId,
-        expectedParentId: childOfContext.parentId,
-      },
-      {
-        childOf: null,
-        references: [followsFromRef],
-        expectedTraceId: followsFromContext.traceId,
-        expectedParentId: followsFromContext.parentId,
-      },
-      {
         childOf: null,
         references: [childOfRef, followsFromRef],
         expectedTraceId: childOfContext.traceId,
@@ -167,31 +137,29 @@ describe('udp sender', () => {
           references: o.references,
         });
         span.finish();
-        span = ThriftUtils.spanToThrift(span);
+        const tSpan = ThriftUtils.spanToThrift(span);
 
         server.on('message', function(msg, remote) {
           let thriftObj = thrift.Agent.emitBatch.argumentsMessageRW.readFrom(msg, 0);
           let batch = thriftObj.value.body.batch;
-          let span = batch.spans[0];
-          let ref = span.references[0];
 
           assert.isOk(batch);
-          assertThriftSpanEqual(assert, span, batch.spans[0]);
+          assertThriftSpanEqual(assert, tSpan, batch.spans[0]);
           if (o.expectedTraceId) {
-            assert.deepEqual(span.traceIdLow, o.expectedTraceId);
+            assert.deepEqual(batch.spans[0].traceIdLow, o.expectedTraceId);
           }
 
           if (o.expectedParentId) {
-            assert.deepEqual(span.parentId, o.expectedParentId);
+            assert.deepEqual(batch.spans[0].parentId, o.expectedParentId);
           } else {
-            assert.isNotOk(span.parentId);
+            assert.isNotOk(batch.spans[0].parentId);
           }
 
           sender.close();
           done();
         });
 
-        sender.append(span);
+        sender.append(tSpan);
         sender.flush();
       });
     });
