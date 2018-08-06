@@ -109,7 +109,7 @@ export default class Configuration {
   static _getReporter(config, options) {
     let reporterConfig = {};
     let reporters = [];
-    let senderCls = UDPSender;
+    let isHTTPSender = false;
     let senderConfig = {
       logger: options.logger,
     };
@@ -123,7 +123,7 @@ export default class Configuration {
       }
 
       if (config.reporter.agentProtocol === 'http' || config.reporter.agentProtocol === 'https') {
-        senderCls = HTTPSender;
+        isHTTPSender = true;
         senderConfig['useHTTPS'] = config.reporter.agentProtocol === 'https';
 
         if (config.reporter.agentPath) {
@@ -146,7 +146,7 @@ export default class Configuration {
     }
     reporterConfig['metrics'] = options.metrics;
     reporterConfig['logger'] = options.logger;
-    let sender = new senderCls(senderConfig);
+    let sender = isHTTPSender ? new HTTPSender(senderConfig) : new UDPSender(senderConfig);
     let remoteReporter = new RemoteReporter(sender, reporterConfig);
     if (reporters.length == 0) {
       return remoteReporter;
