@@ -139,36 +139,81 @@ describe('tracer should', () => {
     assert.equal(span._startTime, startTime);
   });
 
-  it('start a child span represented as a separate span from parent, using childOf and references', () => {
-    let traceId = Utils.encodeInt64(1);
-    let spanId = Utils.encodeInt64(2);
-    let parentId = Utils.encodeInt64(3);
-    let flags = 1;
-    let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
-    let startTime = 123.456;
+  describe('start a child span represented as a separate span from parent, using childOf and references', () => {
+    let nextId = 0;
+    const getId = () => Utils.encodeInt64(nextId++);
+    const traceId = getId();
+    const flags = 1;
 
-    let childOfParams = {
-      operationName: 'test-name',
-      childOf: context,
-      startTime: startTime,
-    };
+    const parentContext = SpanContext.withBinaryIds(traceId, getId(), null, flags);
+    const childOfContext = SpanContext.withBinaryIds(traceId, getId(), null, flags);
+    const childOfRef = new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, childOfContext);
+    const followsFromContext = SpanContext.withBinaryIds(traceId, getId(), null, flags);
+    const followsFromRef = new opentracing.Reference(opentracing.REFERENCE_FOLLOWS_FROM, followsFromContext);
 
-    let referenceParams = {
-      operationName: 'test-name',
-      startTime: startTime,
-      references: [new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, context)],
-    };
+    const testCases = [
+      {
+        message: 'starts a span based on childOf',
+        spanOptions: {
+          childOf: parentContext,
+          references: [],
+        },
+        verify: parentContext,
+      },
+      {
+        message: 'starts a span based on childOf, ignoring FOLLOWS_FROM',
+        spanOptions: {
+          childOf: parentContext,
+          references: [followsFromRef],
+        },
+        verify: parentContext,
+      },
+      {
+        message: 'starts a span based on childOf, ignoring CHILD_OF and FOLLOWS_FROM',
+        spanOptions: {
+          childOf: parentContext,
+          references: [childOfRef, followsFromRef],
+        },
+        verify: parentContext,
+      },
+      {
+        message: 'starts a span with parent falling back to the CHILD_OF ref',
+        spanOptions: {
+          childOf: null,
+          references: [childOfRef],
+        },
+        verify: childOfContext,
+      },
+      {
+        message: 'starts a span with parent falling back to the FOLLOWS_FROM ref',
+        spanOptions: {
+          childOf: null,
+          references: [followsFromRef],
+        },
+        verify: followsFromContext,
+      },
+      {
+        message: 'starts a span with parent falling back to the CHILD_OF ref and ignoring FOLLOWS_FROM',
+        spanOptions: {
+          childOf: null,
+          references: [childOfRef, followsFromRef],
+        },
+        verify: childOfContext,
+      },
+    ];
 
-    let assertByStartSpanParameters = params => {
-      let span = tracer.startSpan('test-span', params);
-      assert.deepEqual(span.context().traceId, traceId);
-      assert.deepEqual(span.context().parentId, spanId);
-      assert.equal(span.context().flags, constants.SAMPLED_MASK);
-      assert.equal(span._startTime, startTime);
-    };
-
-    assertByStartSpanParameters(childOfParams);
-    assertByStartSpanParameters(referenceParams);
+    testCases.forEach(params => {
+      const { message, spanOptions, verify } = params;
+      it(message, () => {
+        let span = tracer.startSpan('bender', {
+          childOf: spanOptions.childOf,
+          references: spanOptions.references,
+        });
+        span.finish();
+        assert.deepEqual(span.context().traceId, verify.traceId);
+        assert.deepEqual(span.context().parentId, verify.spanId);
+      });
+    });
   });
 
   it('inject plain text headers into carrier, and extract span context with the same value', () => {
