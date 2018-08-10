@@ -1,5 +1,9 @@
 # Changes by Version
 
+## 3.12.1 (unreleased)
+
+* Nothing yet.
+
 ## 3.12.0 (2018-08-10)
 
 * Rename `"throttler-update"` metric (#279) - thanks @yknx4
