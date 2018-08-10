@@ -14,7 +14,7 @@ Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Initialization
 
-The Tracer defaults to sending spans over UDP to the jaeger-agent running on localhost.
+The Tracer defaults to sending spans over UDP to the jaeger-agent running on localhost; the jaeger-agent handles forwarding the spans to the jaeger-collector.
 
 ```javascript
 var initTracer = require('jaeger-client').initTracer;
@@ -34,6 +34,8 @@ var tracer = initTracer(config, options);
 ```
 
 #### Reporting spans via HTTP
+
+UDP has a hard size limit of 65,507 bytes; if the span is larger than this limit, the tracer will drop the span. To circumvent this, you can configure the tracer to directly send spans to the jaeger-collector over HTTP (skipping the jaeger-agent altogether).
 
 ```javascript
 var initTracer = require('jaeger-client').initTracer;
