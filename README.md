@@ -14,12 +14,41 @@ Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Initialization
 
+The Tracer defaults to sending spans over UDP to the jaeger-agent running on localhost.
+
 ```javascript
 var initTracer = require('jaeger-client').initTracer;
 
 // See schema https://github.com/jaegertracing/jaeger-client-node/blob/master/src/configuration.js#L37
 var config = {
   serviceName: 'my-awesome-service',
+};
+var options = {
+  tags: {
+    'my-awesome-service.version': '1.1.2',
+  },
+  metrics: metrics,
+  logger: logger,
+};
+var tracer = initTracer(config, options);
+```
+
+#### Reporting spans via HTTP
+
+```javascript
+var initTracer = require('jaeger-client').initTracer;
+
+// See schema https://github.com/jaegertracing/jaeger-client-node/blob/master/src/configuration.js#L37
+var config = {
+  serviceName: 'my-awesome-service',
+  reporter: {
+    // Provide the traces endpoint; this forces the client to connect directly to the Collector and send
+    // spans over HTTP
+    collectorEndpoint: 'http://jaeger-collector:14268/api/traces',
+    // Provide username and password if authentication is enabled in the Collector
+    // username: '',
+    // password: '',
+  },
 };
 var options = {
   tags: {
