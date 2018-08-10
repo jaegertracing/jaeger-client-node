@@ -2,7 +2,7 @@
 
 ## 3.12.0 (2018-08-10)
 
-* Rename throttler-update to throttler_update (#279) - thanks @yknx4
+* Rename `"throttler-update"` metric (#279) - thanks @yknx4
 * Add HTTP Sender (#280) - thanks @keitwb
 
 ## 3.11.0 (2018-07-09)
