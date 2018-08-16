@@ -16,6 +16,7 @@ import * as URL from 'url';
 import { raw } from 'body-parser';
 import { assert, expect } from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
+import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
@@ -251,6 +252,34 @@ describe('http sender', () => {
       assert.equal(numSpans, 1);
       expect(err).to.have.string('error sending spans over HTTP: Error: getaddrinfo ENOTFOUND');
       tracer.close(done);
+    });
+  });
+
+  it('should handle HTTPS collectors', done => {
+    // Make it ignore the fact that our cert isn't valid.
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+    var options = {
+      key:
+        '-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDmnEKeVkNNQylt\nI+HgcxBzY3w9oCMvg/SBn0jy5d9XYeQNreP+VujBNEo+OmmAzYeh7Nv3lq78zH31\nRzznwF/4lYBE148SOhT+KP0NvAt4uiVf3zjD2zChSdpSWoR9CZOxwJM06YrIvJlX\nxkm3fcWzcZ6r/DrhDgC44QXlD1qqcFZ5ITkGRWF+ym5sh+FRr1qhRcFURFMH67G2\niZ+CLUzBPAYJ8Ho9HNkm8R0IN/yLAymnjXLW7QjrZ+w88IVyv38Lm9RFFjQ21WRq\nSdCMw0/ZL+Fcmjstj3PvcO5jPFNwijuKMvkpP1fspH9wLNg6NzChkwTNUlqsekek\nOlvihWRvAgMBAAECggEAUZcJjuGwUB6qAn5GhVXQhTK2m0sUB9Sk5lOHyMCBw3XT\n7O8QEkWHdgvdFKUv/K07BpQ5wyBh6vkiu2wn5UrP6bBjQHgPm4BHOyEfXwOf/2fE\nn2XnvIvJadcqUibKZz7DLYmXy4mxW5I2orJ6FFyAXRue6vSDlGqS4NZkcoV7K3+F\nWtBDGl1FVEqQXy1iCmbm0izqlFAf3xV1piS+hd0XgM1+3F8mcmICP+oWDJLeItXO\nEjklysZdcZ6o40Vr7Sxp2XhC/BO7r6MsYCP1PDPl6fQnkIS7mf1qjHZo+ryRVhB4\nRY1SSGT5xRc4v2pBcxSwELEJRiJMj/WcrveneGJZeQKBgQD8Wro1S50Dis8Qf9+o\nYU+jSsRwJmoAguZNNOXXdovN7LMOqykOXl13vXZ+gth6R2UlbU7EVNLe+dAxnHKv\njBPEvQPm3dh4V9O4NNqJ5pfi85MjIc9PIZV5h7pQo77RMPv0o4Fe36Yo0fb1KD0o\nh5SCTD7F42qyQ1YqTVZDlskVNQKBgQDp8R4oegKsCZnIOhO2Q5O3Gu6+b18VmEtf\nDoOtyLTg+M27Ngnur2OdUc3YHOVpzSEi9BFkhonv6gSEplycq7LnaNBXFLF0KGrh\nC8ChaaSpY/BZLZLeBGQu9cYq6ZI+CwbClBeLAqXvJRbes7RHKTjG+6Ixea5krGB3\ng2GUDN87kwKBgQCbO0w0IJEzbp21LpPsRf/xGLsBqf+m1N7KO3HvOnMBd0smCM+2\nkQG5+If9houXnHdxsG21g+A7XTxeaDh8GBTI/uR5jZntXUlVlN2h2oEwEFlAUTnv\nGV+TZJSNqkxk7lbuw+1+6OCTV6UsZVZJqi0GgdRTcnNduOI2H2CjLwv+yQKBgQCU\nPEOm1EETL/YwyJQq/sD/2mIDa2Ctt1WzAuhvWuk6UI1UHhbHFn2hdu9fDFhV5TQl\nCNBoiVOoIPoB78RpRebT+TdipmsXNnEa7q592QoMh5YJe/Y/FjtBAl0yXdRb2fLL\norkUTXZFhZPrQ6VtHfKrK1GH1hmqEwwBTs+q10kwXwKBgQDXfm6ee3Vc7p6s7x+h\n4kf0VBZYqVVUC2N7l8BdHXc/AOAb5aRCdg0UHdA5zMghtGmk5pvburrXxNR6rJHo\nVNbvxeM87eQSDZUT8oO30kcKJKr3rHvDxN0NGghFEdvDNDIo4BFBUjwYATudRQDM\n3AahfvL8vW4xXANRuPmVz43TBA==\n-----END PRIVATE KEY-----',
+      cert:
+        '-----BEGIN CERTIFICATE-----\nMIIDpTCCAo2gAwIBAgIJAOOgmfOEDemYMA0GCSqGSIb3DQEBCwUAMGkxCzAJBgNV\nBAYTAlVTMQswCQYDVQQIDAJDQTEWMBQGA1UEBwwNU2FuIEZyYW5jaXNjbzEPMA0G\nA1UECgwGSmFlZ2VyMRAwDgYDVQQLDAdUcmFjaW5nMRIwEAYDVQQDDAlsb2NhbGhv\nc3QwHhcNMTgwODE2MTg0MjA0WhcNNDYwMTAxMTg0MjA0WjBpMQswCQYDVQQGEwJV\nUzELMAkGA1UECAwCQ0ExFjAUBgNVBAcMDVNhbiBGcmFuY2lzY28xDzANBgNVBAoM\nBkphZWdlcjEQMA4GA1UECwwHVHJhY2luZzESMBAGA1UEAwwJbG9jYWxob3N0MIIB\nIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5pxCnlZDTUMpbSPh4HMQc2N8\nPaAjL4P0gZ9I8uXfV2HkDa3j/lbowTRKPjppgM2Hoezb95au/Mx99Uc858Bf+JWA\nRNePEjoU/ij9DbwLeLolX984w9swoUnaUlqEfQmTscCTNOmKyLyZV8ZJt33Fs3Ge\nq/w64Q4AuOEF5Q9aqnBWeSE5BkVhfspubIfhUa9aoUXBVERTB+uxtomfgi1MwTwG\nCfB6PRzZJvEdCDf8iwMpp41y1u0I62fsPPCFcr9/C5vURRY0NtVkaknQjMNP2S/h\nXJo7LY9z73DuYzxTcIo7ijL5KT9X7KR/cCzYOjcwoZMEzVJarHpHpDpb4oVkbwID\nAQABo1AwTjAdBgNVHQ4EFgQUz2dnzTaJoc995597JxRu5jQRno0wHwYDVR0jBBgw\nFoAUz2dnzTaJoc995597JxRu5jQRno0wDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0B\nAQsFAAOCAQEAPTpTJnhIwtbxa/yDn7BvkV6DDU/Y+fyXuR/wEb/aFfsWfJbK+7qe\nFChX4hxiAOMUEEGhyredunCG3cgz46l+Lb+vQZafzr0JZCBNa6IKRUVWkHps2TRV\nwtcXSFAly4tcRyYGtVr+qGFd9oHWBRSBU0bzv3Rb/AVbXCpSTcjZwqPRvzqyICYf\nkZ7z6b0kLxSume4h6beQnCH/tWdxbZqZbsEINxO5o6JHhslpiGNjm5BulT6dr91k\n8O6L8TprggQz6H5l8N5dCxbYARTsHBf1tqcmyxV/hAjoJFU9kvmU+r+QJMRWCyOe\nCk6tc1MJHquCkX3Xum+KKegTn18rot6XvQ==\n-----END CERTIFICATE-----',
+    };
+
+    server = https.createServer(options, app).listen(0);
+    serverEndpoint = `https://localhost:${server.address().port}/api/traces`;
+    sender = new HTTPSender({
+      endpoint: serverEndpoint,
+      maxSpanBatchSize: batchSize,
+    });
+    sender.setProcess(reporter._process);
+
+    const s = tracer.startSpan('operation');
+    s.finish();
+    sender.append(ThriftUtils.spanToThrift(s));
+    sender.flush();
+
+    server.on('batchReceived', batch => {
+      done();
     });
   });
 });
