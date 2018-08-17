@@ -13,6 +13,7 @@
 
 import fs from 'fs';
 import http from 'http';
+import https from 'https';
 import path from 'path';
 import * as URL from 'url';
 import { Thrift } from 'thriftrw';
@@ -45,7 +46,10 @@ export default class HTTPSender {
     this._username = options.username;
     this._password = options.password;
     this._timeoutMS = options.timeoutMS || DEFAULT_TIMEOUT_MS;
-    this._httpAgent = new http.Agent({ keepAlive: true });
+    this._httpAgent =
+      this._url.protocol === 'http:'
+        ? new http.Agent({ keepAlive: true })
+        : new https.Agent({ keepAlive: true });
 
     this._maxSpanBatchSize = options.maxSpanBatchSize || DEFAULT_MAX_SPAN_BATCH_SIZE;
 
@@ -105,7 +109,9 @@ export default class HTTPSender {
 
     this._reset();
 
-    const req = http.request(this._httpOptions, resp => {
+    const requester = this._url.protocol === 'https:' ? https.request : http.request;
+
+    const req = requester(this._httpOptions, resp => {
       SenderUtils.invokeCallback(callback, numSpans);
     });
 
