@@ -30,6 +30,18 @@ export default class Utils {
   }
 
   /**
+   * Determines whether a string contains a given suffix.
+   *
+   * @param {string} text - the string for to search for a suffix
+   * @param {string} suffix - the suffix to search for in the text given.
+   * @return {boolean} - boolean representing whether or not the
+   * string contains the suffix.
+   **/
+  static endsWith(text: string, suffix: string): boolean {
+    return text.lastIndexOf(suffix) === text.length - suffix.length;
+  }
+
+  /**
    * Determines whether a string contains a given prefix.
    *
    * @return {Buffer}  - returns a buffer representing a random 64 bit
