@@ -1,8 +1,8 @@
 # Changes by Version
 
-## 3.12.1 (unreleased)
+## 3.13.0 (2018-10-08)
 
-* Nothing yet.
+* Support TLS in HTTP Sender (#294) - thanks [@keitwb](https://github.com/keitwb)
 
 ## 3.12.0 (2018-08-10)
 
