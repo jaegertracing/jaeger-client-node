@@ -14,8 +14,8 @@ import Configuration from './configuration.js';
 import Utils from './util.js';
 
 export default class ConfigurationEnv {
-  static _getConfigValue(obj, key, env) {
-    return obj ? obj[key] || env : env;
+  static _getConfigValue(obj, key, defaultValue) {
+    return (obj && obj[key]) || defaultValue;
   }
 
   static _getSamplerFromEnv(config) {
