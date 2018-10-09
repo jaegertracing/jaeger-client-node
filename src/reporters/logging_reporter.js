@@ -34,4 +34,6 @@ export default class LoggingReporter {
       callback();
     }
   }
+
+  setProcess(serviceName: string, tags: Array<Tag>): void {}
 }
