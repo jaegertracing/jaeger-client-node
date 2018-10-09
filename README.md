@@ -14,7 +14,16 @@ Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Initialization
 
-The Tracer defaults to sending spans over UDP to the jaeger-agent running on localhost; the jaeger-agent handles forwarding the spans to the jaeger-collector.
+The Tracer defaults to sending spans over UDP to the jaeger-agent running on localhost; the jaeger-agent handles forwarding the spans to the jaeger-collector. When you are instantiating your client instance you can specify the sampler of your choice. The library support the following samplers:
+
+| SAMPLER       | KEY             |
+|---------------|-----------------|
+| Constant      | `const`         |
+| Probabilistic | `probabilistic` |
+| Rate Limiting | `ratelimiting`  |
+| Remote        | `remote`        |
+
+More information about sampling can be found [here](https://www.jaegertracing.io/docs/1.7/sampling/#client-sampling-configuration)
 
 ```javascript
 var initTracer = require('jaeger-client').initTracer;

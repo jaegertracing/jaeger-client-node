@@ -47,9 +47,9 @@ export default class HTTPSender {
     this._password = options.password;
     this._timeoutMS = options.timeoutMS || DEFAULT_TIMEOUT_MS;
     this._httpAgent =
-      this._url.protocol === 'http:'
-        ? new http.Agent({ keepAlive: true })
-        : new https.Agent({ keepAlive: true });
+      this._url.protocol === 'https:'
+        ? new https.Agent({ keepAlive: true })
+        : new http.Agent({ keepAlive: true });
 
     this._maxSpanBatchSize = options.maxSpanBatchSize || DEFAULT_MAX_SPAN_BATCH_SIZE;
 
