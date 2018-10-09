@@ -2,7 +2,8 @@
 
 ## 3.13.0 (2018-10-08)
 
-* Support TLS in HTTP Sender (#294) - thanks [@keitwb](https://github.com/keitwb)
+* Support TLS in HTTP Sender (#294) - thanks [Ben Keith @keitwb](https://github.com/keitwb)
+* Support ENV variables for configuration (#296) - thanks [Eundoo Song @eundoosong](https://github.com/eundoosong)
 
 ## 3.12.0 (2018-08-10)
 
