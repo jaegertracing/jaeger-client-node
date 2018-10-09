@@ -27,6 +27,8 @@ Declaring formal releases requires peer review.
   * `git log --abbrev-commit | head` (expecting to see a tagged commit, e.g. `commit 510cebd (tag: v3.5.3)`)
   * `make build-node`
   * `npm publish` (requires permissions)
+    * Your `~/.npmrc` file should contain an entry `//registry.npmjs.org/:_authToken={token}`
+    * Follow these instructions to create a token: https://docs.npmjs.com/getting-started/working_with_tokens
 * Create a "Back to development" pull request
   * Increment patch number in [package.json](./package.json) with `dev` suffix, e.g. if the last release was `3.5.3` then change it to `3.5.4dev`
   * Add a new entry to [CHANGELOG.md](./CHANGELOG.md)
