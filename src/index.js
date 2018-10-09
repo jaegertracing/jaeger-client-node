@@ -11,6 +11,7 @@
 // the License.
 
 import Configuration from './configuration';
+import ConfigurationEnv from './configuration_env';
 
 import SpanContext from './span_context';
 import Span from './span';
@@ -40,6 +41,7 @@ import * as opentracing from 'opentracing';
 module.exports = {
   Configuration,
   initTracer: Configuration.initTracer,
+  initTracerFromEnv: ConfigurationEnv.initTracer,
   SpanContext,
   Span,
   Tracer,
