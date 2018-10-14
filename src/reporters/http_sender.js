@@ -63,7 +63,7 @@ export default class HTTPSender {
       protocol: this._url.protocol,
       hostname: this._url.hostname,
       port: this._url.port,
-      path: this._url.pathname,
+      path: this._url.path,
       method: 'POST',
       auth: this._username && this._password ? `${this._username}:${this._password}` : undefined,
       headers: {
