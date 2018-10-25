@@ -95,6 +95,23 @@ describe('ZipkinB3TextMapCodec', () => {
     assert.equal(ctx.isSampled(), true);
     assert.equal(ctx.isDebug(), true);
   });
+  it('should not extract parentspanid if not injected', () => {
+    let codec = new ZipkinB3TextMapCodec({ urlEncoding: true });
+
+    let carrier = {
+      // do not specify parentspanid when extracting
+      // 'x-b3-parentspanid': '',
+      'x-b3-spanid': '0b42e8789a26ba03',
+      'x-b3-traceid': '0b42e8789a26ba03',
+      'x-b3-sampled': '1',
+      'x-b3-flags': '1',
+      foo: 'bar',
+    };
+    let ctx = codec.extract(carrier);
+    let injectedHeaders = {};
+    codec.inject(ctx, injectedHeaders);
+    assert.notProperty(injectedHeaders, 'x-b3-parentspanid');
+  });
   it('correctly inject the zipkin headers into a span context', () => {
     let codec = new ZipkinB3TextMapCodec({ urlEncoding: true });
     let carrier = {};

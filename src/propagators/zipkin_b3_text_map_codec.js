@@ -155,7 +155,9 @@ export default class ZipkinB3TextMapCodec {
 
   inject(spanContext: SpanContext, carrier: any): void {
     carrier[ZIPKIN_TRACE_HEADER] = spanContext.traceIdStr;
-    carrier[ZIPKIN_PARENTSPAN_HEADER] = spanContext.parentIdStr;
+    if (spanContext.parentIdStr) {
+      carrier[ZIPKIN_PARENTSPAN_HEADER] = spanContext.parentIdStr;
+    }
     carrier[ZIPKIN_SPAN_HEADER] = spanContext.spanIdStr;
 
     if (spanContext.isDebug()) {
