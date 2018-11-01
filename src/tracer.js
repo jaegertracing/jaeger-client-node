@@ -54,6 +54,7 @@ export default class Tracer {
    * @param {Object} [options.metrics] - instance of the Metrics class from ./metrics/metrics.js.
    * @param {Object} [options.logger] - a logger matching NullLogger API from ./logger.js.
    * @param {Object} [options.baggageRestrictionManager] - a baggageRestrictionManager matching
+   * @param {Object} [options.contextKey] - a name of the key to extract/inject context from headers
    * BaggageRestrictionManager API from ./baggage.js.
    */
   constructor(

@@ -225,6 +225,7 @@ export default class Configuration {
     }
 
     return new Tracer(config.serviceName, reporter, sampler, {
+      contextKey: options.contextKey,
       metrics: options.metrics,
       logger: options.logger,
       tags: options.tags,
