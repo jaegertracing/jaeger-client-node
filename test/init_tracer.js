@@ -209,11 +209,13 @@ describe('initTracer', () => {
         tags: {
           x: 'y',
         },
+        contextKey: 'custom-header',
       }
     );
     assert.equal(tracer._logger, logger);
     assert.equal(tracer._metrics._factory, metrics);
     assert.equal(tracer._tags['x'], 'y');
+    assert.equal(tracer._injectors[opentracing.FORMAT_TEXT_MAP]._contextKey, 'custom-header');
     tracer.close(done);
   });
 
