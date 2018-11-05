@@ -103,13 +103,13 @@ export default class ZipkinB3TextMapCodec {
 
         switch (lowerKey) {
           case ZIPKIN_PARENTSPAN_HEADER:
-            parentId = this._decodeValue(carrier[ZIPKIN_PARENTSPAN_HEADER]);
+            parentId = this._decodeValue(carrier[key]);
             break;
           case ZIPKIN_SPAN_HEADER:
-            spanId = this._decodeValue(carrier[ZIPKIN_SPAN_HEADER]);
+            spanId = this._decodeValue(carrier[key]);
             break;
           case ZIPKIN_TRACE_HEADER:
-            traceId = this._decodeValue(carrier[ZIPKIN_TRACE_HEADER]);
+            traceId = this._decodeValue(carrier[key]);
             break;
           case ZIPKIN_SAMPLED_HEADER:
             flags = flags | constants.SAMPLED_MASK;
@@ -124,7 +124,7 @@ export default class ZipkinB3TextMapCodec {
             }
             break;
           case constants.JAEGER_DEBUG_HEADER:
-            debugId = this._decodeValue(carrier[constants.JAEGER_DEBUG_HEADER]);
+            debugId = this._decodeValue(carrier[key]);
             break;
           case constants.JAEGER_BAGGAGE_HEADER:
             parseCommaSeparatedBaggage(baggage, this._decodeValue(carrier[key]));
