@@ -55,6 +55,7 @@ export default class Tracer {
    * @param {Object} [options.logger] - a logger matching NullLogger API from ./logger.js.
    * @param {Object} [options.baggageRestrictionManager] - a baggageRestrictionManager matching
    * @param {Object} [options.contextKey] - a name of the key to extract/inject context from headers
+   * @param {Object} [options.baggagePrefix] - a name of the context baggage key prefix
    * BaggageRestrictionManager API from ./baggage.js.
    */
   constructor(
@@ -84,6 +85,7 @@ export default class Tracer {
 
     let codecOptions = {
       contextKey: options.contextKey || null,
+      baggagePrefix: options.baggagePrefix || null,
       urlEncoding: false,
       metrics: this._metrics,
     };
