@@ -92,6 +92,30 @@ describe('Zipkin B3 Text Map Codec should', () => {
     });
   });
 
+  it("should normalize header's case and return a context", () => {
+    /**
+     *  HTTP headers are case insensitive and title case is often used, e.g.:
+     *  X-B3-TraceId.
+     */
+    const headers = {
+      'X-B3-TraceId': '123abc',
+      'x-b3-spanID': '456def',
+      'X-B3-PARENTSPANID': '789ghi',
+      'X-b3-SAmpleD': '012jkl',
+      'X-b3-Flags': '1',
+      'Jaeger-Debug-ID': '678pqr',
+    };
+
+    const context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
+
+    assert.isOk(context.traceIdStr);
+    assert.isOk(context.spanIdStr);
+    assert.isOk(context.parentIdStr);
+    assert.isOk(context.isSampled());
+    assert.isOk(context.isDebug());
+    assert.isOk(context.debugId);
+  });
+
   it('set the sampled flag when the zipkin sampled header is received', () => {
     let headers = {
       'x-b3-sampled': '1',
