@@ -273,7 +273,7 @@ export default class Span {
    *         log record.
    */
   logEvent(eventName: string, payload: any): void {
-    return this.log({
+    this.log({
       event: eventName,
       payload: payload,
     });
