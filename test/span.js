@@ -77,7 +77,7 @@ describe('span should', () => {
   });
 
   it('return this when calling log method', () => {
-    const ret = span.log({ event: event }, timestamp);
+    const ret = span.log({ event: 'event' });
     assert.equal(ret, span);
   });
 
