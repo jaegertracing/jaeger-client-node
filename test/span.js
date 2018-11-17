@@ -76,6 +76,11 @@ describe('span should', () => {
     assert.equal(tracer._logger._errorMsgs[0], `${spanInfo}#You can only call finish() on a span once.`);
   });
 
+  it('return this when calling log method', () => {
+    const ret = span.log({ event: 'event' });
+    assert.equal(ret, span);
+  });
+
   it('set debug and sampling version through sampling priority', () => {
     span._setSamplingPriority(3);
 

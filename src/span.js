@@ -253,14 +253,16 @@ export default class Span {
    *        timestamps with sub-millisecond accuracy can be represented. If
    *        not specified, the implementation is expected to use its notion
    *        of the current time of the call.
+   * @return {Span} - returns this span.
    */
-  log(keyValuePairs: any, timestamp: ?number): void {
+  log(keyValuePairs: any, timestamp: ?number): Span {
     if (this._isWriteable()) {
       this._logs.push({
         timestamp: timestamp || this._tracer.now(),
         fields: Utils.convertObjectToTags(keyValuePairs),
       });
     }
+    return this;
   }
 
   /**
@@ -271,7 +273,7 @@ export default class Span {
    *         log record.
    */
   logEvent(eventName: string, payload: any): void {
-    return this.log({
+    this.log({
       event: eventName,
       payload: payload,
     });
