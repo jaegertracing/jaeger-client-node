@@ -209,7 +209,7 @@ export default class Span {
     const samplingPriorityWasSet = samplingPriority != null && this._setSamplingPriority(samplingPriority);
     if (this._isWriteable()) {
       for (let key in keyValuePairs) {
-        if (keyValuePairs.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(keyValuePairs, key)) {
           if (key === samplingKey && !samplingPriorityWasSet) {
             continue;
           }

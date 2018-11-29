@@ -103,7 +103,10 @@ export default class TChannelBridge {
       let headerKeys: Array<string> = Object.keys(headers);
       for (let i = 0; i < headerKeys.length; i++) {
         let key = headerKeys[i];
-        if (headers.hasOwnProperty(key) && Utils.startsWith(key, TCHANNEL_TRACING_PREFIX)) {
+        if (
+          Object.prototype.hasOwnProperty.call(headers, key) &&
+          Utils.startsWith(key, TCHANNEL_TRACING_PREFIX)
+        ) {
           delete headers[key];
         }
       }

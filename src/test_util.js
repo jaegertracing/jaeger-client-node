@@ -25,7 +25,10 @@ export default class TestUtils {
     }
 
     for (let tag in expectedTags) {
-      if (expectedTags.hasOwnProperty(tag) && actualTags.hasOwnProperty(tag)) {
+      if (
+        Object.prototype.hasOwnProperty.call(expectedTags, tag) &&
+        Object.prototype.hasOwnProperty.call(actualTags, tag)
+      ) {
         if (actualTags[tag] !== expectedTags[tag]) {
           console.log('expected tag:', expectedTags[tag], ', actual tag: ', actualTags[tag]);
           return false;

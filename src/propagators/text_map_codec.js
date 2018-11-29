@@ -65,7 +65,7 @@ export default class TextMapCodec {
     let debugId = '';
 
     for (let key in carrier) {
-      if (carrier.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(carrier, key)) {
         let lowerKey = key.toLowerCase();
         if (lowerKey === this._contextKey) {
           let decodedContext = SpanContext.fromString(this._decodeValue(carrier[key]));
@@ -96,7 +96,7 @@ export default class TextMapCodec {
 
     let baggage = spanContext.baggage;
     for (let key in baggage) {
-      if (baggage.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(baggage, key)) {
         let value = this._encodeValue(spanContext.baggage[key]);
         carrier[`${this._baggagePrefix}${key}`] = value;
       }
