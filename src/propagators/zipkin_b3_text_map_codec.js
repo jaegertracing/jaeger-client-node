@@ -98,7 +98,7 @@ export default class ZipkinB3TextMapCodec {
     let traceId = '';
 
     for (let key in carrier) {
-      if (carrier.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(carrier, key)) {
         let lowerKey = key.toLowerCase();
 
         switch (lowerKey) {
@@ -171,7 +171,7 @@ export default class ZipkinB3TextMapCodec {
 
     let baggage = spanContext.baggage;
     for (let key in baggage) {
-      if (baggage.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(baggage, key)) {
         let value = this._encodeValue(spanContext.baggage[key]);
         carrier[`${this._baggagePrefix}${key}`] = value;
       }

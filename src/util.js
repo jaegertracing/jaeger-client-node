@@ -125,7 +125,7 @@ export default class Utils {
   static clone(obj: any): any {
     let newObj = {};
     for (let key in obj) {
-      if (obj.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         newObj[key] = obj[key];
       }
     }
@@ -137,7 +137,7 @@ export default class Utils {
     let tags: Array<Tag> = [];
     for (let key in dict) {
       let value = dict[key];
-      if (dict.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(dict, key)) {
         tags.push({ key: key, value: value });
       }
     }
