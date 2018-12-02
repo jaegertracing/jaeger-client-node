@@ -299,6 +299,7 @@ describe('initTracerFromENV', () => {
     delete process.env.JAEGER_SAMPLER_PARAM;
     delete process.env.JAEGER_SAMPLER_HOST;
     delete process.env.JAEGER_SAMPLER_PORT;
+    delete process.env.JAEGER_SAMPLER_MANAGER_HOST_PORT;
     delete process.env.JAEGER_SAMPLER_REFRESH_INTERVAL;
     delete process.env.JAEGER_REPORTER_AGENT_PORT;
     delete process.env.JAEGER_AGENT_PORT;
@@ -353,6 +354,27 @@ describe('initTracerFromENV', () => {
   });
 
   it('should initialize proper samplers from env', () => {
+    process.env.JAEGER_SERVICE_NAME = 'test-service';
+
+    process.env.JAEGER_SAMPLER_TYPE = 'probabilistic';
+    process.env.JAEGER_SAMPLER_PARAM = 0.5;
+    let tracer = initTracerFromEnv();
+    expect(tracer._sampler).to.be.an.instanceof(ProbabilisticSampler);
+    assert.equal(tracer._sampler._samplingRate, 0.5);
+    tracer.close();
+
+    process.env.JAEGER_SAMPLER_TYPE = 'remote';
+    process.env.JAEGER_SAMPLER_MANAGER_HOST_PORT = 'localhost:8080';
+    process.env.JAEGER_SAMPLER_REFRESH_INTERVAL = 100;
+    tracer = initTracerFromEnv();
+    expect(tracer._sampler).to.be.an.instanceof(RemoteSampler);
+    assert.equal(tracer._sampler._host, 'localhost');
+    assert.equal(tracer._sampler._port, 8080);
+    assert.equal(tracer._sampler._refreshInterval, 100);
+    tracer.close();
+  });
+
+  it('should initialize proper samplers from mismatching env', () => {
     process.env.JAEGER_SERVICE_NAME = 'test-service';
 
     process.env.JAEGER_SAMPLER_TYPE = 'probabilistic';

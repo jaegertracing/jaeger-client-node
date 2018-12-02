@@ -36,6 +36,7 @@ let jaegerSchema = {
       properties: {
         type: { type: 'string' },
         param: { type: 'number' },
+        hostPort: { type: 'string' },
         host: { type: 'string' },
         port: { type: 'number' },
         refreshIntervalMs: { type: 'number' },
@@ -70,6 +71,7 @@ export default class Configuration {
   static _getSampler(config, options) {
     let type = config.sampler.type;
     let param = config.sampler.param;
+    let hostPort = config.sampler.hostPort;
     let host = config.sampler.host;
     let port = config.sampler.port;
     let refreshIntervalMs = config.sampler.refreshIntervalMs;
@@ -94,6 +96,7 @@ export default class Configuration {
     if (type === constants.SAMPLER_TYPE_REMOTE) {
       sampler = new RemoteSampler(config.serviceName, {
         sampler: new ProbabilisticSampler(param),
+        hostPort: hostPort,
         host: host,
         port: port,
         refreshInterval: refreshIntervalMs,

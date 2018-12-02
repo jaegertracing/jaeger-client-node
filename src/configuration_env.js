@@ -30,6 +30,15 @@ export default class ConfigurationEnv {
       samplerConfig.param = parseFloat(value);
     }
 
+    value = ConfigurationEnv._getConfigValue(
+      config.sampler,
+      'hostPort',
+      process.env.JAEGER_SAMPLER_MANAGER_HOST_PORT
+    );
+    if (value) {
+      samplerConfig.hostPort = value;
+    }
+
     value = ConfigurationEnv._getConfigValue(config.sampler, 'host', process.env.JAEGER_SAMPLER_HOST);
     if (value) {
       samplerConfig.host = value;

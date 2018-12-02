@@ -11,6 +11,7 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
+import url from 'url';
 import ProbabilisticSampler from './probabilistic_sampler.js';
 import RateLimitingSampler from './ratelimiting_sampler.js';
 import PerOperationSampler from './per_operation_sampler.js';
@@ -52,6 +53,7 @@ export default class RemoteControlledSampler {
    * @param {object} [options.logger] - optional logger, see _flow/logger.js
    * @param {object} [options.metrics] - instance of Metrics object
    * @param {number} [options.refreshInterval] - interval in milliseconds before sampling strategy refreshes (0 to not refresh)
+   * @param {string} [options.hostPort] - host and port for jaeger-agent, defaults to 'localhost:5778'
    * @param {string} [options.host] - host for jaeger-agent, defaults to 'localhost'
    * @param {number} [options.port] - port for jaeger-agent for SamplingManager endpoint
    * @param {number} [options.maxOperations] - max number of operations to track in PerOperationSampler
@@ -63,10 +65,13 @@ export default class RemoteControlledSampler {
     this._logger = options.logger || new NullLogger();
     this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
     this._refreshInterval = options.refreshInterval || DEFAULT_REFRESH_INTERVAL;
-    this._host = options.host || DEFAULT_SAMPLING_HOST;
-    this._port = options.port || DEFAULT_SAMPLING_PORT;
     this._maxOperations = options.maxOperations || DEFAULT_MAX_OPERATIONS;
-
+    if (options.hostPort) {
+      this._parseHostPort(options.hostPort);
+    } else {
+      this._host = options.host || DEFAULT_SAMPLING_HOST;
+      this._port = options.port || DEFAULT_SAMPLING_PORT;
+    }
     this._onSamplerUpdate = options.onSamplerUpdate;
 
     if (options.refreshInterval !== 0) {
@@ -81,6 +86,14 @@ export default class RemoteControlledSampler {
 
   toString(): string {
     return `${this.name()}(serviceName=${this._serviceName})`;
+  }
+
+  _parseHostPort(hostPort) {
+    hostPort = /^http/.test(hostPort) ? hostPort : `http://${hostPort}`;
+    const parsedUrl = url.parse(hostPort);
+
+    this._host = parsedUrl.hostname;
+    this._port = parsedUrl.port;
   }
 
   _afterInitialDelay(): void {
