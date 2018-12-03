@@ -88,12 +88,12 @@ export default class RemoteControlledSampler {
     return `${this.name()}(serviceName=${this._serviceName})`;
   }
 
-  _parseHostPort(hostPort) {
+  _parseHostPort(hostPort: string) {
     hostPort = /^http/.test(hostPort) ? hostPort : `http://${hostPort}`;
     const parsedUrl = url.parse(hostPort);
 
-    this._host = parsedUrl.hostname;
-    this._port = parsedUrl.port;
+    this._host = parsedUrl.hostname || DEFAULT_SAMPLING_HOST;
+    this._port = parsedUrl.port ? parseInt(parsedUrl.port) : DEFAULT_SAMPLING_PORT;
   }
 
   _afterInitialDelay(): void {
