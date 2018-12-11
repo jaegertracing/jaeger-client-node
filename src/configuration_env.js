@@ -164,7 +164,7 @@ export default class ConfigurationEnv {
    * @param {Object} options - options, see Configuration.initTracer
    */
   static initTracer(config = {}, options = {}) {
-    config.disable = config.disable || process.env.JAEGER_DISABLE === 'true';
+    config.disable = config.disable || process.env.JAEGER_DISABLED === 'true' || process.env.JAEGER_DISABLE === 'true';
     config.serviceName = config.serviceName || process.env.JAEGER_SERVICE_NAME;
 
     options.tags = ConfigurationEnv._parseTagsFromEnv(options);
