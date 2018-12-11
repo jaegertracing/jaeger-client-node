@@ -294,6 +294,7 @@ describe('initTracerFromENV', () => {
   afterEach(() => {
     delete process.env.JAEGER_SERVICE_NAME;
     delete process.env.JAEGER_DISABLE;
+    delete process.env.JAEGER_DISABLED;
     delete process.env.JAEGER_TAGS;
     delete process.env.JAEGER_SAMPLER_TYPE;
     delete process.env.JAEGER_SAMPLER_PARAM;
