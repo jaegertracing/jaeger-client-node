@@ -69,7 +69,7 @@ export default class ConfigurationEnv {
       process.env.JAEGER_REPORTER_LOG_SPANS
     );
     if (value) {
-      reporterConfig.logSpans = value;
+      reporterConfig.logSpans = Boolean(value);
     }
 
     value = ConfigurationEnv._getConfigValue(
