@@ -294,22 +294,29 @@ describe('initTracerFromENV', () => {
   afterEach(() => {
     delete process.env.JAEGER_SERVICE_NAME;
     delete process.env.JAEGER_DISABLE;
+    delete process.env.JAEGER_DISABLED;
     delete process.env.JAEGER_TAGS;
     delete process.env.JAEGER_SAMPLER_TYPE;
     delete process.env.JAEGER_SAMPLER_PARAM;
     delete process.env.JAEGER_SAMPLER_HOST;
     delete process.env.JAEGER_SAMPLER_PORT;
+    delete process.env.JAEGER_SAMPLER_MANAGER_HOST_PORT;
     delete process.env.JAEGER_SAMPLER_REFRESH_INTERVAL;
     delete process.env.JAEGER_REPORTER_AGENT_PORT;
+    delete process.env.JAEGER_AGENT_PORT;
     delete process.env.JAEGER_REPORTER_AGENT_HOST;
+    delete process.env.JAEGER_AGENT_HOST;
     delete process.env.JAEGER_REPORTER_ENDPOINT;
+    delete process.env.JAEGER_ENDPOINT;
     delete process.env.JAEGER_REPORTER_USER;
+    delete process.env.JAEGER_USER;
     delete process.env.JAEGER_REPORTER_PASSWORD;
+    delete process.env.JAEGER_PASSWORD;
     delete process.env.JAEGER_REPORTER_FLUSH_INTERVAL;
     delete process.env.JAEGER_REPORTER_LOG_SPANS;
   });
 
-  it('should initialize noop tracer with disable env is set', () => {
+  it('should initialize noop tracer with mismatching disable env is set', () => {
     process.env.JAEGER_DISABLE = true;
 
     let tracer = initTracerFromEnv();
@@ -317,9 +324,27 @@ describe('initTracerFromENV', () => {
     expect(tracer).to.be.an.instanceof(opentracing.Tracer);
   });
 
-  it('should initialize tracer from env', () => {
+  it('should initialize noop tracer with disable env is set', () => {
+    process.env.JAEGER_DISABLED = true;
+
+    let tracer = initTracerFromEnv();
+
+    expect(tracer).to.be.an.instanceof(opentracing.Tracer);
+  });
+
+  it('should initialize tracer from mismatching env', () => {
     process.env.JAEGER_SERVICE_NAME = 'test-service';
     process.env.JAEGER_DISABLE = false;
+
+    let tracer = initTracerFromEnv();
+    assert.equal(tracer._serviceName, 'test-service');
+
+    tracer.close();
+  });
+
+  it('should initialize tracer from env', () => {
+    process.env.JAEGER_SERVICE_NAME = 'test-service';
+    process.env.JAEGER_DISABLED = false;
 
     let tracer = initTracerFromEnv();
     assert.equal(tracer._serviceName, 'test-service');
@@ -336,7 +361,7 @@ describe('initTracerFromENV', () => {
 
   it('should parse tags', () => {
     process.env.JAEGER_SERVICE_NAME = 'test-service';
-    process.env.JAEGER_DISABLE = false;
+    process.env.JAEGER_DISABLED = false;
     process.env.JAEGER_TAGS = 'KEY1=${TEST_KEY:VALUE1}, KEY2=VALUE2,KEY3=${TEST_KEY2:VALUE3}';
     process.env.TEST_KEY = 'VALUE4';
     let tracer = initTracerFromEnv();
@@ -348,6 +373,27 @@ describe('initTracerFromENV', () => {
   });
 
   it('should initialize proper samplers from env', () => {
+    process.env.JAEGER_SERVICE_NAME = 'test-service';
+
+    process.env.JAEGER_SAMPLER_TYPE = 'probabilistic';
+    process.env.JAEGER_SAMPLER_PARAM = 0.5;
+    let tracer = initTracerFromEnv();
+    expect(tracer._sampler).to.be.an.instanceof(ProbabilisticSampler);
+    assert.equal(tracer._sampler._samplingRate, 0.5);
+    tracer.close();
+
+    process.env.JAEGER_SAMPLER_TYPE = 'remote';
+    process.env.JAEGER_SAMPLER_MANAGER_HOST_PORT = 'localhost:8080';
+    process.env.JAEGER_SAMPLER_REFRESH_INTERVAL = 100;
+    tracer = initTracerFromEnv();
+    expect(tracer._sampler).to.be.an.instanceof(RemoteSampler);
+    assert.equal(tracer._sampler._host, 'localhost');
+    assert.equal(tracer._sampler._port, 8080);
+    assert.equal(tracer._sampler._refreshInterval, 100);
+    tracer.close();
+  });
+
+  it('should initialize proper samplers from mismatching env', () => {
     process.env.JAEGER_SERVICE_NAME = 'test-service';
 
     process.env.JAEGER_SAMPLER_TYPE = 'probabilistic';
@@ -370,6 +416,32 @@ describe('initTracerFromENV', () => {
   });
 
   it('should respect udp reporter options from env', done => {
+    process.env.JAEGER_SERVICE_NAME = 'test-service';
+    process.env.JAEGER_REPORTER_LOG_SPANS = 'true';
+    process.env.JAEGER_AGENT_HOST = '127.0.0.1';
+    process.env.JAEGER_AGENT_PORT = 4939;
+    process.env.JAEGER_REPORTER_FLUSH_INTERVAL = 2000;
+
+    let tracer = initTracerFromEnv();
+    expect(tracer._reporter).to.be.an.instanceof(CompositeReporter);
+    let remoteReporter;
+    for (let i = 0; i < tracer._reporter._reporters.length; i++) {
+      let reporter = tracer._reporter._reporters[i];
+      if (reporter instanceof RemoteReporter) {
+        remoteReporter = reporter;
+        break;
+      }
+    }
+
+    assert.equal(remoteReporter._bufferFlushInterval, 2000);
+    assert.equal(remoteReporter._sender._host, '127.0.0.1');
+    assert.equal(remoteReporter._sender._port, 4939);
+    assert.instanceOf(remoteReporter._sender, UDPSender);
+
+    tracer.close(done);
+  });
+
+  it('should respect udp reporter options from mismatching env', done => {
     process.env.JAEGER_SERVICE_NAME = 'test-service';
     process.env.JAEGER_REPORTER_LOG_SPANS = 'true';
     process.env.JAEGER_REPORTER_AGENT_HOST = '127.0.0.1';
@@ -398,6 +470,24 @@ describe('initTracerFromENV', () => {
   it('should respect http reporter options from env', done => {
     process.env.JAEGER_SERVICE_NAME = 'test-service';
     process.env.JAEGER_REPORTER_FLUSH_INTERVAL = 3000;
+    process.env.JAEGER_ENDPOINT = 'http://127.0.0.1:8080';
+    process.env.JAEGER_USER = 'test';
+    process.env.JAEGER_PASSWORD = 'xxxx';
+
+    let tracer = initTracerFromEnv();
+    expect(tracer._reporter).to.be.an.instanceof(RemoteReporter);
+    assert.instanceOf(tracer._reporter._sender, HTTPSender);
+    assert.equal(tracer._reporter._bufferFlushInterval, 3000);
+    assert.equal(tracer._reporter._sender._url.href, 'http://127.0.0.1:8080/');
+    assert.equal(tracer._reporter._sender._username, 'test');
+    assert.equal(tracer._reporter._sender._password, 'xxxx');
+
+    tracer.close(done);
+  });
+
+  it('should respect http reporter options from mismatching env', done => {
+    process.env.JAEGER_SERVICE_NAME = 'test-service';
+    process.env.JAEGER_REPORTER_FLUSH_INTERVAL = 3000;
     process.env.JAEGER_REPORTER_ENDPOINT = 'http://127.0.0.1:8080';
     process.env.JAEGER_REPORTER_USER = 'test';
     process.env.JAEGER_REPORTER_PASSWORD = 'xxxx';
@@ -415,7 +505,7 @@ describe('initTracerFromENV', () => {
 
   it('should be overridden via direct config setting.', done => {
     process.env.JAEGER_SERVICE_NAME = 'test-service';
-    process.env.JAEGER_DISABLE = false;
+    process.env.JAEGER_DISABLED = false;
     process.env.JAEGER_SAMPLER_TYPE = 'const';
     process.env.JAEGER_SAMPLER_PARAM = 1;
     process.env.JAEGER_TAGS = 'KEY1=VALUE1';
