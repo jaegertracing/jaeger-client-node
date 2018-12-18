@@ -1,5 +1,13 @@
 {
-  "extends": ["eslint-config-airbnb", "prettier"],
+  "extends": [
+    "plugin:flowtype/recommended",
+    "eslint-config-airbnb",
+    "prettier"
+  ],
+  "parser": "babel-eslint",
+  "plugins": [
+    "flowtype"
+  ],
   "env": {
     "node": true
   },
@@ -17,14 +25,9 @@
       "func-names": [0],
       "no-multi-spaces": [2, { "exceptions": {
           "AssignmentExpression": true,
-          "VariableDeclarator": true,
+          "VariableDeclarator": true
       }} ],
       "consistent-return": [0],
-
-      // Disabled as the "exceptions" clause does not seem to currently work
-      "spaced-comment": [0],
-  },
-  "plugins": {
-    "flowtype"
+      "spaced-comment": [0]
   }
 }
