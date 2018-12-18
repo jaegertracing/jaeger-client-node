@@ -37,6 +37,8 @@ export default class RemoteControlledSampler {
   _refreshInterval: number;
   _host: string;
   _port: number;
+  _env_host: string;
+  _env_port: number;
   _maxOperations: number;
 
   _onSamplerUpdate: ?Function;
@@ -66,12 +68,13 @@ export default class RemoteControlledSampler {
     this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
     this._refreshInterval = options.refreshInterval || DEFAULT_REFRESH_INTERVAL;
     this._maxOperations = options.maxOperations || DEFAULT_MAX_OPERATIONS;
+
     if (options.hostPort) {
       this._parseHostPort(options.hostPort);
-    } else {
-      this._host = options.host || DEFAULT_SAMPLING_HOST;
-      this._port = options.port || DEFAULT_SAMPLING_PORT;
     }
+    this._host = options.host || this._env_host || DEFAULT_SAMPLING_HOST;
+    this._port = options.port || this._env_port || DEFAULT_SAMPLING_PORT;
+
     this._onSamplerUpdate = options.onSamplerUpdate;
 
     if (options.refreshInterval !== 0) {
@@ -92,8 +95,8 @@ export default class RemoteControlledSampler {
     hostPort = /^http/.test(hostPort) ? hostPort : `http://${hostPort}`;
     const parsedUrl = url.parse(hostPort);
 
-    this._host = parsedUrl.hostname || DEFAULT_SAMPLING_HOST;
-    this._port = parsedUrl.port ? parseInt(parsedUrl.port) : DEFAULT_SAMPLING_PORT;
+    this._env_host = parsedUrl.hostname || DEFAULT_SAMPLING_HOST;
+    this._env_port = parsedUrl.port ? parseInt(parsedUrl.port) : DEFAULT_SAMPLING_PORT;
   }
 
   _afterInitialDelay(): void {

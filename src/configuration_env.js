@@ -39,12 +39,12 @@ export default class ConfigurationEnv {
       samplerConfig.hostPort = value;
     }
 
-    value = ConfigurationEnv._getConfigValue(config.sampler, 'host', process.env.JAEGER_SAMPLER_HOST);
+    value = ConfigurationEnv._getConfigValue(config.sampler, 'host');
     if (value) {
       samplerConfig.host = value;
     }
 
-    value = ConfigurationEnv._getConfigValue(config.sampler, 'port', process.env.JAEGER_SAMPLER_PORT);
+    value = ConfigurationEnv._getConfigValue(config.sampler, 'port');
     if (value) {
       samplerConfig.port = parseInt(value);
     }
@@ -84,44 +84,28 @@ export default class ConfigurationEnv {
     value = ConfigurationEnv._getConfigValue(
       config.reporter,
       'collectorEndpoint',
-      process.env.JAEGER_ENDPOINT || process.env.JAEGER_REPORTER_ENDPOINT
+      process.env.JAEGER_ENDPOINT
     );
     if (value) {
       reporterConfig.collectorEndpoint = value;
     }
 
-    value = ConfigurationEnv._getConfigValue(
-      config.reporter,
-      'username',
-      process.env.JAEGER_USER || process.env.JAEGER_REPORTER_USER
-    );
+    value = ConfigurationEnv._getConfigValue(config.reporter, 'username', process.env.JAEGER_USER);
     if (value) {
       reporterConfig.username = value;
     }
 
-    value = ConfigurationEnv._getConfigValue(
-      config.reporter,
-      'password',
-      process.env.JAEGER_PASSWORD || process.env.JAEGER_REPORTER_PASSWORD
-    );
+    value = ConfigurationEnv._getConfigValue(config.reporter, 'password', process.env.JAEGER_PASSWORD);
     if (value) {
       reporterConfig.password = value;
     }
 
-    value = ConfigurationEnv._getConfigValue(
-      config.reporter,
-      'agentHost',
-      process.env.JAEGER_AGENT_HOST || process.env.JAEGER_REPORTER_AGENT_HOST
-    );
+    value = ConfigurationEnv._getConfigValue(config.reporter, 'agentHost', process.env.JAEGER_AGENT_HOST);
     if (value) {
       reporterConfig.agentHost = value;
     }
 
-    value = ConfigurationEnv._getConfigValue(
-      config.reporter,
-      'agentPort',
-      process.env.JAEGER_AGENT_PORT || process.env.JAEGER_REPORTER_AGENT_PORT
-    );
+    value = ConfigurationEnv._getConfigValue(config.reporter, 'agentPort', process.env.JAEGER_AGENT_PORT);
     if (value) {
       reporterConfig.agentPort = parseInt(value);
     }
@@ -164,7 +148,7 @@ export default class ConfigurationEnv {
    * @param {Object} options - options, see Configuration.initTracer
    */
   static initTracer(config = {}, options = {}) {
-    config.disable = config.disable || process.env.JAEGER_DISABLED === 'true' || process.env.JAEGER_DISABLE === 'true';
+    config.disable = config.disable || process.env.JAEGER_DISABLED === 'true';
     config.serviceName = config.serviceName || process.env.JAEGER_SERVICE_NAME;
 
     options.tags = ConfigurationEnv._parseTagsFromEnv(options);
