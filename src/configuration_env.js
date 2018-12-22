@@ -35,7 +35,7 @@ export default class ConfigurationEnv {
       .keys(deprecatedEnvVars)
       .forEach(env => {
         if (process.env[env]) {
-          console.warn(`You are using deprecated env variable ${env}. Use ${deprecatedEnvVars[env]} instead. \nMismatching env variable will be removed in the next major release (4.x.x)`)
+          console.warn(`You are using deprecated env variable ${env}. Use ${deprecatedEnvVars[env]} instead. \nDeprecated env variable will be removed in the next major release (4.x.x)`)
         }
       })
 
