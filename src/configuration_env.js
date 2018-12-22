@@ -32,7 +32,7 @@ export default class ConfigurationEnv {
   static _getSamplerFromEnv(config) {
 
     Object
-      .keys(wrongEnvVars)
+      .keys(deprecatedEnvVars)
       .forEach(env => {
         if (process.env[env]) {
           console.warn(`You are using deprecated env variable ${env}. Use ${deprecatedEnvVars[env]} instead. \nMismatching env variable will be removed in the next major release (4.x.x)`)
