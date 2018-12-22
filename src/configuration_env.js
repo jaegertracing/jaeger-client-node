@@ -13,12 +13,32 @@
 import Configuration from './configuration.js';
 import Utils from './util.js';
 
+const wrongEnvVars = {
+  JAEGER_SAMPLER_HOST: 'JAEGER_SAMPLER_MANAGER_HOST_PORT',
+  JAEGER_SAMPLER_PORT: 'JAEGER_SAMPLER_MANAGER_HOST_PORT',
+  JAEGER_REPORTER_ENDPOINT: 'JAEGER_ENDPOINT',
+  JAEGER_REPORTER_USER: 'JAEGER_USER',
+  JAEGER_REPORTER_PASSWORD: 'JAEGER_PASSWORD',
+  JAEGER_REPORTER_AGENT_HOST: 'JAEGER_AGENT_HOST',
+  JAEGER_REPORTER_AGENT_PORT: 'JAEGER_AGENT_PORT',
+  JAEGER_DISABLE: 'JAEGER_DISABLED'
+};
+
 export default class ConfigurationEnv {
   static _getConfigValue(obj, key, defaultValue) {
     return (obj && obj[key]) || defaultValue;
   }
 
   static _getSamplerFromEnv(config) {
+
+    Object
+      .keys(wrongEnvVars)
+      .forEach(env => {
+        if (process.env[env]) {
+          console.error(`You are using wrong missmatching env variable ${env}. Use ${wrongEnvVars[env]} instead. \nMismatching env variable will be removed in the next major release (4.x.x)`)
+        }
+      })
+
     let samplerConfig = {};
     let value = ConfigurationEnv._getConfigValue(config.sampler, 'type', process.env.JAEGER_SAMPLER_TYPE);
     if (value) {
