@@ -13,7 +13,7 @@
 import Configuration from './configuration.js';
 import Utils from './util.js';
 
-const wrongEnvVars = {
+const deprecatedEnvVars = {
   JAEGER_SAMPLER_HOST: 'JAEGER_SAMPLER_MANAGER_HOST_PORT',
   JAEGER_SAMPLER_PORT: 'JAEGER_SAMPLER_MANAGER_HOST_PORT',
   JAEGER_REPORTER_ENDPOINT: 'JAEGER_ENDPOINT',
@@ -35,7 +35,7 @@ export default class ConfigurationEnv {
       .keys(wrongEnvVars)
       .forEach(env => {
         if (process.env[env]) {
-          console.warn(`You are using wrong missmatching env variable ${env}. Use ${wrongEnvVars[env]} instead. \nMismatching env variable will be removed in the next major release (4.x.x)`)
+          console.warn(`You are using deprecated env variable ${env}. Use ${deprecatedEnvVars[env]} instead. \nMismatching env variable will be removed in the next major release (4.x.x)`)
         }
       })
 
