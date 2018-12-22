@@ -35,7 +35,7 @@ export default class ConfigurationEnv {
       .keys(wrongEnvVars)
       .forEach(env => {
         if (process.env[env]) {
-          console.error(`You are using wrong missmatching env variable ${env}. Use ${wrongEnvVars[env]} instead. \nMismatching env variable will be removed in the next major release (4.x.x)`)
+          console.warn(`You are using wrong missmatching env variable ${env}. Use ${wrongEnvVars[env]} instead. \nMismatching env variable will be removed in the next major release (4.x.x)`)
         }
       })
 
