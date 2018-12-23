@@ -25,12 +25,7 @@ const deprecatedEnvVars = {
 };
 
 export default class ConfigurationEnv {
-  static _getConfigValue(obj, key, defaultValue) {
-    return (obj && obj[key]) || defaultValue;
-  }
-
-  static _getSamplerFromEnv(config) {
-
+  static _validateEnv() {
     Object
       .keys(deprecatedEnvVars)
       .forEach(env => {
@@ -38,7 +33,13 @@ export default class ConfigurationEnv {
           console.warn(`You are using deprecated env variable ${env}. Use ${deprecatedEnvVars[env]} instead. \nDeprecated env variable will be removed in the next major release (4.x.x)`)
         }
       })
+  }
 
+  static _getConfigValue(obj, key, defaultValue) {
+    return (obj && obj[key]) || defaultValue;
+  }
+
+  static _getSamplerFromEnv(config) {
     let samplerConfig = {};
     let value = ConfigurationEnv._getConfigValue(config.sampler, 'type', process.env.JAEGER_SAMPLER_TYPE);
     if (value) {
@@ -184,6 +185,8 @@ export default class ConfigurationEnv {
    * @param {Object} options - options, see Configuration.initTracer
    */
   static initTracer(config = {}, options = {}) {
+    this._validateEnv()
+
     config.disable = config.disable || process.env.JAEGER_DISABLED === 'true' || process.env.JAEGER_DISABLE === 'true';
     config.serviceName = config.serviceName || process.env.JAEGER_SERVICE_NAME;
 
