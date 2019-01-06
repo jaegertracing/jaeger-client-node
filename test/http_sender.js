@@ -117,8 +117,8 @@ describe('http sender', () => {
       });
       assert.equal(actualTags.length, 4);
       assert.equal(actualTags[0].key, 'client-uuid');
-      assert.equal(actualTags[1].key, 'ip');
-      assert.equal(actualTags[2].key, 'jaeger.hostname');
+      assert.equal(actualTags[1].key, 'hostname');
+      assert.equal(actualTags[2].key, 'ip');
       assert.equal(actualTags[3].key, 'jaeger.version');
     });
 
