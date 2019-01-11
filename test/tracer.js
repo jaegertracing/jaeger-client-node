@@ -24,6 +24,7 @@ import LocalMetricFactory from './lib/metrics/local/metric_factory.js';
 import LocalBackend from './lib/metrics/local/backend.js';
 import sinon from 'sinon';
 import DefaultThrottler from '../src/throttler/default_throttler';
+import os from 'os';
 
 describe('tracer should', () => {
   let tracer;
@@ -58,6 +59,23 @@ describe('tracer should', () => {
 
     mytracer.inject(myspan.context(), opentracing.FORMAT_HTTP_HEADERS, exheaders);
     assert.notEqual(exheaders[ck], null);
+  });
+
+  it('find the ip and hostname by default', () => {
+    assert.equal(tracer._tags[constants.PROCESS_IP], Utils.ipToInt(Utils.myIp()));
+    assert.equal(tracer._tags[constants.TRACER_HOSTNAME_TAG_KEY], os.hostname());
+  });
+
+  it('be able to override ip and hostname tags if provided', () => {
+    let mytags = {};
+    mytags[constants.PROCESS_IP] = '10.0.0.1';
+    mytags[constants.TRACER_HOSTNAME_TAG_KEY] = '10.0.0.1.internal';
+    let mytracer = new Tracer('test-service-name', reporter, new ConstSampler(true), {
+      tags: mytags,
+    });
+
+    assert.equal(mytracer._tags[constants.PROCESS_IP], Utils.ipToInt('10.0.0.1'));
+    assert.equal(mytracer._tags[constants.TRACER_HOSTNAME_TAG_KEY], '10.0.0.1.internal');
   });
 
   it('begin a new span given only baggage headers', () => {
