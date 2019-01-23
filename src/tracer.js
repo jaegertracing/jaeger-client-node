@@ -66,8 +66,9 @@ export default class Tracer {
   ) {
     this._tags = options.tags || {};
     this._tags[constants.JAEGER_CLIENT_VERSION_TAG_KEY] = `Node-${pjson.version}`;
-    this._tags[constants.TRACER_HOSTNAME_TAG_KEY] = os.hostname();
-    this._tags[constants.PROCESS_IP] = Utils.ipToInt(Utils.myIp());
+    this._tags[constants.TRACER_HOSTNAME_TAG_KEY] =
+      this._tags[constants.TRACER_HOSTNAME_TAG_KEY] || os.hostname();
+    this._tags[constants.PROCESS_IP] = Utils.ipToInt(this._tags[constants.PROCESS_IP] || Utils.myIp());
 
     this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
 
