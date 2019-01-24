@@ -65,7 +65,10 @@ export default class TChannelBridge {
   _tchannelCallbackWrapper(span: Span, callback: Function, err: any, res: any) {
     if (err) {
       span.setTag(opentracing.Tags.ERROR, true);
-      span.log('error_msg', err);
+      span.log({
+        event: 'error',
+        message: err,
+      });
     }
 
     span.finish();

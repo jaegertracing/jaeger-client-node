@@ -157,4 +157,19 @@ describe('test tchannel span bridge', () => {
       }
     }).timeout(BIG_TIMEOUT);
   });
+
+  it('span logs an error that occurred while propagating through tchannel', done => {
+    let mockSpan = tracer.startSpan('checkErr');
+    let mockCallback = (err, res) => {};
+    let res = { ok: false, body: {} };
+    let err = 'some error occurred while propagating';
+    bridge._tchannelCallbackWrapper(mockSpan, mockCallback, err, res);
+
+    assert.equal(mockSpan._logs.length, 1);
+    assert.equal(mockSpan._logs[0].fields[0].key, 'event');
+    assert.equal(mockSpan._logs[0].fields[0].value, 'error');
+    assert.equal(mockSpan._logs[0].fields[1].key, 'message');
+    assert.equal(mockSpan._logs[0].fields[1].value, err);
+    done();
+  }).timeout(BIG_TIMEOUT);
 });
