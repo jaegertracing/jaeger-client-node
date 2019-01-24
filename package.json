@@ -13,7 +13,7 @@
     "type": "git",
     "url": "git://github.com/jaegertracing/jaeger-client-node.git"
   },
-  "files": ["dist/src"],
+  "files": ["src/**"],
   "contributors": ["Yuri Shkuro <ys@uber.com>", "Won Jun Jang <wjang@uber.com>"],
   "dependencies": {
     "node-int64": "^0.4.0",
