@@ -1,5 +1,9 @@
 # Changes by Version
 
+## 3.14.2 (2019-01-24)
+
+* Actually fix issue where dist/src files were missing
+
 ## 3.14.1 (2019-01-24)
 
 * Fixed issue where dist/src files were missing
