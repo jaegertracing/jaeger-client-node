@@ -158,60 +158,18 @@ describe('test tchannel span bridge', () => {
     }).timeout(BIG_TIMEOUT);
   });
 
-  let errSpanOptions = {
-    as: 'json',
-    mode: 'req.send',
-    context: ctx1,
-    headers: {},
-  };
+  it('span logs an error that occurred while propagating through tchannel', done => {
+    let mockSpan = tracer.startSpan('checkErr');
+    let mockCallback = (err, res) => {};
+    let res = { ok: false, body: {} };
+    let err = 'some error occurred while propagating';
+    bridge._tchannelCallbackWrapper(mockSpan, mockCallback, err, res);
 
-  it('as=json|mode=req.send spans log an error while propagating through tchannel', done => {
-    let server = new TChannel({
-      serviceName: 'server',
-      timeout: BIG_TIMEOUT,
-      trace: true,
-      forceTrace: true,
-    });
-    server.listen(4040, '127.0.0.1', onServerListeningErr);
-
-    let client = new TChannel({
-      trace: true,
-      forceTrace: true,
-    });
-
-    let clientSubChannel = client.makeSubChannel({
-      serviceName: 'server',
-      peers: ['127.0.0.1:4040'],
-    });
-
-    let encodedChannel = TChannelAsJSON({
-      channel: clientSubChannel,
-      entryPoint: path.join(__dirname, 'thrift', 'echo.thrift'),
-    });
-
-    let options: any = {};
-    encodedChannel.register(server, 'Echo::echo', options, bridge.tracedHandler(handleErrServerReq));
-    function handleErrServerReq(context, req, head, body, callback) {
-      callback('Some error occurred while propagation', { ok: false, body: {} });
-    }
-
-    function onServerListeningErr(err, res, arg2, arg3) {
-      let tracedChannel = bridge.tracedChannel(encodedChannel);
-      let clientCallback = (err, res, headers, body) => {
-        assert.isOk(err);
-        reporter.clear();
-        server.close();
-        client.close();
-        done();
-      };
-
-      let req = tracedChannel.request({
-        serviceName: 'server',
-        headers: { cn: 'echo' },
-        context: errSpanOptions.context,
-        timeout: BIG_TIMEOUT,
-      });
-      req.send('Echo::echo', errSpanOptions.headers, { value: 'some-string' }, clientCallback);
-    }
+    assert.equal(mockSpan._logs.length, 1);
+    assert.equal(mockSpan._logs[0].fields[0].key, 'event');
+    assert.equal(mockSpan._logs[0].fields[0].value, 'error');
+    assert.equal(mockSpan._logs[0].fields[1].key, 'message');
+    assert.equal(mockSpan._logs[0].fields[1].value, err);
+    done();
   }).timeout(BIG_TIMEOUT);
 });
