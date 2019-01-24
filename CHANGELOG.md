@@ -1,8 +1,18 @@
 # Changes by Version
 
-## 3.13.1 (unreleased)
+## 3.14.0 (2019-01-24)
 
-* Nothing yet.
+* Add setProcess method to LoggingReporter (#303) - thanks @isayme
+* Change Zipkin Codec to Not Inject Missing Parent (#305) - thanks @adinunzio84
+* Add missed contextKey option to initTracer (#308) - thanks @yepninja
+* Allow overriding codec's default baggage prefix (#310) - thanks @artemruts
+* Make zipkin codec use case insensetive headers (#309) - thanks @artemruts
+* Fix Span.log to return `this` (#316) - thanks @doubret
+* Support injecting and extracting into carriers without Object prototypes (#318) - thanks @ggoodman
+* Support canonical env variables (#311) - thanks @yepninja
+* Rename 'jaeger.hostname' tracer tag to 'hostname' (#333) - thanks @verma-varsha
+* Use the ip and hostname tags if provided (#336) - thanks @ledor473
+* Make TchannelBridge use semantic conventions when logging error to the span (#334) - thanks @verma-varsha
 
 ## 3.13.0 (2018-10-08)
 
