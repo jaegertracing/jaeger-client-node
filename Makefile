@@ -50,7 +50,6 @@ build-node: check-node-6 node-modules
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/test/ test/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/crossdock/ crossdock/
 	cp -R ./test/thrift ./dist/test/thrift/
-	cp package.json ./dist/
 	cp -R ./src/jaeger-idl ./dist/src/
 	rm -rf ./dist/src/jaeger-idl/.git
 	cp -R ./src/thriftrw-idl ./dist/src/
