@@ -15,7 +15,6 @@ import BinaryCodec from './propagators/binary_codec';
 import ConstSampler from './samplers/const_sampler';
 import * as constants from './constants';
 import * as opentracing from 'opentracing';
-import pjson from '../package.json';
 import { Tags as opentracing_tags } from 'opentracing';
 import NoopReporter from './reporters/noop_reporter';
 import Span from './span';
@@ -30,6 +29,14 @@ import os from 'os';
 import BaggageSetter from './baggage/baggage_setter';
 import DefaultThrottler from './throttler/default_throttler';
 import uuidv4 from 'uuid/v4';
+
+let pjson;
+try {
+  pjson = require('../package.json');
+} catch (_) {
+  // $FlowIgnore
+  pjson = require('../../package.json');
+}
 
 export default class Tracer {
   _serviceName: string;

@@ -1,10 +1,10 @@
 -include crossdock/rules.mk
 
 NODE_VER=$(shell node -v)
-ifeq ($(patsubst v6.%,matched,$(NODE_VER)), matched)
-	NODE_6=true
+ifeq ($(patsubst v8.%,matched,$(NODE_VER)), matched)
+	NODE_8=true
 else
-	NODE_6=false
+	NODE_8=false
 endif
 ifeq ($(patsubst v0.10%,matched,$(NODE_VER)), matched)
 	NODE_0_10=true
@@ -25,26 +25,26 @@ test: build-node
 
 .PHONY: test-without-build
 test-without-build: install-test-deps
-	npm run flow
-ifeq ($(NODE_6),true)
-	npm run test-all
+	yarn flow
+ifeq ($(NODE_8),true)
+	yarn test-all
 endif
-	npm run test-dist
-	npm run check-license
+	yarn test-dist
+	yarn check-license
 
 .PHONY: install-test-deps
 install-test-deps:
 ifeq ($(NODE_0_10), false)
-	npm install prom-client@11.0.0
+	yarn add prom-client@11.0.0
 endif
 
-.PHONY: check-node-6
-check-node-6:
-	@$(NODE_6) || echo Build requires Node 6.x
-	@$(NODE_6) && echo Building using Node 6.x
+.PHONY: check-node-8
+check-node-8:
+	@$(NODE_8) || echo Build requires Node 8.x
+	@$(NODE_8) && echo Building using Node 8.x
 
 .PHONY: build-node
-build-node: check-node-6 node-modules
+build-node: check-node-8 node-modules
 	rm -rf ./dist/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/src/ src/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/test/ test/
@@ -58,4 +58,4 @@ build-node: check-node-6 node-modules
 node-modules:
 	git submodule init -- ./src/jaeger-idl
 	git submodule update
-	npm install
+	yarn
