@@ -1,5 +1,13 @@
 # Changes by Version
 
+## 3.14.4 (2019-01-24)
+
+* Hard code version
+
+## 3.14.3 (2019-01-24)
+
+* Nothing
+
 ## 3.14.2 (2019-01-24)
 
 * Actually fix issue where dist/src files were missing

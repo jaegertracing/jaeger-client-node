@@ -15,7 +15,6 @@ import BinaryCodec from './propagators/binary_codec';
 import ConstSampler from './samplers/const_sampler';
 import * as constants from './constants';
 import * as opentracing from 'opentracing';
-import pjson from '../package.json';
 import { Tags as opentracing_tags } from 'opentracing';
 import NoopReporter from './reporters/noop_reporter';
 import Span from './span';
@@ -65,8 +64,9 @@ export default class Tracer {
     options: any = {}
   ) {
     this._tags = options.tags || {};
-    this._tags[constants.JAEGER_CLIENT_VERSION_TAG_KEY] = `Node-${pjson.version}`;
-    this._tags[constants.TRACER_HOSTNAME_TAG_KEY] =
+    this._tags[constants.JAEGER_CLIENT_VERSION_TAG_KEY] = 'Node-3.14.4'.this._tags[
+      constants.TRACER_HOSTNAME_TAG_KEY
+    ] =
       this._tags[constants.TRACER_HOSTNAME_TAG_KEY] || os.hostname();
     this._tags[constants.PROCESS_IP] = Utils.ipToInt(this._tags[constants.PROCESS_IP] || Utils.myIp());
 
