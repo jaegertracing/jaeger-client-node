@@ -65,30 +65,6 @@ export default class Utils {
   }
 
   /**
-   * @param {string} ip - a string representation of an ip address.
-   * @return {number} - a 32-bit number where each byte represents an
-   * octect of an ip address.
-   **/
-  static ipToInt(ip: string): ?number {
-    let ipl = 0;
-    let parts = ip.split('.');
-    if (parts.length != 4) {
-      return null;
-    }
-
-    for (let i = 0; i < parts.length; i++) {
-      ipl <<= 8;
-      ipl += parseInt(parts[i], 10);
-    }
-
-    let signedLimit = 0x7fffffff;
-    if (ipl > signedLimit) {
-      return (1 << 32) - ipl;
-    }
-    return ipl;
-  }
-
-  /**
    * @param {string} input - the input for which leading zeros should be removed.
    * @return {string} - returns the input string without leading zeros.
    **/
