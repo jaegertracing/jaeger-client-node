@@ -62,7 +62,7 @@ describe('tracer should', () => {
   });
 
   it('find the ip and hostname by default', () => {
-    assert.equal(tracer._tags[constants.PROCESS_IP], Utils.ipToInt(Utils.myIp()));
+    assert.equal(tracer._tags[constants.PROCESS_IP], Utils.myIp());
     assert.equal(tracer._tags[constants.TRACER_HOSTNAME_TAG_KEY], os.hostname());
   });
 
@@ -74,7 +74,7 @@ describe('tracer should', () => {
       tags: mytags,
     });
 
-    assert.equal(mytracer._tags[constants.PROCESS_IP], Utils.ipToInt('10.0.0.1'));
+    assert.equal(mytracer._tags[constants.PROCESS_IP], '10.0.0.1');
     assert.equal(mytracer._tags[constants.TRACER_HOSTNAME_TAG_KEY], '10.0.0.1.internal');
   });
 

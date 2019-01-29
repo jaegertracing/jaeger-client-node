@@ -16,20 +16,6 @@ import Utils from '../src/util.js';
 import combinations from './lib/combinations.js';
 
 describe('utils', () => {
-  describe('ipToInt', () => {
-    it('should convert malformed IP to null', () => {
-      assert.isNotOk(Utils.ipToInt('127.0'));
-    });
-
-    it('should convert an ip less than 2^32 to an unsigned number', () => {
-      assert.equal((127 << 24) | 1, Utils.ipToInt('127.0.0.1'));
-    });
-
-    it('should convert an ip greater than 2^32 to a negative number', () => {
-      assert.equal(-1, Utils.ipToInt('255.255.255.255'));
-    });
-  });
-
   describe('removeLeadingZeros', () => {
     it('should leave single 0 digit intact', () => {
       assert.equal('0', Utils.removeLeadingZeros('0'));
