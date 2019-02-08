@@ -17,7 +17,7 @@ Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 The Tracer defaults to sending spans over UDP to the jaeger-agent running on localhost; the jaeger-agent handles forwarding the spans to the jaeger-collector. When you are instantiating your client instance you can specify the sampler of your choice. The library support the following samplers:
 
 | SAMPLER       | KEY             |
-|---------------|-----------------|
+| ------------- | --------------- |
 | Constant      | `const`         |
 | Probabilistic | `probabilistic` |
 | Rate Limiting | `ratelimiting`  |
@@ -44,7 +44,13 @@ var tracer = initTracer(config, options);
 
 ### Environment variables
 
-The tracer can be initialized with values coming from environment variables. None of the env vars are required and all of them can be overridden via direct setting of the property on the configuration object.
+The tracer can be initialized with values coming from environment variables:
+
+```jhavascript:
+var tracer = initTracerFromEnv(config, options);
+```
+
+None of the env vars are required and all of them can be overridden via properties on the `config` object.
 
 | Property                         | Description                                                                                                                                                                                                                                                                                                      |
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
