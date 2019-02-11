@@ -112,6 +112,8 @@ export default class HTTPSender {
     const requester = this._url.protocol === 'https:' ? https.request : http.request;
 
     const req = requester(this._httpOptions, resp => {
+      // consume response data to free up memory
+      resp.resume();
       SenderUtils.invokeCallback(callback, numSpans);
     });
 
