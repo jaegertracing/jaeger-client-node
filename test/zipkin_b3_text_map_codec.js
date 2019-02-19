@@ -126,6 +126,33 @@ describe('Zipkin B3 Text Map Codec should', () => {
     assert.isNotOk(context.isDebug());
   });
 
+  it('not set the sampled flag if sampling is denied', () => {
+    const headers = {
+      'x-b3-sampled': '0',
+    };
+
+    const context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
+    assert.isNotOk(context.isSampled());
+  });
+
+  it('handle true value for the sampled header', () => {
+    let headers = {
+      'x-b3-sampled': 'true',
+    };
+
+    let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
+    assert.isOk(context.isSampled());
+  });
+
+  it('handle false value for the sampled header', () => {
+    let headers = {
+      'x-b3-sampled': 'false',
+    };
+
+    let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
+    assert.isNotOk(context.isSampled());
+  });
+
   it('set the debug and sampled flags when the zipkin flags header is received', () => {
     let headers = {
       'x-b3-flags': '1',

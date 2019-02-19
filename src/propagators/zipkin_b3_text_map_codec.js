@@ -112,7 +112,9 @@ export default class ZipkinB3TextMapCodec {
             traceId = this._decodeValue(carrier[key]);
             break;
           case ZIPKIN_SAMPLED_HEADER:
-            flags = flags | constants.SAMPLED_MASK;
+            if (carrier[key] === '1' || carrier[key] === 'true') {
+              flags = flags | constants.SAMPLED_MASK;
+            }
             break;
           case ZIPKIN_FLAGS_HEADER:
             // Per https://github.com/openzipkin/b3-propagation
