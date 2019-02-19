@@ -45,7 +45,7 @@ check-node-6:
 
 .PHONY: build-node
 build-node: check-node-6 node-modules
-	sed -i.bak "s|const pjsonVersion = '.*'|const pjsonVersion = '$(shell node -p 'require("./package.json").version')'|" src/tracer.js && rm src/tracer.js.bak
+	sed -i.bak "s|module.exports = '.*'|module.exports = '$(shell node -p 'require("./package.json").version')'|" src/version.js && rm src/version.js.bak
 	rm -rf ./dist/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/src/ src/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/test/ test/
