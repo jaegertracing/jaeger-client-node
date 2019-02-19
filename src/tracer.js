@@ -30,6 +30,8 @@ import BaggageSetter from './baggage/baggage_setter';
 import DefaultThrottler from './throttler/default_throttler';
 import uuidv4 from 'uuid/v4';
 
+const pjsonVersion = '3.14.4';
+
 export default class Tracer {
   _serviceName: string;
   _reporter: Reporter;
@@ -64,7 +66,7 @@ export default class Tracer {
     options: any = {}
   ) {
     this._tags = options.tags || {};
-    this._tags[constants.JAEGER_CLIENT_VERSION_TAG_KEY] = 'Node-3.14.4';
+    this._tags[constants.JAEGER_CLIENT_VERSION_TAG_KEY] = `Node-${pjsonVersion}`;
     this._tags[constants.TRACER_HOSTNAME_TAG_KEY] =
       this._tags[constants.TRACER_HOSTNAME_TAG_KEY] || os.hostname();
     this._tags[constants.PROCESS_IP] = this._tags[constants.PROCESS_IP] || Utils.myIp();
