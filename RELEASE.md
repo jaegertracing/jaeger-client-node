@@ -31,7 +31,6 @@ Declaring formal releases requires peer review.
     * Follow these instructions to create a token: https://docs.npmjs.com/getting-started/working_with_tokens
 * Create a "Back to development" pull request
   * Increment patch number in [package.json](./package.json) with `dev` suffix, e.g. if the last release was `3.5.3` then change it to `3.5.4dev`
-  * Update [src/version.js](./src/version.js) to reflect the version in package.json
   * Add a new entry to [CHANGELOG.md](./CHANGELOG.md)
     * Caption `{next_version} (unreleased)`
     * In place of the list of changes, add one entry "- nothing yet"
