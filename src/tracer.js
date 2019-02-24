@@ -63,7 +63,7 @@ export default class Tracer {
     sampler: Sampler = new ConstSampler(false),
     options: any = {}
   ) {
-    this._tags = options.tags || {};
+    this._tags = options.tags ? Utils.clone(options.tags) : {};
     this._tags[constants.JAEGER_CLIENT_VERSION_TAG_KEY] = 'Node-3.14.4';
     this._tags[constants.TRACER_HOSTNAME_TAG_KEY] =
       this._tags[constants.TRACER_HOSTNAME_TAG_KEY] || os.hostname();
