@@ -140,6 +140,15 @@ export default class ConfigurationEnv {
 
     value = ConfigurationEnv._getConfigValue(
       config.reporter,
+      'timeoutMs',
+      process.env.JAEGER_REPORTER_TIMEOUT
+    );
+    if (value) {
+      reporterConfig.timeoutMs = parseInt(value);
+    }
+
+    value = ConfigurationEnv._getConfigValue(
+      config.reporter,
       'agentPort',
       process.env.JAEGER_AGENT_PORT || process.env.JAEGER_REPORTER_AGENT_PORT
     );

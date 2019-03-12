@@ -177,6 +177,7 @@ describe('initTracer', () => {
             username: protocol === 'https' ? 'test' : undefined,
             password: protocol === 'https' ? 'mypass' : undefined,
             flushIntervalMs: 2000,
+            timeoutMs: 225,
           },
         };
         let tracer = initTracer(config);
@@ -192,6 +193,7 @@ describe('initTracer', () => {
         }
 
         assert.equal(url.format(remoteReporter._sender._url), `${protocol}://127.0.0.1:4939/my/path`);
+        assert.equal(remoteReporter._sender._timeoutMs, 225);
         assert.instanceOf(remoteReporter._sender, HTTPSender);
         tracer.close(done);
       });
@@ -489,6 +491,7 @@ describe('initTracerFromENV', () => {
     process.env.JAEGER_SERVICE_NAME = 'test-service';
     process.env.JAEGER_REPORTER_FLUSH_INTERVAL = 3000;
     process.env.JAEGER_REPORTER_ENDPOINT = 'http://127.0.0.1:8080';
+    process.env.JAEGER_REPORTER_TIMEOUT = 225;
     process.env.JAEGER_REPORTER_USER = 'test';
     process.env.JAEGER_REPORTER_PASSWORD = 'xxxx';
 
@@ -499,6 +502,7 @@ describe('initTracerFromENV', () => {
     assert.equal(tracer._reporter._sender._url.href, 'http://127.0.0.1:8080/');
     assert.equal(tracer._reporter._sender._username, 'test');
     assert.equal(tracer._reporter._sender._password, 'xxxx');
+    assert.equal(tracer._reporter._sender._timeout, 225);
 
     tracer.close(done);
   });

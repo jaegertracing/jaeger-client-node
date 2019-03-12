@@ -31,7 +31,7 @@ export default class HTTPSender {
   _username: string;
   _password: string;
   _emitSpanBatchOverhead: number;
-  _timeoutMS: number;
+  _timeoutMs: number;
   _httpAgent: http$Agent;
   _logger: Logger;
   _jaegerThrift: Thrift;
@@ -45,7 +45,7 @@ export default class HTTPSender {
     this._url = URL.parse(options.endpoint);
     this._username = options.username;
     this._password = options.password;
-    this._timeoutMS = options.timeoutMS || DEFAULT_TIMEOUT_MS;
+    this._timeoutMs = options.timeoutMs || options.timeoutMS || DEFAULT_TIMEOUT_MS;
     this._httpAgent =
       this._url.protocol === 'https:'
         ? new https.Agent({ keepAlive: true })
@@ -71,7 +71,7 @@ export default class HTTPSender {
         Connection: 'keep-alive',
       },
       agent: this._httpAgent,
-      timeout: this._timeoutMS,
+      timeout: this._timeoutMs,
     };
   }
 

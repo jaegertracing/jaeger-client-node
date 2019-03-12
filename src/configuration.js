@@ -53,6 +53,7 @@ let jaegerSchema = {
         username: { type: 'string' },
         password: { type: 'string' },
         flushIntervalMs: { type: 'number' },
+        timeoutMs: { type: 'number' },
       },
       additionalProperties: false,
     },
@@ -134,6 +135,9 @@ export default class Configuration {
         }
         if (config.reporter.password) {
           senderConfig['password'] = config.reporter.password;
+        }
+        if (config.reporter.timeoutMs) {
+          senderConfig[ 'timeoutMs' ] = config.reporter.timeoutMs;
         }
       }
       if (config.reporter.agentHost) {
