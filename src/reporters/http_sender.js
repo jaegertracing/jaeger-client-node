@@ -111,7 +111,7 @@ export default class HTTPSender {
 
     const req = requester(this._httpOptions, resp => {
       
-      if(resp.statusCode && resp.statusCode === 200)
+      if(resp.statusCode && (resp.statusCode >= 200 || resp.statusCode < 227))
       {
         this._reset();  
       }
