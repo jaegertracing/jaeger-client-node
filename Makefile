@@ -49,6 +49,7 @@ build-node: check-node-6 node-modules
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/src/ src/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/test/ test/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/crossdock/ crossdock/
+	cat src/version.js | sed "s|VERSION_TBD|$(shell node -p 'require("./package.json").version')|g" > dist/src/version.js
 	cp -R ./test/thrift ./dist/test/thrift/
 	cp package.json ./dist/
 	cp -R ./src/jaeger-idl ./dist/src/
