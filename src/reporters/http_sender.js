@@ -115,6 +115,8 @@ export default class HTTPSender {
       // consume response data to free up memory
       resp.resume();
       SenderUtils.invokeCallback(callback, numSpans);
+      // sockets are not closing by server, so we will reach 65k limit and fail
+      req.abort();
     });
 
     req.on('error', err => {
