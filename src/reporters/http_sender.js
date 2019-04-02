@@ -122,6 +122,9 @@ export default class HTTPSender {
       this._logger.error(error);
       SenderUtils.invokeCallback(callback, numSpans, error);
     });
+    req.on('timeout', () => {
+      req.abort();
+    });
     req.write(result.value);
     req.end();
   }
