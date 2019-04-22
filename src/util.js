@@ -132,7 +132,7 @@ export default class Utils {
         res => {
           // explicitly treat incoming data as utf8 (avoids issues with multi-byte chars)
           res.setEncoding('utf8');
-
+          let statusCode = res.statusCode;
           // incrementally capture the incoming response body
           let body = '';
           res.on('data', chunk => {
@@ -140,7 +140,11 @@ export default class Utils {
           });
 
           res.on('end', () => {
-            success(body);
+            if (statusCode == 200) {
+              success(body);
+            } else {
+              error('StatusCode: ', statusCode);
+            }
           });
         }
       )
