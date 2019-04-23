@@ -417,4 +417,18 @@ describe('tracer should', () => {
       assert.isOk(LocalBackend.counterEquals(metrics.spansFinished, 1));
     });
   });
+
+  it('should NOT mutate tags', () => {
+    const tags = {
+      robot: 'bender',
+    };
+    tracer = new Tracer('test-service-name', reporter, new ConstSampler(true), {
+      tags: tags,
+    });
+    tracer.close();
+    assert.notEqual(tags, tracer._tags);
+    assert.deepEqual(tags, {
+      robot: 'bender',
+    });
+  });
 });
