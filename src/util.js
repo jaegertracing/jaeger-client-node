@@ -139,7 +139,7 @@ export default class Utils {
           });
 
           res.on('end', () => {
-            if (res.complete && res.statusCode == 200) {
+            if (res.statusCode == 200) {
               success(body);
             } else {
               error(new Error(`HTTP GET failed: ${res.statusCode}`));
