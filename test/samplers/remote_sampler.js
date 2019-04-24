@@ -73,7 +73,7 @@ describe('RemoteSampler', () => {
   });
 
   it('should throw error on bad sampling strategy', done => {
-    metrics.samplerUpdateFailure.increment = function() {
+    metrics.samplerQueryFailure.increment = function() {
       assert.equal(logger._errorMsgs.length, 1);
       done();
     };
