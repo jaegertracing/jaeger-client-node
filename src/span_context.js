@@ -83,10 +83,11 @@ export default class SpanContext {
     if (this._traceIdLow == null && this._traceIdHigh == null && this._traceIdStr != null) {
       if (this._traceIdStr.length > 16) {
         const safeTraceIdStr = this._traceIdStr.length % 2 == 0 ? this._traceIdStr : '0' + this._traceIdStr;
-        const traceId = Buffer.from(safeTraceIdStr, 'hex');
+        const traceId = new Buffer(safeTraceIdStr, 'hex');
         this._traceIdHigh = traceId.slice(-16, -8);
         if (this._traceIdHigh.length != 8) {
-          const tmpBuffer = Buffer.alloc(8);
+          const tmpBuffer = new Buffer(8);
+          tmpBuffer.fill(0);
           this._traceIdHigh.copy(tmpBuffer, 8 - this._traceIdHigh.length);
           this._traceIdHigh = tmpBuffer;
         }
