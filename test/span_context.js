@@ -24,14 +24,31 @@ describe('SpanContext should', () => {
   });
 
   it('return given values as they were set', () => {
-    let traceId = Utils.encodeInt64(1);
+    let traceIdLow = Utils.encodeInt64(1);
     let spanId = Utils.encodeInt64(2);
     let parentId = Utils.encodeInt64(3);
     let flags = 1;
 
-    let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
+    let context = SpanContext.withBinaryIds(traceIdLow, null, spanId, parentId, flags);
 
-    assert.deepEqual(traceId, context.traceId);
+    assert.deepEqual(traceIdLow, context.traceIdLow);
+    assert.deepEqual(spanId, context.spanId);
+    assert.deepEqual(parentId, context.parentId);
+    assert.equal(flags, context.flags);
+  });
+
+  it('return given values as they were set 128 bit', () => {
+    let traceIdLow = Utils.encodeInt64(1);
+    let traceIdHigh = Utils.encodeInt64(2);
+    let spanId = Utils.encodeInt64(3);
+    let parentId = Utils.encodeInt64(4);
+    let flags = 1;
+
+    let context = SpanContext.withBinaryIds(traceIdLow, traceIdHigh, spanId, parentId, flags);
+
+    assert.deepEqual(traceIdLow, context.traceIdLow);
+    assert.deepEqual(traceIdHigh, context.traceIdHigh);
+    assert.deepEqual('20000000000000001', context.traceIdStr);
     assert.deepEqual(spanId, context.spanId);
     assert.deepEqual(parentId, context.parentId);
     assert.equal(flags, context.flags);
@@ -40,6 +57,7 @@ describe('SpanContext should', () => {
   it('return IsSampled properly', () => {
     let context = SpanContext.withBinaryIds(
       Utils.encodeInt64(1),
+      null,
       Utils.encodeInt64(2),
       Utils.encodeInt64(3),
       3
@@ -53,11 +71,12 @@ describe('SpanContext should', () => {
   });
 
   it('format strings properly with toString', () => {
-    let ctx1 = SpanContext.withBinaryIds(Utils.encodeInt64(0x100), Utils.encodeInt64(0x7f), null, 1);
+    let ctx1 = SpanContext.withBinaryIds(Utils.encodeInt64(0x100), null, Utils.encodeInt64(0x7f), null, 1);
     assert.equal(ctx1.toString(), '100:7f:0:1');
 
     let ctx2 = SpanContext.withBinaryIds(
       Utils.encodeInt64(255 << 4),
+      null,
       Utils.encodeInt64(127),
       Utils.encodeInt64(256),
       0
@@ -65,7 +84,7 @@ describe('SpanContext should', () => {
     assert.equal(ctx2.toString(), 'ff0:7f:100:0');
 
     // test large numbers
-    let ctx3 = SpanContext.withBinaryIds(LARGEST_64_BUFFER, LARGEST_64_BUFFER, LARGEST_64_BUFFER, 0);
+    let ctx3 = SpanContext.withBinaryIds(LARGEST_64_BUFFER, null, LARGEST_64_BUFFER, LARGEST_64_BUFFER, 0);
     assert.equal(ctx3.toString(), 'ffffffffffffffff:ffffffffffffffff:ffffffffffffffff:0');
     assert.equal('ffffffffffffffff', ctx3.traceIdStr);
     assert.equal('ffffffffffffffff', ctx3.spanIdStr);
@@ -84,6 +103,28 @@ describe('SpanContext should', () => {
     context = SpanContext.fromString('ffffffffffffffff:ffffffffffffffff:5:1');
     assert.equal('ffffffffffffffff', context.traceIdStr);
     assert.equal('ffffffffffffffff', context.spanIdStr);
+    assert.deepEqual(LARGEST_64_BUFFER, context.spanId);
+    assert.deepEqual(LARGEST_64_BUFFER, context.spanId);
+    assert.deepEqual(Utils.encodeInt64(0x5), context.parentId);
+    assert.equal(context.flags, 0x1);
+  });
+
+  it('turn properly formatted strings into correct span contexts 128 bit', () => {
+    let context = SpanContext.fromString('20000000000000100:7f:0:1');
+
+    assert.deepEqual('20000000000000100', context.traceIdStr);
+    assert.deepEqual(Utils.encodeInt64(0x100), context.traceIdLow);
+    assert.deepEqual(Utils.encodeInt64(0x2), context.traceIdHigh);
+    assert.deepEqual(Utils.encodeInt64(0x7f), context.spanId);
+    assert.equal(null, context.parentId);
+    assert.equal(1, context.flags);
+
+    // test large numbers
+    context = SpanContext.fromString('ffffffffffffffffffffffffffffffff:ffffffffffffffff:5:1');
+    assert.equal('ffffffffffffffffffffffffffffffff', context.traceIdStr);
+    assert.equal('ffffffffffffffff', context.spanIdStr);
+    assert.deepEqual(LARGEST_64_BUFFER, context.traceIdLow);
+    assert.deepEqual(LARGEST_64_BUFFER, context.traceIdHigh);
     assert.deepEqual(LARGEST_64_BUFFER, context.spanId);
     assert.deepEqual(LARGEST_64_BUFFER, context.spanId);
     assert.deepEqual(Utils.encodeInt64(0x5), context.parentId);

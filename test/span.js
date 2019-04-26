@@ -35,6 +35,7 @@ describe('span should', () => {
 
     spanContext = SpanContext.withBinaryIds(
       Utils.encodeInt64(1),
+      null,
       Utils.encodeInt64(2),
       Utils.encodeInt64(3),
       constants.SAMPLED_MASK

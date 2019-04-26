@@ -104,8 +104,8 @@ export default class ThriftUtils {
 
       thriftRefs.push({
         refType: refEnum,
-        traceIdLow: context.traceId,
-        traceIdHigh: ThriftUtils.emptyBuffer,
+        traceIdLow: context.traceIdLow,
+        traceIdHigh: context.traceIdHigh == null ? ThriftUtils.emptyBuffer : context.traceIdHigh,
         spanId: context.spanId,
       });
     }
@@ -119,8 +119,9 @@ export default class ThriftUtils {
     let unsigned = true;
 
     return {
-      traceIdLow: span._spanContext.traceId,
-      traceIdHigh: ThriftUtils.emptyBuffer, // TODO(oibe) implement 128 bit ids
+      traceIdLow: span._spanContext.traceIdLow,
+      traceIdHigh:
+        span._spanContext.traceIdHigh == null ? ThriftUtils.emptyBuffer : span._spanContext.traceIdHigh,
       spanId: span._spanContext.spanId,
       parentSpanId: span._spanContext.parentId || ThriftUtils.emptyBuffer,
       operationName: span._operationName,

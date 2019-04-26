@@ -89,7 +89,7 @@ describe('tracer should', () => {
     let spanContext = tracer.extract(opentracing.FORMAT_TEXT_MAP, headers);
     let rootSpan = tracer.startSpan('fry', { childOf: spanContext });
 
-    assert.isOk(rootSpan.context().traceId);
+    assert.isOk(rootSpan.context().traceIdLow);
     assert.isNotOk(rootSpan.context().parentId);
     assert.equal(rootSpan.context().flags, 1);
     assert.equal('Bender', rootSpan.getBaggageItem('robot'));
@@ -98,11 +98,11 @@ describe('tracer should', () => {
   });
 
   it('create a span correctly through _startInternalSpan', () => {
-    let traceId = Utils.encodeInt64(1);
+    let traceIdLow = Utils.encodeInt64(1);
     let spanId = Utils.encodeInt64(2);
     let parentId = Utils.encodeInt64(3);
     let flags = 1;
-    let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
+    let context = SpanContext.withBinaryIds(traceIdLow, null, spanId, parentId, flags);
     let start = 123.456;
     let rpcServer = false;
     let internalTags = [];
@@ -122,7 +122,7 @@ describe('tracer should', () => {
       references
     );
 
-    assert.deepEqual(span.context().traceId, traceId);
+    assert.deepEqual(span.context().traceIdLow, traceIdLow);
     assert.deepEqual(span.context().spanId, spanId);
     assert.deepEqual(span.context().parentId, parentId);
     assert.equal(span.context().flags, flags);
@@ -151,7 +151,7 @@ describe('tracer should', () => {
       startTime: startTime,
     });
 
-    assert.equal(span.context().traceId, span.context().spanId);
+    assert.equal(span.context().traceIdLow, span.context().spanId);
     assert.isNotOk(span.context().parentId);
     assert.isOk(span.context().isSampled());
     assert.equal(span._startTime, startTime);
@@ -160,13 +160,13 @@ describe('tracer should', () => {
   describe('start a child span represented as a separate span from parent, using childOf and references', () => {
     let nextId = 0;
     const getId = () => Utils.encodeInt64(nextId++);
-    const traceId = getId();
+    const traceIdLow = getId();
     const flags = 1;
 
-    const parentContext = SpanContext.withBinaryIds(traceId, getId(), null, flags);
-    const childOfContext = SpanContext.withBinaryIds(traceId, getId(), null, flags);
+    const parentContext = SpanContext.withBinaryIds(traceIdLow, getId(), null, flags);
+    const childOfContext = SpanContext.withBinaryIds(traceIdLow, getId(), null, flags);
     const childOfRef = new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, childOfContext);
-    const followsFromContext = SpanContext.withBinaryIds(traceId, getId(), null, flags);
+    const followsFromContext = SpanContext.withBinaryIds(traceIdLow, getId(), null, flags);
     const followsFromRef = new opentracing.Reference(opentracing.REFERENCE_FOLLOWS_FROM, followsFromContext);
 
     const testCases = [
@@ -264,6 +264,7 @@ describe('tracer should', () => {
     };
     let savedContext = SpanContext.withBinaryIds(
       Utils.encodeInt64(1),
+      null,
       Utils.encodeInt64(2),
       Utils.encodeInt64(3),
       constants.SAMPLED_MASK,
@@ -293,6 +294,7 @@ describe('tracer should', () => {
     };
     let savedContext = SpanContext.withBinaryIds(
       Utils.encodeInt64(1),
+      null,
       Utils.encodeInt64(2),
       Utils.encodeInt64(3),
       constants.SAMPLED_MASK,
@@ -416,6 +418,17 @@ describe('tracer should', () => {
 
       assert.isOk(LocalBackend.counterEquals(metrics.spansFinished, 1));
     });
+  });
+
+  it('start a root span with 128 bit traceId', () => {
+    let span = tracer.startSpan('test-name', {
+      traceId128bit: true,
+    });
+
+    assert.equal(span.context().traceIdLow, span.context().spanId);
+    assert.isOk(span.context().traceIdHigh);
+    assert.isNotOk(span.context().parentId);
+    assert.isOk(span.context().isSampled());
   });
 
   it('should NOT mutate tags', () => {

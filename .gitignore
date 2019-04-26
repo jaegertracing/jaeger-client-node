@@ -4,6 +4,7 @@ npm-debug.log
 dist/
 
 .idea/
+.vscode/
 *.iml
 
 crossdock/jaeger-docker-compose.yml

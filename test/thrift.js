@@ -11,6 +11,7 @@
 // the License.
 
 import { assert } from 'chai';
+import opentracing from 'opentracing';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import Tracer from '../src/tracer.js';
@@ -63,5 +64,23 @@ describe('ThriftUtils', () => {
     assert.deepEqual(tSpan.startTime, Utils.encodeInt64(123456));
     assert.deepEqual(tSpan.duration, Utils.encodeInt64((123.678 - 123.456) * 1000));
     assert.deepEqual(tSpan.logs[0].timestamp, Utils.encodeInt64(123567));
+  });
+
+  it('should convert span with 128 bit traceId', () => {
+    let reporter = new InMemoryReporter();
+    let tracer = new Tracer('test-service-name', reporter, new ConstSampler(true));
+    let span = tracer.startSpan('some operation', { traceId128bit: true });
+    let childOfRef = new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, span.context());
+    let childSpan = tracer.startSpan('some child operation', { references: [childOfRef] });
+    childSpan.finish();
+    span.finish();
+    tracer.close();
+    let tSpan = ThriftUtils.spanToThrift(childSpan);
+    assert.deepEqual(tSpan.traceIdLow, childSpan.context().traceIdLow);
+    assert.deepEqual(tSpan.traceIdHigh, childSpan.context().traceIdHigh);
+    assert.deepEqual(tSpan.spanId, childSpan.context().spanId);
+    assert.deepEqual(tSpan.references[0].traceIdLow, span.context().traceIdLow);
+    assert.deepEqual(tSpan.references[0].traceIdHigh, span.context().traceIdHigh);
+    assert.deepEqual(tSpan.references[0].spanId, span.context().spanId);
   });
 });

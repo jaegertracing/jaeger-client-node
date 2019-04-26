@@ -188,6 +188,8 @@ export default class Tracer {
    *        the created Span object. The time should be specified in
    *        milliseconds as Unix timestamp. Decimal value are supported
    *        to represent time values with sub-millisecond accuracy.
+   * @param {number} [options.traceId128bit] - generate root span with a
+   *        128bit traceId.
    * @return {Span} - a new Span object.
    **/
   startSpan(operationName: string, options: ?startSpanOptions): Span {
@@ -239,12 +241,18 @@ export default class Tracer {
         ctx.baggage = parent.baggage;
       }
 
-      ctx.traceId = randomId;
+      if (options.traceId128bit) {
+        ctx.traceIdLow = randomId;
+        ctx.traceIdHigh = Utils.getRandom64();
+      } else {
+        ctx.traceIdLow = randomId;
+      }
       ctx.spanId = randomId;
       ctx.parentId = null;
       ctx.flags = flags;
     } else {
-      ctx.traceId = parent.traceId;
+      ctx.traceIdLow = parent.traceIdLow;
+      ctx.traceIdHigh = parent.traceIdHigh;
       ctx.spanId = Utils.getRandom64();
       ctx.parentId = parent.spanId;
       ctx.flags = parent.flags;
