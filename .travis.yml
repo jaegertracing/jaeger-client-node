@@ -22,6 +22,7 @@ matrix:
   - env: TEST_NODE_VERSION=6 LINT=1 COVER=1
   - env: TEST_NODE_VERSION=4
   - env: TEST_NODE_VERSION=--lts
+  - env: TEST_NODE_VERSION=node
   allow_failures:
   - env: TEST_NODE_VERSION=node
 
