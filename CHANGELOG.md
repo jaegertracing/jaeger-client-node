@@ -4,7 +4,7 @@
 
 * Avoid mutation of user's tags (#348) - Thanks @fapspirit
 * Support false values for the B3 Sampled header (#346) - Thanks @sebnow
-* Fix HTTP sender, consume response data to free up memory (#343) - Thanks baldmaster
+* Fix HTTP sender, consume response data to free up memory (#343) - Thanks @baldmaster
 * Transform IP for int32 representation to dot representation (#340) - Thanks @Etienne-Carriere
 
 ## 3.14.4 (2019-01-24)
