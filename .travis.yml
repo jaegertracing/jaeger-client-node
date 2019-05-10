@@ -17,9 +17,9 @@ matrix:
     sudo: required
     services:
       - docker
-  - env: TEST_NODE_VERSION=6 LINT=1 COVER=1
   - env: TEST_NODE_VERSION=4
-  - env: TEST_NODE_VERSION=node
+  - env: TEST_NODE_VERSION=6
+  - env: TEST_NODE_VERSION=10 LINT=1 COVER=1
 
 env:
   global:
