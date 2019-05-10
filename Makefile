@@ -35,7 +35,7 @@ endif
 .PHONY: install-test-deps
 install-test-deps:
 ifeq ($(NODE_0_10), false)
-	npm install prom-client@11.0.0
+	npm install --no-save prom-client@11.0.0
 endif
 
 .PHONY: check-node-lts
