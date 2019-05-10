@@ -51,7 +51,6 @@ build-node: check-node-lts node-modules
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/crossdock/ crossdock/
 	cat src/version.js | sed "s|VERSION_TBD|$(shell node -p 'require("./package.json").version')|g" > dist/src/version.js
 	cp -R ./test/thrift ./dist/test/thrift/
-	cp package.json ./dist/
 	cp -R ./src/jaeger-idl ./dist/src/
 	rm -rf ./dist/src/jaeger-idl/.git
 	cp -R ./src/thriftrw-idl ./dist/src/
