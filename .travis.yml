@@ -1,9 +1,7 @@
 sudo: required
 
+# Travis will use .nvmrc, by default
 language: node_js
-
-node_js:
-- '6'
 
 cache:
   directories:
