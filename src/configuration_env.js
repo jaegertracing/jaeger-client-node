@@ -21,18 +21,20 @@ const deprecatedEnvVars = {
   JAEGER_REPORTER_PASSWORD: 'JAEGER_PASSWORD',
   JAEGER_REPORTER_AGENT_HOST: 'JAEGER_AGENT_HOST',
   JAEGER_REPORTER_AGENT_PORT: 'JAEGER_AGENT_PORT',
-  JAEGER_DISABLE: 'JAEGER_DISABLED'
+  JAEGER_DISABLE: 'JAEGER_DISABLED',
 };
 
 export default class ConfigurationEnv {
   static _validateEnv() {
-    Object
-      .keys(deprecatedEnvVars)
-      .forEach(env => {
-        if (process.env[env]) {
-          console.warn(`You are using deprecated env variable ${env}. Use ${deprecatedEnvVars[env]} instead. \nDeprecated env variable will be removed in the next major release (4.x.x)`)
-        }
-      })
+    Object.keys(deprecatedEnvVars).forEach(env => {
+      if (process.env[env]) {
+        console.warn(
+          `You are using deprecated env variable ${env}. Use ${
+            deprecatedEnvVars[env]
+          } instead. \nDeprecated env variable will be removed in the next major release (4.x.x)`
+        );
+      }
+    });
   }
 
   static _getConfigValue(obj, key, defaultValue) {
@@ -185,9 +187,10 @@ export default class ConfigurationEnv {
    * @param {Object} options - options, see Configuration.initTracer
    */
   static initTracer(config = {}, options = {}) {
-    ConfigurationEnv._validateEnv()
+    ConfigurationEnv._validateEnv();
 
-    config.disable = config.disable || process.env.JAEGER_DISABLED === 'true' || process.env.JAEGER_DISABLE === 'true';
+    config.disable =
+      config.disable || process.env.JAEGER_DISABLED === 'true' || process.env.JAEGER_DISABLE === 'true';
     config.serviceName = config.serviceName || process.env.JAEGER_SERVICE_NAME;
 
     options.tags = ConfigurationEnv._parseTagsFromEnv(options);

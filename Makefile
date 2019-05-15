@@ -1,10 +1,10 @@
 -include crossdock/rules.mk
 
 NODE_VER=$(shell node -v)
-ifeq ($(patsubst v6.%,matched,$(NODE_VER)), matched)
-	NODE_6=true
+ifeq ($(patsubst v10.%,matched,$(NODE_VER)), matched)
+	NODE_LTS=true
 else
-	NODE_6=false
+	NODE_LTS=false
 endif
 ifeq ($(patsubst v0.10%,matched,$(NODE_VER)), matched)
 	NODE_0_10=true
@@ -26,7 +26,7 @@ test: build-node
 .PHONY: test-without-build
 test-without-build: install-test-deps
 	npm run flow
-ifeq ($(NODE_6),true)
+ifeq ($(NODE_LTS),true)
 	npm run test-all
 endif
 	npm run test-dist
@@ -35,23 +35,22 @@ endif
 .PHONY: install-test-deps
 install-test-deps:
 ifeq ($(NODE_0_10), false)
-	npm install prom-client@11.0.0
+	npm install --no-save prom-client@11.0.0
 endif
 
-.PHONY: check-node-6
-check-node-6:
-	@$(NODE_6) || echo Build requires Node 6.x
-	@$(NODE_6) && echo Building using Node 6.x
+.PHONY: check-node-lts
+check-node-lts:
+	@$(NODE_LTS) || echo Build requires Node 10.x
+	@$(NODE_LTS) && echo Building using Node 10.x
 
 .PHONY: build-node
-build-node: check-node-6 node-modules
+build-node: check-node-lts node-modules
 	rm -rf ./dist/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/src/ src/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/test/ test/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/crossdock/ crossdock/
 	cat src/version.js | sed "s|VERSION_TBD|$(shell node -p 'require("./package.json").version')|g" > dist/src/version.js
 	cp -R ./test/thrift ./dist/test/thrift/
-	cp package.json ./dist/
 	cp -R ./src/jaeger-idl ./dist/src/
 	rm -rf ./dist/src/jaeger-idl/.git
 	cp -R ./src/thriftrw-idl ./dist/src/

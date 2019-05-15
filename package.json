@@ -1,6 +1,6 @@
 {
   "name": "jaeger-client",
-  "version": "3.14.4",
+  "version": "3.15.0",
   "description": "Jaeger binding for OpenTracing Node",
   "engines": {
     "node": ">=0.10"
@@ -17,10 +17,10 @@
   "contributors": ["Yuri Shkuro <ys@uber.com>", "Won Jun Jang <wjang@uber.com>"],
   "dependencies": {
     "node-int64": "^0.4.0",
-    "thriftrw": "^3.5.0",
-    "xorshift": "^0.2.0",
     "opentracing": "^0.13.0",
-    "uuid": "^3.2.1"
+    "thriftrw": "^3.5.0",
+    "uuid": "^3.2.1",
+    "xorshift": "^0.2.0"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",
