@@ -242,17 +242,15 @@ export default class Tracer {
       }
 
       if (options.traceId128bit) {
-        ctx.traceIdLow = randomId;
-        ctx.traceIdHigh = Utils.getRandom64();
+        ctx.traceId = new Buffer.concat([Utils.getRandom64(), randomId]);
       } else {
-        ctx.traceIdLow = randomId;
+        ctx.traceId = randomId;
       }
       ctx.spanId = randomId;
       ctx.parentId = null;
       ctx.flags = flags;
     } else {
-      ctx.traceIdLow = parent.traceIdLow;
-      ctx.traceIdHigh = parent.traceIdHigh;
+      ctx.traceId = parent.traceId;
       ctx.spanId = Utils.getRandom64();
       ctx.parentId = parent.spanId;
       ctx.flags = parent.flags;

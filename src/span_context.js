@@ -15,8 +15,7 @@ import * as constants from './constants.js';
 import Utils from './util.js';
 
 export default class SpanContext {
-  _traceIdLow: any;
-  _traceIdHigh: any;
+  _traceId: any;
   _spanId: any;
   _parentId: any;
   _traceIdStr: ?string;
@@ -44,8 +43,7 @@ export default class SpanContext {
   _samplingFinalized: boolean;
 
   constructor(
-    traceIdLow: any,
-    traceIdHigh: any,
+    traceId: any,
     spanId: any,
     parentId: any,
     traceIdStr: ?string,
@@ -56,8 +54,7 @@ export default class SpanContext {
     debugId: ?string = '',
     samplingFinalized: boolean = false
   ) {
-    this._traceIdLow = traceIdLow;
-    this._traceIdHigh = traceIdHigh;
+    this._traceId = traceId;
     this._spanId = spanId;
     this._parentId = parentId;
     this._traceIdStr = traceIdStr;
@@ -69,33 +66,16 @@ export default class SpanContext {
     this._samplingFinalized = samplingFinalized;
   }
 
-  get traceIdLow(): any {
-    this._tryParseTraceIdStr();
-    return this._traceIdLow;
-  }
-
-  get traceIdHigh(): any {
-    this._tryParseTraceIdStr();
-    return this._traceIdHigh;
-  }
-
-  _tryParseTraceIdStr() {
-    if (this._traceIdLow == null && this._traceIdHigh == null && this._traceIdStr != null) {
-      if (this._traceIdStr.length > 16) {
-        const safeTraceIdStr = this._traceIdStr.length % 2 == 0 ? this._traceIdStr : '0' + this._traceIdStr;
-        const traceId = new Buffer(safeTraceIdStr, 'hex');
-        this._traceIdHigh = traceId.slice(-16, -8);
-        if (this._traceIdHigh.length != 8) {
-          const tmpBuffer = new Buffer(8);
-          tmpBuffer.fill(0);
-          this._traceIdHigh.copy(tmpBuffer, 8 - this._traceIdHigh.length);
-          this._traceIdHigh = tmpBuffer;
-        }
-        this._traceIdLow = traceId.slice(-8);
-      } else {
-        this._traceIdLow = Utils.encodeInt64(this._traceIdStr);
-      }
+  get traceId(): any {
+    if (this._traceId == null && this._traceIdStr != null) {
+      const safeTraceIdStr = this._traceIdStr.length % 2 == 0 ? this._traceIdStr : '0' + this._traceIdStr;
+      const tmpBuffer = new Buffer(safeTraceIdStr, 'hex');
+      const size = tmpBuffer.length > 8 ? 16 : 8;
+      this._traceId = new Buffer(size);
+      this._traceId.fill(0);
+      tmpBuffer.copy(this._traceId, size - tmpBuffer.length);
     }
+    return this._traceId;
   }
 
   get spanId(): any {
@@ -113,14 +93,8 @@ export default class SpanContext {
   }
 
   get traceIdStr(): ?string {
-    if (this._traceIdStr == null && this._traceIdLow != null) {
-      if (this._traceIdHigh != null) {
-        this._traceIdStr = Utils.removeLeadingZeros(
-          this._traceIdHigh.toString('hex') + this._traceIdLow.toString('hex')
-        );
-      } else {
-        this._traceIdStr = Utils.removeLeadingZeros(this._traceIdLow.toString('hex'));
-      }
+    if (this._traceIdStr == null && this._traceId != null) {
+      this._traceIdStr = Utils.removeLeadingZeros(this._traceId.toString('hex'));
     }
     return this._traceIdStr;
   }
@@ -155,13 +129,8 @@ export default class SpanContext {
     return this._samplingFinalized;
   }
 
-  set traceIdLow(traceIdLow: Buffer): void {
-    this._traceIdLow = traceIdLow;
-    this._traceIdStr = null;
-  }
-
-  set traceIdHigh(traceIdHigh: Buffer): void {
-    this._traceIdHigh = traceIdHigh;
+  set traceId(traceId: Buffer): void {
+    this._traceId = traceId;
     this._traceIdStr = null;
   }
 
@@ -188,7 +157,7 @@ export default class SpanContext {
   }
 
   get isValid(): boolean {
-    return !!((this._traceIdLow || this._traceIdStr) && (this._spanId || this._spanIdStr));
+    return !!((this._traceId || this._traceIdStr) && (this._spanId || this._spanIdStr));
   }
 
   finalizeSampling(): void {
@@ -217,8 +186,7 @@ export default class SpanContext {
     let newBaggage = Utils.clone(this._baggage);
     newBaggage[key] = value;
     return new SpanContext(
-      this._traceIdLow,
-      this._traceIdHigh,
+      this._traceId,
       this._spanId,
       this._parentId,
       this._traceIdStr,
@@ -275,8 +243,7 @@ export default class SpanContext {
   }
 
   static withBinaryIds(
-    traceIdLow: any,
-    traceIdHigh: any,
+    traceId: any,
     spanId: any,
     parentId: any,
     flags: number,
@@ -284,8 +251,7 @@ export default class SpanContext {
     debugId: ?string = ''
   ): SpanContext {
     return new SpanContext(
-      traceIdLow,
-      traceIdHigh,
+      traceId,
       spanId,
       parentId,
       null, // traceIdStr: string,
@@ -306,8 +272,7 @@ export default class SpanContext {
     debugId: ?string = ''
   ): SpanContext {
     return new SpanContext(
-      null, // traceIdLow,
-      null, // traceIdHigh,
+      null, // traceId,
       null, // spanId,
       null, // parentId,
       traceIdStr,

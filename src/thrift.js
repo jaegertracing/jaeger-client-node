@@ -104,13 +104,29 @@ export default class ThriftUtils {
 
       thriftRefs.push({
         refType: refEnum,
-        traceIdLow: context.traceIdLow,
-        traceIdHigh: context.traceIdHigh == null ? ThriftUtils.emptyBuffer : context.traceIdHigh,
+        traceIdLow: ThriftUtils.getTraceIdLow(context.traceId),
+        traceIdHigh: ThriftUtils.getTraceIdHigh(context.traceId),
         spanId: context.spanId,
       });
     }
 
     return thriftRefs;
+  }
+
+  static getTraceIdLow(traceId: Buffer) {
+    if (traceId != null) {
+      return traceId.slice(-8);
+    }
+
+    return ThriftUtils.emptyBuffer;
+  }
+
+  static getTraceIdHigh(traceId: Buffer) {
+    if (traceId != null && traceId.length > 8) {
+      return traceId.slice(-16, -8);
+    }
+
+    return ThriftUtils.emptyBuffer;
   }
 
   static spanToThrift(span: Span): any {
@@ -119,9 +135,8 @@ export default class ThriftUtils {
     let unsigned = true;
 
     return {
-      traceIdLow: span._spanContext.traceIdLow,
-      traceIdHigh:
-        span._spanContext.traceIdHigh == null ? ThriftUtils.emptyBuffer : span._spanContext.traceIdHigh,
+      traceIdLow: ThriftUtils.getTraceIdLow(span._spanContext.traceId),
+      traceIdHigh: ThriftUtils.getTraceIdHigh(span._spanContext.traceId),
       spanId: span._spanContext.spanId,
       parentSpanId: span._spanContext.parentId || ThriftUtils.emptyBuffer,
       operationName: span._operationName,

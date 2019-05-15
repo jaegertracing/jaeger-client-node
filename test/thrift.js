@@ -76,11 +76,11 @@ describe('ThriftUtils', () => {
     span.finish();
     tracer.close();
     let tSpan = ThriftUtils.spanToThrift(childSpan);
-    assert.deepEqual(tSpan.traceIdLow, childSpan.context().traceIdLow);
-    assert.deepEqual(tSpan.traceIdHigh, childSpan.context().traceIdHigh);
+    assert.deepEqual(tSpan.traceIdLow, childSpan.context().traceId.slice(-8));
+    assert.deepEqual(tSpan.traceIdHigh, childSpan.context().traceId.slice(-16, -8));
     assert.deepEqual(tSpan.spanId, childSpan.context().spanId);
-    assert.deepEqual(tSpan.references[0].traceIdLow, span.context().traceIdLow);
-    assert.deepEqual(tSpan.references[0].traceIdHigh, span.context().traceIdHigh);
+    assert.deepEqual(tSpan.references[0].traceIdLow, span.context().traceId.slice(-8));
+    assert.deepEqual(tSpan.references[0].traceIdHigh, span.context().traceId.slice(-16, -8));
     assert.deepEqual(tSpan.references[0].spanId, span.context().spanId);
   });
 });
