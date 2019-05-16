@@ -83,4 +83,16 @@ describe('ThriftUtils', () => {
     assert.deepEqual(tSpan.references[0].traceIdHigh, span.context().traceId.slice(-16, -8));
     assert.deepEqual(tSpan.references[0].spanId, span.context().spanId);
   });
+
+  it('should convert extract traceIdLow and traceIdHigh', () => {
+    let traceIdLow = Utils.encodeInt64(1);
+    let traceIdHigh = Utils.encodeInt64(2);
+    let traceId = Buffer.concat([traceIdHigh, traceIdLow]);
+
+    assert.deepEqual(ThriftUtils.getTraceIdLow(traceId), traceIdLow);
+    assert.deepEqual(ThriftUtils.getTraceIdHigh(traceId), traceIdHigh);
+
+    assert.deepEqual(ThriftUtils.getTraceIdLow(null), ThriftUtils.emptyBuffer);
+    assert.deepEqual(ThriftUtils.getTraceIdHigh(null), ThriftUtils.emptyBuffer);
+  });
 });
