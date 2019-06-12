@@ -188,7 +188,7 @@ export default class Tracer {
    *        the created Span object. The time should be specified in
    *        milliseconds as Unix timestamp. Decimal value are supported
    *        to represent time values with sub-millisecond accuracy.
-   * @param {number} [options.traceId128bit] - generate root span with a
+   * @param {boolean} [options.traceId128bit] - generate root span with a
    *        128bit traceId.
    * @return {Span} - a new Span object.
    **/
@@ -242,7 +242,7 @@ export default class Tracer {
       }
 
       if (options.traceId128bit) {
-        ctx.traceId = new Buffer.concat([Utils.getRandom64(), randomId]);
+        ctx.traceId = Buffer.concat([Utils.getRandom64(), randomId]);
       } else {
         ctx.traceId = randomId;
       }

@@ -16,6 +16,17 @@ import Int64 from 'node-int64';
 import os from 'os';
 import http from 'http';
 
+type BufferEncoding =
+  | 'ascii'
+  | 'utf8'
+  | 'utf-8'
+  | 'utf16le'
+  | 'ucs2'
+  | 'ucs-2'
+  | 'base64'
+  | 'latin1'
+  | 'binary'
+  | 'hex';
 export default class Utils {
   /**
    * Determines whether a string contains a given prefix.
@@ -147,5 +158,29 @@ export default class Utils {
       .on('error', err => {
         error(err);
       });
+  }
+
+  /**
+   * @param {string|number} input - a string to store in the buffer
+   * or a number of octets to allocate.
+   * @param {string} encoding - identifies the character encoding. Default is 'utf8'.
+   * @return {Buffer} - returns a buffer representing the encoded string, or an empty buffer.
+   **/
+  static newBuffer(input: string | number, encoding?: BufferEncoding): Buffer {
+    if (typeof input === 'string') {
+      if (Buffer.from && Buffer.from !== Uint8Array.from) {
+        return Buffer.from(input, encoding);
+      }
+      return new Buffer(input, encoding);
+    } else if (typeof input === 'number') {
+      if (Buffer.alloc) {
+        return Buffer.alloc(input);
+      }
+      const buffer = new Buffer(input);
+      buffer.fill(0);
+      return buffer;
+    } else {
+      throw new Error('The "input" argument must be a number or a string');
+    }
   }
 }

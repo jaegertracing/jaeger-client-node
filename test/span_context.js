@@ -121,7 +121,6 @@ describe('SpanContext should', () => {
     assert.equal('ffffffffffffffff', context.spanIdStr);
     assert.deepEqual(Buffer.concat([LARGEST_64_BUFFER, LARGEST_64_BUFFER]), context.traceId);
     assert.deepEqual(LARGEST_64_BUFFER, context.spanId);
-    assert.deepEqual(LARGEST_64_BUFFER, context.spanId);
     assert.deepEqual(Utils.encodeInt64(0x5), context.parentId);
     assert.equal(context.flags, 0x1);
   });

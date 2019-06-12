@@ -69,10 +69,9 @@ export default class SpanContext {
   get traceId(): any {
     if (this._traceId == null && this._traceIdStr != null) {
       const safeTraceIdStr = this._traceIdStr.length % 2 == 0 ? this._traceIdStr : '0' + this._traceIdStr;
-      const tmpBuffer = new Buffer(safeTraceIdStr, 'hex');
+      const tmpBuffer = Utils.newBuffer(safeTraceIdStr, 'hex');
       const size = tmpBuffer.length > 8 ? 16 : 8;
-      this._traceId = new Buffer(size);
-      this._traceId.fill(0);
+      this._traceId = Utils.newBuffer(size);
       tmpBuffer.copy(this._traceId, size - tmpBuffer.length);
     }
     return this._traceId;
