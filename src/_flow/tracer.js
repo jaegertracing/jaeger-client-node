@@ -20,5 +20,4 @@ declare type startSpanOptions = {
   references?: Array<Reference>,
   tags?: any,
   startTime?: number,
-  traceId128bit?: boolean,
 };

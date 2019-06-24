@@ -43,6 +43,7 @@ export default class Tracer {
   _baggageSetter: BaggageSetter;
   _debugThrottler: Throttler & ProcessSetter;
   _process: Process;
+  _traceId128bit: boolean;
 
   /**
    * @param {String} [serviceName] - name of the current service or application.
@@ -56,6 +57,7 @@ export default class Tracer {
    * @param {Object} [options.baggageRestrictionManager] - a baggageRestrictionManager matching
    * @param {Object} [options.contextKey] - a name of the key to extract/inject context from headers
    * @param {Object} [options.baggagePrefix] - a name of the context baggage key prefix
+   * @param {boolean} [options.traceId128bit] - generate root span with a 128bit traceId.
    * BaggageRestrictionManager API from ./baggage.js.
    */
   constructor(
@@ -115,6 +117,8 @@ export default class Tracer {
     this._debugThrottler.setProcess(this._process);
     // TODO update reporter to implement ProcessSetter
     this._reporter.setProcess(this._process.serviceName, this._process.tags);
+
+    this._traceId128bit = options.traceId128bit;
   }
 
   _startInternalSpan(
@@ -188,8 +192,6 @@ export default class Tracer {
    *        the created Span object. The time should be specified in
    *        milliseconds as Unix timestamp. Decimal value are supported
    *        to represent time values with sub-millisecond accuracy.
-   * @param {boolean} [options.traceId128bit] - generate root span with a
-   *        128bit traceId.
    * @return {Span} - a new Span object.
    **/
   startSpan(operationName: string, options: ?startSpanOptions): Span {
@@ -226,7 +228,6 @@ export default class Tracer {
     let ctx: SpanContext = new SpanContext();
     let internalTags: any = {};
     if (!parent || !parent.isValid) {
-      let randomId = Utils.getRandom64();
       let flags = 0;
       if (this._sampler.isSampled(operationName, internalTags)) {
         flags |= constants.SAMPLED_MASK;
@@ -241,12 +242,16 @@ export default class Tracer {
         ctx.baggage = parent.baggage;
       }
 
-      if (options.traceId128bit) {
-        ctx.traceId = Buffer.concat([Utils.getRandom64(), randomId]);
-      } else {
+      if (this._traceId128bit) {
+        let randomId = Utils.getRandom128();
         ctx.traceId = randomId;
+        ctx.spanId = randomId.slice(-8);
+      } else {
+        let randomId = Utils.getRandom64();
+        ctx.traceId = randomId;
+        ctx.spanId = randomId;
       }
-      ctx.spanId = randomId;
+
       ctx.parentId = null;
       ctx.flags = flags;
     } else {

@@ -451,9 +451,8 @@ describe('tracer should', () => {
   });
 
   it('start a root span with 128 bit traceId', () => {
-    let span = tracer.startSpan('test-name', {
-      traceId128bit: true,
-    });
+    tracer = new Tracer('test-service-name', reporter, new ConstSampler(true), { traceId128bit: true });
+    let span = tracer.startSpan('test-name');
 
     assert.deepEqual(span.context().traceId.slice(-8), span.context().spanId);
     assert.isOk(span.context().traceId);

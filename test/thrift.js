@@ -68,8 +68,8 @@ describe('ThriftUtils', () => {
 
   it('should convert span with 128 bit traceId', () => {
     let reporter = new InMemoryReporter();
-    let tracer = new Tracer('test-service-name', reporter, new ConstSampler(true));
-    let span = tracer.startSpan('some operation', { traceId128bit: true });
+    let tracer = new Tracer('test-service-name', reporter, new ConstSampler(true), { traceId128bit: true });
+    let span = tracer.startSpan('some operation');
     let childOfRef = new opentracing.Reference(opentracing.REFERENCE_CHILD_OF, span.context());
     let childSpan = tracer.startSpan('some child operation', { references: [childOfRef] });
     childSpan.finish();

@@ -16,17 +16,6 @@ import Int64 from 'node-int64';
 import os from 'os';
 import http from 'http';
 
-type BufferEncoding =
-  | 'ascii'
-  | 'utf8'
-  | 'utf-8'
-  | 'utf16le'
-  | 'ucs2'
-  | 'ucs-2'
-  | 'base64'
-  | 'latin1'
-  | 'binary'
-  | 'hex';
 export default class Utils {
   /**
    * Determines whether a string contains a given prefix.
@@ -53,7 +42,7 @@ export default class Utils {
   }
 
   /**
-   * Determines whether a string contains a given prefix.
+   * Get a random buffer representing a random 64 bit.
    *
    * @return {Buffer}  - returns a buffer representing a random 64 bit
    * number.
@@ -63,6 +52,23 @@ export default class Utils {
     let buf = new Buffer(8);
     buf.writeUInt32BE(randint[0], 0);
     buf.writeUInt32BE(randint[1], 4);
+    return buf;
+  }
+
+  /**
+   * Get a random buffer representing a random 128 bit.
+   *
+   * @return {Buffer}  - returns a buffer representing a random 128 bit
+   * number.
+   **/
+  static getRandom128(): Buffer {
+    let randint1 = xorshift.randomint();
+    let randint2 = xorshift.randomint();
+    let buf = new Buffer(16);
+    buf.writeUInt32BE(randint1[0], 0);
+    buf.writeUInt32BE(randint1[1], 4);
+    buf.writeUInt32BE(randint2[0], 8);
+    buf.writeUInt32BE(randint2[1], 12);
     return buf;
   }
 
@@ -161,26 +167,27 @@ export default class Utils {
   }
 
   /**
-   * @param {string|number} input - a string to store in the buffer
-   * or a number of octets to allocate.
-   * @param {string} encoding - identifies the character encoding. Default is 'utf8'.
-   * @return {Buffer} - returns a buffer representing the encoded string, or an empty buffer.
+   * @param {string|number} input - a hex encoded string to store in the buffer.
+   * @return {Buffer} - returns a buffer representing the hex encoded string.
    **/
-  static newBuffer(input: string | number, encoding?: BufferEncoding): Buffer {
-    if (typeof input === 'string') {
-      if (Buffer.from && Buffer.from !== Uint8Array.from) {
-        return Buffer.from(input, encoding);
-      }
-      return new Buffer(input, encoding);
-    } else if (typeof input === 'number') {
-      if (Buffer.alloc) {
-        return Buffer.alloc(input);
-      }
-      const buffer = new Buffer(input);
-      buffer.fill(0);
-      return buffer;
-    } else {
-      throw new Error('The "input" argument must be a number or a string');
+  static newBufferFromHex(input: string): Buffer {
+    const encoding = 'hex';
+    if (Buffer.from && Buffer.from !== Uint8Array.from) {
+      return Buffer.from(input, encoding);
     }
+    return new Buffer(input, encoding);
+  }
+
+  /**
+   * @param {number} input - a number of octets to allocate.
+   * @return {Buffer} - returns an empty buffer.
+   **/
+  static newBuffer(size: number): Buffer {
+    if (Buffer.alloc) {
+      return Buffer.alloc(size);
+    }
+    const buffer = new Buffer(size);
+    buffer.fill(0);
+    return buffer;
   }
 }
