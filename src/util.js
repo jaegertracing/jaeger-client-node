@@ -172,6 +172,8 @@ export default class Utils {
    **/
   static newBufferFromHex(input: string): Buffer {
     const encoding = 'hex';
+    // check that 'Buffer.from' exists based on node's documentation
+    // https://nodejs.org/en/docs/guides/buffer-constructor-deprecation/#variant-3
     if (Buffer.from && Buffer.from !== Uint8Array.from) {
       return Buffer.from(input, encoding);
     }

@@ -68,13 +68,17 @@ export default class SpanContext {
 
   get traceId(): any {
     if (this._traceId == null && this._traceIdStr != null) {
-      // make sure that the HEX has an even number of digits, node is expecting 2 HEX character per byte
+      // make sure that the string is 32 or 16 characters long to generate the
+      // corresponding 64 or 128 bits buffer by padding the start with zeros if necessary
+      // https://github.com/jaegertracing/jaeger/issues/1657
+      // At the same time this will enforce that the HEX has an even number of digits, node is expecting 2 HEX characters per byte
       // https://github.com/nodejs/node/issues/21242
-      const safeTraceIdStr = this._traceIdStr.length % 2 == 0 ? this._traceIdStr : '0' + this._traceIdStr;
-      const tmpBuffer = Utils.newBufferFromHex(safeTraceIdStr);
-      const size = tmpBuffer.length > 8 ? 16 : 8;
-      this._traceId = Utils.newBuffer(size);
-      tmpBuffer.copy(this._traceId, size - tmpBuffer.length);
+      const traceIdExactLength = this._traceIdStr.length > 16 ? 32 : 16;
+      const safeTraceIdStr =
+        this._traceIdStr.length === traceIdExactLength
+          ? this._traceIdStr
+          : this._traceIdStr.padStart(traceIdExactLength, '0');
+      this._traceId = Utils.newBufferFromHex(safeTraceIdStr);
     }
     return this._traceId;
   }
