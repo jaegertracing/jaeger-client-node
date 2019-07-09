@@ -74,11 +74,14 @@ export default class SpanContext {
       // At the same time this will enforce that the HEX has an even number of digits, node is expecting 2 HEX characters per byte
       // https://github.com/nodejs/node/issues/21242
       const traceIdExactLength = this._traceIdStr.length > 16 ? 32 : 16;
-      const safeTraceIdStr =
-        this._traceIdStr.length === traceIdExactLength
-          ? this._traceIdStr
-          : this._traceIdStr.padStart(traceIdExactLength, '0');
-      this._traceId = Utils.newBufferFromHex(safeTraceIdStr);
+      if (this._traceIdStr.length === traceIdExactLength) {
+        this._traceId = Utils.newBufferFromHex(this._traceIdStr);
+      } else {
+        const paddings = ['0000000000000000', '00000000000000000000000000000000'];
+        const paddingIndex = traceIdExactLength === 16 ? 0 : 1;
+        const safeTraceIdStr = (paddings[paddingIndex] + this._traceIdStr).slice(-traceIdExactLength);
+        this._traceId = Utils.newBufferFromHex(safeTraceIdStr);
+      }
     }
     return this._traceId;
   }
