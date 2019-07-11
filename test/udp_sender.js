@@ -272,5 +272,5 @@ describe('udp sender', () => {
         tracer.close(done);
       }
     });
-  });
-}).timeout(5000);
+  }).timeout(5000);
+});
