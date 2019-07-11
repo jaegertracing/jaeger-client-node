@@ -49,7 +49,7 @@ export default class Utils {
    **/
   static getRandom64(): Buffer {
     let randint = xorshift.randomint();
-    let buf = new Buffer(8);
+    let buf = this.newBuffer(8);
     buf.writeUInt32BE(randint[0], 0);
     buf.writeUInt32BE(randint[1], 4);
     return buf;
@@ -64,7 +64,7 @@ export default class Utils {
   static getRandom128(): Buffer {
     let randint1 = xorshift.randomint();
     let randint2 = xorshift.randomint();
-    let buf = new Buffer(16);
+    let buf = this.newBuffer(16);
     buf.writeUInt32BE(randint1[0], 0);
     buf.writeUInt32BE(randint1[1], 4);
     buf.writeUInt32BE(randint2[0], 8);

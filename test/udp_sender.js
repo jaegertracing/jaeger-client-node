@@ -273,4 +273,4 @@ describe('udp sender', () => {
       }
     });
   });
-});
+}).timeout(5000);
