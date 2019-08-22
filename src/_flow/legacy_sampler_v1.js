@@ -36,6 +36,17 @@ declare interface LegacySamplerV1 {
   isSampled(operation: string, tags: any): boolean;
 
   equal(other: LegacySamplerV1): boolean;
+  close(callback: ?Function): void;
+}
 
+declare interface Sampler {
+  apiVersion: SamplerApiVersion;
+  extendedStateNamespace(): string;
+  name(): string;
+  onCreateSpan(span: Span): void;
+  onSetOperationName(span: Span, operationName: string): void;
+  onSetTag(span: Span, key: string, value: string): void;
+  // TODO(joe): confirm equal() is not necessary
+  // equal(other: LegacySamplerV1): boolean;
   close(callback: ?Function): void;
 }

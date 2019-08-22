@@ -12,7 +12,7 @@
 
 import _ from 'lodash';
 import { assert, expect } from 'chai';
-import ConstSampler from '../src/samplers/const_sampler';
+import ConstSampler from '../src/samplers/v2/const_sampler';
 import * as constants from '../src/constants';
 import InMemoryReporter from '../src/reporters/in_memory_reporter';
 import * as opentracing from 'opentracing';
@@ -127,7 +127,7 @@ describe('tracer should', () => {
     assert.deepEqual(span.context().parentId, parentId);
     assert.equal(span.context().flags, flags);
     assert.equal(span._startTime, start);
-    assert.equal(Object.keys(span._tags).length, 2);
+    assert.equal(span._tags.length, 4);
   });
 
   it('report a span with no tracer level tags', () => {

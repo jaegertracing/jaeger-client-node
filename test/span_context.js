@@ -46,7 +46,7 @@ describe('SpanContext should', () => {
     assert.isOk(context.isSampled());
     assert.isOk(context.isDebug());
 
-    context._flags = 0;
+    context.flags = 0;
     assert.isNotOk(context.isSampled());
     assert.isNotOk(context.isDebug());
   });

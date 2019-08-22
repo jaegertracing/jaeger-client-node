@@ -1,5 +1,5 @@
 // @flow
-// Copyright (c) 2016 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -11,18 +11,6 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-export default class NoopReporter implements Reporter {
-  name(): string {
-    return 'NoopReporter';
-  }
+export const SAMPLER_API_V2 = 'SAMPLER_API_V2';
 
-  report(span: any): void {}
-
-  close(callback?: () => void): void {
-    if (callback) {
-      callback();
-    }
-  }
-
-  setProcess(serviceName: string, tags: Array<Tag>): void {}
-}
+export type SamplerApiVersion = typeof SAMPLER_API_V2;
