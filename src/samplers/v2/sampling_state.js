@@ -12,22 +12,18 @@
 // the License.
 
 import { DEBUG_MASK, FIREHOSE_MASK, SAMPLED_MASK } from '../../constants';
-import Span from '../../span';
 import SpanContext from '../../span_context';
 
 export const WARN_NOT_FINALIZABLE = 'This sampling state is not finalizable.';
 export const WARN_SHOULD_NOT_ENABLE_FINALIZABLE = 'Finalizable can only be changed to false';
 export const WARN_CANNOT_REVERT_FINALIZABLE = 'Setting finalizable to false cannot be reverted';
 export const WARN_CANNOT_REVERT_FINAL = 'The final state cannot be reverted.';
-// export const WARN_CANNOT_UNSAMPLE = 'The final state cannot be reverted.';
-// export const WARN_CANNOT_REMOVE_DEBUG = 'The debug flag cannot be reverted.';
-// export const WARN_CANNOT_REMOVE_FIREHOSE = 'The firehose flag cannot be reverted.';
 
 export default class SamplingState {
   _extendedState: { [string]: any } = {};
   _flags: number = 0;
-  _isFinal: boolean = false;
-  _isFinalizable: boolean = true;
+  _final: boolean = false;
+  _finalizable: boolean = true;
   _localRootSpanIdStr: ?string;
 
   constructor(localRootSpanIdStr: ?string) {
@@ -47,45 +43,38 @@ export default class SamplingState {
   }
 
   isFinalizable() {
-    return this._isFinalizable;
+    return this._finalizable;
   }
 
   setIsFinalizable(value: false): ?string {
     if (value) {
-      if (!this._isFinalizable) {
+      if (!this._finalizable) {
         return WARN_CANNOT_REVERT_FINALIZABLE;
       }
       return WARN_SHOULD_NOT_ENABLE_FINALIZABLE;
     }
-    this._isFinalizable = false;
-    this._isFinal = false;
+    this._finalizable = false;
+    this._final = false;
   }
 
   isFinal() {
-    return this._isFinal;
+    return this._final;
   }
 
   setIsFinal(value: boolean): ?string {
-    if (!this._isFinalizable) {
+    if (!this._finalizable) {
       return WARN_NOT_FINALIZABLE;
     }
-    // TODO(joe): verify this is the behavior we want
-    if (!value && this._isFinal) {
+    if (!value && this._final) {
       return WARN_CANNOT_REVERT_FINAL;
     }
-    this._isFinal = value;
+    this._final = value;
   }
 
   isSampled() {
     return Boolean(this._flags & SAMPLED_MASK);
   }
 
-  // setIsSampled(value: true) {
-  //   if (!value && this._isSampled) {
-  //     return WARN_CANNOT_UNSAMPLE;
-  //   }
-  //   this._toggleFlag(SAMPLED_MASK, enable);
-  // }
   setIsSampled(enable: boolean) {
     this._toggleFlag(SAMPLED_MASK, enable);
   }
@@ -94,12 +83,6 @@ export default class SamplingState {
     return Boolean(this._flags & DEBUG_MASK);
   }
 
-  // setIsDebug(value: true) {
-  //   if (!value && this.isDebug()) {
-  //     return WARN_CANNOT_REMOVE_DEBUG;
-  //   }
-  //   this._toggleFlag(DEBUG_MASK, value);
-  // }
   setIsDebug(enable: boolean) {
     this._toggleFlag(DEBUG_MASK, enable);
   }
@@ -108,12 +91,6 @@ export default class SamplingState {
     return Boolean(this._flags & FIREHOSE_MASK);
   }
 
-  // setIsFirehose(value: true) {
-  //   if (!value && this._isFirehose) {
-  //     return WARN_CANNOT_REMOVE_FIREHOSE;
-  //   }
-  //   this._toggleFlag(FIREHOSE_MASK, enable);
-  // }
   setIsFirehose(enable: boolean) {
     this._toggleFlag(FIREHOSE_MASK, enable);
   }
@@ -132,12 +109,5 @@ export default class SamplingState {
     } else {
       this._flags &= ~mask;
     }
-  }
-
-  reset() {
-    this._extendedState = {};
-    this._flags = 0;
-    this._isFinal = false;
-    this._isFinalizable = true;
   }
 }

@@ -17,7 +17,7 @@ export const SAMPLED_MASK = 0b1;
 export const DEBUG_MASK = 0b10;
 
 // FIREHOSE_MASK is the bit mask indicationg a span is a firehose span.
-export const FIREHOSE_MASK = 0b100;
+export const FIREHOSE_MASK = 0b1000;
 
 // JAEGER_CLIENT_VERSION_TAG_KEY is the name of the tag used to report client version.
 export const JAEGER_CLIENT_VERSION_TAG_KEY = 'jaeger.version';

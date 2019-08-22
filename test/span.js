@@ -13,7 +13,8 @@
 import _ from 'lodash';
 import { assert, expect } from 'chai';
 import ConstSampler from '../src/samplers/v2/const_sampler';
-import adaptSampler from '../src/samplers/adapt_sampler';
+import LegacyConstSampler from '../src/samplers/const_sampler';
+import adaptSampler from '../src/samplers/_adapt_sampler';
 import ProbabilisticSampler from '../src/samplers/probabilistic_sampler';
 import * as constants from '../src/constants';
 import InMemoryReporter from '../src/reporters/in_memory_reporter';
@@ -243,7 +244,7 @@ describe('span should', () => {
         });
         span.log({ logkeyOne: 'logValueOne' });
 
-        tracer._sampler = new ConstSampler(o.sampling);
+        tracer._sampler = adaptSampler.orThrow(new LegacyConstSampler(o.sampling));
         span.setOperationName('sampled-span');
         span.finish();
 

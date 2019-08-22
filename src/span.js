@@ -19,17 +19,6 @@ import Tracer from './tracer';
 import Utils from './util';
 
 export default class Span {
-  static _baggageHeaderCache: {};
-
-  static _getBaggageHeaderCache() {
-    if (!Span._baggageHeaderCache) {
-      Span._baggageHeaderCache = {};
-    }
-
-    return Span._baggageHeaderCache;
-  }
-
-  _baggageSetter: BaggageSetter;
   _tracer: Tracer;
   _operationName: string;
   _spanContext: SpanContext;
@@ -38,7 +27,9 @@ export default class Span {
   _duration: number;
   _logs: Array<LogData>;
   _tags: Array<Tag>;
+  static _baggageHeaderCache: {};
   _references: Array<Reference>;
+  _baggageSetter: BaggageSetter;
 
   constructor(
     tracer: Tracer,
@@ -58,6 +49,35 @@ export default class Span {
     this._tags = [];
   }
 
+  static _getBaggageHeaderCache() {
+    if (!Span._baggageHeaderCache) {
+      Span._baggageHeaderCache = {};
+    }
+
+    return Span._baggageHeaderCache;
+  }
+
+  /**
+   * Returns a normalize key.
+   *
+   * @param {string} key - The key to be normalized for a particular baggage value.
+   * @return {string} - The normalized key (lower cased and underscores replaced, along with dashes.)
+   **/
+  _normalizeBaggageKey(key: string) {
+    let baggageHeaderCache = Span._getBaggageHeaderCache();
+    if (key in baggageHeaderCache) {
+      return baggageHeaderCache[key];
+    }
+
+    let normalizedKey: string = key.replace(/_/g, '-').toLowerCase();
+
+    if (Object.keys(baggageHeaderCache).length < 100) {
+      baggageHeaderCache[key] = normalizedKey;
+    }
+
+    return normalizedKey;
+  }
+
   get operationName(): string {
     return this._operationName;
   }
@@ -66,26 +86,8 @@ export default class Span {
     return this._tracer._serviceName;
   }
 
-  /**
-   * Returns the span context that represents this span.
-   *
-   * @return {SpanContext} - Returns this span's span context.
-   **/
-  context(): SpanContext {
-    return this._spanContext;
-  }
-
-  /**
-   *  Returns the tracer associated with this span.
-   *
-   * @return {Tracer} - returns the tracer associated with this span.
-   **/
-  tracer(): Tracer {
-    return this._tracer;
-  }
-
-  isLocalRootSpan() {
-    return this._spanContext.isLocalRootSpan();
+  _isLocalRootSpan() {
+    return this._spanContext._isLocalRootSpan();
   }
 
   /**
@@ -118,6 +120,33 @@ export default class Span {
   getBaggageItem(key: string): string {
     let normalizedKey = this._normalizeBaggageKey(key);
     return this._spanContext.baggage[normalizedKey];
+  }
+
+  /**
+   * Returns the span context that represents this span.
+   *
+   * @return {SpanContext} - Returns this span's span context.
+   **/
+  context(): SpanContext {
+    return this._spanContext;
+  }
+
+  /**
+   *  Returns the tracer associated with this span.
+   *
+   * @return {Tracer} - returns the tracer associated with this span.
+   **/
+  tracer(): Tracer {
+    return this._tracer;
+  }
+
+  /**
+   * Checks whether or not a span can be written to.
+   *
+   * @return {boolean} - The decision about whether this span can be written to.
+   **/
+  _isWriteable(): boolean {
+    return !this._spanContext.samplingFinalized || this._spanContext.isSampled();
   }
 
   /**
@@ -257,36 +286,6 @@ export default class Span {
   }
 
   /**
-   * Checks whether or not a span can be written to.
-   *
-   * @return {boolean} - The decision about whether this span can be written to.
-   **/
-  _isWriteable(): boolean {
-    return !this._spanContext.samplingFinalized || this._spanContext.isSampled();
-  }
-
-  /**
-   * Returns a normalize key.
-   *
-   * @param {string} key - The key to be normalized for a particular baggage value.
-   * @return {string} - The normalized key (lower cased and underscores replaced, along with dashes.)
-   **/
-  _normalizeBaggageKey(key: string) {
-    let baggageHeaderCache = Span._getBaggageHeaderCache();
-    if (key in baggageHeaderCache) {
-      return baggageHeaderCache[key];
-    }
-
-    let normalizedKey: string = key.replace(/_/g, '-').toLowerCase();
-
-    if (Object.keys(baggageHeaderCache).length < 100) {
-      baggageHeaderCache[key] = normalizedKey;
-    }
-
-    return normalizedKey;
-  }
-
-  /**
    * Returns true if the flag was updated successfully, false otherwise
    *
    * @param priority - 0 to disable sampling, 1 to enable
@@ -301,14 +300,14 @@ export default class Span {
         return false;
       }
       if (this._tracer._isDebugAllowed(this._operationName)) {
-        this._spanContext.setIsSampled(true);
-        this._spanContext.setIsDebug(true);
+        this._spanContext._setIsSampled(true);
+        this._spanContext._setIsDebug(true);
         return true;
       }
       return false;
     }
-    this._spanContext.setIsSampled(false);
-    this._spanContext.setIsDebug(false);
+    this._spanContext._setIsSampled(false);
+    this._spanContext._setIsDebug(false);
     return true;
   }
 
