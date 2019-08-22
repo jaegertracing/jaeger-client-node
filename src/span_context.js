@@ -126,15 +126,15 @@ export default class SpanContext {
     this._samplingState.setFlags(flags);
   }
 
-  setIsSampled(value: boolean) {
+  _setIsSampled(value: boolean) {
     this._samplingState.setIsSampled(value);
   }
 
-  setIsDebug(value: boolean) {
+  _setIsDebug(value: boolean) {
     this._samplingState.setIsDebug(value);
   }
 
-  setIsFirehose(value: boolean) {
+  _setIsFirehose(value: boolean) {
     this._samplingState.setIsFirehose(value);
   }
 
@@ -154,7 +154,7 @@ export default class SpanContext {
     return this._samplingState.setIsFinal(true);
   }
 
-  isLocalRootSpan() {
+  _isLocalRootSpan() {
     return this._samplingState.isLocalRootSpan(this);
   }
 
@@ -196,7 +196,7 @@ export default class SpanContext {
     );
   }
 
-  makeChildContext(childId: any) {
+  _makeChildContext(childId: any) {
     const idIsStr = typeof childId === 'string';
     const _childId = idIsStr ? null : childId;
     const _childIdStr = idIsStr ? childId : null;

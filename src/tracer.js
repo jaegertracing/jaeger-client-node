@@ -13,7 +13,7 @@
 
 import BinaryCodec from './propagators/binary_codec';
 import ConstSampler from './samplers/v2/const_sampler';
-import adaptSampler from './samplers/adapt_sampler';
+import adaptSampler from './samplers/_adapt_sampler';
 import * as constants from './constants';
 import * as opentracing from 'opentracing';
 import { Tags as otTags } from 'opentracing';
@@ -235,15 +235,15 @@ export default class Tracer {
       // TODO(joe): verify `hasValidParent`
       // old code was: parentContext && !parentContext.isDebugIDContainerOnly();
       hasValidParent = true;
-      ctx = parent.makeChildContext(id);
+      ctx = parent._makeChildContext(id);
       // finalize sampling for all span contexts of the parent.traceId trace
       parent.finalizeSampling();
     } else {
       ctx = new SpanContext(id, id);
       if (parent) {
         if (parent.isDebugIDContainerOnly() && this._isDebugAllowed(operationName)) {
-          ctx.setIsSampled(true);
-          ctx.setIsDebug(true);
+          ctx._setIsSampled(true);
+          ctx._setIsDebug(true);
           internalTags = {
             [constants.JAEGER_DEBUG_HEADER]: parent.debugId,
           };

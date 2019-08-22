@@ -11,12 +11,14 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
+import Span from '../span';
+
 export default class NoopReporter implements Reporter {
   name(): string {
     return 'NoopReporter';
   }
 
-  report(span: any): void {}
+  report(span: Span): void {}
 
   close(callback?: () => void): void {
     if (callback) {

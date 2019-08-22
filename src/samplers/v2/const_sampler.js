@@ -17,7 +17,7 @@ import * as constants from '../../constants.js';
 import Span from '../../span';
 
 export default class ConstSamplerV2 implements Sampler {
-  apiVersion: ?string = SAMPLER_API_V2;
+  apiVersion = SAMPLER_API_V2;
   _decision: boolean;
   _extendedStateNamespace: string;
 
@@ -44,34 +44,18 @@ export default class ConstSamplerV2 implements Sampler {
 
   onCreateSpan(span: Span) {
     const ctx = span._spanContext;
-    if (this._decision && !ctx.samplingFinalized && !ctx.isSampled() && span.isLocalRootSpan()) {
-      ctx.setIsSampled(true);
-      // TODO(joe): Determine if any existing tags with same keys should be removed
+    if (this._decision && !ctx.samplingFinalized && !ctx.isSampled() && span._isLocalRootSpan()) {
+      ctx._setIsSampled(true);
       span._setTag(constants.SAMPLER_TYPE_TAG_KEY, constants.SAMPLER_TYPE_CONST);
       span._setTag(constants.SAMPLER_PARAM_TAG_KEY, this._decision);
     }
   }
 
   onSetOperationName(span: Span, operationName: string) {
-    const ctx = span.context();
-    if (!ctx.samplingFinalized && span.isLocalRootSpan()) {
-      // TODO(joe): Determine if any existing sampling related tags should be removed
-      // treat it like a new span, i.e. resample
-      ctx._samplingState.reset();
-      this.onCreateSpan(span);
-      ctx.finalizeSampling();
-    }
+    span._spanContext.finalizeSampling();
   }
 
   onSetTag(span: Span) {}
-
-  // TODO(joe): confirm remvoing equal is fine
-  // equal(other: LegacySamplerV1): boolean {
-  //   if (!(other instanceof ConstSamplerV2)) {
-  //     return false;
-  //   }
-  //   return this.decision === other.decision;
-  // }
 
   close(callback: ?Function): void {
     if (callback) {

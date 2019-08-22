@@ -92,20 +92,26 @@ class LegacySamplerV1Adapter implements Sampler {
 
   onSetOperationName(span: Span, operationName: string) {
     const samplingState = span._spanContext._samplingState;
-    if (samplingState.isFinal() || !samplingState.isLocalRootSpan(span._spanContext)) {
+    if (
+      samplingState.isFinal() ||
+      !samplingState.isLocalRootSpan(span._spanContext) ||
+      samplingState.isDebug()
+    ) {
       return;
     }
-    samplingState.reset();
     const tags = {};
     const isSampled = this._adaptee.isSampled(span.operationName, tags);
+    // TODO: For now, this is only additive, it should be updated to only take
+    // action if the sampling has changed and to remove existing sampled tags
+    // if there are any.
     if (isSampled) {
       samplingState.setIsSampled(true);
-      samplingState.setIsFinal(true);
       const tagsArr = Utils.convertObjectToTags(tags);
       for (let i = 0; i < tagsArr.length; i++) {
         span._setTag(tagsArr[i].key, tagsArr[i].value);
       }
     }
+    samplingState.setIsFinal(true);
   }
 
   onSetTag(span: Span, key: string, value: string) {}

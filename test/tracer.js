@@ -127,7 +127,7 @@ describe('tracer should', () => {
     assert.deepEqual(span.context().parentId, parentId);
     assert.equal(span.context().flags, flags);
     assert.equal(span._startTime, start);
-    assert.equal(span._tags.length, 4);
+    assert.equal(span._tags.length, 2);
   });
 
   it('report a span with no tracer level tags', () => {
