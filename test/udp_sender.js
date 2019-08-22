@@ -249,9 +249,8 @@ describe('udp sender', () => {
     sender.flush(assertCallback(0, undefined));
   });
 
-  // use `function(){ ... }` to get the `this` binding
   it('should gracefully handle errors emitted by socket.send', function(done) {
-    // flaky test due to timeouts
+    // this test tends to timeout
     this.timeout(15000);
     let tracer = new Tracer('test-service-name', new RemoteReporter(sender), new ConstSampler(true));
     sender._host = 'foo.bar.xyz';
