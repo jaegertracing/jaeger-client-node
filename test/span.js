@@ -12,18 +12,19 @@
 
 import _ from 'lodash';
 import { assert, expect } from 'chai';
-import ConstSampler from '../src/samplers/const_sampler.js';
+import ConstSampler from '../src/samplers/v2/const_sampler';
+import adaptSampler from '../src/samplers/adapt_sampler';
 import ProbabilisticSampler from '../src/samplers/probabilistic_sampler';
-import * as constants from '../src/constants.js';
-import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
+import * as constants from '../src/constants';
+import InMemoryReporter from '../src/reporters/in_memory_reporter';
 import JaegerTestUtils from '../src/test_util';
 import MockLogger from './lib/mock_logger';
 import * as opentracing from 'opentracing';
-import Span from '../src/span.js';
-import SpanContext from '../src/span_context.js';
+import Span from '../src/span';
+import SpanContext from '../src/span_context';
 import sinon from 'sinon';
-import Tracer from '../src/tracer.js';
-import Utils from '../src/util.js';
+import Tracer from '../src/tracer';
+import Utils from '../src/util';
 import DefaultThrottler from '../src/throttler/default_throttler';
 
 describe('span should', () => {
@@ -335,7 +336,7 @@ describe('span should', () => {
           'sampler.param': true,
         })
       );
-      tracer._sampler = new ProbabilisticSampler(1.0);
+      tracer._sampler = adaptSampler.orThrow(new ProbabilisticSampler(1.0));
       span.setOperationName('re-sampled-span');
 
       assert.equal(span.operationName, 're-sampled-span');
@@ -354,7 +355,7 @@ describe('span should', () => {
       assert.equal(span.operationName, 'new-span-one');
 
       // update sampler to something will always sample
-      tracer._sampler = new ProbabilisticSampler(1.0);
+      tracer._sampler = adaptSampler.orThrow(new ProbabilisticSampler(1.0));
 
       // The second cal lshould rename the operation name, but
       // not re-sample the span.  This is because finalize was set

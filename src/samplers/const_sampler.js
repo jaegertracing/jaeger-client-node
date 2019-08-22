@@ -13,7 +13,7 @@
 
 import * as constants from '../constants.js';
 
-export default class ConstSampler {
+export default class ConstSampler implements LegacySamplerV1 {
   _decision: boolean;
 
   constructor(decision: boolean) {
@@ -40,7 +40,7 @@ export default class ConstSampler {
     return this._decision;
   }
 
-  equal(other: Sampler): boolean {
+  equal(other: LegacySamplerV1): boolean {
     if (!(other instanceof ConstSampler)) {
       return false;
     }

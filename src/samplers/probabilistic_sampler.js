@@ -13,7 +13,7 @@
 
 import * as constants from '../constants.js';
 
-export default class ProbabilisticSampler {
+export default class ProbabilisticSampler implements LegacySamplerV1 {
   _samplingRate: number;
 
   constructor(samplingRate: number) {
@@ -51,7 +51,7 @@ export default class ProbabilisticSampler {
     return Math.random();
   }
 
-  equal(other: Sampler): boolean {
+  equal(other: LegacySamplerV1): boolean {
     if (!(other instanceof ProbabilisticSampler)) {
       return false;
     }

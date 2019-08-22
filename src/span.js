@@ -11,14 +11,26 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import * as constants from './constants.js';
-import SpanContext from './span_context.js';
-import * as opentracing from 'opentracing';
-import Utils from './util.js';
 import BaggageSetter from './baggage/baggage_setter';
+import * as constants from './constants';
+import * as opentracing from 'opentracing';
+import SpanContext from './span_context';
+import Tracer from './tracer';
+import Utils from './util';
 
 export default class Span {
-  _tracer: any;
+  static _baggageHeaderCache: {};
+
+  static _getBaggageHeaderCache() {
+    if (!Span._baggageHeaderCache) {
+      Span._baggageHeaderCache = {};
+    }
+
+    return Span._baggageHeaderCache;
+  }
+
+  _baggageSetter: BaggageSetter;
+  _tracer: Tracer;
   _operationName: string;
   _spanContext: SpanContext;
   _startTime: number;
@@ -26,12 +38,10 @@ export default class Span {
   _duration: number;
   _logs: Array<LogData>;
   _tags: Array<Tag>;
-  static _baggageHeaderCache: any;
   _references: Array<Reference>;
-  _baggageSetter: BaggageSetter;
 
   constructor(
-    tracer: any,
+    tracer: Tracer,
     operationName: string,
     spanContext: SpanContext,
     startTime: number,
@@ -56,33 +66,26 @@ export default class Span {
     return this._tracer._serviceName;
   }
 
-  static _getBaggageHeaderCache() {
-    if (!Span._baggageHeaderCache) {
-      Span._baggageHeaderCache = {};
-    }
-
-    return Span._baggageHeaderCache;
+  /**
+   * Returns the span context that represents this span.
+   *
+   * @return {SpanContext} - Returns this span's span context.
+   **/
+  context(): SpanContext {
+    return this._spanContext;
   }
 
   /**
-   * Returns a normalize key.
+   *  Returns the tracer associated with this span.
    *
-   * @param {string} key - The key to be normalized for a particular baggage value.
-   * @return {string} - The normalized key (lower cased and underscores replaced, along with dashes.)
+   * @return {Tracer} - returns the tracer associated with this span.
    **/
-  _normalizeBaggageKey(key: string) {
-    let baggageHeaderCache = Span._getBaggageHeaderCache();
-    if (key in baggageHeaderCache) {
-      return baggageHeaderCache[key];
-    }
+  tracer(): Tracer {
+    return this._tracer;
+  }
 
-    let normalizedKey: string = key.replace(/_/g, '-').toLowerCase();
-
-    if (Object.keys(baggageHeaderCache).length < 100) {
-      baggageHeaderCache[key] = normalizedKey;
-    }
-
-    return normalizedKey;
+  isLocalRootSpan() {
+    return this._spanContext.isLocalRootSpan();
   }
 
   /**
@@ -118,33 +121,6 @@ export default class Span {
   }
 
   /**
-   * Returns the span context that represents this span.
-   *
-   * @return {SpanContext} - Returns this span's span context.
-   **/
-  context(): SpanContext {
-    return this._spanContext;
-  }
-
-  /**
-   *  Returns the tracer associated with this span.
-   *
-   * @return {Tracer} - returns the tracer associated with this span.
-   **/
-  tracer(): any {
-    return this._tracer;
-  }
-
-  /**
-   * Checks whether or not a span can be written to.
-   *
-   * @return {boolean} - The decision about whether this span can be written to.
-   **/
-  _isWriteable(): boolean {
-    return !this._spanContext.samplingFinalized || this._spanContext.isSampled();
-  }
-
-  /**
    * Sets the operation name on this given span.
    *
    * @param {string} name - The name to use for setting a span's operation name.
@@ -153,18 +129,9 @@ export default class Span {
   setOperationName(operationName: string): Span {
     this._operationName = operationName;
     // We re-sample the span if it has not been finalized.
-    if (this._spanContext.samplingFinalized) {
-      return this;
+    if (!this._spanContext.samplingFinalized) {
+      this._tracer._sampler.onSetOperationName(this, operationName);
     }
-
-    let sampler = this.tracer()._sampler;
-    let tags = {};
-    if (sampler.isSampled(operationName, tags)) {
-      this._spanContext.flags |= constants.SAMPLED_MASK;
-      this.addTags(tags);
-    }
-    this._spanContext.finalizeSampling();
-
     return this;
   }
 
@@ -204,17 +171,26 @@ export default class Span {
    * @return {Span} - returns this span.
    **/
   addTags(keyValuePairs: any): Span {
+    const hasOwnProperty = Object.prototype.hasOwnProperty;
+    const sampler = this._tracer._sampler;
     const samplingKey = opentracing.Tags.SAMPLING_PRIORITY;
     const samplingPriority = keyValuePairs[samplingKey];
-    const samplingPriorityWasSet = samplingPriority != null && this._setSamplingPriority(samplingPriority);
+    const samplingWasSet = samplingPriority != null && this._setSamplingPriority(samplingPriority);
     if (this._isWriteable()) {
+      // if we updated the sampling priority, add the tag straight-away
+      if (samplingWasSet) {
+        this._setTag(samplingKey, samplingPriority);
+        sampler.onSetTag(this, samplingKey, samplingPriority);
+      }
       for (let key in keyValuePairs) {
-        if (Object.prototype.hasOwnProperty.call(keyValuePairs, key)) {
-          if (key === samplingKey && !samplingPriorityWasSet) {
+        if (hasOwnProperty.call(keyValuePairs, key)) {
+          if (key === samplingKey) {
+            // this has already been added, if it was updated
             continue;
           }
           const value = keyValuePairs[key];
-          this._tags.push({ key: key, value: value });
+          this._setTag(key, value);
+          sampler.onSetTag(this, key, value);
         }
       }
     }
@@ -235,7 +211,8 @@ export default class Span {
     }
 
     if (this._isWriteable()) {
-      this._tags.push({ key: key, value: value });
+      this._setTag(key, value);
+      this._tracer._sampler.onSetTag(this, key, value);
     }
     return this;
   }
@@ -280,6 +257,36 @@ export default class Span {
   }
 
   /**
+   * Checks whether or not a span can be written to.
+   *
+   * @return {boolean} - The decision about whether this span can be written to.
+   **/
+  _isWriteable(): boolean {
+    return !this._spanContext.samplingFinalized || this._spanContext.isSampled();
+  }
+
+  /**
+   * Returns a normalize key.
+   *
+   * @param {string} key - The key to be normalized for a particular baggage value.
+   * @return {string} - The normalized key (lower cased and underscores replaced, along with dashes.)
+   **/
+  _normalizeBaggageKey(key: string) {
+    let baggageHeaderCache = Span._getBaggageHeaderCache();
+    if (key in baggageHeaderCache) {
+      return baggageHeaderCache[key];
+    }
+
+    let normalizedKey: string = key.replace(/_/g, '-').toLowerCase();
+
+    if (Object.keys(baggageHeaderCache).length < 100) {
+      baggageHeaderCache[key] = normalizedKey;
+    }
+
+    return normalizedKey;
+  }
+
+  /**
    * Returns true if the flag was updated successfully, false otherwise
    *
    * @param priority - 0 to disable sampling, 1 to enable
@@ -294,12 +301,18 @@ export default class Span {
         return false;
       }
       if (this._tracer._isDebugAllowed(this._operationName)) {
-        this._spanContext.flags = this._spanContext.flags | constants.SAMPLED_MASK | constants.DEBUG_MASK;
+        this._spanContext.setIsSampled(true);
+        this._spanContext.setIsDebug(true);
         return true;
       }
       return false;
     }
-    this._spanContext.flags = this._spanContext.flags & ~constants.SAMPLED_MASK;
+    this._spanContext.setIsSampled(false);
+    this._spanContext.setIsDebug(false);
     return true;
+  }
+
+  _setTag(key: string, value: any): void {
+    this._tags.push({ key: key, value: value });
   }
 }

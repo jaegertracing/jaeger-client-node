@@ -11,31 +11,17 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
+import Span from '../span';
+import type { SamplerApiVersion } from '../samplers/constants';
+
 declare interface Sampler {
+  apiVersion: SamplerApiVersion;
+  extendedStateNamespace(): string;
   name(): string;
-
-  /**
-   * Decides if a new trace starting with given operation name
-   * should be sampled or not. If the method returns true, it
-   * must populate the tags dictionary with tags that identify
-   * the sampler, namely sampler.type and sampler.param.
-   *
-   * This API is different from Python and Go, because Javascript
-   * does not allow functions to return multiple values. We would
-   * have to return an object like {sampled: bool, tags: map},
-   * which would require heap allocation every time, and in most
-   * cases will have sampled=false where tags are irrelevant.
-   * By passing tags as an out parameter we can minimize the
-   * allocations.
-   *
-   * @param {string} operation - Operation name of the root span.
-   * @param {Object} tags - output dictionary to store sampler tags.
-   * @return {boolean} - returns whether the trace should be sampled.
-   *
-   */
-  isSampled(operation: string, tags: any): boolean;
-
-  equal(other: Sampler): boolean;
-
+  onCreateSpan(span: Span): void;
+  onSetOperationName(span: Span, operationName: string): void;
+  onSetTag(span: Span, key: string, value: string): void;
+  // TODO(joe): confirm equal() is not necessary
+  // equal(other: LegacySamplerV1): boolean;
   close(callback: ?Function): void;
 }

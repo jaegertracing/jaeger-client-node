@@ -23,7 +23,7 @@ type SamplersByOperation = { [key: string]: GuaranteedThroughputSampler, __proto
 // that all endpoints are represented in the sampled traces. If the number
 // of distinct operation names exceeds maxOperations, all other names are
 // sampled with a default probabilistic sampler.
-export default class PerOperationSampler {
+export default class PerOperationSampler implements LegacySamplerV1 {
   _maxOperations: number;
   _samplersByOperation: SamplersByOperation;
   _defaultSampler: ProbabilisticSampler;
@@ -78,7 +78,7 @@ export default class PerOperationSampler {
   }
 
   isSampled(operation: string, tags: any): boolean {
-    let sampler: Sampler = this._samplersByOperation[operation];
+    let sampler: LegacySamplerV1 = this._samplersByOperation[operation];
     if (!sampler) {
       if (Object.keys(this._samplersByOperation).length >= this._maxOperations) {
         return this._defaultSampler.isSampled(operation, tags);
@@ -89,7 +89,7 @@ export default class PerOperationSampler {
     return sampler.isSampled(operation, tags);
   }
 
-  equal(other: Sampler): boolean {
+  equal(other: LegacySamplerV1): boolean {
     return false; // TODO equal should be removed
   }
 

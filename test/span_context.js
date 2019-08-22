@@ -12,7 +12,7 @@
 
 import { assert } from 'chai';
 import * as constants from '../src/constants.js';
-import SpanContext from '../src/span_context.js';
+import SpanContext from '../src/span_context';
 import Utils from '../src/util.js';
 
 describe('SpanContext should', () => {
@@ -47,7 +47,7 @@ describe('SpanContext should', () => {
     assert.isOk(context.isSampled());
     assert.isOk(context.isDebug());
 
-    context._flags = 0;
+    context.flags = 0;
     assert.isNotOk(context.isSampled());
     assert.isNotOk(context.isDebug());
   });
