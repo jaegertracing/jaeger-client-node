@@ -11,7 +11,6 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import getInstanceId from './get_instance_id';
 import { SAMPLER_API_V2 } from './constants';
 import Span from '../span';
 import Utils from '../util';
@@ -52,15 +51,9 @@ class LegacySamplerV1Adapter implements Sampler {
   apiVersion = SAMPLER_API_V2;
 
   _adaptee: LegacySamplerV1;
-  _extendedStateNamespace: string;
 
   constructor(instance: LegacySamplerV1) {
     this._adaptee = instance;
-    this._extendedStateNamespace = getInstanceId(this.name());
-  }
-
-  extendedStateNamespace() {
-    return this._extendedStateNamespace;
   }
 
   name() {

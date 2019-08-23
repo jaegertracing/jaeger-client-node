@@ -179,6 +179,10 @@ export default class RemoteControlledSampler implements LegacySamplerV1 {
     return this._sampler.isSampled(operation, tags);
   }
 
+  /**
+   * Not implemented, always returns false.
+   * @param {LegacySamplerV1} other
+   */
   equal(other: LegacySamplerV1): boolean {
     return false;
   }

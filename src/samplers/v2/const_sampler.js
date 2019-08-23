@@ -11,7 +11,6 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import getInstanceId from '../get_instance_id';
 import { SAMPLER_API_V2 } from '../constants.js';
 import * as constants from '../../constants.js';
 import Span from '../../span';
@@ -19,19 +18,13 @@ import Span from '../../span';
 export default class ConstSamplerV2 implements Sampler {
   apiVersion = SAMPLER_API_V2;
   _decision: boolean;
-  _extendedStateNamespace: string;
 
   constructor(decision: boolean) {
     this._decision = Boolean(decision);
-    this._extendedStateNamespace = getInstanceId(this.name());
   }
 
   name() {
     return 'ConstSampler';
-  }
-
-  extendedStateNamespace() {
-    return this._extendedStateNamespace;
   }
 
   toString() {
