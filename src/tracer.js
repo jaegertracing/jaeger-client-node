@@ -34,7 +34,7 @@ import version from './version';
 export default class Tracer {
   _serviceName: string;
   _reporter: Reporter;
-  _sampler: Sampler;
+  _sampler: LegacySamplerV1;
   _logger: NullLogger;
   _tags: any;
   _injectors: any;
@@ -61,7 +61,7 @@ export default class Tracer {
   constructor(
     serviceName: string,
     reporter: Reporter = new NoopReporter(),
-    sampler: Sampler = new ConstSampler(false),
+    sampler: LegacySamplerV1 = new ConstSampler(false),
     options: any = {}
   ) {
     this._tags = options.tags ? Utils.clone(options.tags) : {};

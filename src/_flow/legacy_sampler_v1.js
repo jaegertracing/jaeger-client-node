@@ -1,5 +1,5 @@
 // @flow
-// Copyright (c) 2016 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -11,7 +11,7 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-declare interface Sampler {
+declare interface LegacySamplerV1 {
   name(): string;
 
   /**
@@ -35,7 +35,7 @@ declare interface Sampler {
    */
   isSampled(operation: string, tags: any): boolean;
 
-  equal(other: Sampler): boolean;
+  equal(other: LegacySamplerV1): boolean;
 
   close(callback: ?Function): void;
 }

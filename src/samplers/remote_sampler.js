@@ -28,9 +28,9 @@ const DEFAULT_SAMPLING_PORT = 5778;
 const PROBABILISTIC_STRATEGY_TYPE = 'PROBABILISTIC';
 const RATELIMITING_STRATEGY_TYPE = 'RATE_LIMITING';
 
-export default class RemoteControlledSampler {
+export default class RemoteControlledSampler implements LegacySamplerV1 {
   _serviceName: string;
-  _sampler: Sampler;
+  _sampler: LegacySamplerV1;
   _logger: Logger;
   _metrics: Metrics;
 
@@ -152,7 +152,7 @@ export default class RemoteControlledSampler {
       this._sampler = new PerOperationSampler(response.operationSampling, this._maxOperations);
       return true;
     }
-    let newSampler: Sampler;
+    let newSampler: LegacySamplerV1;
     if (response.strategyType === PROBABILISTIC_STRATEGY_TYPE && response.probabilisticSampling) {
       let samplingRate = response.probabilisticSampling.samplingRate;
       newSampler = new ProbabilisticSampler(samplingRate);
@@ -177,6 +177,10 @@ export default class RemoteControlledSampler {
 
   isSampled(operation: string, tags: any): boolean {
     return this._sampler.isSampled(operation, tags);
+  }
+
+  equal(other: LegacySamplerV1): boolean {
+    return false;
   }
 
   close(callback: ?Function): void {

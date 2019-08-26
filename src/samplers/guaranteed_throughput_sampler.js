@@ -22,7 +22,7 @@ import RateLimitingSampler from './ratelimiting_sampler.js';
 //
 // The probabilisticSampler is given higher priority when tags are emitted, ie. if IsSampled() for both
 // samplers return true, the tags for probabilisticSampler will be used.
-export default class GuaranteedThroughputSampler {
+export default class GuaranteedThroughputSampler implements LegacySamplerV1 {
   _probabilisticSampler: ProbabilisticSampler;
   _lowerBoundSampler: RateLimitingSampler;
   _tagsPlaceholder: any;
@@ -59,7 +59,7 @@ export default class GuaranteedThroughputSampler {
     return decision;
   }
 
-  equal(other: Sampler): boolean {
+  equal(other: LegacySamplerV1): boolean {
     if (!(other instanceof GuaranteedThroughputSampler)) {
       return false;
     }
