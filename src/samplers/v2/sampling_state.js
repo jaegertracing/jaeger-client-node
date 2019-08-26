@@ -14,60 +14,42 @@
 import { DEBUG_MASK, FIREHOSE_MASK, SAMPLED_MASK } from '../../constants';
 import SpanContext from '../../span_context';
 
-export const WARN_NOT_FINALIZABLE = 'This sampling state is not finalizable.';
-export const WARN_SHOULD_NOT_ENABLE_FINALIZABLE = 'Finalizable can only be changed to false';
-export const WARN_CANNOT_REVERT_FINALIZABLE = 'Setting finalizable to false cannot be reverted';
-export const WARN_CANNOT_REVERT_FINAL = 'The final state cannot be reverted.';
-
 export default class SamplingState {
+  // samplers may store their individual states in this map
   _extendedState: { [string]: any } = {};
+
+  // shared Flags from span context
   _flags: number = 0;
+
+  // when state is not final, sampling will be retried on other write operations,
+  // and spans will remain writable.
   _final: boolean = false;
-  _finalizable: boolean = true;
+
+  // Span ID of the local root span, i.e. the first span in this process for this trace.
   _localRootSpanIdStr: ?string;
 
   constructor(localRootSpanIdStr: ?string) {
     this._localRootSpanIdStr = localRootSpanIdStr;
   }
 
+  // checks if another span context has the same Span ID as the local root span
   isLocalRootSpan(context: SpanContext) {
     return this._localRootSpanIdStr === context.spanIdStr;
+  }
+
+  localRootSpanId(): ?string {
+    return this._localRootSpanIdStr;
   }
 
   extendedState() {
     return this._extendedState;
   }
 
-  localRootSpanId() {
-    return this._localRootSpanIdStr;
-  }
-
-  isFinalizable() {
-    return this._finalizable;
-  }
-
-  setIsFinalizable(value: false): ?string {
-    if (value) {
-      if (!this._finalizable) {
-        return WARN_CANNOT_REVERT_FINALIZABLE;
-      }
-      return WARN_SHOULD_NOT_ENABLE_FINALIZABLE;
-    }
-    this._finalizable = false;
-    this._final = false;
-  }
-
   isFinal() {
     return this._final;
   }
 
-  setIsFinal(value: boolean): ?string {
-    if (!this._finalizable) {
-      return WARN_NOT_FINALIZABLE;
-    }
-    if (!value && this._final) {
-      return WARN_CANNOT_REVERT_FINAL;
-    }
+  setFinal(value: boolean) {
     this._final = value;
   }
 
@@ -75,7 +57,7 @@ export default class SamplingState {
     return Boolean(this._flags & SAMPLED_MASK);
   }
 
-  setIsSampled(enable: boolean) {
+  setSampled(enable: boolean) {
     this._toggleFlag(SAMPLED_MASK, enable);
   }
 
@@ -83,7 +65,7 @@ export default class SamplingState {
     return Boolean(this._flags & DEBUG_MASK);
   }
 
-  setIsDebug(enable: boolean) {
+  setDebug(enable: boolean) {
     this._toggleFlag(DEBUG_MASK, enable);
   }
 
@@ -91,7 +73,7 @@ export default class SamplingState {
     return Boolean(this._flags & FIREHOSE_MASK);
   }
 
-  setIsFirehose(enable: boolean) {
+  setFirehose(enable: boolean) {
     this._toggleFlag(FIREHOSE_MASK, enable);
   }
 

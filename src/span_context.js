@@ -126,16 +126,16 @@ export default class SpanContext {
     this._samplingState.setFlags(flags);
   }
 
-  _setIsSampled(value: boolean) {
-    this._samplingState.setIsSampled(value);
+  _setSampled(value: boolean) {
+    this._samplingState.setSampled(value);
   }
 
-  _setIsDebug(value: boolean) {
-    this._samplingState.setIsDebug(value);
+  _setDebug(value: boolean) {
+    this._samplingState.setDebug(value);
   }
 
-  _setIsFirehose(value: boolean) {
-    this._samplingState.setIsFirehose(value);
+  _setFirehose(value: boolean) {
+    this._samplingState.setFirehose(value);
   }
 
   set baggage(baggage: any): void {
@@ -151,7 +151,7 @@ export default class SpanContext {
   }
 
   finalizeSampling() {
-    return this._samplingState.setIsFinal(true);
+    return this._samplingState.setFinal(true);
   }
 
   _isLocalRootSpan() {

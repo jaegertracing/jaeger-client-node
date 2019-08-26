@@ -13,7 +13,7 @@
 
 import BinaryCodec from './propagators/binary_codec';
 import ConstSampler from './samplers/v2/const_sampler';
-import adaptSampler from './samplers/_adapt_sampler';
+import { adaptSamplerOrThrow } from './samplers/_adapt_sampler';
 import * as constants from './constants';
 import * as opentracing from 'opentracing';
 import { Tags as otTags } from 'opentracing';
@@ -77,7 +77,7 @@ export default class Tracer {
     this._serviceName = serviceName;
     this._reporter = reporter;
     // TODO(joe): verify we want to throw if the sampler is invalid
-    this._sampler = adaptSampler.orThrow(sampler);
+    this._sampler = adaptSamplerOrThrow(sampler);
     this._logger = options.logger || new NullLogger();
     this._baggageSetter = new BaggageSetter(
       options.baggageRestrictionManager || new DefaultBaggageRestrictionManager(),

@@ -300,14 +300,14 @@ export default class Span {
         return false;
       }
       if (this._tracer._isDebugAllowed(this._operationName)) {
-        this._spanContext._setIsSampled(true);
-        this._spanContext._setIsDebug(true);
+        this._spanContext._setSampled(true);
+        this._spanContext._setDebug(true);
         return true;
       }
       return false;
     }
-    this._spanContext._setIsSampled(false);
-    this._spanContext._setIsDebug(false);
+    this._spanContext._setSampled(false);
+    this._spanContext._setDebug(false);
     return true;
   }
 
