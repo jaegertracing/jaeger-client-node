@@ -35,14 +35,14 @@ export default class ConstSamplerV2 extends BaseSamplerV2 {
   }
 
   get decision() {
+    return this._decision.sample;
+  }
+
+  onCreateSpan(span: Span): SamplingDecision {
     return this._decision;
   }
 
-  onCreateSpan(span: Span): SamplerDecision {
-    return this._decision;
-  }
-
-  onSetOperationName(span: Span, operationName: string): SamplerDecision {
+  onSetOperationName(span: Span, operationName: string): SamplingDecision {
     return this._decision;
   }
 }

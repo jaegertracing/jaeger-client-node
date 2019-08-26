@@ -57,10 +57,10 @@ class LegacySamplerV1Adapter extends BaseSamplerV2 {
     this._adaptee = instance;
   }
 
-  onCreateSpan(span: Span) {
+  onCreateSpan(span: Span): SamplingDecision {
     const samplingState = span._spanContext._samplingState;
     if (samplingState.isFinal()) {
-      return;
+      return { sample: false, retryable: false, tags: null };
     }
     if (!samplingState.isLocalRootSpan(span._spanContext)) {
       // this is not the local root span, therefore we should attempt to
@@ -77,17 +77,19 @@ class LegacySamplerV1Adapter extends BaseSamplerV2 {
           span._setTag(tagsArr[i].key, tagsArr[i].value);
         }
       }
+      return { sample: isSampled, retryable: false, tags: null };
     }
+    return { sample: false, retryable: false, tags: null };
   }
 
-  onSetOperationName(span: Span, operationName: string) {
+  onSetOperationName(span: Span, operationName: string): SamplingDecision {
     const samplingState = span._spanContext._samplingState;
     if (
       samplingState.isFinal() ||
       !samplingState.isLocalRootSpan(span._spanContext) ||
       samplingState.isDebug()
     ) {
-      return;
+      return { sample: false, retryable: false, tags: null };
     }
     const tags = {};
     const isSampled = this._adaptee.isSampled(span.operationName, tags);
@@ -102,6 +104,7 @@ class LegacySamplerV1Adapter extends BaseSamplerV2 {
       }
     }
     samplingState.setIsFinal(true);
+    return { sample: isSampled, retryable: false, tags: null };
   }
 
   close(callback: ?Function) {

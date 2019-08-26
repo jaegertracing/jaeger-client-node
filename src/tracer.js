@@ -36,7 +36,7 @@ import SamplingState from './samplers/v2/sampling_state';
 export default class Tracer {
   _serviceName: string;
   _reporter: Reporter;
-  _sampler: LegacySamplerV1 | Sampler;
+  _sampler: Sampler;
   _logger: NullLogger;
   _tags: any;
   _injectors: any;
