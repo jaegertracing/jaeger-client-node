@@ -15,34 +15,42 @@ import getInstanceId from '../get_instance_id';
 import { SAMPLER_API_V2 } from '../constants.js';
 import * as constants from '../../constants.js';
 import Span from '../../span';
-import BaseSamplerV2 from './base';
 
-export default class ConstSamplerV2 extends BaseSamplerV2 {
-  _decision: boolean;
+let _instanceId = 0;
 
-  constructor(decision: boolean) {
-    super('ConstSampler');
-    this._decision = Boolean(decision);
+export default class BaseSamplerV2 implements Sampler {
+  apiVersion = SAMPLER_API_V2;
+  _name: string;
+  _uniqueName: string;
+
+  constructor(name: string) {
+    this._name = name;
+    this._uniqueName = BaseSamplerV2._getInstanceId(name);
   }
 
-  toString() {
-    return `${this.name()}(version=2, ${this._decision ? 'always' : 'never'})`;
+  static _getInstanceId(name: string) {
+    return `${name}[${_instanceId++}]`;
   }
 
-  get decision() {
-    return this._decision;
+  name() {
+    return this._name;
+  }
+
+  uniqueName() {
+    return this._uniqueName;
   }
 
   onCreateSpan(span: Span) {
-    const ctx = span._spanContext;
-    if (this._decision && !ctx.samplingFinalized && !ctx.isSampled() && span._isLocalRootSpan()) {
-      ctx._setIsSampled(true);
-      span._setTag(constants.SAMPLER_TYPE_TAG_KEY, constants.SAMPLER_TYPE_CONST);
-      span._setTag(constants.SAMPLER_PARAM_TAG_KEY, this._decision);
-    }
+    throw new Error(`${this.name()} does not implement onCreateSpan`);
   }
 
-  onSetOperationName(span: Span, operationName: string) {
-    span._spanContext.finalizeSampling();
+  onSetOperationName(span: Span, operationName: string) {}
+
+  onSetTag(span: Span) {}
+
+  close(callback: ?Function): void {
+    if (callback) {
+      callback();
+    }
   }
 }
