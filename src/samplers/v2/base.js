@@ -22,10 +22,12 @@ export default class BaseSamplerV2 implements Sampler {
   apiVersion = SAMPLER_API_V2;
   _name: string;
   _uniqueName: string;
+  _decision: SamplingDecision;
 
   constructor(name: string) {
     this._name = name;
     this._uniqueName = BaseSamplerV2._getInstanceId(name);
+    this._decision = { sample: false, retryable: false, tags: null };
   }
 
   static _getInstanceId(name: string) {
@@ -40,13 +42,17 @@ export default class BaseSamplerV2 implements Sampler {
     return this._uniqueName;
   }
 
-  onCreateSpan(span: Span) {
+  onCreateSpan(span: Span): SamplingDecision {
     throw new Error(`${this.name()} does not implement onCreateSpan`);
   }
 
-  onSetOperationName(span: Span, operationName: string) {}
+  onSetOperationName(span: Span, operationName: string): SamplingDecision {
+    return this._decision;
+  }
 
-  onSetTag(span: Span) {}
+  onSetTag(span: Span): SamplingDecision {
+    return this._decision;
+  }
 
   close(callback: ?Function): void {
     if (callback) {
