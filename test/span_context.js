@@ -11,9 +11,8 @@
 // the License.
 
 import { assert } from 'chai';
-import * as constants from '../src/constants.js';
 import SpanContext from '../src/span_context';
-import Utils from '../src/util.js';
+import Utils from '../src/util';
 
 describe('SpanContext should', () => {
   let LARGEST_64_BUFFER;

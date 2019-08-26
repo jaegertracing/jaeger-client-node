@@ -13,7 +13,7 @@
 
 import * as constants from './constants';
 import SamplingState from './samplers/v2/sampling_state';
-import Utils from './util.js';
+import Utils from './util';
 import Span from './span';
 
 export default class SpanContext {
