@@ -238,7 +238,9 @@ describe('http sender', () => {
     sender.flush(assertCallback(0, undefined));
   });
 
-  it('should gracefully handle errors emitted by socket.send', done => {
+  it('should gracefully handle errors emitted by socket.send', function(done) {
+    // this test tends to timeout
+    this.timeout(15000);
     sender = new HTTPSender({
       endpoint: 'http://foo.bar.xyz',
       maxSpanBatchSize: batchSize,

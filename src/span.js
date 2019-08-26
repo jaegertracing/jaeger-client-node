@@ -11,14 +11,15 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import * as constants from './constants.js';
-import SpanContext from './span_context.js';
-import * as opentracing from 'opentracing';
-import Utils from './util.js';
 import BaggageSetter from './baggage/baggage_setter';
+import * as constants from './constants';
+import * as opentracing from 'opentracing';
+import SpanContext from './span_context';
+import Tracer from './tracer';
+import Utils from './util';
 
 export default class Span {
-  _tracer: any;
+  _tracer: Tracer;
   _operationName: string;
   _spanContext: SpanContext;
   _startTime: number;
@@ -31,7 +32,7 @@ export default class Span {
   _baggageSetter: BaggageSetter;
 
   constructor(
-    tracer: any,
+    tracer: Tracer,
     operationName: string,
     spanContext: SpanContext,
     startTime: number,
@@ -131,7 +132,7 @@ export default class Span {
    *
    * @return {Tracer} - returns the tracer associated with this span.
    **/
-  tracer(): any {
+  tracer(): Tracer {
     return this._tracer;
   }
 
