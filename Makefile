@@ -32,6 +32,15 @@ endif
 	npm run test-dist
 	npm run check-license
 
+.PHONY: test-without-install
+test-without-install: build-without-install
+	npm run flow
+ifeq ($(NODE_LTS),true)
+	npm run test-all
+endif
+	npm run test-dist
+	npm run check-license
+
 .PHONY: install-test-deps
 install-test-deps:
 ifeq ($(NODE_0_10), false)

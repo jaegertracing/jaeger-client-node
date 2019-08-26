@@ -16,8 +16,7 @@ import type { SamplerApiVersion } from '../samplers/constants';
 
 declare interface Sampler {
   apiVersion: SamplerApiVersion;
-  extendedStateNamespace(): string;
-  name(): string;
+  uniqueName(): string;
   onCreateSpan(span: Span): void;
   onSetOperationName(span: Span, operationName: string): void;
   onSetTag(span: Span, key: string, value: string): void;

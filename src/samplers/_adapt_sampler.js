@@ -15,6 +15,7 @@ import getInstanceId from './get_instance_id';
 import { SAMPLER_API_V2 } from './constants';
 import Span from '../span';
 import Utils from '../util';
+import BaseSamplerV2 from './v2/base';
 
 type AdaptSamplerFn = {
   (sampler: any): ?Sampler,
@@ -48,23 +49,12 @@ adaptSamplerFn.orThrow = adaptSamplerOrThrow;
 const adaptSampler: AdaptSamplerFn = adaptSamplerFn;
 export default adaptSampler;
 
-class LegacySamplerV1Adapter implements Sampler {
-  apiVersion = SAMPLER_API_V2;
-
+class LegacySamplerV1Adapter extends BaseSamplerV2 {
   _adaptee: LegacySamplerV1;
-  _extendedStateNamespace: string;
 
   constructor(instance: LegacySamplerV1) {
+    super(`SamplerV1Adapter(${instance.name()})`);
     this._adaptee = instance;
-    this._extendedStateNamespace = getInstanceId(this.name());
-  }
-
-  extendedStateNamespace() {
-    return this._extendedStateNamespace;
-  }
-
-  name() {
-    return `SamplerV1Adapter(${this._adaptee.name()})`;
   }
 
   onCreateSpan(span: Span) {
@@ -113,8 +103,6 @@ class LegacySamplerV1Adapter implements Sampler {
     }
     samplingState.setIsFinal(true);
   }
-
-  onSetTag(span: Span, key: string, value: string) {}
 
   close(callback: ?Function) {
     this._adaptee.close(callback);
