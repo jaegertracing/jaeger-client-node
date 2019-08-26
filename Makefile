@@ -32,6 +32,15 @@ endif
 	npm run test-dist
 	npm run check-license
 
+.PHONY: test-without-install
+test-without-install: build-without-install
+	npm run flow
+ifeq ($(NODE_LTS),true)
+	npm run test-all
+endif
+	npm run test-dist
+	npm run check-license
+
 .PHONY: install-test-deps
 install-test-deps:
 ifeq ($(NODE_0_10), false)
@@ -44,7 +53,10 @@ check-node-lts:
 	@$(NODE_LTS) && echo Building using Node 10.x
 
 .PHONY: build-node
-build-node: check-node-lts node-modules
+build-node: check-node-lts node-modules build-without-install
+
+.PHONY: build-without-install
+build-without-install:
 	rm -rf ./dist/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/src/ src/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/test/ test/
