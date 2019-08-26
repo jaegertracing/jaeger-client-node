@@ -12,18 +12,18 @@
 
 import _ from 'lodash';
 import { assert, expect } from 'chai';
-import ConstSampler from '../src/samplers/const_sampler.js';
+import ConstSampler from '../src/samplers/const_sampler';
 import ProbabilisticSampler from '../src/samplers/probabilistic_sampler';
-import * as constants from '../src/constants.js';
-import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
+import * as constants from '../src/constants';
+import InMemoryReporter from '../src/reporters/in_memory_reporter';
 import JaegerTestUtils from '../src/test_util';
 import MockLogger from './lib/mock_logger';
 import * as opentracing from 'opentracing';
 import Span from '../src/span.js';
-import SpanContext from '../src/span_context.js';
+import SpanContext from '../src/span_context';
 import sinon from 'sinon';
-import Tracer from '../src/tracer.js';
-import Utils from '../src/util.js';
+import Tracer from '../src/tracer';
+import Utils from '../src/util';
 import DefaultThrottler from '../src/throttler/default_throttler';
 
 describe('span should', () => {

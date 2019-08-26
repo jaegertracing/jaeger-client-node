@@ -11,7 +11,7 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import * as constants from './constants.js';
+import * as constants from './constants';
 import Utils from './util.js';
 
 export default class SpanContext {

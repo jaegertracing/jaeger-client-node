@@ -1,4 +1,5 @@
 sudo: required
+dist: trusty
 
 # Travis will use .nvmrc, by default
 language: node_js

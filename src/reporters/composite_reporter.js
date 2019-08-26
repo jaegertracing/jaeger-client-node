@@ -13,7 +13,7 @@
 
 import Span from '../span.js';
 
-export default class CompositeReporter {
+export default class CompositeReporter implements Reporter {
   _reporters: Array<Reporter>;
 
   constructor(reporters: Array<Reporter>) {
