@@ -49,6 +49,14 @@ export default class Span {
     this._tags = [];
   }
 
+  get operationName(): string {
+    return this._operationName;
+  }
+
+  get serviceName(): string {
+    return this._tracer._serviceName;
+  }
+
   static _getBaggageHeaderCache() {
     if (!Span._baggageHeaderCache) {
       Span._baggageHeaderCache = {};
@@ -76,14 +84,6 @@ export default class Span {
     }
 
     return normalizedKey;
-  }
-
-  get operationName(): string {
-    return this._operationName;
-  }
-
-  get serviceName(): string {
-    return this._tracer._serviceName;
   }
 
   _isLocalRootSpan() {
