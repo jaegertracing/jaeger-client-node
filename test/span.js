@@ -13,7 +13,7 @@
 
 import _ from 'lodash';
 import { assert, expect } from 'chai';
-import ConstSampler from '../src/samplers/v2/const_sampler';
+import ConstSampler from '../src/samplers/const_sampler';
 import LegacyConstSampler from '../src/samplers/const_sampler';
 import { adaptSamplerOrThrow } from '../src/samplers/_adapt_sampler';
 import ProbabilisticSampler from '../src/samplers/probabilistic_sampler';
@@ -248,7 +248,7 @@ describe('span should', () => {
   });
 
   describe('adaptive sampling tests for span', () => {
-    class RetryableSampler extends BaseSamplerV2 {
+    class RetryableSampler2 extends BaseSamplerV2 {
       _decision: boolean;
       constructor(decision: boolean) {
         super('RetryableSampler');
@@ -275,25 +275,24 @@ describe('span should', () => {
       { desc: 'unsampled span: ', sampling: false, reportedSpans: 0 },
     ];
     _.each(options, o => {
-      it(o.desc + 'should save tags, and logs on an unsampled span in case it later becomes sampled', () => {
+      it(o.desc + 'should save tags, and logs on an unsampled span incase it later becomes sampled', () => {
         let reporter = new InMemoryReporter();
-        let tracer = new Tracer('test-service-name', reporter, new RetryableSampler(false), {
+        let tracer = new Tracer('test-service-name', reporter, new ConstSampler(false), {
           logger: new MockLogger(),
         });
         let span = tracer.startSpan('initially-unsampled-span');
         assert.ok(span._isWriteable(), 'span is writeable when created');
+        assert.equal(false, span.context().samplingFinalized, 'span is not finalized when created');
+        assert.ok(span._isWriteable(), 'span is writeable when created');
         span.setTag('tagKeyOne', 'tagValueOne');
-        assert.ok(span._isWriteable(), 'span is writeable after setTag');
         span.addTags({
           tagKeyTwo: 'tagValueTwo',
         });
-        assert.ok(span._isWriteable(), 'span is writeable after addTags');
+        assert.ok(span._isWriteable(), 'span is writeable after setting tags');
         span.log({ logkeyOne: 'logValueOne' });
-        assert.ok(span._isWriteable(), 'span is writeable after log()');
 
-        tracer._sampler._decision = o.sampling;
+        tracer._sampler = adaptSamplerOrThrow(new ConstSampler(o.sampling));
         span.setOperationName('sampled-span');
-        assert.equal(span._isWriteable(), o.sampling);
         span.finish();
 
         assert.deepEqual(span._tags[0], { key: 'tagKeyOne', value: 'tagValueOne' });
@@ -359,23 +358,23 @@ describe('span should', () => {
     });
 
     it('isWriteable returns true if not finalized, or the span is sampled', () => {
-      tracer = new Tracer('test-service-name', new InMemoryReporter(), new RetryableSampler(false), {
+      tracer = new Tracer('test-service-name', new InMemoryReporter(), new ConstSampler(false), {
         logger: new MockLogger(),
       });
       let unFinalizedSpan = tracer.startSpan('unFinalizedSpan');
-      assert.equal(unFinalizedSpan.context().samplingFinalized, false);
-      assert.isOk(unFinalizedSpan._isWriteable());
+      assert.equal(false, unFinalizedSpan.context().samplingFinalized);
+      assert.equal(true, unFinalizedSpan._isWriteable());
 
-      tracer._sampler._decision = true;
+      tracer._sampler = adaptSamplerOrThrow(new ConstSampler(true));
       let sampledSpan = tracer.startSpan('sampled-span');
-      assert.isOk(sampledSpan.context().isSampled);
+      assert.equal(true, sampledSpan.context().isSampled());
       sampledSpan.finish(); // finalizes the span
-      assert.isOk(sampledSpan.context().samplingFinalized);
-      assert.isOk(sampledSpan._isWriteable());
+      assert.equal(true, sampledSpan.context().samplingFinalized);
+      assert.equal(true, sampledSpan._isWriteable());
     });
 
     it('2nd setOperationName should add sampler tags to span, and change operationName', () => {
-      tracer = new Tracer('test-service-name', new InMemoryReporter(), new RetryableSampler(true), {
+      tracer = new Tracer('test-service-name', new InMemoryReporter(), new ConstSampler(true), {
         logger: new MockLogger(),
       });
       let span = tracer.startSpan('fry');
