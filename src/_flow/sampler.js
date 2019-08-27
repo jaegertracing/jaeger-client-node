@@ -14,19 +14,21 @@
 import Span from '../span';
 import type { SamplerApiVersion } from '../samplers/constants';
 
-declare interface Sampler {
-  apiVersion: SamplerApiVersion;
-  uniqueName(): string;
-  onCreateSpan(span: Span): SamplingDecision;
-  onSetOperationName(span: Span, operationName: string): SamplingDecision;
-  onSetTag(span: Span, key: string, value: any): SamplingDecision;
-  // TODO(joe): confirm equal() is not necessary
-  // equal(other: LegacySamplerV1): boolean;
-  close(callback: ?Function): void;
-}
-
+/**
+ * Sampler methods return SamplingDecision struct.
+ */
 declare type SamplingDecision = {
   sample: boolean,
   retryable: boolean,
   tags: ?{},
 };
+
+declare interface Sampler {
+  apiVersion: SamplerApiVersion;
+
+  onCreateSpan(span: Span): SamplingDecision;
+  onSetOperationName(span: Span, operationName: string): SamplingDecision;
+  onSetTag(span: Span, key: string, value: any): SamplingDecision;
+
+  close(callback: ?Function): void;
+}
