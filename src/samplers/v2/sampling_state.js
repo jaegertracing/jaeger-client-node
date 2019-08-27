@@ -21,8 +21,25 @@ export default class SamplingState {
   // shared Flags from span context
   _flags: number = 0;
 
-  // when state is not final, sampling will be retried on other write operations,
-  // and spans will remain writable.
+  /**
+   * When state is not final, sampling will be retried on other write operations,
+   * and spans will remain writable.
+   *
+   * This field exists to help distinguish between when a span can have a properly
+   * correlated operation name -> sampling rate mapping, and when it cannot.
+   * Adaptive sampling uses the operation name of a span to correlate it with
+   * a sampling rate.  If an operation name is set on a span after the span's creation
+   * then adaptive sampling cannot associate the operation name with the proper sampling rate.
+   * In order to correct this we allow a span to be written to, so that we can re-sample
+   * it in the case that an operation name is set after span creation. Situations
+   * where a span context's sampling decision is finalized include:
+   * - it has inherited the sampling decision from its parent
+   * - its debug flag is set via the sampling.priority tag
+   * - it is finish()-ed
+   * - setOperationName is called
+   * - it is used as a parent for another span
+   * - its context is serialized using injectors
+   */
   _final: boolean = false;
 
   // Span ID of the local root span, i.e. the first span in this process for this trace.

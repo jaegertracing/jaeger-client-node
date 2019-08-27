@@ -140,7 +140,7 @@ export default class Tracer {
       span.addTags(userTags);
     }
     if (internalTags) {
-      span._appendTags(internalTags);
+      span._appendTags(internalTags); // no need to run internal tags through sampler
     }
 
     // emit metrics
@@ -207,7 +207,6 @@ export default class Tracer {
     let userTags = options.tags;
     let startTime = options.startTime || this.now();
 
-    // Convert options.childOf to options.references as needed.
     // followsFromIsParent is used to ensure that CHILD_OF reference is preferred
     // as a parent even if it comes after FOLLOWS_FROM reference.
     let followsFromIsParent = false;
@@ -235,6 +234,7 @@ export default class Tracer {
       let randomId = Utils.getRandom64();
       ctx = new SpanContext(randomId, randomId);
       if (parent) {
+        // fake parent, doesn't contain a parent trace-id, but may contain debug-id/baggage
         if (parent.isDebugIDContainerOnly() && this._isDebugAllowed(operationName)) {
           ctx._setSampled(true);
           ctx._setDebug(true);

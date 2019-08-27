@@ -107,11 +107,11 @@ describe('tracer should', () => {
     let start = 123.456;
     let rpcServer = false;
     let tags = {
-      keyOne: 'leela',
-      keyTwo: 'bender',
+      keyOne: 'Leela',
+      keyTwo: 'Bender',
     };
     let internalTags = {
-      'internal-tag': 'Bender',
+      'internal-tag': 'Fry',
     };
     let references = [];
     let span = tracer._startInternalSpan(
@@ -132,11 +132,11 @@ describe('tracer should', () => {
     assert.equal(span._startTime, start);
     assert.isOk(
       JaegerTestUtils.hasTags(span, {
-        keyOne: 'leela',
-        keyTwo: 'bender',
+        keyOne: 'Leela',
+        keyTwo: 'Bender',
         'sampler.type': 'const',
         'sampler.param': true,
-        'internal-tag': 'Bender',
+        'internal-tag': 'Fry',
       })
     );
   });

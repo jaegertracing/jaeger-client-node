@@ -154,10 +154,6 @@ export default class SpanContext {
     return this._samplingState.setFinal(true);
   }
 
-  _isLocalRootSpan() {
-    return this._samplingState.isLocalRootSpan(this);
-  }
-
   isDebugIDContainerOnly(): boolean {
     return !this.isValid && Boolean(this._debugId);
   }
@@ -201,15 +197,15 @@ export default class SpanContext {
     const _childId = idIsStr ? null : childId;
     const _childIdStr = idIsStr ? childId : null;
     return new SpanContext(
-      this._traceId,
-      _childId,
-      this._spanId,
-      this._traceIdStr,
-      _childIdStr,
-      this._spanIdStr,
-      this._baggage,
-      this._debugId,
-      this._samplingState
+      this._traceId, // traceId
+      _childId, // spanId
+      this._spanId, // parentId
+      this._traceIdStr, // traceIdStr
+      _childIdStr, // spanIdStr
+      this._spanIdStr, // parentIdStr
+      this._baggage, // baggage
+      this._debugId, // debugID
+      this._samplingState // samplingState
     );
   }
 
