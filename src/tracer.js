@@ -236,8 +236,8 @@ export default class Tracer {
       ctx = new SpanContext(randomId, randomId);
       if (parent) {
         if (parent.isDebugIDContainerOnly() && this._isDebugAllowed(operationName)) {
-          ctx._setIsSampled(true);
-          ctx._setIsDebug(true);
+          ctx._setSampled(true);
+          ctx._setDebug(true);
           internalTags[constants.JAEGER_DEBUG_HEADER] = parent.debugId;
         }
         // baggage that could have been passed via `jaeger-baggage` header
