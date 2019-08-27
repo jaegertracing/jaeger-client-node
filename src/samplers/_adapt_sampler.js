@@ -40,6 +40,12 @@ export function adaptSamplerOrThrow(sampler: any): Sampler {
 
 export default adaptSampler;
 
+/**
+ * Transforms legacy v1 sampler into V2.
+ * Primarily intended for simple samplers that are not sensitive to
+ * things like operation names or tags and make a decision only once.
+ * As such, this always returns retryable=false.
+ */
 class LegacySamplerV1Adapter extends BaseSamplerV2 {
   _delegate: LegacySamplerV1;
 
@@ -52,13 +58,17 @@ class LegacySamplerV1Adapter extends BaseSamplerV2 {
     const outTags = {};
     const isSampled = this._delegate.isSampled(span.operationName, outTags);
     // TODO not sure if retryable: false is correct here; depends on the sampler
-    return { sample: isSampled, retryable: true, tags: outTags };
+    return { sample: isSampled, retryable: false, tags: outTags };
   }
 
   onSetOperationName(span: Span, operationName: string): SamplingDecision {
     const outTags = {};
     const isSampled = this._delegate.isSampled(span.operationName, outTags);
-    return { sample: isSampled, retryable: true, tags: outTags };
+    return { sample: isSampled, retryable: false, tags: outTags };
+  }
+
+  onSetTag(span: Span, key: string, value: any): SamplingDecision {
+    return { sample: false, retryable: false, tags: null };
   }
 
   close(callback: ?Function) {

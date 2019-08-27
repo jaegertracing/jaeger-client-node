@@ -85,15 +85,34 @@ describe('span should', () => {
     assert.equal(ret, span);
   });
 
-  it('set debug and sampling version through sampling priority', () => {
-    span._setSamplingPriority(3);
+  it('set debug and sampling flags through sampling priority via setTag', () => {
+    span.setTag(opentracing.Tags.SAMPLING_PRIORITY, 3);
 
     assert.isOk(span.context().isDebug());
     assert.isOk(span.context().isSampled());
+    assert.isOk(
+      JaegerTestUtils.hasTags(span, {
+        'sampling.priority': 3,
+      })
+    );
   });
 
-  it('unset sampling on span', () => {
-    span._setSamplingPriority(0);
+  it('set debug and sampling flags through sampling priority via addTags', () => {
+    let tags = {};
+    tags[opentracing.Tags.SAMPLING_PRIORITY] = 3;
+    span.addTags(tags);
+
+    assert.isOk(span.context().isDebug());
+    assert.isOk(span.context().isSampled());
+    assert.isOk(
+      JaegerTestUtils.hasTags(span, {
+        'sampling.priority': 3,
+      })
+    );
+  });
+
+  it('unset sampling on span via sampling priority', () => {
+    span.setTag(opentracing.Tags.SAMPLING_PRIORITY, 0);
 
     assert.isNotOk(span.context().isSampled());
   });

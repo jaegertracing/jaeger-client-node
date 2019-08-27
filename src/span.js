@@ -86,10 +86,6 @@ export default class Span {
     return normalizedKey;
   }
 
-  _isLocalRootSpan() {
-    return this._spanContext._isLocalRootSpan();
-  }
-
   /**
    * Sets a baggage value with an associated key.
    *
@@ -218,7 +214,6 @@ export default class Span {
     const samplingPriority = keyValuePairs[samplingKey];
     if (samplingPriority != null && this._setSamplingPriority(samplingPriority)) {
       this._appendTag(samplingKey, samplingPriority);
-      // sampler.onSetTag(this, samplingKey, samplingPriority);
     }
     if (this._isWriteable()) {
       for (let key in keyValuePairs) {
