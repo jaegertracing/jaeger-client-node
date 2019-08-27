@@ -52,7 +52,7 @@ class LegacySamplerV1Adapter extends BaseSamplerV2 {
     const outTags = {};
     const isSampled = this._delegate.isSampled(span.operationName, outTags);
     // TODO not sure if retryable: false is correct here; depends on the sampler
-    return { sample: isSampled, retryable: false, tags: outTags };
+    return { sample: isSampled, retryable: true, tags: outTags };
   }
 
   onSetOperationName(span: Span, operationName: string): SamplingDecision {

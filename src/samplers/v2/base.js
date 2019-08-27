@@ -20,12 +20,12 @@ export default class BaseSamplerV2 implements Sampler {
   apiVersion = SAMPLER_API_V2;
   _name: string;
   _uniqueName: string;
-  _decision: SamplingDecision;
+  _cachedDecision: SamplingDecision;
 
   constructor(name: string) {
     this._name = name;
     this._uniqueName = BaseSamplerV2._getInstanceId(name);
-    this._decision = { sample: false, retryable: false, tags: null };
+    this._cachedDecision = { sample: false, retryable: false, tags: null };
   }
 
   static _getInstanceId(name: string) {
@@ -45,11 +45,11 @@ export default class BaseSamplerV2 implements Sampler {
   }
 
   onSetOperationName(span: Span, operationName: string): SamplingDecision {
-    return this._decision;
+    return this._cachedDecision;
   }
 
-  onSetTag(span: Span): SamplingDecision {
-    return this._decision;
+  onSetTag(span: Span, key: string, value: any): SamplingDecision {
+    return this._cachedDecision;
   }
 
   close(callback: ?Function): void {

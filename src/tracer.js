@@ -131,13 +131,16 @@ export default class Tracer {
     isRpcServer: boolean
   ): Span {
     const span = new Span(this, operationName, spanContext, startTime, references);
-    this._sampler.onCreateSpan(span);
+    if (!span._spanContext.samplingFinalized) {
+      const decision = this._sampler.onCreateSpan(span);
+      span._applySamplingDecision(decision);
+    }
 
     if (userTags) {
       span.addTags(userTags);
     }
     if (internalTags) {
-      span.addTags(internalTags);
+      span._appendTags(internalTags);
     }
 
     // emit metrics

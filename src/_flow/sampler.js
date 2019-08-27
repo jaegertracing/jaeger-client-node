@@ -19,7 +19,7 @@ declare interface Sampler {
   uniqueName(): string;
   onCreateSpan(span: Span): SamplingDecision;
   onSetOperationName(span: Span, operationName: string): SamplingDecision;
-  onSetTag(span: Span, key: string, value: string): SamplingDecision;
+  onSetTag(span: Span, key: string, value: any): SamplingDecision;
   // TODO(joe): confirm equal() is not necessary
   // equal(other: LegacySamplerV1): boolean;
   close(callback: ?Function): void;

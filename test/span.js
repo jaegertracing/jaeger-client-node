@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2016 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -14,7 +15,7 @@ import _ from 'lodash';
 import { assert, expect } from 'chai';
 import ConstSampler from '../src/samplers/v2/const_sampler';
 import LegacyConstSampler from '../src/samplers/const_sampler';
-import adaptSampler from '../src/samplers/_adapt_sampler';
+import { adaptSamplerOrThrow } from '../src/samplers/_adapt_sampler';
 import ProbabilisticSampler from '../src/samplers/probabilistic_sampler';
 import * as constants from '../src/constants';
 import InMemoryReporter from '../src/reporters/in_memory_reporter';
@@ -27,6 +28,7 @@ import sinon from 'sinon';
 import Tracer from '../src/tracer';
 import Utils from '../src/util';
 import DefaultThrottler from '../src/throttler/default_throttler';
+import BaseSamplerV2 from '../src/samplers/v2/base';
 
 describe('span should', () => {
   let reporter = new InMemoryReporter();
@@ -227,25 +229,52 @@ describe('span should', () => {
   });
 
   describe('adaptive sampling tests for span', () => {
+    class RetryableSampler extends BaseSamplerV2 {
+      _decision: boolean;
+      constructor(decision: boolean) {
+        super('RetryableSampler');
+        this._decision = decision;
+      }
+      _tags(): {} {
+        return {
+          'sampler.type': 'const',
+          'sampler.param': this._decision,
+        };
+      }
+      onCreateSpan(span: Span): SamplingDecision {
+        return { sample: this._decision, retryable: true, tags: this._tags() };
+      }
+      onSetOperationName(span: Span, operationName: string): SamplingDecision {
+        return { sample: this._decision, retryable: false, tags: this._tags() };
+      }
+      onSetTag(span: Span, key: string, value: any): SamplingDecision {
+        return { sample: this._decision, retryable: true, tags: this._tags() };
+      }
+    }
     let options = [
-      { desc: 'sampled: ', sampling: true, reportedSpans: 1 },
-      { desc: 'unsampled: ', sampling: false, reportedSpans: 0 },
+      { desc: 'sampled span: ', sampling: true, reportedSpans: 1 },
+      { desc: 'unsampled span: ', sampling: false, reportedSpans: 0 },
     ];
     _.each(options, o => {
-      it(o.desc + 'should save tags, and logs on an unsampled span incase it later becomes sampled', () => {
+      it(o.desc + 'should save tags, and logs on an unsampled span in case it later becomes sampled', () => {
         let reporter = new InMemoryReporter();
-        let tracer = new Tracer('test-service-name', reporter, new ConstSampler(false), {
+        let tracer = new Tracer('test-service-name', reporter, new RetryableSampler(false), {
           logger: new MockLogger(),
         });
         let span = tracer.startSpan('initially-unsampled-span');
+        assert.ok(span._isWriteable(), 'span is writeable when created');
         span.setTag('tagKeyOne', 'tagValueOne');
+        assert.ok(span._isWriteable(), 'span is writeable after setTag');
         span.addTags({
           tagKeyTwo: 'tagValueTwo',
         });
+        assert.ok(span._isWriteable(), 'span is writeable after addTags');
         span.log({ logkeyOne: 'logValueOne' });
+        assert.ok(span._isWriteable(), 'span is writeable after log()');
 
-        tracer._sampler = adaptSampler.orThrow(new LegacyConstSampler(o.sampling));
+        tracer._sampler._decision = o.sampling;
         span.setOperationName('sampled-span');
+        assert.equal(span._isWriteable(), o.sampling);
         span.finish();
 
         assert.deepEqual(span._tags[0], { key: 'tagKeyOne', value: 'tagValueOne' });
@@ -311,23 +340,25 @@ describe('span should', () => {
     });
 
     it('isWriteable returns true if not finalized, or the span is sampled', () => {
-      tracer = new Tracer('test-service-name', new InMemoryReporter(), new ConstSampler(false), {
+      tracer = new Tracer('test-service-name', new InMemoryReporter(), new RetryableSampler(false), {
         logger: new MockLogger(),
       });
       let unFinalizedSpan = tracer.startSpan('unFinalizedSpan');
       assert.equal(unFinalizedSpan.context().samplingFinalized, false);
       assert.isOk(unFinalizedSpan._isWriteable());
 
-      tracer._sampler = new ConstSampler(true);
+      tracer._sampler._decision = true;
       let sampledSpan = tracer.startSpan('sampled-span');
-
+      assert.isOk(sampledSpan.context().isSampled);
       sampledSpan.finish(); // finalizes the span
       assert.isOk(sampledSpan.context().samplingFinalized);
-
       assert.isOk(sampledSpan._isWriteable());
     });
 
     it('2nd setOperationName should add sampler tags to span, and change operationName', () => {
+      tracer = new Tracer('test-service-name', new InMemoryReporter(), new RetryableSampler(true), {
+        logger: new MockLogger(),
+      });
       let span = tracer.startSpan('fry');
 
       assert.equal(span.operationName, 'fry');
@@ -337,7 +368,7 @@ describe('span should', () => {
           'sampler.param': true,
         })
       );
-      tracer._sampler = adaptSampler.orThrow(new ProbabilisticSampler(1.0));
+      tracer._sampler = adaptSamplerOrThrow(new ProbabilisticSampler(1.0));
       span.setOperationName('re-sampled-span');
 
       assert.equal(span.operationName, 're-sampled-span');
@@ -356,7 +387,7 @@ describe('span should', () => {
       assert.equal(span.operationName, 'new-span-one');
 
       // update sampler to something will always sample
-      tracer._sampler = adaptSampler.orThrow(new ProbabilisticSampler(1.0));
+      tracer._sampler = adaptSamplerOrThrow(new ProbabilisticSampler(1.0));
 
       // The second cal lshould rename the operation name, but
       // not re-sample the span.  This is because finalize was set

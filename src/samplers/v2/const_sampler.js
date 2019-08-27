@@ -16,14 +16,14 @@ import Span from '../../span';
 import BaseSamplerV2 from './base';
 
 export default class ConstSamplerV2 extends BaseSamplerV2 {
-  _decision: SamplingDecision;
+  _cachedDecision: SamplingDecision;
 
   constructor(decision: boolean) {
     super('ConstSampler');
     const tags = {};
     tags[constants.SAMPLER_TYPE_TAG_KEY] = constants.SAMPLER_TYPE_CONST;
     tags[constants.SAMPLER_PARAM_TAG_KEY] = Boolean(decision);
-    this._decision = {
+    this._cachedDecision = {
       sample: Boolean(decision),
       retryable: false,
       tags: tags,
@@ -31,18 +31,18 @@ export default class ConstSamplerV2 extends BaseSamplerV2 {
   }
 
   toString() {
-    return `${this.name()}(version=2, ${this._decision ? 'always' : 'never'})`;
+    return `${this.name()}(version=2, ${this._cachedDecision ? 'always' : 'never'})`;
   }
 
   get decision() {
-    return this._decision.sample;
+    return this._cachedDecision.sample;
   }
 
   onCreateSpan(span: Span): SamplingDecision {
-    return this._decision;
+    return this._cachedDecision;
   }
 
   onSetOperationName(span: Span, operationName: string): SamplingDecision {
-    return this._decision;
+    return this._cachedDecision;
   }
 }

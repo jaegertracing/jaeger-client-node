@@ -36,14 +36,14 @@ export default class Span {
     operationName: string,
     spanContext: SpanContext,
     startTime: number,
-    references: Array<Reference>
+    references: ?Array<Reference>
   ) {
     this._tracer = tracer;
     this._operationName = operationName;
     this._spanContext = spanContext;
     this._startTime = startTime;
     this._logger = tracer._logger;
-    this._references = references;
+    this._references = references || [];
     this._baggageSetter = tracer._baggageSetter;
     this._logs = [];
     this._tags = [];
@@ -169,9 +169,9 @@ export default class Span {
     if (!decision.retryable) {
       this._spanContext.finalizeSampling();
     }
-    if (decision.sampled) {
+    if (decision.sample) {
       this._spanContext._setSampled(true);
-      this.addTags(decision.tags);
+      this._appendTags(decision.tags);
     }
   }
 
@@ -246,12 +246,16 @@ export default class Span {
    * */
   setTag(key: string, value: any): Span {
     if (key === opentracing.Tags.SAMPLING_PRIORITY && !this._setSamplingPriority(value)) {
+      // TODO should we not record the tag here?
       return this;
     }
 
     if (this._isWriteable()) {
       this._appendTag(key, value);
-      this._tracer._sampler.onSetTag(this, key, value);
+      if (!this._spanContext.samplingFinalized) {
+        const decision = this._tracer._sampler.onSetTag(this, key, value);
+        this._applySamplingDecision(decision);
+      }
     }
     return this;
   }
@@ -323,5 +327,17 @@ export default class Span {
 
   _appendTag(key: string, value: any): void {
     this._tags.push({ key: key, value: value });
+  }
+
+  // Internal method that adds tags without verifying them.
+  // TODO: consider if we want to remove duplicates when sampling tags are added twice.
+  _appendTags(tags: {}): void {
+    const hasOwnProperty = Object.prototype.hasOwnProperty;
+    for (let key in tags) {
+      if (hasOwnProperty.call(tags, key)) {
+        const value = tags[key];
+        this._appendTag(key, value);
+      }
+    }
   }
 }
