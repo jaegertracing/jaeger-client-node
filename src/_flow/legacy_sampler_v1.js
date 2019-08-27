@@ -36,5 +36,6 @@ declare interface LegacySamplerV1 {
   isSampled(operation: string, tags: any): boolean;
 
   equal(other: LegacySamplerV1): boolean;
+
   close(callback: ?Function): void;
 }
