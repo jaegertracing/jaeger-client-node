@@ -25,6 +25,7 @@ import LocalBackend from './lib/metrics/local/backend';
 import sinon from 'sinon';
 import DefaultThrottler from '../src/throttler/default_throttler';
 import os from 'os';
+import JaegerTestUtils from '../src/test_util';
 
 describe('tracer should', () => {
   let tracer;
@@ -105,21 +106,23 @@ describe('tracer should', () => {
     let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
     let start = 123.456;
     let rpcServer = false;
-    let internalTags = [];
-    let references = [];
     let tags = {
       keyOne: 'leela',
       keyTwo: 'bender',
     };
+    let internalTags = {
+      'internal-tag': 'Bender',
+    };
+    let references = [];
     let span = tracer._startInternalSpan(
       context,
       'op-name',
       start,
       internalTags,
       tags,
-      null,
-      rpcServer,
-      references
+      references,
+      false,
+      rpcServer
     );
 
     assert.deepEqual(span.context().traceId, traceId);
@@ -127,7 +130,15 @@ describe('tracer should', () => {
     assert.deepEqual(span.context().parentId, parentId);
     assert.equal(span.context().flags, flags);
     assert.equal(span._startTime, start);
-    assert.equal(span._tags.length, 2);
+    assert.isOk(
+      JaegerTestUtils.hasTags(span, {
+        keyOne: 'leela',
+        keyTwo: 'bender',
+        'sampler.type': 'const',
+        'sampler.param': true,
+        'internal-tag': 'Bender',
+      })
+    );
   });
 
   it('report a span with no tracer level tags', () => {
