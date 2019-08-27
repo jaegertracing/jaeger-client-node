@@ -198,59 +198,55 @@ export default class Tracer {
    * @return {Span} - a new Span object.
    **/
   startSpan(operationName: string, options: ?startSpanOptions): Span {
-    // Convert options.childOf to options.references as needed.
     options = options || {};
-    let references = options.references;
+    let references = options.references || [];
 
     let userTags = options.tags;
     let startTime = options.startTime || this.now();
 
-    // This flag is used to ensure that CHILD_OF reference is preferred
+    // Convert options.childOf to options.references as needed.
+    // followsFromIsParent is used to ensure that CHILD_OF reference is preferred
     // as a parent even if it comes after FOLLOWS_FROM reference.
     let followsFromIsParent = false;
     let parent: ?SpanContext = options.childOf instanceof Span ? options.childOf.context() : options.childOf;
     // If there is no childOf in options, then search list of references
-    if (!parent && references) {
-      for (let i = 0; i < references.length; i++) {
-        let ref: Reference = references[i];
-        if (ref.type() === opentracing.REFERENCE_CHILD_OF) {
-          if (!parent || followsFromIsParent) {
-            parent = ref.referencedContext();
-            break;
-          }
-        } else if (ref.type() === opentracing.REFERENCE_FOLLOWS_FROM) {
-          if (!parent) {
-            parent = ref.referencedContext();
-            followsFromIsParent = true;
-          }
+    for (let i = 0; i < references.length; i++) {
+      let ref: Reference = references[i];
+      if (ref.type() === opentracing.REFERENCE_CHILD_OF) {
+        if (!parent || followsFromIsParent) {
+          parent = ref.referencedContext();
+          break;
+        }
+      } else if (ref.type() === opentracing.REFERENCE_FOLLOWS_FROM) {
+        if (!parent) {
+          parent = ref.referencedContext();
+          followsFromIsParent = true;
         }
       }
     }
 
     let ctx: SpanContext;
-    let internalTags: {};
-    const id = Utils.getRandom64();
+    let internalTags: any = {};
     let hasValidParent = false;
-    if (parent && parent.isValid) {
-      // TODO(joe): verify `hasValidParent`
-      // old code was: parentContext && !parentContext.isDebugIDContainerOnly();
-      hasValidParent = true;
-      ctx = parent._makeChildContext(id);
-      // finalize sampling for all span contexts of the parent.traceId trace
-      parent.finalizeSampling();
-    } else {
-      ctx = new SpanContext(id, id);
+    if (!parent || !parent.isValid) {
+      let randomId = Utils.getRandom64();
+      ctx = new SpanContext(randomId, randomId);
       if (parent) {
         if (parent.isDebugIDContainerOnly() && this._isDebugAllowed(operationName)) {
           ctx._setIsSampled(true);
           ctx._setIsDebug(true);
-          internalTags = {
-            [constants.JAEGER_DEBUG_HEADER]: parent.debugId,
-          };
+          internalTags[constants.JAEGER_DEBUG_HEADER] = parent.debugId;
         }
+        // baggage that could have been passed via `jaeger-baggage` header
         ctx.baggage = parent.baggage;
       }
+    } else {
+      hasValidParent = true;
+      let spanId = Utils.getRandom64();
+      ctx = parent._makeChildContext(spanId);
+      ctx.finalizeSampling(); // will finalize sampling for all spans sharing this traceId
     }
+
     const isRpcServer = Boolean(userTags && userTags[otTags.SPAN_KIND] === otTags.SPAN_KIND_RPC_SERVER);
     return this._startInternalSpan(
       ctx,
@@ -258,7 +254,7 @@ export default class Tracer {
       startTime,
       userTags,
       internalTags,
-      references || [],
+      references,
       hasValidParent,
       isRpcServer
     );

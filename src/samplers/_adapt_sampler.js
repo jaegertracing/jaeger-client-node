@@ -41,27 +41,27 @@ export function adaptSamplerOrThrow(sampler: any): Sampler {
 export default adaptSampler;
 
 class LegacySamplerV1Adapter extends BaseSamplerV2 {
-  _wrapped: LegacySamplerV1;
+  _delegate: LegacySamplerV1;
 
   constructor(wrapped: LegacySamplerV1) {
     super(`SamplerV1Adapter(${wrapped.name()})`);
-    this._wrapped = wrapped;
+    this._delegate = wrapped;
   }
 
   onCreateSpan(span: Span): SamplingDecision {
     const outTags = {};
-    const isSampled = this._wrapped.isSampled(span.operationName, outTags);
+    const isSampled = this._delegate.isSampled(span.operationName, outTags);
     // TODO not sure if retryable: false is correct here; depends on the sampler
     return { sample: isSampled, retryable: false, tags: outTags };
   }
 
   onSetOperationName(span: Span, operationName: string): SamplingDecision {
     const outTags = {};
-    const isSampled = this._wrapped.isSampled(span.operationName, outTags);
+    const isSampled = this._delegate.isSampled(span.operationName, outTags);
     return { sample: isSampled, retryable: true, tags: outTags };
   }
 
   close(callback: ?Function) {
-    this._wrapped.close(callback);
+    this._delegate.close(callback);
   }
 }

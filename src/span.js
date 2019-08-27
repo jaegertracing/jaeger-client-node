@@ -159,9 +159,20 @@ export default class Span {
     this._operationName = operationName;
     // We re-sample the span if it has not been finalized.
     if (!this._spanContext.samplingFinalized) {
-      this._tracer._sampler.onSetOperationName(this, operationName);
+      const decision = this.tracer()._sampler.onSetOperationName(this, operationName);
+      this._applySamplingDecision(decision);
     }
     return this;
+  }
+
+  _applySamplingDecision(decision: SamplingDecision): void {
+    if (!decision.retryable) {
+      this._spanContext.finalizeSampling();
+    }
+    if (decision.sampled) {
+      this._spanContext._setSampled(true);
+      this.addTags(decision.tags);
+    }
   }
 
   /**
@@ -201,25 +212,24 @@ export default class Span {
    **/
   addTags(keyValuePairs: any): Span {
     const hasOwnProperty = Object.prototype.hasOwnProperty;
-    const sampler = this._tracer._sampler;
     const samplingKey = opentracing.Tags.SAMPLING_PRIORITY;
     const samplingPriority = keyValuePairs[samplingKey];
-    const samplingWasSet = samplingPriority != null && this._setSamplingPriority(samplingPriority);
+    if (samplingPriority != null && this._setSamplingPriority(samplingPriority)) {
+      this._appendTag(samplingKey, samplingPriority);
+      // sampler.onSetTag(this, samplingKey, samplingPriority);
+    }
     if (this._isWriteable()) {
-      // if we updated the sampling priority, add the tag straight-away
-      if (samplingWasSet) {
-        this._setTag(samplingKey, samplingPriority);
-        sampler.onSetTag(this, samplingKey, samplingPriority);
-      }
       for (let key in keyValuePairs) {
         if (hasOwnProperty.call(keyValuePairs, key)) {
           if (key === samplingKey) {
-            // this has already been added, if it was updated
-            continue;
+            continue; // this tag has already been added above
           }
           const value = keyValuePairs[key];
-          this._setTag(key, value);
-          sampler.onSetTag(this, key, value);
+          this._appendTag(key, value);
+          if (!this._spanContext.samplingFinalized) {
+            const decision = this._tracer._sampler.onSetTag(this, key, value);
+            this._applySamplingDecision(decision);
+          }
         }
       }
     }
@@ -240,7 +250,7 @@ export default class Span {
     }
 
     if (this._isWriteable()) {
-      this._setTag(key, value);
+      this._appendTag(key, value);
       this._tracer._sampler.onSetTag(this, key, value);
     }
     return this;
@@ -311,7 +321,7 @@ export default class Span {
     return true;
   }
 
-  _setTag(key: string, value: any): void {
+  _appendTag(key: string, value: any): void {
     this._tags.push({ key: key, value: value });
   }
 }
