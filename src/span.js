@@ -171,7 +171,9 @@ export default class Span {
     }
     if (decision.sample) {
       this._spanContext._setSampled(true);
-      this._appendTags(decision.tags);
+      if (decision.tags) {
+        this._appendTags(decision.tags);
+      }
     }
   }
 
