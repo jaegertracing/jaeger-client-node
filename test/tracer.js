@@ -12,7 +12,7 @@
 
 import _ from 'lodash';
 import { assert, expect } from 'chai';
-import ConstSampler from '../src/samplers/v2/const_sampler';
+import ConstSampler from '../src/samplers/const_sampler';
 import * as constants from '../src/constants';
 import InMemoryReporter from '../src/reporters/in_memory_reporter';
 import * as opentracing from 'opentracing';

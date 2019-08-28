@@ -11,25 +11,25 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import BinaryCodec from './propagators/binary_codec';
-import ConstSampler from './samplers/const_sampler';
-import { adaptSamplerOrThrow } from './samplers/_adapt_sampler';
-import * as constants from './constants';
 import * as opentracing from 'opentracing';
 import { Tags as otTags } from 'opentracing';
-import NoopReporter from './reporters/noop_reporter';
-import Span from './span';
-import SpanContext from './span_context';
-import TextMapCodec from './propagators/text_map_codec';
+import os from 'os';
+import uuidv4 from 'uuid/v4';
+import BaggageSetter from './baggage/baggage_setter';
+import DefaultBaggageRestrictionManager from './baggage/default_baggage_restriction_manager';
+import * as constants from './constants';
 import NullLogger from './logger';
-import Utils from './util';
 import Metrics from './metrics/metrics';
 import NoopMetricFactory from './metrics/noop/metric_factory';
-import DefaultBaggageRestrictionManager from './baggage/default_baggage_restriction_manager';
-import os from 'os';
-import BaggageSetter from './baggage/baggage_setter';
+import BinaryCodec from './propagators/binary_codec';
+import TextMapCodec from './propagators/text_map_codec';
+import NoopReporter from './reporters/noop_reporter';
+import ConstSampler from './samplers/const_sampler';
+import { adaptSamplerOrThrow } from './samplers/_adapt_sampler';
+import Span from './span';
+import SpanContext from './span_context';
 import DefaultThrottler from './throttler/default_throttler';
-import uuidv4 from 'uuid/v4';
+import Utils from './util';
 import version from './version';
 
 export default class Tracer {
