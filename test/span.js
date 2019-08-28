@@ -13,9 +13,8 @@
 
 import _ from 'lodash';
 import { assert, expect } from 'chai';
-import ConstSampler from '../src/samplers/const_sampler';
-import LegacyConstSampler from '../src/samplers/const_sampler';
 import { adaptSamplerOrThrow } from '../src/samplers/_adapt_sampler';
+import ConstSampler from '../src/samplers/const_sampler';
 import ProbabilisticSampler from '../src/samplers/probabilistic_sampler';
 import * as constants from '../src/constants';
 import InMemoryReporter from '../src/reporters/in_memory_reporter';
@@ -28,7 +27,6 @@ import sinon from 'sinon';
 import Tracer from '../src/tracer';
 import Utils from '../src/util';
 import DefaultThrottler from '../src/throttler/default_throttler';
-import BaseSamplerV2 from '../src/samplers/v2/base';
 
 describe('span should', () => {
   let reporter = new InMemoryReporter();
@@ -248,28 +246,6 @@ describe('span should', () => {
   });
 
   describe('adaptive sampling tests for span', () => {
-    class RetryableSampler2 extends BaseSamplerV2 {
-      _decision: boolean;
-      constructor(decision: boolean) {
-        super('RetryableSampler');
-        this._decision = decision;
-      }
-      _tags(): {} {
-        return {
-          'sampler.type': 'const',
-          'sampler.param': this._decision,
-        };
-      }
-      onCreateSpan(span: Span): SamplingDecision {
-        return { sample: this._decision, retryable: true, tags: this._tags() };
-      }
-      onSetOperationName(span: Span, operationName: string): SamplingDecision {
-        return { sample: this._decision, retryable: false, tags: this._tags() };
-      }
-      onSetTag(span: Span, key: string, value: any): SamplingDecision {
-        return { sample: this._decision, retryable: true, tags: this._tags() };
-      }
-    }
     let options = [
       { desc: 'sampled span: ', sampling: true, reportedSpans: 1 },
       { desc: 'unsampled span: ', sampling: false, reportedSpans: 0 },

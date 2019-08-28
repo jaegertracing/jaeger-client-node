@@ -44,7 +44,9 @@ export default adaptSampler;
  * Transforms legacy v1 sampler into V2.
  * Primarily intended for simple samplers that are not sensitive to
  * things like operation names or tags and make a decision only once.
- * As such, this always returns retryable=false.
+ *
+ * However, to keep compatible with existing behavior, onCreateSpan and onSetTag
+ * return retryable decision, because previously that's how tracer was behaving.
  */
 class LegacySamplerV1Adapter extends BaseSamplerV2 {
   _delegate: LegacySamplerV1;

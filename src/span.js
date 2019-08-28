@@ -210,9 +210,10 @@ export default class Span {
    **/
   addTags(keyValuePairs: any): Span {
     const hasOwnProperty = Object.prototype.hasOwnProperty;
+    // handle sampling.priority tag first as it can make the span writable
     const samplingKey = opentracing.Tags.SAMPLING_PRIORITY;
     const samplingPriority = keyValuePairs[samplingKey];
-    if (samplingPriority != null && this._setSamplingPriority(samplingPriority)) {
+    if (this._setSamplingPriority(samplingPriority)) {
       this._appendTag(samplingKey, samplingPriority);
     }
     if (this._isWriteable()) {
@@ -243,7 +244,6 @@ export default class Span {
    * */
   setTag(key: string, value: any): Span {
     if (key === opentracing.Tags.SAMPLING_PRIORITY && !this._setSamplingPriority(value)) {
-      // TODO should we not record the tag here?
       return this;
     }
 
@@ -303,7 +303,10 @@ export default class Span {
    * @returns {boolean} - true if the flag was updated successfully
    * @private
    */
-  _setSamplingPriority(priority: number): boolean {
+  _setSamplingPriority(priority: ?number): boolean {
+    if (priority == null) {
+      return false;
+    }
     this._spanContext.finalizeSampling();
     if (priority > 0) {
       if (this._spanContext.isDebug()) {
