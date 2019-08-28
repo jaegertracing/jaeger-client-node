@@ -48,11 +48,11 @@ export default adaptSampler;
  * However, to keep compatible with existing behavior, onCreateSpan and onSetTag
  * return retryable decision, because previously that's how tracer was behaving.
  */
-class LegacySamplerV1Adapter extends BaseSamplerV2 {
+class LegacySamplerV1Adapter implements Sampler {
+  apiVersion = SAMPLER_API_V2;
   _delegate: LegacySamplerV1;
 
   constructor(delegate: LegacySamplerV1) {
-    super(`SamplerV1Adapter(${delegate.name()})`);
     this._delegate = delegate;
   }
 
@@ -71,6 +71,10 @@ class LegacySamplerV1Adapter extends BaseSamplerV2 {
 
   onSetTag(span: Span, key: string, value: any): SamplingDecision {
     return { sample: false, retryable: true, tags: null };
+  }
+
+  toString(): string {
+    return this._delegate.toString();
   }
 
   close(callback: ?Function) {
