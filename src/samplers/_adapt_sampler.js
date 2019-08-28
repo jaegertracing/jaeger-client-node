@@ -46,7 +46,9 @@ export default adaptSampler;
  * things like operation names or tags and make a decision only once.
  *
  * However, to keep compatible with existing behavior, onCreateSpan and onSetTag
- * return retryable decision, because previously that's how tracer was behaving.
+ * return retryable decision, because previously that's how tracer was behaving,
+ * where as onSetOperation() returns retryable=false, since that is what the tracer
+ * used to do.
  */
 class LegacySamplerV1Adapter implements Sampler {
   apiVersion = SAMPLER_API_V2;
@@ -59,7 +61,6 @@ class LegacySamplerV1Adapter implements Sampler {
   onCreateSpan(span: Span): SamplingDecision {
     const outTags = {};
     const isSampled = this._delegate.isSampled(span.operationName, outTags);
-    // TODO not sure if retryable: false is correct here; depends on the sampler
     return { sample: isSampled, retryable: true, tags: outTags };
   }
 
