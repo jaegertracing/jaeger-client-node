@@ -28,18 +28,18 @@ describe('BaseSamplerV2', () => {
   });
   it('should throw in onCreateSpan', () => {
     let s = new BaseSamplerV2('testSampler');
-    let span = {};
+    let span = ({}: Span);
     assert.throw(() => s.onCreateSpan(span), Error, 'testSampler does not implement onCreateSpan');
   });
   it('should return cached decision from onSetOperation', () => {
     let s = new BaseSamplerV2('testSampler');
-    let span = {};
+    let span = ({}: Span);
     let d = s.onSetOperationName(span, 'operation');
     assert.equal(s._cachedDecision, d);
   });
   it('should return cached decision from onSetTag', () => {
     let s = new BaseSamplerV2('testSampler');
-    let span = {};
+    let span = ({}: Span);
     let d = s.onSetTag(span, 'key', 'value');
     assert.equal(s._cachedDecision, d);
   });
