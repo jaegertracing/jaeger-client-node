@@ -51,9 +51,9 @@ export default adaptSampler;
 class LegacySamplerV1Adapter extends BaseSamplerV2 {
   _delegate: LegacySamplerV1;
 
-  constructor(wrapped: LegacySamplerV1) {
-    super(`SamplerV1Adapter(${wrapped.name()})`);
-    this._delegate = wrapped;
+  constructor(delegate: LegacySamplerV1) {
+    super(`SamplerV1Adapter(${delegate.name()})`);
+    this._delegate = delegate;
   }
 
   onCreateSpan(span: Span): SamplingDecision {
