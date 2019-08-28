@@ -12,8 +12,7 @@
 // the License.
 
 import BaggageSetter from './baggage/baggage_setter';
-import * as constants from './constants';
-import * as opentracing from 'opentracing';
+import { Tags as otTags } from 'opentracing';
 import SpanContext from './span_context';
 import Tracer from './tracer';
 import Utils from './util';
@@ -211,7 +210,7 @@ export default class Span {
   addTags(keyValuePairs: any): Span {
     const hasOwnProperty = Object.prototype.hasOwnProperty;
     // handle sampling.priority tag first as it can make the span writable
-    const samplingKey = opentracing.Tags.SAMPLING_PRIORITY;
+    const samplingKey = otTags.SAMPLING_PRIORITY;
     const samplingPriority = keyValuePairs[samplingKey];
     if (this._setSamplingPriority(samplingPriority)) {
       this._appendTag(samplingKey, samplingPriority);
@@ -243,7 +242,7 @@ export default class Span {
    * @return {Span} - returns this span.
    * */
   setTag(key: string, value: any): Span {
-    if (key === opentracing.Tags.SAMPLING_PRIORITY && !this._setSamplingPriority(value)) {
+    if (key === otTags.SAMPLING_PRIORITY && !this._setSamplingPriority(value)) {
       return this;
     }
 
