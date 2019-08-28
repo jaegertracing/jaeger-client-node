@@ -12,7 +12,7 @@
 // the License.
 
 import BinaryCodec from './propagators/binary_codec';
-import ConstSampler from './samplers/v2/const_sampler';
+import ConstSampler from './samplers/const_sampler';
 import { adaptSamplerOrThrow } from './samplers/_adapt_sampler';
 import * as constants from './constants';
 import * as opentracing from 'opentracing';
@@ -31,7 +31,6 @@ import BaggageSetter from './baggage/baggage_setter';
 import DefaultThrottler from './throttler/default_throttler';
 import uuidv4 from 'uuid/v4';
 import version from './version';
-import SamplingState from './samplers/v2/sampling_state';
 
 export default class Tracer {
   _serviceName: string;
