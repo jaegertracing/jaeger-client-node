@@ -118,8 +118,8 @@ describe('tracer should', () => {
       context,
       'op-name',
       start,
-      internalTags,
       tags,
+      internalTags,
       references,
       false,
       rpcServer
