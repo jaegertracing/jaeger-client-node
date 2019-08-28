@@ -58,9 +58,9 @@ build-node: check-node-lts node-modules build-without-install
 .PHONY: build-without-install
 build-without-install:
 	rm -rf ./dist/
-	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/src/ src/
-	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/test/ test/
-	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/crossdock/ crossdock/
+	node_modules/.bin/babel --source-maps -d dist/src/ src/
+	node_modules/.bin/babel --source-maps -d dist/test/ test/
+	node_modules/.bin/babel --source-maps -d dist/crossdock/ crossdock/
 	cat src/version.js | sed "s|VERSION_TBD|$(shell node -p 'require("./package.json").version')|g" > dist/src/version.js
 	cp -R ./test/thrift ./dist/test/thrift/
 	cp -R ./src/jaeger-idl ./dist/src/

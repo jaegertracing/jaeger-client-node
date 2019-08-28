@@ -34,7 +34,7 @@ env:
 
 before_install:
 - docker version
-- npm install babel-cli
+- npm install @babel/cli
 - if [ "$CROSSDOCK" = "1" ]; then make install_docker_ci ; fi
 # Install the Node version to test against
 - nvm install $TEST_NODE_VERSION

@@ -1,4 +1,14 @@
 {
-  "presets": ["env"],
-  "plugins": ["transform-class-properties", "transform-flow-strip-types"]
+  "env": {
+    "test": {
+      "plugins": [ "istanbul" ]
+    }
+  },
+  "presets": [
+    "@babel/preset-env"
+  ],
+  "plugins": [
+    "@babel/plugin-proposal-class-properties",
+    "@babel/transform-flow-strip-types"
+  ]
 }
