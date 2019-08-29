@@ -30,6 +30,11 @@ describe('adaptSampler', () => {
     let s1 = new BaseSamplerV2('name1');
     assert.equal(s1, adaptSampler(s1));
   });
+  it('should delegate toString', () => {
+    let s1 = new ConstSampler(false);
+    let s2: any = adaptSampler(s1);
+    assert.equal(s1.toString(), s2.toString());
+  });
 });
 
 describe('adaptSamplerOrThrow', () => {
