@@ -11,30 +11,31 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import BinaryCodec from './propagators/binary_codec';
-import ConstSampler from './samplers/const_sampler';
-import * as constants from './constants';
 import * as opentracing from 'opentracing';
-import { Tags as opentracing_tags } from 'opentracing';
-import NoopReporter from './reporters/noop_reporter';
-import Span from './span';
-import SpanContext from './span_context';
-import TextMapCodec from './propagators/text_map_codec';
+import { Tags as otTags } from 'opentracing';
+import os from 'os';
+import uuidv4 from 'uuid/v4';
+import BaggageSetter from './baggage/baggage_setter';
+import DefaultBaggageRestrictionManager from './baggage/default_baggage_restriction_manager';
+import * as constants from './constants';
 import NullLogger from './logger';
-import Utils from './util';
 import Metrics from './metrics/metrics';
 import NoopMetricFactory from './metrics/noop/metric_factory';
-import DefaultBaggageRestrictionManager from './baggage/default_baggage_restriction_manager';
-import os from 'os';
-import BaggageSetter from './baggage/baggage_setter';
+import BinaryCodec from './propagators/binary_codec';
+import TextMapCodec from './propagators/text_map_codec';
+import NoopReporter from './reporters/noop_reporter';
+import ConstSampler from './samplers/const_sampler';
+import { adaptSamplerOrThrow } from './samplers/_adapt_sampler';
+import Span from './span';
+import SpanContext from './span_context';
 import DefaultThrottler from './throttler/default_throttler';
-import uuidv4 from 'uuid/v4';
+import Utils from './util';
 import version from './version';
 
 export default class Tracer {
   _serviceName: string;
   _reporter: Reporter;
-  _sampler: LegacySamplerV1;
+  _sampler: Sampler;
   _logger: NullLogger;
   _tags: any;
   _injectors: any;
@@ -61,7 +62,7 @@ export default class Tracer {
   constructor(
     serviceName: string,
     reporter: Reporter = new NoopReporter(),
-    sampler: LegacySamplerV1 = new ConstSampler(false),
+    sampler: LegacySamplerV1 | Sampler = new ConstSampler(false),
     options: any = {}
   ) {
     this._tags = options.tags ? Utils.clone(options.tags) : {};
@@ -74,7 +75,8 @@ export default class Tracer {
 
     this._serviceName = serviceName;
     this._reporter = reporter;
-    this._sampler = sampler;
+    // TODO(joe): verify we want to throw if the sampler is invalid
+    this._sampler = adaptSamplerOrThrow(sampler);
     this._logger = options.logger || new NullLogger();
     this._baggageSetter = new BaggageSetter(
       options.baggageRestrictionManager || new DefaultBaggageRestrictionManager(),
@@ -121,31 +123,38 @@ export default class Tracer {
     spanContext: SpanContext,
     operationName: string,
     startTime: number,
-    userTags: any,
-    internalTags: any,
-    parentContext: ?SpanContext,
-    rpcServer: boolean,
-    references: Array<Reference>
+    userTags: ?{},
+    internalTags: ?{},
+    references: Array<Reference>,
+    hadParent: boolean,
+    isRpcServer: boolean
   ): Span {
-    let hadParent = parentContext && !parentContext.isDebugIDContainerOnly();
-    let span = new Span(this, operationName, spanContext, startTime, references);
+    const span = new Span(this, operationName, spanContext, startTime, references);
+    if (!span._spanContext.samplingFinalized) {
+      const decision = this._sampler.onCreateSpan(span);
+      span._applySamplingDecision(decision);
+    }
 
-    span.addTags(userTags);
-    span.addTags(internalTags);
+    if (userTags) {
+      span.addTags(userTags);
+    }
+    if (internalTags) {
+      span._appendTags(internalTags); // no need to run internal tags through sampler
+    }
 
     // emit metrics
     if (span.context().isSampled()) {
       this._metrics.spansStartedSampled.increment(1);
       if (!hadParent) {
         this._metrics.tracesStartedSampled.increment(1);
-      } else if (rpcServer) {
+      } else if (isRpcServer) {
         this._metrics.tracesJoinedSampled.increment(1);
       }
     } else {
       this._metrics.spansStartedNotSampled.increment(1);
       if (!hadParent) {
         this._metrics.tracesStartedNotSampled.increment(1);
-      } else if (rpcServer) {
+      } else if (isRpcServer) {
         this._metrics.tracesJoinedNotSampled.increment(1);
       }
     }
@@ -191,14 +200,13 @@ export default class Tracer {
    * @return {Span} - a new Span object.
    **/
   startSpan(operationName: string, options: ?startSpanOptions): Span {
-    // Convert options.childOf to options.references as needed.
     options = options || {};
     let references = options.references || [];
 
-    let userTags = options.tags || {};
+    let userTags = options.tags;
     let startTime = options.startTime || this.now();
 
-    // This flag is used to ensure that CHILD_OF reference is preferred
+    // followsFromIsParent is used to ensure that CHILD_OF reference is preferred
     // as a parent even if it comes after FOLLOWS_FROM reference.
     let followsFromIsParent = false;
     let parent: ?SpanContext = options.childOf instanceof Span ? options.childOf.context() : options.childOf;
@@ -218,53 +226,39 @@ export default class Tracer {
       }
     }
 
-    let spanKindValue = userTags[opentracing_tags.SPAN_KIND];
-    let rpcServer = spanKindValue === opentracing_tags.SPAN_KIND_RPC_SERVER;
-
-    let ctx: SpanContext = new SpanContext();
+    let ctx: SpanContext;
     let internalTags: any = {};
+    let hasValidParent = false;
     if (!parent || !parent.isValid) {
       let randomId = Utils.getRandom64();
-      let flags = 0;
-      if (this._sampler.isSampled(operationName, internalTags)) {
-        flags |= constants.SAMPLED_MASK;
-      }
-
+      ctx = new SpanContext(randomId, randomId);
       if (parent) {
+        // fake parent, doesn't contain a parent trace-id, but may contain debug-id/baggage
         if (parent.isDebugIDContainerOnly() && this._isDebugAllowed(operationName)) {
-          flags |= constants.SAMPLED_MASK | constants.DEBUG_MASK;
+          ctx._setSampled(true);
+          ctx._setDebug(true);
           internalTags[constants.JAEGER_DEBUG_HEADER] = parent.debugId;
         }
         // baggage that could have been passed via `jaeger-baggage` header
         ctx.baggage = parent.baggage;
       }
-
-      ctx.traceId = randomId;
-      ctx.spanId = randomId;
-      ctx.parentId = null;
-      ctx.flags = flags;
     } else {
-      ctx.traceId = parent.traceId;
-      ctx.spanId = Utils.getRandom64();
-      ctx.parentId = parent.spanId;
-      ctx.flags = parent.flags;
-
-      // reuse parent's baggage as we'll never change it
-      ctx.baggage = parent.baggage;
-
-      parent.finalizeSampling();
-      ctx.finalizeSampling();
+      hasValidParent = true;
+      let spanId = Utils.getRandom64();
+      ctx = parent._makeChildContext(spanId);
+      ctx.finalizeSampling(); // will finalize sampling for all spans sharing this traceId
     }
 
+    const isRpcServer = Boolean(userTags && userTags[otTags.SPAN_KIND] === otTags.SPAN_KIND_RPC_SERVER);
     return this._startInternalSpan(
       ctx,
       operationName,
       startTime,
       userTags,
       internalTags,
-      parent,
-      rpcServer,
-      references
+      references,
+      hasValidParent,
+      isRpcServer
     );
   }
 
@@ -283,18 +277,13 @@ export default class Tracer {
     if (!spanContext) {
       return;
     }
-
-    let injector = this._injectors[format];
+    const injector = this._injectors[format];
     if (!injector) {
       throw new Error(`Unsupported format: ${format}`);
     }
-
-    if (spanContext instanceof Span) {
-      spanContext = spanContext.context();
-    }
-
-    spanContext.finalizeSampling();
-    injector.inject(spanContext, carrier);
+    const _context = spanContext instanceof Span ? spanContext.context() : spanContext;
+    _context.finalizeSampling();
+    injector.inject(_context, carrier);
   }
 
   /**
@@ -312,9 +301,7 @@ export default class Tracer {
     if (!extractor) {
       throw new Error(`Unsupported format: ${format}`);
     }
-
-    let spanContext = extractor.extract(carrier);
-
+    const spanContext = extractor.extract(carrier);
     if (spanContext) {
       spanContext.finalizeSampling();
     }

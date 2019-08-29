@@ -12,7 +12,9 @@
 // the License.
 
 import * as constants from './constants';
-import Utils from './util.js';
+import SamplingState from './samplers/v2/sampling_state';
+import Utils from './util';
+import Span from './span';
 
 export default class SpanContext {
   _traceId: any;
@@ -21,26 +23,9 @@ export default class SpanContext {
   _traceIdStr: ?string;
   _spanIdStr: ?string;
   _parentIdStr: ?string;
-  _flags: number;
   _baggage: any;
   _debugId: ?string;
-  /**
-   * This field exists to help distinguish between when a span can have a properly
-   * correlated operation name -> sampling rate mapping, and when it cannot.
-   * Adaptive sampling uses the operation name of a span to correlate it with
-   * a sampling rate.  If an operation name is set on a span after the span's creation
-   * then adaptive sampling cannot associate the operation name with the proper sampling rate.
-   * In order to correct this we allow a span to be written to, so that we can re-sample
-   * it in the case that an operation name is set after span creation. Situations
-   * where a span context's sampling decision is finalized include:
-   * - it has inherited the sampling decision from its parent
-   * - its debug flag is set via the sampling.priority tag
-   * - it is finish()-ed
-   * - setOperationName is called
-   * - it is used as a parent for another span
-   * - its context is serialized using injectors
-   * */
-  _samplingFinalized: boolean;
+  _samplingState: SamplingState;
 
   constructor(
     traceId: any,
@@ -49,10 +34,9 @@ export default class SpanContext {
     traceIdStr: ?string,
     spanIdStr: ?string,
     parentIdStr: ?string,
-    flags: number = 0,
     baggage: any = {},
     debugId: ?string = '',
-    samplingFinalized: boolean = false
+    samplingState: ?SamplingState
   ) {
     this._traceId = traceId;
     this._spanId = spanId;
@@ -60,10 +44,9 @@ export default class SpanContext {
     this._traceIdStr = traceIdStr;
     this._spanIdStr = spanIdStr;
     this._parentIdStr = parentIdStr;
-    this._flags = flags;
     this._baggage = baggage;
     this._debugId = debugId;
-    this._samplingFinalized = samplingFinalized;
+    this._samplingState = samplingState || new SamplingState(this.spanIdStr);
   }
 
   get traceId(): any {
@@ -109,7 +92,7 @@ export default class SpanContext {
   }
 
   get flags(): number {
-    return this._flags;
+    return this._samplingState.flags();
   }
 
   get baggage(): any {
@@ -121,7 +104,7 @@ export default class SpanContext {
   }
 
   get samplingFinalized(): boolean {
-    return this._samplingFinalized;
+    return this._samplingState.isFinal();
   }
 
   set traceId(traceId: Buffer): void {
@@ -140,7 +123,19 @@ export default class SpanContext {
   }
 
   set flags(flags: number): void {
-    this._flags = flags;
+    this._samplingState.setFlags(flags);
+  }
+
+  _setSampled(value: boolean) {
+    this._samplingState.setSampled(value);
+  }
+
+  _setDebug(value: boolean) {
+    this._samplingState.setDebug(value);
+  }
+
+  _setFirehose(value: boolean) {
+    this._samplingState.setFirehose(value);
   }
 
   set baggage(baggage: any): void {
@@ -152,29 +147,33 @@ export default class SpanContext {
   }
 
   get isValid(): boolean {
-    return !!((this._traceId || this._traceIdStr) && (this._spanId || this._spanIdStr));
+    return Boolean((this._traceId || this._traceIdStr) && (this._spanId || this._spanIdStr));
   }
 
-  finalizeSampling(): void {
-    this._samplingFinalized = true;
+  finalizeSampling() {
+    return this._samplingState.setFinal(true);
   }
 
   isDebugIDContainerOnly(): boolean {
-    return !this.isValid && this._debugId !== '';
+    return !this.isValid && Boolean(this._debugId);
   }
 
   /**
    * @return {boolean} - returns whether or not this span context was sampled.
    **/
   isSampled(): boolean {
-    return (this.flags & constants.SAMPLED_MASK) === constants.SAMPLED_MASK;
+    return this._samplingState.isSampled();
   }
 
   /**
    * @return {boolean} - returns whether or not this span context has a debug flag set.
    **/
   isDebug(): boolean {
-    return (this.flags & constants.DEBUG_MASK) === constants.DEBUG_MASK;
+    return this._samplingState.isDebug();
+  }
+
+  isFirehose(): boolean {
+    return this._samplingState.isFirehose();
   }
 
   withBaggageItem(key: string, value: string): SpanContext {
@@ -187,10 +186,26 @@ export default class SpanContext {
       this._traceIdStr,
       this._spanIdStr,
       this._parentIdStr,
-      this._flags,
       newBaggage,
       this._debugId,
-      this._samplingFinalized
+      this._samplingState
+    );
+  }
+
+  _makeChildContext(childId: any) {
+    const idIsStr = typeof childId === 'string';
+    const _childId = idIsStr ? null : childId;
+    const _childIdStr = idIsStr ? childId : null;
+    return new SpanContext(
+      this._traceId, // traceId
+      _childId, // spanId
+      this._spanId, // parentId
+      this._traceIdStr, // traceIdStr
+      _childIdStr, // spanIdStr
+      this._spanIdStr, // parentIdStr
+      this._baggage, // baggage
+      this._debugId, // debugID
+      this._samplingState // samplingState
     );
   }
 
@@ -198,7 +213,9 @@ export default class SpanContext {
    * @return {string} - returns a string version of this span context.
    **/
   toString(): string {
-    return [this.traceIdStr, this.spanIdStr, this.parentIdStr || '0', this._flags.toString(16)].join(':');
+    return `${String(this.traceIdStr)}:${String(this.spanIdStr)}:${String(
+      this.parentIdStr || 0
+    )}:${this._samplingState.flags().toString(16)}`;
   }
 
   /**
@@ -245,17 +262,18 @@ export default class SpanContext {
     baggage: any = {},
     debugId: ?string = ''
   ): SpanContext {
-    return new SpanContext(
+    const ctx = new SpanContext(
       traceId,
       spanId,
       parentId,
       null, // traceIdStr: string,
       null, // spanIdStr: string,
       null, // parentIdStr: string,
-      flags,
       baggage,
       debugId
     );
+    ctx.flags = flags;
+    return ctx;
   }
 
   static withStringIds(
@@ -266,16 +284,17 @@ export default class SpanContext {
     baggage: any = {},
     debugId: ?string = ''
   ): SpanContext {
-    return new SpanContext(
+    const ctx = new SpanContext(
       null, // traceId,
       null, // spanId,
       null, // parentId,
       traceIdStr,
       spanIdStr,
       parentIdStr,
-      flags,
       baggage,
       debugId
     );
+    ctx.flags = flags;
+    return ctx;
   }
 }

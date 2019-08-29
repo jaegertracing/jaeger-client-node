@@ -68,7 +68,7 @@
     "precommit": "lint-staged",
     "test": "make test",
     "test-dist": "mocha dist/test/ dist/test/baggage/ dist/test/throttler/ dist/test/samplers/ dist/test/metrics/",
-    "test-all": "npm run test-core && npm run test-samplers && npm run test-crossdock && npm run test-baggage && npm run test-throttler && npm run test-prom-metrics",
+    "test-all": "npm run test-core && npm run test-samplers && npm run test-baggage && npm run test-throttler && npm run test-prom-metrics && npm run test-crossdock",
     "test-core": "mocha --compilers js:babel-core/register test",
     "test-samplers": "mocha --compilers js:babel-core/register test/samplers",
     "test-baggage": "mocha --compilers js:babel-core/register test/baggage",
