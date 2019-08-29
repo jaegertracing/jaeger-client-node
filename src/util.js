@@ -148,4 +148,18 @@ export default class Utils {
         error(err);
       });
   }
+
+  /**
+   * Creates a callback function that only delegates to passed <code>callback</code>
+   * after <code>limit</code> invocations.
+   */
+  static countdownCallback(limit: number, callback: ?() => void): () => void {
+    let count = 0;
+    return () => {
+      count++;
+      if (count >= limit && callback) {
+        callback();
+      }
+    };
+  }
 }
