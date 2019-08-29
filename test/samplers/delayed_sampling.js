@@ -14,6 +14,7 @@
 import { assert } from 'chai';
 import { SAMPLER_API_V2 } from '../../src/samplers/constants';
 import Span from '../../src/span';
+import Utils from '../../src/util';
 
 describe('delayed sampling', () => {
   declare type Matcher = {
@@ -147,24 +148,26 @@ describe('delayed sampling', () => {
     }
 
     onSetOperationName(span: Span, operationName: string): SamplingDecision {
+      // FIXME:
       return this.onCreateSpan(span);
     }
 
     onSetTag(span: Span, key: string, value: any): SamplingDecision {
-      if (key === this._tagKey) {
-        return this._decide(value);
-      }
-      return this._undecided;
+      // FIXME:
+      return this.onCreateSpan(span);
     }
 
     toString(): string {
       return 'DelegatingSampler';
     }
 
-    close(callback: ?Function): void {
-      this._lateBindingSampler.close(() => this._defaultEagerSampler.close(callback));
+    close(callback: ?() => void): void {
+      const countdownCallback = Utils.countdownCallback(this._delegates.length, callback);
+      this._delegates.forEach(r => r.close(countdownCallback));
     }
   }
 
-  it('', () => {});
+  it('', () => {
+    // TODO: tet me
+  });
 });

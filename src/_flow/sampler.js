@@ -30,5 +30,5 @@ declare interface Sampler {
   onSetOperationName(span: Span, operationName: string): SamplingDecision;
   onSetTag(span: Span, key: string, value: any): SamplingDecision;
 
-  close(callback: ?Function): void;
+  close(callback: ?() => void): void;
 }
