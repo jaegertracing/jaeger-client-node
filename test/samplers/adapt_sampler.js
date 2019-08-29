@@ -23,7 +23,7 @@ describe('adaptSampler', () => {
   });
   it('should return wrapper for v1 sampler', () => {
     let s1 = new ConstSampler(false);
-    let s2 = adaptSampler(s1);
+    let s2: any = adaptSampler(s1);
     assert.deepEqual(s1, s2._delegate);
   });
   it('should return v2 sampler as is', () => {
