@@ -56,6 +56,10 @@ export default class Span {
     return this._tracer._serviceName;
   }
 
+  getTags(): Array<Tag> {
+    return this._tags;
+  }
+
   static _getBaggageHeaderCache() {
     if (!Span._baggageHeaderCache) {
       Span._baggageHeaderCache = {};
