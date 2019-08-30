@@ -48,6 +48,7 @@ export default class SpanContext {
     this._baggage = baggage;
     this._debugId = debugId;
     this._samplingState = samplingState || new SamplingState(this.spanIdStr);
+    this._remote = false;
   }
 
   get traceId(): any {

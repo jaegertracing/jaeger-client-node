@@ -246,7 +246,7 @@ export default class Tracer {
       hasValidParent = true;
       let spanId = Utils.getRandom64();
       ctx = parent._makeChildContext(spanId);
-      if (ctx.isRemote()) {
+      if (parent.isRemote()) {
         ctx.finalizeSampling(); // will finalize sampling for all spans sharing this traceId
       }
     }

@@ -382,6 +382,21 @@ describe('sampling finalizer', () => {
     assert.isFalse(span.context().samplingFinalized, 'remains unfinalized after inject()');
   });
 
+  it('should finalize the child span created with remote parent', () => {
+    let tracer = new Tracer('test-service-name', reporter, new RetryableSampler(false));
+    let span = tracer.startSpan('test');
+    assert.isFalse(span.context().samplingFinalized, 'new root span not finalized');
+    let span2 = tracer.startSpan('test2', { childOf: span.context() });
+    assert.isFalse(span2.context().samplingFinalized, 'child span not finalized');
+    let carrier = {};
+    tracer.inject(span2.context(), opentracing.FORMAT_HTTP_HEADERS, carrier);
+    let ctx = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, carrier);
+    console.log(ctx);
+    assert.isTrue(ctx.isRemote(), 'extracted context is "remote"');
+    let span3 = tracer.startSpan('test2', { childOf: ctx });
+    assert.isTrue(span3.context().samplingFinalized, 'child span of remote parent is finalized');
+  });
+
   it('should keep isWriteable=true if span is sampled or not finalized', () => {
     let tracer = new Tracer('test-service-name', reporter, new RetryableSampler(false));
     let span = tracer.startSpan('initially-unsampled-span');
