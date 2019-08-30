@@ -13,7 +13,6 @@
 
 import { SAMPLER_API_V2 } from './constants';
 import Span from '../span';
-import BaseSamplerV2 from './v2/base';
 
 function adaptSampler(sampler: any): ?Sampler {
   if (!sampler) {
@@ -40,6 +39,46 @@ export function adaptSamplerOrThrow(sampler: any): Sampler {
 
 export default adaptSampler;
 
+export class LegacySamplerV1Base implements Sampler {
+  apiVersion = SAMPLER_API_V2;
+
+  constructor() {}
+
+  isSampled(operationName: string, outTags: {}): boolean {
+    throw new Error('Subclass must override isSampled()');
+  }
+
+  // equal(other: LegacySamplerV1): boolean {
+  //   throw new Error('Subclass must override equal()');
+  // }
+
+  // name(): string {
+  //   throw new Error('Subclass must override name()');
+  // }
+
+  onCreateSpan(span: Span): SamplingDecision {
+    const outTags = {};
+    const isSampled = this.isSampled(span.operationName, outTags);
+    return { sample: isSampled, retryable: false, tags: outTags };
+  }
+
+  onSetOperationName(span: Span, operationName: string): SamplingDecision {
+    const outTags = {};
+    const isSampled = this.isSampled(span.operationName, outTags);
+    return { sample: isSampled, retryable: false, tags: outTags };
+  }
+
+  onSetTag(span: Span, key: string, value: any): SamplingDecision {
+    return { sample: false, retryable: true, tags: null };
+  }
+
+  close(callback: ?Function) {
+    if (callback) {
+      callback();
+    }
+  }
+}
+
 /**
  * Transforms legacy v1 sampler into V2.
  * Primarily intended for simple samplers that are not sensitive to
@@ -50,28 +89,17 @@ export default adaptSampler;
  * where as onSetOperation() returns retryable=false, since that is what the tracer
  * used to do.
  */
-class LegacySamplerV1Adapter implements Sampler {
+class LegacySamplerV1Adapter extends LegacySamplerV1Base {
   apiVersion = SAMPLER_API_V2;
   _delegate: LegacySamplerV1;
 
   constructor(delegate: LegacySamplerV1) {
+    super();
     this._delegate = delegate;
   }
 
-  onCreateSpan(span: Span): SamplingDecision {
-    const outTags = {};
-    const isSampled = this._delegate.isSampled(span.operationName, outTags);
-    return { sample: isSampled, retryable: false, tags: outTags };
-  }
-
-  onSetOperationName(span: Span, operationName: string): SamplingDecision {
-    const outTags = {};
-    const isSampled = this._delegate.isSampled(span.operationName, outTags);
-    return { sample: isSampled, retryable: false, tags: outTags };
-  }
-
-  onSetTag(span: Span, key: string, value: any): SamplingDecision {
-    return { sample: false, retryable: true, tags: null };
+  isSampled(operationName: string, outTags: {}) {
+    return this._delegate.isSampled(operationName, outTags);
   }
 
   toString(): string {

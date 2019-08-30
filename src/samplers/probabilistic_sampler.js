@@ -12,11 +12,15 @@
 // the License.
 
 import * as constants from '../constants.js';
+import { SAMPLER_API_V2 } from './constants';
+import { LegacySamplerV1Base } from './_adapt_sampler';
 
-export default class ProbabilisticSampler implements LegacySamplerV1 {
+export default class ProbabilisticSampler extends LegacySamplerV1Base implements LegacySamplerV1 {
+  apiVersion = SAMPLER_API_V2;
   _samplingRate: number;
 
   constructor(samplingRate: number) {
+    super();
     if (samplingRate < 0.0 || samplingRate > 1.0) {
       throw new Error(
         `The sampling rate must be less than 0.0 and greater than 1.0. Received ${samplingRate}`
@@ -57,11 +61,5 @@ export default class ProbabilisticSampler implements LegacySamplerV1 {
     }
 
     return this.samplingRate === other.samplingRate;
-  }
-
-  close(callback: ?Function): void {
-    if (callback) {
-      callback();
-    }
   }
 }

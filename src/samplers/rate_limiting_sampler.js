@@ -13,12 +13,16 @@
 
 import * as constants from '../constants.js';
 import RateLimiter from '../rate_limiter.js';
+import { SAMPLER_API_V2 } from './constants';
+import { LegacySamplerV1Base } from './_adapt_sampler';
 
-export default class RateLimitingSampler implements LegacySamplerV1 {
+export default class RateLimitingSampler extends LegacySamplerV1Base implements LegacySamplerV1 {
+  apiVersion = SAMPLER_API_V2;
   _rateLimiter: RateLimiter;
   _maxTracesPerSecond: number;
 
   constructor(maxTracesPerSecond: number, initBalance: ?number) {
+    super();
     this._init(maxTracesPerSecond, initBalance);
   }
 
@@ -69,11 +73,5 @@ export default class RateLimitingSampler implements LegacySamplerV1 {
     }
 
     return this.maxTracesPerSecond === other.maxTracesPerSecond;
-  }
-
-  close(callback: ?Function): void {
-    if (callback) {
-      callback();
-    }
   }
 }

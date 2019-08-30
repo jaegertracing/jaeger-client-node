@@ -96,7 +96,11 @@ describe('initTracer', () => {
       config.sampler = samplerConfig;
       let tracer = initTracer(config);
 
-      expect(tracer._sampler._delegate).to.be.an.instanceof(expectedType);
+      if (tracer._sampler._delegate) {
+        expect(tracer._sampler._delegate).to.be.an.instanceof(expectedType);
+      } else {
+        expect(tracer._sampler).to.be.an.instanceof(expectedType);
+      }
       tracer.close();
       // TODO(oibe:head) test utils for expectedParam here?
     });
@@ -378,8 +382,8 @@ describe('initTracerFromENV', () => {
     process.env.JAEGER_SAMPLER_TYPE = 'probabilistic';
     process.env.JAEGER_SAMPLER_PARAM = 0.5;
     let tracer = initTracerFromEnv();
-    expect(tracer._sampler._delegate).to.be.an.instanceof(ProbabilisticSampler);
-    assert.equal(tracer._sampler._delegate._samplingRate, 0.5);
+    expect(tracer._sampler).to.be.an.instanceof(ProbabilisticSampler);
+    assert.equal(tracer._sampler._samplingRate, 0.5);
     tracer.close();
 
     process.env.JAEGER_SAMPLER_TYPE = 'remote';
@@ -399,8 +403,8 @@ describe('initTracerFromENV', () => {
     process.env.JAEGER_SAMPLER_TYPE = 'probabilistic';
     process.env.JAEGER_SAMPLER_PARAM = 0.5;
     let tracer = initTracerFromEnv();
-    expect(tracer._sampler._delegate).to.be.an.instanceof(ProbabilisticSampler);
-    assert.equal(tracer._sampler._delegate._samplingRate, 0.5);
+    expect(tracer._sampler).to.be.an.instanceof(ProbabilisticSampler);
+    assert.equal(tracer._sampler._samplingRate, 0.5);
     tracer.close();
 
     process.env.JAEGER_SAMPLER_TYPE = 'remote';
