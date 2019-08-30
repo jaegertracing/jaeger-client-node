@@ -196,7 +196,6 @@ export default class Span {
       return;
     }
 
-    this._spanContext.finalizeSampling();
     if (this._spanContext.isSampled()) {
       let endTime = finishTime || this._tracer.now();
       this._duration = endTime - this._startTime;

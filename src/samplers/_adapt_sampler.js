@@ -61,7 +61,7 @@ class LegacySamplerV1Adapter implements Sampler {
   onCreateSpan(span: Span): SamplingDecision {
     const outTags = {};
     const isSampled = this._delegate.isSampled(span.operationName, outTags);
-    return { sample: isSampled, retryable: true, tags: outTags };
+    return { sample: isSampled, retryable: false, tags: outTags };
   }
 
   onSetOperationName(span: Span, operationName: string): SamplingDecision {

@@ -12,9 +12,14 @@
 // the License.
 
 import { assert } from 'chai';
+import * as opentracing from 'opentracing';
 import { SAMPLER_API_V2 } from '../../src/samplers/constants';
 import Span from '../../src/span';
 import Utils from '../../src/util';
+import ConstSampler from '../../src/samplers/const_sampler';
+import { adaptSamplerOrThrow } from '../../src/samplers/_adapt_sampler';
+import InMemoryReporter from '../../src/reporters/in_memory_reporter';
+import Tracer from '../../src/tracer';
 
 describe('delayed sampling', () => {
   declare type Matcher = {
@@ -112,12 +117,12 @@ describe('delayed sampling', () => {
     _delegates: Array<Sampler>;
 
     constructor(samplers: Array<Sampler>) {
-      this._delegates = samplers;
+      this._delegates = samplers.map(s => adaptSamplerOrThrow(s));
     }
 
     _getState(span: Span): PrioritySamplerState {
       const store = span.context()._samplingState.extendedState();
-      const stateKey = 'DelegatingSampler'; // TODO ideally should be uniqueName() per BaseSamplerB2
+      const stateKey = 'PrioritySampler'; // TODO ideally should be uniqueName() per BaseSamplerB2
       let state: ?PrioritySamplerState = store[stateKey];
       if (!state) {
         state = {
@@ -140,6 +145,7 @@ describe('delayed sampling', () => {
         if (!d.retryable) {
           state.samplerFired[i] = true;
         }
+        console.log(`retryable=${retryable}, sample=${d.sample}`);
         if (d.sample) {
           return d; // TODO do we want to alter out tags?
         }
@@ -167,7 +173,48 @@ describe('delayed sampling', () => {
     }
   }
 
-  it('', () => {
-    // TODO: tet me
+  describe('with PrioritySampler', () => {
+    const tagSampler = new TagEqualsSampler('theWho', [{ tagValue: 'Bender' }, { tagValue: 'Leela' }]);
+    const constSampler = new ConstSampler(false);
+    const priSampler = new PrioritySampler([tagSampler, constSampler]);
+    const reporter = new InMemoryReporter();
+    const tracer = new Tracer('test-service-name', reporter, priSampler);
+
+    beforeEach(() => {});
+
+    it('should not sample or finalize new span without tags', () => {
+      let span = tracer.startSpan('opName');
+      assert.isFalse(span._spanContext.isSampled(), 'sampled');
+      assert.isFalse(span._spanContext.samplingFinalized, 'finalized');
+    });
+
+    it('should sample and finalize created span with tag', () => {
+      let span = tracer.startSpan('opName', { tags: { theWho: 'Bender' } });
+      assert.isTrue(span._spanContext.isSampled(), 'sampled');
+      assert.isTrue(span._spanContext.samplingFinalized, 'finalized');
+    });
+
+    it('should sample and finalize span after setTag', () => {
+      let span = tracer.startSpan('opName');
+      assert.isFalse(span._spanContext.isSampled(), 'sampled');
+      assert.isFalse(span._spanContext.samplingFinalized, 'finalized');
+      span.setTag('theWho', 'Leela');
+    });
+
+    it('should not sample or finalize span after starting a child span', () => {
+      let span = tracer.startSpan('opName');
+      let span2 = tracer.startSpan('opName2', { childOf: span.context() });
+      assert.isFalse(span._spanContext.isSampled(), 'sampled');
+      assert.isFalse(span._spanContext.samplingFinalized, 'finalized');
+    });
+
+    it('should not sample or finalize span after serializing context', () => {
+      let span = tracer.startSpan('opName');
+      let carrier = {};
+      tracer.inject(span.context(), opentracing.FORMAT_TEXT_MAP, carrier);
+      assert.isOk(carrier);
+      assert.isFalse(span._spanContext.isSampled(), 'sampled');
+      assert.isFalse(span._spanContext.samplingFinalized, 'finalized');
+    });
   });
 });
