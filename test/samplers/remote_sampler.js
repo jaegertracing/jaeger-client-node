@@ -13,7 +13,7 @@
 import { assert } from 'chai';
 import sinon from 'sinon';
 import Metrics from '../../src/metrics/metrics.js';
-import RateLimitingSampler from '../../src/samplers/ratelimiting_sampler';
+import RateLimitingSampler from '../../src/samplers/rate_limiting_sampler';
 import ProbabilisticSampler from '../../src/samplers/probabilistic_sampler.js';
 import PerOperationSampler from '../../src/samplers/per_operation_sampler';
 import RemoteSampler from '../../src/samplers/remote_sampler';

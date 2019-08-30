@@ -18,7 +18,7 @@ import RemoteReporter from '../src/reporters/remote_reporter';
 import ConstSampler from '../src/samplers/const_sampler';
 import ProbabilisticSampler from '../src/samplers/probabilistic_sampler';
 import RemoteSampler from '../src/samplers/remote_sampler';
-import RateLimitingSampler from '../src/samplers/ratelimiting_sampler';
+import RateLimitingSampler from '../src/samplers/rate_limiting_sampler';
 import { initTracer, initTracerFromEnv } from '../src/index.js';
 import opentracing from 'opentracing';
 import RemoteThrottler from '../src/throttler/remote_throttler';

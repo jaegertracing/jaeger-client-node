@@ -11,9 +11,9 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import * as constants from '../constants.js';
-import ProbabilisticSampler from './probabilistic_sampler.js';
-import RateLimitingSampler from './ratelimiting_sampler.js';
+import * as constants from '../constants';
+import ProbabilisticSampler from './probabilistic_sampler';
+import RateLimitingSampler from './rate_limiting_sampler';
 
 // GuaranteedThroughputProbabilisticSampler is a sampler that leverages both probabilisticSampler and
 // rateLimitingSampler. The rateLimitingSampler is used as a guaranteed lower bound sampler such that

@@ -16,7 +16,7 @@ import sinon from 'sinon';
 import * as constants from '../../src/constants.js';
 import ConstSampler from '../../src/samplers/const_sampler.js';
 import ProbabilisticSampler from '../../src/samplers/probabilistic_sampler.js';
-import RateLimitingSampler from '../../src/samplers/ratelimiting_sampler.js';
+import RateLimitingSampler from '../../src/samplers/rate_limiting_sampler.js';
 import GuaranteedThroughputSampler from '../../src/samplers/guaranteed_throughput_sampler.js';
 import PerOperationSampler from '../../src/samplers/per_operation_sampler.js';
 import RemoteSampler from '../../src/samplers/remote_sampler.js';

@@ -358,7 +358,7 @@ describe('sampling finalizer', () => {
 
   it('should finalize the span sampled with V1 sampler', () => {
     let span = tracer.startSpan('test');
-    assert.isTrue(span.context().samplingFinalized);
+    assert.isTrue(span.context().samplingFinalized, 'finalized');
   });
 
   it('should not trigger on a finish()-ed span', () => {
@@ -423,7 +423,7 @@ describe('sampling finalizer', () => {
       })
     );
     tracer._sampler = adaptSamplerOrThrow(new ProbabilisticSampler(1.0));
-    span._tags = []; // since we don't de-dupe tags, JaegerTestUtils.hasTags() below fails
+    span._tags = []; // JaegerTestUtils.hasTags() below doesn't work with dupes
     span.setOperationName('re-sampled-span');
     assert.equal(span.operationName, 're-sampled-span');
     assert.equal(0, span._tags.length);

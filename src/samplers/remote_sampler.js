@@ -13,7 +13,7 @@
 
 import url from 'url';
 import ProbabilisticSampler from './probabilistic_sampler.js';
-import RateLimitingSampler from './ratelimiting_sampler.js';
+import RateLimitingSampler from './rate_limiting_sampler.js';
 import PerOperationSampler from './per_operation_sampler.js';
 import Metrics from '../metrics/metrics.js';
 import NullLogger from '../logger.js';
@@ -26,7 +26,8 @@ const DEFAULT_MAX_OPERATIONS = 2000;
 const DEFAULT_SAMPLING_HOST = '0.0.0.0';
 const DEFAULT_SAMPLING_PORT = 5778;
 const PROBABILISTIC_STRATEGY_TYPE = 'PROBABILISTIC';
-const RATELIMITING_STRATEGY_TYPE = 'RATE_LIMITING';
+const RATE_LIMITING_STRATEGY_TYPE = 'RATE_LIMITING';
+const PER_OPERATION_STRATEGY_TYPE = 'PER_OPERATION';
 
 export default class RemoteControlledSampler implements LegacySamplerV1 {
   _serviceName: string;
@@ -156,7 +157,7 @@ export default class RemoteControlledSampler implements LegacySamplerV1 {
     if (response.strategyType === PROBABILISTIC_STRATEGY_TYPE && response.probabilisticSampling) {
       let samplingRate = response.probabilisticSampling.samplingRate;
       newSampler = new ProbabilisticSampler(samplingRate);
-    } else if (response.strategyType === RATELIMITING_STRATEGY_TYPE && response.rateLimitingSampling) {
+    } else if (response.strategyType === RATE_LIMITING_STRATEGY_TYPE && response.rateLimitingSampling) {
       let maxTracesPerSecond = response.rateLimitingSampling.maxTracesPerSecond;
       if (this._sampler instanceof RateLimitingSampler) {
         let sampler: RateLimitingSampler = this._sampler;
