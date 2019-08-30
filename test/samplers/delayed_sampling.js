@@ -126,8 +126,12 @@ describe('delayed sampling', () => {
       let state: ?PrioritySamplerState = store[stateKey];
       if (!state) {
         state = {
-          samplerFired: Array(this._delegates.length).fill(false),
+          samplerFired: Array(this._delegates.length),
         };
+        // cannot use array.fill() in Node 0.10
+        for (let i = 0; i < this._delegates.length; i++) {
+          state.samplerFired[i] = false;
+        }
         store[stateKey] = state;
       }
       return state;
