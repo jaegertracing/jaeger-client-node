@@ -116,7 +116,7 @@ describe('delayed sampling', () => {
 
     _delegates: Array<Sampler>;
 
-    constructor(samplers: Array<Sampler>) {
+    constructor(samplers: Array<Sampler | LegacySamplerV1>) {
       this._delegates = samplers.map(s => adaptSamplerOrThrow(s));
     }
 
@@ -145,7 +145,6 @@ describe('delayed sampling', () => {
         if (!d.retryable) {
           state.samplerFired[i] = true;
         }
-        console.log(`retryable=${retryable}, sample=${d.sample}`);
         if (d.sample) {
           return d; // TODO do we want to alter out tags?
         }

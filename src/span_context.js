@@ -140,7 +140,7 @@ export default class SpanContext {
   }
 
   _setRemote(value: boolean) {
-    this._remote - value;
+    this._remote = value;
   }
 
   set baggage(baggage: any): void {
