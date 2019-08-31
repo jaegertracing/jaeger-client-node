@@ -12,33 +12,37 @@
 // the License.
 
 import { assert } from 'chai';
-import adaptSampler from '../../src/samplers/_adapt_sampler';
-import { adaptSamplerOrThrow } from '../../src/samplers/_adapt_sampler';
-import BaseSamplerV2 from '../../src/samplers/v2/base';
+// Import Tracer here to work around a weird bug that causes the error like this:
+//     TypeError: Super expression must either be null or a function, not undefined
+//         at _inherits (.../jaeger-client-node/src/samplers/const_sampler.js:27:113)
+// The error seems to be related to a recursive import _adapt_sampler -> Span -> Tracer -> _adapt_sampler.
+import Tracer from '../../src/tracer';
+import * as adapter from '../../src/samplers/_adapt_sampler';
 import ConstSampler from '../../src/samplers/const_sampler';
+import GuaranteedThroughputSampler from '../../src/samplers/guaranteed_throughput_sampler';
 
 describe('adaptSampler', () => {
   it('should return null for null argument', () => {
-    assert.isNull(adaptSampler(null));
+    assert.isNull(adapter.adaptSampler(null));
   });
   it('should return wrapper for v1 sampler', () => {
-    let s1 = new ConstSampler(false);
-    let s2: any = adaptSampler(s1);
+    let s1 = new GuaranteedThroughputSampler(0, 1.0);
+    let s2: any = adapter.adaptSampler(s1);
     assert.deepEqual(s1, s2._delegate);
   });
   it('should return v2 sampler as is', () => {
-    let s1 = new BaseSamplerV2('name1');
-    assert.equal(s1, adaptSampler(s1));
+    let s1 = new ConstSampler('name1');
+    assert.equal(s1, adapter.adaptSampler(s1));
   });
   it('should delegate toString', () => {
-    let s1 = new ConstSampler(false);
-    let s2: any = adaptSampler(s1);
+    let s1 = new GuaranteedThroughputSampler(0, 1.0);
+    let s2: any = adapter.adaptSampler(s1);
     assert.equal(s1.toString(), s2.toString());
   });
 });
 
 describe('adaptSamplerOrThrow', () => {
   it('should throw on unrecognized sampler', () => {
-    assert.throws(() => adaptSamplerOrThrow(null), Error, 'Unrecognized sampler: null');
+    assert.throws(() => adapter.adaptSamplerOrThrow(null), Error, 'Unrecognized sampler: null');
   });
 });

@@ -11,12 +11,16 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import * as constants from '../constants.js';
+import * as constants from '../constants';
+import { SAMPLER_API_V2 } from './constants';
+import LegacySamplerV1Base from './_adapt_sampler';
 
-export default class ConstSampler implements LegacySamplerV1 {
+export default class ConstSampler extends LegacySamplerV1Base implements LegacySamplerV1 {
+  apiVersion = SAMPLER_API_V2;
   _decision: boolean;
 
   constructor(decision: boolean) {
+    super('ConstSampler');
     this._decision = decision;
   }
 
@@ -46,11 +50,5 @@ export default class ConstSampler implements LegacySamplerV1 {
     }
 
     return this.decision === other.decision;
-  }
-
-  close(callback: ?Function): void {
-    if (callback) {
-      callback();
-    }
   }
 }

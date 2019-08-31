@@ -13,8 +13,9 @@
 
 import { SAMPLER_API_V2 } from './constants';
 import Span from '../span';
+import BaseSamplerV2 from './v2/base';
 
-function adaptSampler(sampler: any): ?Sampler {
+export function adaptSampler(sampler: any): ?Sampler {
   if (!sampler) {
     return null;
   }
@@ -37,24 +38,18 @@ export function adaptSamplerOrThrow(sampler: any): Sampler {
   return s;
 }
 
-export default adaptSampler;
-
-export class LegacySamplerV1Base implements Sampler {
-  apiVersion = SAMPLER_API_V2;
-
-  constructor() {}
+/**
+ * Convenience base class for simple samplers that implement isSampled() function
+ * that is not sensitive to its arguments.
+ */
+export default class LegacySamplerV1Base extends BaseSamplerV2 {
+  constructor(name: string) {
+    super(name);
+  }
 
   isSampled(operationName: string, outTags: {}): boolean {
     throw new Error('Subclass must override isSampled()');
   }
-
-  // equal(other: LegacySamplerV1): boolean {
-  //   throw new Error('Subclass must override equal()');
-  // }
-
-  // name(): string {
-  //   throw new Error('Subclass must override name()');
-  // }
 
   onCreateSpan(span: Span): SamplingDecision {
     const outTags = {};
@@ -70,12 +65,6 @@ export class LegacySamplerV1Base implements Sampler {
 
   onSetTag(span: Span, key: string, value: any): SamplingDecision {
     return { sample: false, retryable: true, tags: null };
-  }
-
-  close(callback: ?Function) {
-    if (callback) {
-      callback();
-    }
   }
 }
 
@@ -94,7 +83,7 @@ class LegacySamplerV1Adapter extends LegacySamplerV1Base {
   _delegate: LegacySamplerV1;
 
   constructor(delegate: LegacySamplerV1) {
-    super();
+    super(delegate.name());
     this._delegate = delegate;
   }
 

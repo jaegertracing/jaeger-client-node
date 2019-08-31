@@ -71,7 +71,7 @@ describe('initTracer', () => {
     };
     let tracer = initTracer(config);
 
-    expect(tracer._sampler._delegate).to.be.an.instanceof(RemoteSampler);
+    expect(tracer._sampler).to.be.an.instanceof(RemoteSampler);
     expect(tracer._reporter).to.be.an.instanceof(RemoteReporter);
     tracer.close(done);
   });
@@ -257,10 +257,12 @@ describe('initTracer', () => {
         metrics: metrics,
       }
     );
+    expect(tracer._reporter).to.be.an.instanceof(RemoteReporter);
     assert.equal(tracer._reporter._metrics._factory, metrics);
     assert.equal(tracer._reporter._logger, logger);
-    assert.equal(tracer._sampler._delegate._metrics._factory, metrics);
-    assert.equal(tracer._sampler._delegate._logger, logger);
+    expect(tracer._sampler).to.be.an.instanceof(RemoteSampler);
+    assert.equal(tracer._sampler._metrics._factory, metrics);
+    assert.equal(tracer._sampler._logger, logger);
     tracer.close(done);
   });
 
@@ -390,10 +392,10 @@ describe('initTracerFromENV', () => {
     process.env.JAEGER_SAMPLER_MANAGER_HOST_PORT = 'localhost:8080';
     process.env.JAEGER_SAMPLER_REFRESH_INTERVAL = 100;
     tracer = initTracerFromEnv();
-    expect(tracer._sampler._delegate).to.be.an.instanceof(RemoteSampler);
-    assert.equal(tracer._sampler._delegate._host, 'localhost');
-    assert.equal(tracer._sampler._delegate._port, 8080);
-    assert.equal(tracer._sampler._delegate._refreshInterval, 100);
+    expect(tracer._sampler).to.be.an.instanceof(RemoteSampler);
+    assert.equal(tracer._sampler._host, 'localhost');
+    assert.equal(tracer._sampler._port, 8080);
+    assert.equal(tracer._sampler._refreshInterval, 100);
     tracer.close();
   });
 
@@ -412,10 +414,10 @@ describe('initTracerFromENV', () => {
     process.env.JAEGER_SAMPLER_PORT = 8080;
     process.env.JAEGER_SAMPLER_REFRESH_INTERVAL = 100;
     tracer = initTracerFromEnv();
-    expect(tracer._sampler._delegate).to.be.an.instanceof(RemoteSampler);
-    assert.equal(tracer._sampler._delegate._host, 'localhost');
-    assert.equal(tracer._sampler._delegate._port, 8080);
-    assert.equal(tracer._sampler._delegate._refreshInterval, 100);
+    expect(tracer._sampler).to.be.an.instanceof(RemoteSampler);
+    assert.equal(tracer._sampler._host, 'localhost');
+    assert.equal(tracer._sampler._port, 8080);
+    assert.equal(tracer._sampler._refreshInterval, 100);
     tracer.close();
   });
 
@@ -530,10 +532,10 @@ describe('initTracerFromENV', () => {
     };
     let tracer = initTracerFromEnv(config, options);
     assert.equal(tracer._serviceName, 'test-service-arg');
-    expect(tracer._sampler._delegate).to.be.an.instanceof(RemoteSampler);
-    assert.equal(tracer._sampler._delegate._host, 'localhost');
-    assert.equal(tracer._sampler._delegate._port, 8080);
-    assert.equal(tracer._sampler._delegate._refreshInterval, 100);
+    expect(tracer._sampler).to.be.an.instanceof(RemoteSampler);
+    assert.equal(tracer._sampler._host, 'localhost');
+    assert.equal(tracer._sampler._port, 8080);
+    assert.equal(tracer._sampler._refreshInterval, 100);
     assert.equal(tracer._tags['KEY2'], 'VALUE2');
     tracer.close(done);
   });
