@@ -31,7 +31,7 @@ describe('adaptSampler', () => {
     assert.deepEqual(s1, s2._delegate);
   });
   it('should return v2 sampler as is', () => {
-    let s1 = new ConstSampler('name1');
+    let s1 = new ConstSampler(true);
     assert.equal(s1, adapter.adaptSampler(s1));
   });
   it('should delegate toString', () => {
