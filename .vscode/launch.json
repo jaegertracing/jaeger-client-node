@@ -4,7 +4,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Mocha Current File",
+      "name": "Debug Current File",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
       "args": ["--timeout", "999999", "--compilers", "js:babel-core/register", "--colors", "${file}"],
       "console": "integratedTerminal",

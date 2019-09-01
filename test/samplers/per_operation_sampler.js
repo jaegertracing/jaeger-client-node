@@ -13,7 +13,9 @@
 
 import { assert } from 'chai';
 import sinon from 'sinon';
+import NoopReporter from '../../src/reporters/noop_reporter';
 import PerOperationSampler from '../../src/samplers/per_operation_sampler';
+import Tracer from '../../src/tracer';
 
 describe('PerOperationSampler', () => {
   let strategies: PerOperationSamplingStrategies = {
@@ -140,5 +142,30 @@ describe('PerOperationSampler', () => {
     assert.strictEqual(sampler._defaultSampler, s0);
     assert.strictEqual(sampler._samplersByOperation['op1'], s1);
     assert.strictEqual(sampler._samplersByOperation['op2'], s2);
+  });
+
+  it('should leave span non-finalized after first sampling, and finalize after setOperation', () => {
+    let strategies: PerOperationSamplingStrategies = {
+      defaultLowerBoundTracesPerSecond: 0,
+      defaultSamplingProbability: 1,
+      perOperationStrategies: [
+        {
+          operation: 'op1',
+          probabilisticSampling: { samplingRate: 0 },
+        },
+        {
+          operation: 'op2',
+          probabilisticSampling: { samplingRate: 1 },
+        },
+      ],
+    };
+    let sampler = new PerOperationSampler(strategies, 2);
+    let tracer = new Tracer('test', new NoopReporter(), sampler);
+    let span = tracer.startSpan('op1');
+    assert.isFalse(span._spanContext.isSampled());
+    assert.isFalse(span._spanContext.samplingFinalized);
+    span.setOperationName('op2');
+    assert.isTrue(span._spanContext.isSampled());
+    assert.isTrue(span._spanContext.samplingFinalized);
   });
 });
