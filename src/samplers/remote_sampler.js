@@ -29,7 +29,6 @@ const DEFAULT_SAMPLING_HOST = '0.0.0.0';
 const DEFAULT_SAMPLING_PORT = 5778;
 const PROBABILISTIC_STRATEGY_TYPE = 'PROBABILISTIC';
 const RATE_LIMITING_STRATEGY_TYPE = 'RATE_LIMITING';
-const PER_OPERATION_STRATEGY_TYPE = 'PER_OPERATION';
 
 export default class RemoteControlledSampler implements Sampler {
   apiVersion = SAMPLER_API_V2;

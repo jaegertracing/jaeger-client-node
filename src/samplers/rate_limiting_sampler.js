@@ -12,12 +12,10 @@
 // the License.
 
 import * as constants from '../constants';
-import { SAMPLER_API_V2 } from './constants';
 import LegacySamplerV1Base from './_adapt_sampler';
 import RateLimiter from '../rate_limiter';
 
 export default class RateLimitingSampler extends LegacySamplerV1Base implements LegacySamplerV1 {
-  apiVersion = SAMPLER_API_V2;
   _rateLimiter: RateLimiter;
   _maxTracesPerSecond: number;
 

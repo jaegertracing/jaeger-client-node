@@ -12,11 +12,9 @@
 // the License.
 
 import * as constants from '../constants';
-import { SAMPLER_API_V2 } from './constants';
 import LegacySamplerV1Base from './_adapt_sampler';
 
 export default class ConstSampler extends LegacySamplerV1Base implements LegacySamplerV1 {
-  apiVersion = SAMPLER_API_V2;
   _decision: boolean;
 
   constructor(decision: boolean) {
