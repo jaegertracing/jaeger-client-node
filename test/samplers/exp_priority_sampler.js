@@ -80,8 +80,8 @@ describe('PrioritySampler with TagSampler', () => {
   });
 
   it('should delegate calls to close() and invoke a callback', () => {
-    let s1: Sampler = new BaseSamplerV2('s1');
-    let s2: Sampler = new BaseSamplerV2('s2');
+    let s1: any = new BaseSamplerV2('s1');
+    let s2: any = new BaseSamplerV2('s2');
     s1.close = c => {
       s1._closed = true;
       c();
