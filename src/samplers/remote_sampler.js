@@ -112,7 +112,7 @@ export default class RemoteControlledSampler implements Sampler {
   _refreshSamplingStrategy() {
     let serviceName: string = encodeURIComponent(this._serviceName);
     const success: Function = body => {
-      this._parseSamplingServerResponse(body);
+      this._handleSamplingServerResponse(body);
     };
     const error: Function = err => {
       this._logger.error(`Error in fetching sampling strategy: ${err}.`);
@@ -121,7 +121,7 @@ export default class RemoteControlledSampler implements Sampler {
     Utils.httpGet(this._host, this._port, `/sampling?service=${serviceName}`, success, error);
   }
 
-  _parseSamplingServerResponse(body: string) {
+  _handleSamplingServerResponse(body: string) {
     this._metrics.samplerRetrieved.increment(1);
     let strategy;
     try {

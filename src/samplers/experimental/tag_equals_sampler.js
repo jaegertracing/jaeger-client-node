@@ -35,6 +35,18 @@ export default class TagEqualsSampler extends BaseSamplerV2 {
     this._undecided = { sample: false, retryable: true, tags: null };
   }
 
+  static fromStrategy(strategy: any): TagEqualsSampler {
+    let key = strategy.key;
+    let matchers: Array<Matcher> = [];
+    Object.keys(strategy.values).forEach(v => {
+      matchers.push({
+        tagValue: v,
+        firehose: Boolean(strategy.values[v].firehose),
+      });
+    });
+    return new TagEqualsSampler(key, matchers);
+  }
+
   _findTag(tags: Array<Tag>): ?Tag {
     for (let i = 0; i < tags.length; i++) {
       if (tags[i].key === this._tagKey) {

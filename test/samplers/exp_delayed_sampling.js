@@ -32,8 +32,6 @@ describe('delayed sampling', () => {
     const reporter = new InMemoryReporter();
     const tracer = new Tracer('test-service-name', reporter, priSampler);
 
-    beforeEach(() => {});
-
     it('should not sample or finalize new span without tags', () => {
       let span = tracer.startSpan('opName');
       assert.isFalse(span._spanContext.isSampled(), 'sampled');
