@@ -13,11 +13,11 @@
 
 import { assert } from 'chai';
 import * as opentracing from 'opentracing';
-import { SAMPLER_API_V2 } from '../../src/samplers/constants';
 import Span from '../../src/span';
 import Utils from '../../src/util';
 import ConstSampler from '../../src/samplers/const_sampler';
 import { adaptSamplerOrThrow } from '../../src/samplers/_adapt_sampler';
+import BaseSamplerV2 from '../../src/samplers/v2/base';
 import InMemoryReporter from '../../src/reporters/in_memory_reporter';
 import Tracer from '../../src/tracer';
 
@@ -27,14 +27,13 @@ describe('delayed sampling', () => {
     // can add more flags here, like firehose
   };
 
-  class TagEqualsSampler implements Sampler {
-    apiVersion = SAMPLER_API_V2;
-
+  class TagEqualsSampler extends BaseSamplerV2 {
     _tagKey: string;
     _matchers: { [string]: Matcher };
     _undecided: SamplingDecision;
 
     constructor(tagKey: string, matchers: Array<Matcher>) {
+      super('TagEqualsSampler');
       this._tagKey = tagKey;
       this._matchers = {};
       matchers.forEach(m => {
@@ -85,16 +84,6 @@ describe('delayed sampling', () => {
       }
       return this._undecided;
     }
-
-    toString(): string {
-      return 'TagEqualsSampler';
-    }
-
-    close(callback: ?Function): void {
-      if (callback) {
-        callback();
-      }
-    }
   }
 
   /**
@@ -124,18 +113,17 @@ describe('delayed sampling', () => {
    * TODO: since sampling state is shared across all spans of the trace, the execution
    *       of the sampler should probably only happen on the local-root span.
    */
-  class PrioritySampler implements Sampler {
-    apiVersion = SAMPLER_API_V2;
-
+  class PrioritySampler extends BaseSamplerV2 {
     _delegates: Array<Sampler>;
 
     constructor(samplers: Array<Sampler | LegacySamplerV1>) {
+      super('PrioritySampler');
       this._delegates = samplers.map(s => adaptSamplerOrThrow(s));
     }
 
     _getOrCreateState(span: Span): PrioritySamplerState {
       const store = span.context()._samplingState.extendedState();
-      const stateKey = 'PrioritySampler'; // TODO ideally should be uniqueName() per BaseSamplerB2
+      const stateKey = this.uniqueName();
       let state: ?PrioritySamplerState = store[stateKey];
       if (!state) {
         state = new PrioritySamplerState(this._delegates.length);
@@ -179,10 +167,6 @@ describe('delayed sampling', () => {
       return this._trySampling(span, function(delegate: Sampler): SamplingDecision {
         return delegate.onSetTag(span, key, value);
       });
-    }
-
-    toString(): string {
-      return 'DelegatingSampler';
     }
 
     close(callback: ?() => void): void {
