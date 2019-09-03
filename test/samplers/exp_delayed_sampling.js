@@ -47,7 +47,10 @@ describe('delayed sampling', () => {
     });
 
     [{ who: 'Bender', firehose: false }, { who: 'Leela', firehose: true }].forEach(t => {
-      it(`should sample and finalize span after setTag "${t.who}" and set firehose=${t.firehose}`, () => {
+      // have to coerce t.firehose to string, because flow complains about it otherwise.
+      it(`should sample and finalize span after setTag "${t.who}" and set firehose=${String(
+        t.firehose
+      )}`, () => {
         let span = tracer.startSpan('opName');
         assert.isFalse(span._spanContext.isSampled(), 'sampled');
         assert.isFalse(span._spanContext.samplingFinalized, 'finalized');
