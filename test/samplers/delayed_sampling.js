@@ -97,9 +97,22 @@ describe('delayed sampling', () => {
     }
   }
 
-  declare type PrioritySamplerState = {
-    samplerFired: Array<boolean>,
-  };
+  /**
+   * PrioritySamplerState keeps the state of all underlying samplers, specifically
+   * whether each of them has previously returned retryable=false, in which case
+   * those samplers are no longer invoked on future sampling calls.
+   */
+  class PrioritySamplerState {
+    samplerFired: Array<boolean>;
+
+    constructor(numDelegateSamplers: number) {
+      this.samplerFired = Array(numDelegateSamplers);
+      // cannot use array.fill() in Node 0.10
+      for (let i = 0; i < numDelegateSamplers; i++) {
+        this.samplerFired[i] = false;
+      }
+    }
+  }
 
   /**
    * PrioritySampler contains a list of samplers that it interrogates in order.
@@ -120,31 +133,25 @@ describe('delayed sampling', () => {
       this._delegates = samplers.map(s => adaptSamplerOrThrow(s));
     }
 
-    _getState(span: Span): PrioritySamplerState {
+    _getOrCreateState(span: Span): PrioritySamplerState {
       const store = span.context()._samplingState.extendedState();
       const stateKey = 'PrioritySampler'; // TODO ideally should be uniqueName() per BaseSamplerB2
       let state: ?PrioritySamplerState = store[stateKey];
       if (!state) {
-        state = {
-          samplerFired: Array(this._delegates.length),
-        };
-        // cannot use array.fill() in Node 0.10
-        for (let i = 0; i < this._delegates.length; i++) {
-          state.samplerFired[i] = false;
-        }
+        state = new PrioritySamplerState(this._delegates.length);
         store[stateKey] = state;
       }
       return state;
     }
 
-    onCreateSpan(span: Span): SamplingDecision {
-      const state = this._getState(span);
+    _trySampling(span: Span, fn: Function): SamplingDecision {
+      const state = this._getOrCreateState(span);
       let retryable = false;
       for (let i = 0; i < this._delegates.length; i++) {
         if (state.samplerFired[i]) {
           continue;
         }
-        const d = this._delegates[i].onCreateSpan(span);
+        const d = fn(this._delegates[i]);
         retryable = retryable || d.retryable;
         if (!d.retryable) {
           state.samplerFired[i] = true;
@@ -156,14 +163,22 @@ describe('delayed sampling', () => {
       return { sample: false, retryable: retryable, tags: null };
     }
 
+    onCreateSpan(span: Span): SamplingDecision {
+      return this._trySampling(span, function(delegate: Sampler): SamplingDecision {
+        return delegate.onCreateSpan(span);
+      });
+    }
+
     onSetOperationName(span: Span, operationName: string): SamplingDecision {
-      // FIXME:
-      return this.onCreateSpan(span);
+      return this._trySampling(span, function(delegate: Sampler): SamplingDecision {
+        return delegate.onSetOperationName(span, operationName);
+      });
     }
 
     onSetTag(span: Span, key: string, value: any): SamplingDecision {
-      // FIXME:
-      return this.onCreateSpan(span);
+      return this._trySampling(span, function(delegate: Sampler): SamplingDecision {
+        return delegate.onSetTag(span, key, value);
+      });
     }
 
     toString(): string {
@@ -176,7 +191,7 @@ describe('delayed sampling', () => {
     }
   }
 
-  describe('with PrioritySampler', () => {
+  describe('with PrioritySampler and TagSampler', () => {
     const tagSampler = new TagEqualsSampler('theWho', [{ tagValue: 'Bender' }, { tagValue: 'Leela' }]);
     const constSampler = new ConstSampler(false);
     const priSampler = new PrioritySampler([tagSampler, constSampler]);
@@ -202,6 +217,8 @@ describe('delayed sampling', () => {
       assert.isFalse(span._spanContext.isSampled(), 'sampled');
       assert.isFalse(span._spanContext.samplingFinalized, 'finalized');
       span.setTag('theWho', 'Leela');
+      assert.isTrue(span._spanContext.isSampled(), 'sampled');
+      assert.isTrue(span._spanContext.samplingFinalized, 'finalized');
     });
 
     it('should not sample or finalize span after starting a child span', () => {

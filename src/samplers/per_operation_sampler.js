@@ -12,10 +12,9 @@
 // the License.
 
 import assert from 'assert';
-import * as constants from '../constants';
 import { SAMPLER_API_V2 } from './constants';
-import ProbabilisticSampler from './probabilistic_sampler';
 import GuaranteedThroughputSampler from './guaranteed_throughput_sampler';
+import ProbabilisticSampler from './probabilistic_sampler';
 
 type SamplersByOperation = { [key: string]: GuaranteedThroughputSampler, __proto__: null };
 

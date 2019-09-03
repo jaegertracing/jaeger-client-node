@@ -151,7 +151,9 @@ export default class Utils {
 
   /**
    * Creates a callback function that only delegates to passed <code>callback</code>
-   * after <code>limit</code> invocations.
+   * after <code>limit</code> invocations. Useful in types like CompositeReporter that
+   * needs to invoke the top level callback only after all delegates' close() methods
+   * are called.
    */
   static countdownCallback(limit: number, callback: ?() => void): () => void {
     let count = 0;
