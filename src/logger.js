@@ -15,12 +15,3 @@ export default class NullLogger {
   info(msg: string): void {}
   error(msg: string): void {}
 }
-
-export class ConsoleLogger {
-  info(msg: string): void {
-    console.log('INFO  ' + msg);
-  }
-  error(msg: string): void {
-    console.log('ERROR ' + msg);
-  }
-}

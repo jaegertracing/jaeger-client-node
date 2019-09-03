@@ -28,9 +28,6 @@ import LoggingReporter from './reporters/logging_reporter';
 import NoopReporter from './reporters/noop_reporter';
 import RemoteReporter from './reporters/remote_reporter';
 
-import NullLogger from './logger';
-import { ConsoleLogger } from './logger';
-
 import TextMapCodec from './propagators/text_map_codec';
 import ZipkinB3TextMapCodec from './propagators/zipkin_b3_text_map_codec';
 
@@ -59,9 +56,6 @@ module.exports = {
   LoggingReporter,
   NoopReporter,
   RemoteReporter,
-
-  NullLogger,
-  ConsoleLogger,
 
   TextMapCodec,
   ZipkinB3TextMapCodec,

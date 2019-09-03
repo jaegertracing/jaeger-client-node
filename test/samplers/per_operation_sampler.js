@@ -168,4 +168,11 @@ describe('PerOperationSampler', () => {
     assert.isTrue(span._spanContext.isSampled());
     assert.isTrue(span._spanContext.samplingFinalized);
   });
+
+  it('should have onSetTags', () => {
+    let sampler = new PerOperationSampler(strategies, 0);
+    let span: Span = {};
+    let decision = sampler.onSetTag(span, 'pi', 3.1415);
+    assert.deepEqual(decision, { sample: false, retryable: true, tags: null });
+  });
 });
