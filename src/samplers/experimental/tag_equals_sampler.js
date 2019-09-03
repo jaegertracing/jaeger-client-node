@@ -51,9 +51,12 @@ export default class TagEqualsSampler extends BaseSamplerV2 {
     };
   }
 
-  _decide(tagValue: any): SamplingDecision {
+  _decide(span: Span, tagValue: any): SamplingDecision {
     const match: ?Matcher = this._matchers[tagValue];
     if (match) {
+      if (match.firehose) {
+        span._spanContext._setFirehose(true);
+      }
       return { sample: true, retryable: false, tags: this._createOutTags(match.tagValue) };
     }
     return this._undecided;
@@ -62,7 +65,7 @@ export default class TagEqualsSampler extends BaseSamplerV2 {
   onCreateSpan(span: Span): SamplingDecision {
     const tag: ?Tag = this._findTag(span.getTags());
     if (tag) {
-      return this._decide(tag.value);
+      return this._decide(span, tag.value);
     }
     return this._undecided;
   }
@@ -73,7 +76,7 @@ export default class TagEqualsSampler extends BaseSamplerV2 {
 
   onSetTag(span: Span, key: string, value: any): SamplingDecision {
     if (key === this._tagKey) {
-      return this._decide(value);
+      return this._decide(span, value);
     }
     return this._undecided;
   }

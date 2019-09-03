@@ -46,13 +46,16 @@ describe('delayed sampling', () => {
       assert.isTrue(span._spanContext.samplingFinalized, 'finalized');
     });
 
-    it('should sample and finalize span after setTag', () => {
-      let span = tracer.startSpan('opName');
-      assert.isFalse(span._spanContext.isSampled(), 'sampled');
-      assert.isFalse(span._spanContext.samplingFinalized, 'finalized');
-      span.setTag('theWho', 'Leela');
-      assert.isTrue(span._spanContext.isSampled(), 'sampled');
-      assert.isTrue(span._spanContext.samplingFinalized, 'finalized');
+    [{ who: 'Bender', firehose: false }, { who: 'Leela', firehose: true }].forEach(t => {
+      it(`should sample and finalize span after setTag "${t.who}" and set firehose=${t.firehose}`, () => {
+        let span = tracer.startSpan('opName');
+        assert.isFalse(span._spanContext.isSampled(), 'sampled');
+        assert.isFalse(span._spanContext.samplingFinalized, 'finalized');
+        span.setTag('theWho', t.who);
+        assert.isTrue(span._spanContext.isSampled(), 'sampled');
+        assert.isTrue(span._spanContext.samplingFinalized, 'finalized');
+        assert.equal(t.firehose, span._spanContext.isFirehose(), 'finalized');
+      });
     });
 
     it('should not sample or finalize span after starting a child span', () => {
