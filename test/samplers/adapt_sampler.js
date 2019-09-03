@@ -18,6 +18,7 @@ import { assert } from 'chai';
 // The error seems to be related to a recursive import _adapt_sampler -> Span -> Tracer -> _adapt_sampler.
 import Tracer from '../../src/tracer';
 import * as adapter from '../../src/samplers/_adapt_sampler';
+import LegacySamplerV1Base from '../../src/samplers/_adapt_sampler';
 import ConstSampler from '../../src/samplers/const_sampler';
 import GuaranteedThroughputSampler from '../../src/samplers/guaranteed_throughput_sampler';
 
@@ -44,5 +45,12 @@ describe('adaptSampler', () => {
 describe('adaptSamplerOrThrow', () => {
   it('should throw on unrecognized sampler', () => {
     assert.throws(() => adapter.adaptSamplerOrThrow(null), Error, 'Unrecognized sampler: null');
+  });
+});
+
+describe('LegacySamplerV1Base', () => {
+  it('should throw in isSampled', () => {
+    let c = new LegacySamplerV1Base('test');
+    assert.throws(() => c.isSampled('op1', {}), Error, 'Subclass must override isSampled()');
   });
 });
