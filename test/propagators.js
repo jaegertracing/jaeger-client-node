@@ -53,6 +53,23 @@ describe('TextMapCodec', () => {
     let ctx = codec.extract(carrier);
     assert.deepEqual(ctx.baggage, { 'some-key': 'some-value' });
   });
+
+  it('should inject span context through carrier custon set method', () => {
+    let codec = new TextMapCodec({
+      urlEncoding: true,
+      contextKey: 'trace-context',
+      baggagePrefix: 'baggage-',
+    });
+    let carrier = {
+      value: {},
+      set(key, value) {
+        this.value[key] = value;
+      },
+    };
+    const spanContext = new SpanContext();
+    codec.inject(spanContext, carrier);
+    assert.equal(carrier.value['trace-context'], spanContext.toString());
+  });
 });
 
 describe('ZipkinB3TextMapCodec', () => {

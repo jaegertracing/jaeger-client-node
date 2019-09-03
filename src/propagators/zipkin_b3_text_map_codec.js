@@ -89,6 +89,14 @@ export default class ZipkinB3TextMapCodec {
     }
   }
 
+  _set(carrier: any, key: string, value: ?string) {
+    if (carrier.set) {
+      carrier.set(key, value);
+    } else {
+      carrier[key] = value;
+    }
+  }
+
   extract(carrier: any): ?SpanContext {
     let baggage = {};
     let flags = 0;
@@ -156,26 +164,26 @@ export default class ZipkinB3TextMapCodec {
   }
 
   inject(spanContext: SpanContext, carrier: any): void {
-    carrier[ZIPKIN_TRACE_HEADER] = spanContext.traceIdStr;
+    this._set(carrier, ZIPKIN_TRACE_HEADER, spanContext.traceIdStr);
     if (spanContext.parentIdStr) {
-      carrier[ZIPKIN_PARENTSPAN_HEADER] = spanContext.parentIdStr;
+      this._set(carrier, ZIPKIN_PARENTSPAN_HEADER, spanContext.parentIdStr);
     }
-    carrier[ZIPKIN_SPAN_HEADER] = spanContext.spanIdStr;
+    this._set(carrier, ZIPKIN_SPAN_HEADER, spanContext.spanIdStr);
 
     if (spanContext.isDebug()) {
-      carrier[ZIPKIN_FLAGS_HEADER] = '1';
+      this._set(carrier, ZIPKIN_FLAGS_HEADER, '1');
     } else {
       // Only set the zipkin sampled header if we're NOT using debug.
       // Per https://github.com/openzipkin/b3-propagation
       //   "Since Debug implies Sampled, so don't also send "X-B3-Sampled: 1"
-      carrier[ZIPKIN_SAMPLED_HEADER] = spanContext.isSampled() ? '1' : '0';
+      this._set(carrier, ZIPKIN_SAMPLED_HEADER, spanContext.isSampled() ? '1' : '0');
     }
 
     let baggage = spanContext.baggage;
     for (let key in baggage) {
       if (Object.prototype.hasOwnProperty.call(baggage, key)) {
         let value = this._encodeValue(spanContext.baggage[key]);
-        carrier[`${this._baggagePrefix}${key}`] = value;
+        this._set(carrier, `${this._baggagePrefix}${key}`, value);
       }
     }
   }

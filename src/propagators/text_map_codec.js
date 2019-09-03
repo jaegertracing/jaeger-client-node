@@ -59,6 +59,14 @@ export default class TextMapCodec {
     }
   }
 
+  _set(carrier: any, key: string, value: string) {
+    if (carrier.set) {
+      carrier.set(key, value);
+    } else {
+      carrier[key] = value;
+    }
+  }
+
   extract(carrier: any): ?SpanContext {
     let spanContext = new SpanContext();
     let baggage = {};
@@ -92,13 +100,13 @@ export default class TextMapCodec {
 
   inject(spanContext: SpanContext, carrier: any): void {
     let stringSpanContext = spanContext.toString();
-    carrier[this._contextKey] = stringSpanContext; // no need to encode this
+    this._set(carrier, this._contextKey, stringSpanContext); // no need to encode this
 
     let baggage = spanContext.baggage;
     for (let key in baggage) {
       if (Object.prototype.hasOwnProperty.call(baggage, key)) {
         let value = this._encodeValue(spanContext.baggage[key]);
-        carrier[`${this._baggagePrefix}${key}`] = value;
+        this._set(carrier, `${this._baggagePrefix}${key}`, value);
       }
     }
   }
