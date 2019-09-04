@@ -12,9 +12,9 @@
 // the License.
 
 import assert from 'assert';
-import * as constants from '../constants.js';
-import ProbabilisticSampler from './probabilistic_sampler.js';
-import GuaranteedThroughputSampler from './guaranteed_throughput_sampler.js';
+import { SAMPLER_API_V2 } from './constants';
+import GuaranteedThroughputSampler from './guaranteed_throughput_sampler';
+import ProbabilisticSampler from './probabilistic_sampler';
 
 type SamplersByOperation = { [key: string]: GuaranteedThroughputSampler, __proto__: null };
 
@@ -23,7 +23,8 @@ type SamplersByOperation = { [key: string]: GuaranteedThroughputSampler, __proto
 // that all endpoints are represented in the sampled traces. If the number
 // of distinct operation names exceeds maxOperations, all other names are
 // sampled with a default probabilistic sampler.
-export default class PerOperationSampler implements LegacySamplerV1 {
+export default class PerOperationSampler implements Sampler {
+  apiVersion = SAMPLER_API_V2;
   _maxOperations: number;
   _samplersByOperation: SamplersByOperation;
   _defaultSampler: ProbabilisticSampler;
@@ -87,6 +88,23 @@ export default class PerOperationSampler implements LegacySamplerV1 {
       this._samplersByOperation[operation] = sampler;
     }
     return sampler.isSampled(operation, tags);
+  }
+
+  onCreateSpan(span: Span): SamplingDecision {
+    const outTags = {};
+    const isSampled = this.isSampled(span.operationName, outTags);
+    // NB: return retryable=true here since we can change decision after setOperationName().
+    return { sample: isSampled, retryable: true, tags: outTags };
+  }
+
+  onSetOperationName(span: Span, operationName: string): SamplingDecision {
+    const outTags = {};
+    const isSampled = this.isSampled(span.operationName, outTags);
+    return { sample: isSampled, retryable: false, tags: outTags };
+  }
+
+  onSetTag(span: Span, key: string, value: any): SamplingDecision {
+    return { sample: false, retryable: true, tags: null };
   }
 
   equal(other: LegacySamplerV1): boolean {

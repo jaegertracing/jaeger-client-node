@@ -13,7 +13,7 @@
 import { assert } from 'chai';
 import sinon from 'sinon';
 import Metrics from '../../src/metrics/metrics.js';
-import RateLimitingSampler from '../../src/samplers/ratelimiting_sampler';
+import RateLimitingSampler from '../../src/samplers/rate_limiting_sampler';
 import ProbabilisticSampler from '../../src/samplers/probabilistic_sampler.js';
 import PerOperationSampler from '../../src/samplers/per_operation_sampler';
 import RemoteSampler from '../../src/samplers/remote_sampler';
@@ -147,6 +147,22 @@ describe('RemoteSampler', () => {
     remoteSampler._refreshSamplingStrategy();
   });
 
+  it('should reset probabilistic sampler', done => {
+    remoteSampler._sampler = new RateLimitingSampler(10);
+    assert.instanceOf(remoteSampler._sampler, RateLimitingSampler);
+    remoteSampler._onSamplerUpdate = s => {
+      assert.instanceOf(remoteSampler._sampler, ProbabilisticSampler);
+      done();
+    };
+    server.addStrategy('service1', {
+      strategyType: 'PROBABILISTIC',
+      probabilisticSampling: {
+        samplingRate: 1.0,
+      },
+    });
+    remoteSampler._refreshSamplingStrategy();
+  });
+
   it('should set per-operation sampler', done => {
     server.addStrategy('service1', {
       strategyType: 'PROBABILISTIC',
@@ -204,5 +220,39 @@ describe('RemoteSampler', () => {
     });
 
     clock.tick(20);
+  });
+
+  it('should delegate all sampling calls', () => {
+    const decision: SamplingDecision = {
+      sample: false,
+      retryable: true,
+      tags: null,
+      fake: 'fake',
+    };
+    const mockSampler: Sampler = {
+      onCreateSpan: function onCreateSpan(span: Span): SamplingDecision {
+        this._onCreateSpan = [span];
+        return decision;
+      },
+      onSetOperationName: function onSetOperationName(span: Span, operationName: string): SamplingDecision {
+        this._onSetOperationName = [span, operationName];
+        return decision;
+      },
+      onSetTag: function onSetOperationName(span: Span, key: string, value: any): SamplingDecision {
+        this._onSetTag = [span, key, value];
+        return decision;
+      },
+    };
+    remoteSampler._sampler = mockSampler;
+    const span: Span = { fake: 'fake' };
+
+    assert.deepEqual(decision, remoteSampler.onCreateSpan(span));
+    assert.deepEqual([span], mockSampler._onCreateSpan);
+
+    assert.deepEqual(decision, remoteSampler.onSetOperationName(span, 'op1'));
+    assert.deepEqual([span, 'op1'], mockSampler._onSetOperationName);
+
+    assert.deepEqual(decision, remoteSampler.onSetTag(span, 'pi', 3.1415));
+    assert.deepEqual([span, 'pi', 3.1415], mockSampler._onSetTag);
   });
 });

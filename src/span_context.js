@@ -26,6 +26,7 @@ export default class SpanContext {
   _baggage: any;
   _debugId: ?string;
   _samplingState: SamplingState;
+  _remote: boolean; // indicates that span context represents a remote parent
 
   constructor(
     traceId: any,
@@ -47,6 +48,7 @@ export default class SpanContext {
     this._baggage = baggage;
     this._debugId = debugId;
     this._samplingState = samplingState || new SamplingState(this.spanIdStr);
+    this._remote = false;
   }
 
   get traceId(): any {
@@ -138,6 +140,10 @@ export default class SpanContext {
     this._samplingState.setFirehose(value);
   }
 
+  _setRemote(value: boolean) {
+    this._remote = value;
+  }
+
   set baggage(baggage: any): void {
     this._baggage = baggage;
   }
@@ -152,6 +158,10 @@ export default class SpanContext {
 
   finalizeSampling() {
     return this._samplingState.setFinal(true);
+  }
+
+  isRemote(): boolean {
+    return this._remote;
   }
 
   isDebugIDContainerOnly(): boolean {

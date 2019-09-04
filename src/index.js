@@ -19,7 +19,7 @@ import Tracer from './tracer';
 
 import ConstSampler from './samplers/const_sampler';
 import ProbabilisticSampler from './samplers/probabilistic_sampler';
-import RateLimitingSampler from './samplers/ratelimiting_sampler';
+import RateLimitingSampler from './samplers/rate_limiting_sampler';
 import RemoteSampler from './samplers/remote_sampler';
 
 import CompositeReporter from './reporters/composite_reporter';
