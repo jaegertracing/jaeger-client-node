@@ -75,6 +75,7 @@ describe('extended remote sampler', () => {
 
   it('should parse extended strategy response', function(done) {
     server.addStrategy('service1', {
+      strategyType: '', // this is needed yo satisfy server.addStrategy type
       tagEqualsStrategy: {
         key: 'theTag',
         values: {
