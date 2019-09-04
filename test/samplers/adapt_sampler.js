@@ -40,6 +40,21 @@ describe('adaptSampler', () => {
     let s2: any = adapter.adaptSampler(s1);
     assert.equal(s1.toString(), s2.toString());
   });
+  it('should delegate sampling methods to isSampled', () => {
+    let s1: any = new ConstSampler(true);
+    s1.apiVersion = ''; // break V2 compatibility
+    let s2: any = adapter.adaptSampler(s1);
+    assert.deepEqual(s1, s2._delegate);
+    s1._called = 0;
+    s1.isSampled = (operationName: string, outTags: {}) => {
+      s1._called++;
+    };
+    let span: Span = {};
+    s1.onCreateSpan(span);
+    s1.onSetOperationName(span, 'op1');
+    s1.onSetTag(span, 'pi', 3.1415);
+    assert.equal(2, s1._called);
+  });
 });
 
 describe('adaptSamplerOrThrow', () => {
