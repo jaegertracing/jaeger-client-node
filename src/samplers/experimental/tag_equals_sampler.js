@@ -35,6 +35,23 @@ export default class TagEqualsSampler extends BaseSamplerV2 {
     this._undecided = { sample: false, retryable: true, tags: null };
   }
 
+  /**
+   * Creates the sampler from a JSON configuration of the following form:
+   * <code>
+   *   {
+   *     key: 'taKey',
+   *     values: {
+   *       'tagValue1': {
+   *         firehose: true,
+   *       },
+   *       'tagValue1: {
+   *         firehose: false,
+   *       },
+   *     },
+   *   }
+   * </code>
+   * @param {JSON} strategy
+   */
   static fromStrategy(strategy: any): TagEqualsSampler {
     let key = strategy.key;
     let matchers: Array<Matcher> = [];
@@ -83,7 +100,8 @@ export default class TagEqualsSampler extends BaseSamplerV2 {
   }
 
   onSetOperationName(span: Span, operationName: string): SamplingDecision {
-    return this.onCreateSpan(span);
+    // this sampler is not sensitive to operationName, so no reason to re-evaluate the tags.
+    return this._undecided;
   }
 
   onSetTag(span: Span, key: string, value: any): SamplingDecision {
