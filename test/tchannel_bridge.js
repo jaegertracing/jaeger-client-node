@@ -124,7 +124,6 @@ describe('test tchannel span bridge', () => {
 
           assert.isOk(TestUtils.hasTags(serverSpan, serverSpanTags));
           assert.isOk(TestUtils.hasTags(clientSpan, clientSpanTags));
-
           assert.equal(serverSpan.context().parentIdStr, clientSpan.context().spanIdStr);
           // If context exists then the following conditions are true
           // else the following conditons are false

@@ -12,19 +12,20 @@
 
 import _ from 'lodash';
 import { assert, expect } from 'chai';
-import ConstSampler from '../src/samplers/const_sampler.js';
-import * as constants from '../src/constants.js';
-import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
+import ConstSampler from '../src/samplers/const_sampler';
+import * as constants from '../src/constants';
+import InMemoryReporter from '../src/reporters/in_memory_reporter';
 import * as opentracing from 'opentracing';
-import SpanContext from '../src/span_context.js';
-import Tracer from '../src/tracer.js';
-import Utils from '../src/util.js';
-import Metrics from '../src/metrics/metrics.js';
-import LocalMetricFactory from './lib/metrics/local/metric_factory.js';
-import LocalBackend from './lib/metrics/local/backend.js';
+import SpanContext from '../src/span_context';
+import Tracer from '../src/tracer';
+import Utils from '../src/util';
+import Metrics from '../src/metrics/metrics';
+import LocalMetricFactory from './lib/metrics/local/metric_factory';
+import LocalBackend from './lib/metrics/local/backend';
 import sinon from 'sinon';
 import DefaultThrottler from '../src/throttler/default_throttler';
 import os from 'os';
+import JaegerTestUtils from '../src/test_util';
 
 describe('tracer should', () => {
   let tracer;
@@ -105,21 +106,23 @@ describe('tracer should', () => {
     let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
     let start = 123.456;
     let rpcServer = false;
-    let internalTags = [];
-    let references = [];
     let tags = {
-      keyOne: 'leela',
-      keyTwo: 'bender',
+      keyOne: 'Leela',
+      keyTwo: 'Bender',
     };
+    let internalTags = {
+      'internal-tag': 'Fry',
+    };
+    let references = [];
     let span = tracer._startInternalSpan(
       context,
       'op-name',
       start,
-      internalTags,
       tags,
-      null,
-      rpcServer,
-      references
+      internalTags,
+      references,
+      false,
+      rpcServer
     );
 
     assert.deepEqual(span.context().traceId, traceId);
@@ -127,7 +130,15 @@ describe('tracer should', () => {
     assert.deepEqual(span.context().parentId, parentId);
     assert.equal(span.context().flags, flags);
     assert.equal(span._startTime, start);
-    assert.equal(Object.keys(span._tags).length, 2);
+    assert.isOk(
+      JaegerTestUtils.hasTags(span, {
+        keyOne: 'Leela',
+        keyTwo: 'Bender',
+        'sampler.type': 'const',
+        'sampler.param': true,
+        'internal-tag': 'Fry',
+      })
+    );
   });
 
   it('report a span with no tracer level tags', () => {

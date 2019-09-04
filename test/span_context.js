@@ -11,11 +11,10 @@
 // the License.
 
 import { assert } from 'chai';
-import * as constants from '../src/constants.js';
-import SpanContext from '../src/span_context.js';
-import Utils from '../src/util.js';
+import SpanContext from '../src/span_context';
+import Utils from '../src/util';
 
-describe('SpanContext should', () => {
+describe('SpanContext', () => {
   let LARGEST_64_BUFFER;
   before(() => {
     LARGEST_64_BUFFER = new Buffer(8);
@@ -23,7 +22,7 @@ describe('SpanContext should', () => {
     LARGEST_64_BUFFER.writeUInt32BE(0xffffffff, 4);
   });
 
-  it('return given values as they were set', () => {
+  it('should return given values as they were set', () => {
     let traceId = Utils.encodeInt64(1);
     let spanId = Utils.encodeInt64(2);
     let parentId = Utils.encodeInt64(3);
@@ -37,7 +36,7 @@ describe('SpanContext should', () => {
     assert.equal(flags, context.flags);
   });
 
-  it('return given values as they were set 128 bit', () => {
+  it('should return given values as they were set 128 bit', () => {
     let traceId = Buffer.concat([Utils.encodeInt64(2), Utils.encodeInt64(1)]);
     let spanId = Utils.encodeInt64(3);
     let parentId = Utils.encodeInt64(4);
@@ -52,7 +51,7 @@ describe('SpanContext should', () => {
     assert.equal(flags, context.flags);
   });
 
-  it('return IsSampled properly', () => {
+  it('should expose IsSampled properly', () => {
     let context = SpanContext.withBinaryIds(
       Utils.encodeInt64(1),
       Utils.encodeInt64(2),
@@ -62,12 +61,12 @@ describe('SpanContext should', () => {
     assert.isOk(context.isSampled());
     assert.isOk(context.isDebug());
 
-    context._flags = 0;
+    context.flags = 0;
     assert.isNotOk(context.isSampled());
     assert.isNotOk(context.isDebug());
   });
 
-  it('format strings properly with toString', () => {
+  it('should format strings properly with toString', () => {
     let ctx1 = SpanContext.withBinaryIds(Utils.encodeInt64(0x100), Utils.encodeInt64(0x7f), null, 1);
     assert.equal(ctx1.toString(), '100:7f:0:1');
 
@@ -87,7 +86,7 @@ describe('SpanContext should', () => {
     assert.equal('ffffffffffffffff', ctx3.parentIdStr);
   });
 
-  it('turn properly formatted strings into correct span contexts', () => {
+  it('should turn properly formatted strings into correct span contexts', () => {
     let context = SpanContext.fromString('100:7f:0:1');
 
     assert.deepEqual('100', context.traceIdStr);
@@ -106,7 +105,7 @@ describe('SpanContext should', () => {
     assert.equal(context.flags, 0x1);
   });
 
-  it('turn properly formatted strings into correct span contexts 128 bit', () => {
+  it('should turn properly formatted strings into correct span contexts 128 bit', () => {
     let context = SpanContext.fromString('20000000000000100:7f:0:1');
 
     assert.deepEqual('20000000000000100', context.traceIdStr);
@@ -125,7 +124,7 @@ describe('SpanContext should', () => {
     assert.equal(context.flags, 0x1);
   });
 
-  it('return null on malformed traces', () => {
+  it('should return null on malformed traces', () => {
     assert.equal(SpanContext.fromString('bad value'), null);
     assert.equal(SpanContext.fromString('1:1:1:1:1'), null, 'Too many colons');
     assert.equal(SpanContext.fromString('1:1:1'), null, 'Too few colons');
@@ -134,5 +133,14 @@ describe('SpanContext should', () => {
     assert.equal(SpanContext.fromString('1:1:x:1'), null, 'Not all numbers');
     assert.equal(SpanContext.fromString('1:1:1:x'), null, 'Not all numbers');
     assert.equal(SpanContext.fromString('0:1:1:1'), null, 'Trace ID cannot be zero');
+  });
+
+  it('should allow access to firehose mode', () => {
+    let context = SpanContext.fromString('100:7f:0:1');
+    assert.isFalse(context.isFirehose());
+    context._setFirehose(true);
+    assert.isTrue(context.isFirehose());
+    context._setFirehose(false);
+    assert.isFalse(context.isFirehose());
   });
 });

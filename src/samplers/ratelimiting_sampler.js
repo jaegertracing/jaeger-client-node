@@ -14,7 +14,7 @@
 import * as constants from '../constants.js';
 import RateLimiter from '../rate_limiter.js';
 
-export default class RateLimitingSampler {
+export default class RateLimitingSampler implements LegacySamplerV1 {
   _rateLimiter: RateLimiter;
   _maxTracesPerSecond: number;
 
@@ -63,7 +63,7 @@ export default class RateLimitingSampler {
     return decision;
   }
 
-  equal(other: Sampler): boolean {
+  equal(other: LegacySamplerV1): boolean {
     if (!(other instanceof RateLimitingSampler)) {
       return false;
     }
