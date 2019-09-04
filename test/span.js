@@ -26,22 +26,30 @@ import sinon from 'sinon';
 import Tracer from '../src/tracer';
 import Utils from '../src/util';
 import DefaultThrottler from '../src/throttler/default_throttler';
+import BaseSamplerV2 from '../src/samplers/v2/base';
+
+function _prepareObjects() {
+  let reporter = new InMemoryReporter();
+  let tracer = new Tracer('test-service-name', reporter, new ConstSampler(true), {
+    logger: new MockLogger(),
+  });
+
+  let spanContext = SpanContext.withBinaryIds(
+    Utils.encodeInt64(1),
+    Utils.encodeInt64(2),
+    Utils.encodeInt64(3),
+    constants.SAMPLED_MASK
+  );
+
+  let span = new Span(tracer, 'op-name', spanContext, tracer.now());
+  return { reporter, tracer, span, spanContext };
+}
 
 describe('span should', () => {
-  let reporter = new InMemoryReporter();
-  let tracer, span, spanContext;
+  var reporter, tracer, span, spanContext;
 
   beforeEach(() => {
-    tracer = new Tracer('test-service-name', reporter, new ConstSampler(true), { logger: new MockLogger() });
-
-    spanContext = SpanContext.withBinaryIds(
-      Utils.encodeInt64(1),
-      Utils.encodeInt64(2),
-      Utils.encodeInt64(3),
-      constants.SAMPLED_MASK
-    );
-
-    span = new Span(tracer, 'op-name', spanContext, tracer.now());
+    ({ reporter, tracer, span, spanContext } = _prepareObjects());
   });
 
   it('return span context when context() is called', () => {
@@ -85,9 +93,9 @@ describe('span should', () => {
   it('set debug and sampling flags through sampling priority via setTag', () => {
     span.setTag(opentracing.Tags.SAMPLING_PRIORITY, 3);
 
-    assert.isOk(span.context().isDebug());
-    assert.isOk(span.context().isSampled());
-    assert.isOk(
+    assert.isTrue(span.context().isDebug());
+    assert.isTrue(span.context().isSampled());
+    assert.isTrue(
       JaegerTestUtils.hasTags(span, {
         'sampling.priority': 3,
       })
@@ -99,9 +107,9 @@ describe('span should', () => {
     tags[opentracing.Tags.SAMPLING_PRIORITY] = 3;
     span.addTags(tags);
 
-    assert.isOk(span.context().isDebug());
-    assert.isOk(span.context().isSampled());
-    assert.isOk(
+    assert.isTrue(span.context().isDebug());
+    assert.isTrue(span.context().isSampled());
+    assert.isTrue(
       JaegerTestUtils.hasTags(span, {
         'sampling.priority': 3,
       })
@@ -111,7 +119,7 @@ describe('span should', () => {
   it('unset sampling on span via sampling priority', () => {
     span.setTag(opentracing.Tags.SAMPLING_PRIORITY, 0);
 
-    assert.isNotOk(span.context().isSampled());
+    assert.isFalse(span.context().isSampled());
   });
 
   it('add tags', () => {
@@ -132,7 +140,7 @@ describe('span should', () => {
       }
     }
 
-    assert.isOk(span._tags.length, 4);
+    assert.equal(span._tags.length, 4);
     assert.equal(count, 2);
   });
 
@@ -192,7 +200,7 @@ describe('span should', () => {
     let key = span._normalizeBaggageKey(unnormalizedKey);
 
     assert.equal(key, 'some-key');
-    assert.isOk(unnormalizedKey in Span._getBaggageHeaderCache());
+    assert.isTrue(unnormalizedKey in Span._getBaggageHeaderCache());
   });
 
   it('not be set to debug via setTag if throttled', () => {
@@ -201,8 +209,8 @@ describe('span should', () => {
 
     const prevTagLength = span._tags.length;
     span.setTag(opentracing.Tags.SAMPLING_PRIORITY, 1);
-    assert.isOk(span.context().samplingFinalized);
-    assert.isNotOk(span.context().isDebug());
+    assert.isTrue(span.context().samplingFinalized);
+    assert.isFalse(span.context().isDebug());
     assert.equal(
       prevTagLength,
       span._tags.length,
@@ -218,8 +226,8 @@ describe('span should', () => {
     const tags = {};
     tags[opentracing.Tags.SAMPLING_PRIORITY] = 1;
     span.addTags(tags);
-    assert.isOk(span.context().samplingFinalized);
-    assert.isNotOk(span.context().isDebug());
+    assert.isTrue(span.context().samplingFinalized);
+    assert.isFalse(span.context().isDebug());
     assert.equal(
       prevTagLength,
       span._tags.length,
@@ -233,8 +241,8 @@ describe('span should', () => {
     span = new Span(tracer, 'op-name', spanContext, tracer.now());
 
     span.setTag(opentracing.Tags.SAMPLING_PRIORITY, 1);
-    assert.isOk(span.context().samplingFinalized);
-    assert.isOk(span.context().isDebug());
+    assert.isTrue(span.context().samplingFinalized);
+    assert.isTrue(span.context().isDebug());
     assert.deepEqual(span._tags[span._tags.length - 1], { key: 'sampling.priority', value: 1 });
 
     const prevTagLength = span._tags.length;
@@ -244,166 +252,180 @@ describe('span should', () => {
     assert.equal(prevTagLength, span._tags.length, 'The sampling.priority tag should only be set once');
   });
 
-  describe('adaptive sampling tests for span', () => {
-    let options = [
-      { desc: 'sampled span: ', sampling: true, reportedSpans: 1 },
-      { desc: 'unsampled span: ', sampling: false, reportedSpans: 0 },
-    ];
-    _.each(options, o => {
-      it(o.desc + 'should save tags, and logs on an unsampled span incase it later becomes sampled', () => {
-        let reporter = new InMemoryReporter();
-        let tracer = new Tracer('test-service-name', reporter, new ConstSampler(false), {
-          logger: new MockLogger(),
-        });
-        let span = tracer.startSpan('initially-unsampled-span');
-        assert.ok(span._isWriteable(), 'span is writeable when created');
-        assert.equal(false, span.context().samplingFinalized, 'span is not finalized when created');
-        assert.ok(span._isWriteable(), 'span is writeable when created');
-        span.setTag('tagKeyOne', 'tagValueOne');
-        span.addTags({
-          tagKeyTwo: 'tagValueTwo',
-        });
-        assert.ok(span._isWriteable(), 'span is writeable after setting tags');
-        span.log({ logkeyOne: 'logValueOne' });
-
-        tracer._sampler = adaptSamplerOrThrow(new ConstSampler(o.sampling));
-        span.setOperationName('sampled-span');
-        span.finish();
-
-        assert.deepEqual(span._tags[0], { key: 'tagKeyOne', value: 'tagValueOne' });
-        assert.deepEqual(span._tags[1], { key: 'tagKeyTwo', value: 'tagValueTwo' });
-        assert.deepEqual(span._logs[0].fields[0], { key: 'logkeyOne', value: 'logValueOne' });
-        assert.equal(reporter.spans.length, o.reportedSpans);
-      });
-    });
-
-    describe('span sampling finalizer', () => {
-      it('should trigger when it inherits a sampling decision', () => {
-        assert.equal(span.context().samplingFinalized, false, 'Span created in before each is not finalized');
-
-        let childSpan = tracer.startSpan('child-span', { childOf: span });
-        assert.isOk(span.context().samplingFinalized);
-        assert.isOk(childSpan.context().samplingFinalized);
-      });
-
-      it('should trigger when it sets the sampling priority', () => {
-        // Span created in before each is not finalized.
-        assert.equal(span.context().samplingFinalized, false);
-
-        span.setTag(opentracing.Tags.SAMPLING_PRIORITY, 1);
-        assert.isOk(span.context().samplingFinalized);
-        assert.deepEqual(span._tags[span._tags.length - 1], { key: 'sampling.priority', value: 1 });
-
-        const unsampledSpan = tracer.startSpan('unsampled-span');
-        const prevTagLength = span._tags.length;
-        unsampledSpan.setTag(opentracing.Tags.SAMPLING_PRIORITY, -1);
-        assert.isOk(unsampledSpan.context().samplingFinalized);
-        assert.equal(
-          prevTagLength,
-          span._tags.length,
-          'The sampling.priority tag should not be set if span is finalized and not sampled'
-        );
-      });
-
-      it('should trigger on a finish()-ed span', () => {
-        // Span created in before each is not finalized.
-        assert.equal(span.context().samplingFinalized, false);
-
-        span.finish();
-        assert.isOk(span.context().samplingFinalized);
-      });
-
-      it('should trigger after calling setOperationName', () => {
-        // Span created in before each is not finalized.
-        assert.equal(span.context().samplingFinalized, false);
-
-        span.setOperationName('fry');
-        assert.isOk(span.context().samplingFinalized);
-      });
-
-      it('should trigger when its context is injected into headers', () => {
-        // Span created in before each is not finalized.
-        assert.equal(span.context().samplingFinalized, false);
-
-        let headers = {};
-        tracer.inject(span.context(), opentracing.FORMAT_HTTP_HEADERS, headers);
-
-        assert.isOk(span.context().samplingFinalized);
-      });
-    });
-
-    it('isWriteable returns true if not finalized, or the span is sampled', () => {
-      tracer = new Tracer('test-service-name', new InMemoryReporter(), new ConstSampler(false), {
-        logger: new MockLogger(),
-      });
-      let unFinalizedSpan = tracer.startSpan('unFinalizedSpan');
-      assert.equal(false, unFinalizedSpan.context().samplingFinalized);
-      assert.equal(true, unFinalizedSpan._isWriteable());
-
-      tracer._sampler = adaptSamplerOrThrow(new ConstSampler(true));
-      let sampledSpan = tracer.startSpan('sampled-span');
-      assert.equal(true, sampledSpan.context().isSampled());
-      sampledSpan.finish(); // finalizes the span
-      assert.equal(true, sampledSpan.context().samplingFinalized);
-      assert.equal(true, sampledSpan._isWriteable());
-    });
-
-    it('2nd setOperationName should add sampler tags to span, and change operationName', () => {
-      tracer = new Tracer('test-service-name', new InMemoryReporter(), new ConstSampler(true), {
-        logger: new MockLogger(),
-      });
-      let span = tracer.startSpan('fry');
-
-      assert.equal(span.operationName, 'fry');
-      assert.isOk(
-        JaegerTestUtils.hasTags(span, {
-          'sampler.type': 'const',
-          'sampler.param': true,
-        })
-      );
-      tracer._sampler = adaptSamplerOrThrow(new ProbabilisticSampler(1.0));
-      span.setOperationName('re-sampled-span');
-
-      assert.equal(span.operationName, 're-sampled-span');
-      assert.isOk(
-        JaegerTestUtils.hasTags(span, {
-          'sampler.type': 'probabilistic',
-          'sampler.param': 1,
-        })
-      );
-    });
-
-    it('2nd setOperationName should not change the sampling tags, but should change the operationName', () => {
-      let span = tracer.startSpan('fry');
-
-      span.setOperationName('new-span-one');
-      assert.equal(span.operationName, 'new-span-one');
-
-      // update sampler to something will always sample
-      tracer._sampler = adaptSamplerOrThrow(new ProbabilisticSampler(1.0));
-
-      // The second cal lshould rename the operation name, but
-      // not re-sample the span.  This is because finalize was set
-      // in the first 'setOperationName' call.
-      span.setOperationName('new-span-two');
-
-      assert.equal(span.operationName, 'new-span-two');
-      assert.isOk(
-        JaegerTestUtils.hasTags(span, {
-          'sampler.type': 'const',
-          'sampler.param': true,
-        })
-      );
-    });
-  });
-
   describe('setTag', () => {
     it('should set a tag, and return a span', () => {
       let newSpan = span.setTag('key', 'value');
-      assert.isOk(newSpan instanceof Span);
-      assert.isOk(_.isEqual(span._tags[0], { key: 'key', value: 'value' }));
+      assert.isTrue(newSpan instanceof Span);
+      assert.isTrue(JaegerTestUtils.hasTags(span, { key: 'value' }));
     });
   });
 
   // TODO(oibe) need tests for standard tags, and handlers
+});
+
+describe('sampling finalizer', () => {
+  var reporter, tracer, span, spanContext;
+
+  beforeEach(() => {
+    ({ reporter, tracer, span, spanContext } = _prepareObjects());
+  });
+
+  class RetryableSampler extends BaseSamplerV2 {
+    _decision: boolean;
+    constructor(decision: boolean) {
+      super('RetryableSampler');
+      this._decision = decision;
+    }
+    _tags(): {} {
+      return {
+        'sampler.type': 'const',
+        'sampler.param': this._decision,
+      };
+    }
+    onCreateSpan(span: Span): SamplingDecision {
+      return { sample: this._decision, retryable: true, tags: this._tags() };
+    }
+    onSetOperationName(span: Span, operationName: string): SamplingDecision {
+      return { sample: this._decision, retryable: false, tags: this._tags() };
+    }
+    onSetTag(span: Span, key: string, value: any): SamplingDecision {
+      return { sample: this._decision, retryable: true, tags: this._tags() };
+    }
+  }
+
+  it('should keep the span writeable', () => {
+    let tracer = new Tracer('test-service-name', reporter, new RetryableSampler(false));
+    let span = tracer.startSpan('initially-unsampled-span');
+    assert.isTrue(span._isWriteable(), 'span is writeable when created');
+    assert.isFalse(span.context().samplingFinalized, 'span is not finalized when created');
+    span.setTag('tagKeyOne', 'tagValueOne');
+    span.addTags({
+      tagKeyTwo: 'tagValueTwo',
+    });
+    span.log({ logkeyOne: 'logValueOne' });
+    assert.isTrue(span._isWriteable(), 'span is writeable after setting tags');
+    assert.isTrue(
+      JaegerTestUtils.hasTags(
+        span,
+        {
+          tagKeyOne: 'tagValueOne',
+          tagKeyTwo: 'tagValueTwo',
+        },
+        'matching tags'
+      )
+    );
+    assert.deepEqual(span._logs[0].fields[0], { key: 'logkeyOne', value: 'logValueOne' });
+  });
+
+  it('should make span non-writeable when sampler returns retryable=false', () => {
+    let tracer = new Tracer('test-service-name', reporter, new RetryableSampler(false));
+    let span = tracer.startSpan('initially-unsampled-span');
+    assert.isTrue(span._isWriteable(), 'span is writeable when created');
+    assert.isFalse(span.context().samplingFinalized, 'span is not finalized when created');
+    // note: RetryableSampler returns retryable=false from onSetOperation()
+    span.setOperationName('replace-op-name');
+    assert.isFalse(span._isWriteable(), 'span is writeable after setting tags');
+    assert.isTrue(span.context().samplingFinalized, 'span is not finalized when created');
+  });
+
+  it('should share sampling state with children spans', () => {
+    let tracer = new Tracer('test-service-name', reporter, new RetryableSampler(false));
+    let span = tracer.startSpan('initially-unsampled-span');
+    assert.equal(span.context().samplingFinalized, false, 'new unsampled span is not finalized');
+
+    let childSpan = tracer.startSpan('child-span', { childOf: span });
+    assert.isFalse(span.context().samplingFinalized);
+    assert.isFalse(childSpan.context().samplingFinalized);
+  });
+
+  it('should trigger when it sets the sampling priority', () => {
+    assert.isFalse(span.context().samplingFinalized, 'manual span is not finalized');
+
+    span.setTag(opentracing.Tags.SAMPLING_PRIORITY, 1);
+    assert.isTrue(span.context().samplingFinalized);
+    assert.deepEqual(span._tags[span._tags.length - 1], { key: 'sampling.priority', value: 1 });
+
+    const unsampledSpan = tracer.startSpan('unsampled-span');
+    const prevTagLength = span._tags.length;
+    unsampledSpan.setTag(opentracing.Tags.SAMPLING_PRIORITY, -1);
+    assert.isTrue(unsampledSpan.context().samplingFinalized);
+    assert.equal(
+      prevTagLength,
+      span._tags.length,
+      'The sampling.priority tag should not be set if span is finalized and not sampled'
+    );
+  });
+
+  it('should finalize the span sampled with V1 sampler', () => {
+    let span = tracer.startSpan('test');
+    assert.isTrue(span.context().samplingFinalized, 'finalized');
+  });
+
+  it('should not trigger on a finish()-ed span', () => {
+    assert.isFalse(span.context().samplingFinalized, 'manual span is not finalized');
+    span.finish();
+    assert.isFalse(span.context().samplingFinalized, 'finished span may remain unfinalized');
+  });
+
+  it('should trigger after calling setOperationName with V1 sampler', () => {
+    assert.isFalse(span.context().samplingFinalized, 'manual span is not finalized');
+    span.setOperationName('fry');
+    assert.isTrue(span.context().samplingFinalized, 'finalized by V1 sampler');
+  });
+
+  it('should not trigger when its context is injected into headers', () => {
+    assert.isFalse(span.context().samplingFinalized, 'manual span is not finalized');
+
+    let headers = {};
+    tracer.inject(span.context(), opentracing.FORMAT_HTTP_HEADERS, headers);
+
+    assert.isFalse(span.context().samplingFinalized, 'remains unfinalized after inject()');
+  });
+
+  it('should finalize the child span created with remote parent', () => {
+    let tracer = new Tracer('test-service-name', reporter, new RetryableSampler(false));
+    let span = tracer.startSpan('test');
+    assert.isFalse(span.context().samplingFinalized, 'new root span not finalized');
+    let span2 = tracer.startSpan('test2', { childOf: span.context() });
+    assert.isFalse(span2.context().samplingFinalized, 'child span not finalized');
+    let carrier = {};
+    tracer.inject(span2.context(), opentracing.FORMAT_HTTP_HEADERS, carrier);
+    let ctx = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, carrier);
+    console.log(ctx);
+    assert.isTrue(ctx.isRemote(), 'extracted context is "remote"');
+    let span3 = tracer.startSpan('test2', { childOf: ctx });
+    assert.isTrue(span3.context().samplingFinalized, 'child span of remote parent is finalized');
+  });
+
+  it('should keep isWriteable=true if span is sampled or not finalized', () => {
+    let tracer = new Tracer('test-service-name', reporter, new RetryableSampler(false));
+    let span = tracer.startSpan('initially-unsampled-span');
+    assert.isFalse(span.context().samplingFinalized, 'not finalized');
+    assert.isFalse(span.context().isSampled(), 'not sampled');
+    assert.isTrue(span._isWriteable());
+
+    tracer._sampler = adaptSamplerOrThrow(new ConstSampler(true));
+    let sampledSpan = tracer.startSpan('sampled-span');
+    assert.isTrue(sampledSpan.context().isSampled(), 'sampled');
+    assert.isTrue(sampledSpan.context().samplingFinalized, 'finalized');
+    assert.isTrue(sampledSpan._isWriteable(), 'writeable');
+  });
+
+  it('should allow 2nd setOperationName to change operationName, but not to affect sampling', () => {
+    let span = tracer.startSpan('fry');
+    assert.equal(span.operationName, 'fry');
+    assert.isTrue(span._spanContext.isSampled());
+    assert.isTrue(span._spanContext.samplingFinalized);
+    assert.isTrue(
+      JaegerTestUtils.hasTags(span, {
+        'sampler.type': 'const',
+        'sampler.param': true,
+      })
+    );
+    tracer._sampler = adaptSamplerOrThrow(new ProbabilisticSampler(1.0));
+    span._tags = []; // JaegerTestUtils.hasTags() below doesn't work with dupes
+    span.setOperationName('re-sampled-span');
+    assert.equal(span.operationName, 're-sampled-span');
+    assert.equal(0, span._tags.length);
+  });
 });

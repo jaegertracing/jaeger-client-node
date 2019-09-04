@@ -255,7 +255,9 @@ export default class Tracer {
       hasValidParent = true;
       let spanId = Utils.getRandom64();
       ctx = parent._makeChildContext(spanId);
-      ctx.finalizeSampling(); // will finalize sampling for all spans sharing this traceId
+      if (parent.isRemote()) {
+        ctx.finalizeSampling(); // will finalize sampling for all spans sharing this traceId
+      }
     }
 
     const isRpcServer = Boolean(userTags && userTags[otTags.SPAN_KIND] === otTags.SPAN_KIND_RPC_SERVER);
@@ -291,7 +293,6 @@ export default class Tracer {
       throw new Error(`Unsupported format: ${format}`);
     }
     const _context = spanContext instanceof Span ? spanContext.context() : spanContext;
-    _context.finalizeSampling();
     injector.inject(_context, carrier);
   }
 
@@ -312,7 +313,7 @@ export default class Tracer {
     }
     const spanContext = extractor.extract(carrier);
     if (spanContext) {
-      spanContext.finalizeSampling();
+      spanContext._setRemote(true);
     }
     return spanContext;
   }

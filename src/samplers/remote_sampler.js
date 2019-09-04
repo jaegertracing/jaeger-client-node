@@ -12,11 +12,13 @@
 // the License.
 
 import url from 'url';
-import ProbabilisticSampler from './probabilistic_sampler.js';
-import RateLimitingSampler from './ratelimiting_sampler.js';
-import PerOperationSampler from './per_operation_sampler.js';
-import Metrics from '../metrics/metrics.js';
-import NullLogger from '../logger.js';
+import { SAMPLER_API_V2 } from './constants';
+import { adaptSamplerOrThrow } from './_adapt_sampler';
+import ProbabilisticSampler from './probabilistic_sampler';
+import RateLimitingSampler from './rate_limiting_sampler';
+import PerOperationSampler from './per_operation_sampler';
+import Metrics from '../metrics/metrics';
+import NullLogger from '../logger';
 import NoopMetricFactory from '../metrics/noop/metric_factory';
 import Utils from '../util';
 
@@ -26,11 +28,12 @@ const DEFAULT_MAX_OPERATIONS = 2000;
 const DEFAULT_SAMPLING_HOST = '0.0.0.0';
 const DEFAULT_SAMPLING_PORT = 5778;
 const PROBABILISTIC_STRATEGY_TYPE = 'PROBABILISTIC';
-const RATELIMITING_STRATEGY_TYPE = 'RATE_LIMITING';
+const RATE_LIMITING_STRATEGY_TYPE = 'RATE_LIMITING';
 
-export default class RemoteControlledSampler implements LegacySamplerV1 {
+export default class RemoteControlledSampler implements Sampler {
+  apiVersion = SAMPLER_API_V2;
   _serviceName: string;
-  _sampler: LegacySamplerV1;
+  _sampler: Sampler;
   _logger: Logger;
   _metrics: Metrics;
 
@@ -61,7 +64,9 @@ export default class RemoteControlledSampler implements LegacySamplerV1 {
    */
   constructor(serviceName: string, options: any = {}) {
     this._serviceName = serviceName;
-    this._sampler = options.sampler || new ProbabilisticSampler(DEFAULT_INITIAL_SAMPLING_RATE);
+    this._sampler = adaptSamplerOrThrow(
+      options.sampler || new ProbabilisticSampler(DEFAULT_INITIAL_SAMPLING_RATE)
+    );
     this._logger = options.logger || new NullLogger();
     this._metrics = options.metrics || new Metrics(new NoopMetricFactory());
     this._refreshInterval = options.refreshInterval || DEFAULT_REFRESH_INTERVAL;
@@ -107,7 +112,7 @@ export default class RemoteControlledSampler implements LegacySamplerV1 {
   _refreshSamplingStrategy() {
     let serviceName: string = encodeURIComponent(this._serviceName);
     const success: Function = body => {
-      this._parseSamplingServerResponse(body);
+      this._handleSamplingServerResponse(body);
     };
     const error: Function = err => {
       this._logger.error(`Error in fetching sampling strategy: ${err}.`);
@@ -116,7 +121,7 @@ export default class RemoteControlledSampler implements LegacySamplerV1 {
     Utils.httpGet(this._host, this._port, `/sampling?service=${serviceName}`, success, error);
   }
 
-  _parseSamplingServerResponse(body: string) {
+  _handleSamplingServerResponse(body: string) {
     this._metrics.samplerRetrieved.increment(1);
     let strategy;
     try {
@@ -152,11 +157,15 @@ export default class RemoteControlledSampler implements LegacySamplerV1 {
       this._sampler = new PerOperationSampler(response.operationSampling, this._maxOperations);
       return true;
     }
-    let newSampler: LegacySamplerV1;
     if (response.strategyType === PROBABILISTIC_STRATEGY_TYPE && response.probabilisticSampling) {
       let samplingRate = response.probabilisticSampling.samplingRate;
-      newSampler = new ProbabilisticSampler(samplingRate);
-    } else if (response.strategyType === RATELIMITING_STRATEGY_TYPE && response.rateLimitingSampling) {
+      if (this._sampler instanceof ProbabilisticSampler) {
+        return this._sampler.update(samplingRate);
+      }
+      this._sampler = new ProbabilisticSampler(samplingRate);
+      return true;
+    }
+    if (response.strategyType === RATE_LIMITING_STRATEGY_TYPE && response.rateLimitingSampling) {
       let maxTracesPerSecond = response.rateLimitingSampling.maxTracesPerSecond;
       if (this._sampler instanceof RateLimitingSampler) {
         let sampler: RateLimitingSampler = this._sampler;
@@ -164,23 +173,21 @@ export default class RemoteControlledSampler implements LegacySamplerV1 {
       }
       this._sampler = new RateLimitingSampler(maxTracesPerSecond);
       return true;
-    } else {
-      throw 'Malformed response: ' + JSON.stringify(response);
     }
 
-    if (this._sampler.equal(newSampler)) {
-      return false;
-    }
-    this._sampler = newSampler;
-    return true;
+    throw 'Malformed response: ' + JSON.stringify(response);
   }
 
-  isSampled(operation: string, tags: any): boolean {
-    return this._sampler.isSampled(operation, tags);
+  onCreateSpan(span: Span): SamplingDecision {
+    return this._sampler.onCreateSpan(span);
   }
 
-  equal(other: LegacySamplerV1): boolean {
-    return false;
+  onSetOperationName(span: Span, operationName: string): SamplingDecision {
+    return this._sampler.onSetOperationName(span, operationName);
+  }
+
+  onSetTag(span: Span, key: string, value: any): SamplingDecision {
+    return this._sampler.onSetTag(span, key, value);
   }
 
   close(callback: ?Function): void {

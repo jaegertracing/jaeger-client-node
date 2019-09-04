@@ -13,7 +13,7 @@
 
 import { assert, expect } from 'chai';
 import ProbabilisticSampler from '../../src/samplers/probabilistic_sampler.js';
-import RateLimitingSampler from '../../src/samplers/ratelimiting_sampler.js';
+import RateLimitingSampler from '../../src/samplers/rate_limiting_sampler.js';
 import sinon from 'sinon';
 
 describe('RateLimitingSampler should', () => {

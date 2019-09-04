@@ -12,7 +12,7 @@
 
 import ConstSampler from './samplers/const_sampler';
 import ProbabilisticSampler from './samplers/probabilistic_sampler';
-import RateLimitingSampler from './samplers/ratelimiting_sampler';
+import RateLimitingSampler from './samplers/rate_limiting_sampler';
 import RemoteReporter from './reporters/remote_reporter';
 import CompositeReporter from './reporters/composite_reporter';
 import LoggingReporter from './reporters/logging_reporter';

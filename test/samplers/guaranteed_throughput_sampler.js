@@ -34,8 +34,8 @@ describe('GuaranteedThroughput sampler', () => {
 
   it('should equal itself', () => {
     let sampler = new GuaranteedThroughputSampler(2, 0);
-    assert.isOk(sampler.equal(sampler));
-    assert.isOk(sampler.equal(new GuaranteedThroughputSampler(2, 0)));
+    assert.isTrue(sampler.equal(sampler));
+    assert.isTrue(sampler.equal(new GuaranteedThroughputSampler(2, 0)));
     sampler.close();
   });
 
@@ -65,10 +65,10 @@ describe('GuaranteedThroughput sampler', () => {
     sampler.close();
   });
 
-  let assertValues = function assertValues(sampler, lb, rate) {
+  function assertValues(sampler, lb, rate) {
     assert.equal(lb, sampler._lowerBoundSampler.maxTracesPerSecond);
     assert.equal(rate, sampler._probabilisticSampler.samplingRate);
-  };
+  }
 
   it('should not change when update() called with the same values', () => {
     let sampler = new GuaranteedThroughputSampler(2, 1.0);

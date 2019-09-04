@@ -56,6 +56,10 @@ export default class Span {
     return this._tracer._serviceName;
   }
 
+  getTags(): Array<Tag> {
+    return this._tags;
+  }
+
   static _getBaggageHeaderCache() {
     if (!Span._baggageHeaderCache) {
       Span._baggageHeaderCache = {};
@@ -192,7 +196,6 @@ export default class Span {
       return;
     }
 
-    this._spanContext.finalizeSampling();
     if (this._spanContext.isSampled()) {
       let endTime = finishTime || this._tracer.now();
       this._duration = endTime - this._startTime;
