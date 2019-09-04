@@ -64,15 +64,6 @@ export default class TagEqualsSampler extends BaseSamplerV2 {
     return new TagEqualsSampler(key, matchers);
   }
 
-  _findTag(tags: Array<Tag>): ?Tag {
-    for (let i = 0; i < tags.length; i++) {
-      if (tags[i].key === this._tagKey) {
-        return tags[i];
-      }
-    }
-    return null;
-  }
-
   _createOutTags(tagValue: string): { [string]: string } {
     return {
       'sampler.type': 'TagEqualsSampler',
@@ -92,15 +83,12 @@ export default class TagEqualsSampler extends BaseSamplerV2 {
   }
 
   onCreateSpan(span: Span): SamplingDecision {
-    const tag: ?Tag = this._findTag(span.getTags());
-    if (tag) {
-      return this._decide(span, tag.value);
-    }
+    // onCreateSpan is called on a brand new span that has no tags yet, so nothing to do here.
     return this._undecided;
   }
 
   onSetOperationName(span: Span, operationName: string): SamplingDecision {
-    // this sampler is not sensitive to operationName, so no reason to re-evaluate the tags.
+    // this sampler is not sensitive to operationName, so nothing to do here.
     return this._undecided;
   }
 

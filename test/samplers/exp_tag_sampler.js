@@ -16,25 +16,20 @@ import sinon from 'sinon';
 import * as opentracing from 'opentracing';
 import Span from '../../src/span';
 import Utils from '../../src/util';
-import ConstSampler from '../../src/samplers/const_sampler';
 import TagEqualsSampler from '../../src/samplers/experimental/tag_equals_sampler';
-import PrioritySampler from '../../src/samplers/experimental/priority_sampler';
 import InMemoryReporter from '../../src/reporters/in_memory_reporter';
 import Tracer from '../../src/tracer';
-import BaseSamplerV2 from '../../src/samplers/v2/base';
 
-describe('PrioritySampler with TagSampler', () => {
+describe('TagSampler', () => {
   const tagSampler = new TagEqualsSampler('theWho', [
     { tagValue: 'Bender', firehose: false },
     { tagValue: 'Leela', firehose: true },
   ]);
-  const constSampler = new ConstSampler(false);
-  const priSampler = new PrioritySampler([tagSampler, constSampler]);
   const reporter = new InMemoryReporter();
-  const tracer = new Tracer('test-service-name', reporter, priSampler);
+  const tracer = new Tracer('test-service-name', reporter, tagSampler);
 
   it('should not sample or finalize new span without tags and after setOperation', () => {
-    let span = tracer.startSpan('opName', { tags: { theWho: 'Fry' } }); // NB: wrong tag value used
+    let span = tracer.startSpan('opName', { tags: { theWho: 'Fry' } }); // wrong tag value
     assert.isFalse(span._spanContext.isSampled(), 'sampled');
     assert.isFalse(span._spanContext.samplingFinalized, 'finalized');
     span.setOperationName('opName2');
@@ -44,6 +39,8 @@ describe('PrioritySampler with TagSampler', () => {
 
   it('should sample and finalize created span with tag', () => {
     let span = tracer.startSpan('opName', { tags: { theWho: 'Bender' } });
+    console.log('span has tags');
+    console.log(span.getTags());
     assert.isTrue(span._spanContext.isSampled(), 'sampled');
     assert.isTrue(span._spanContext.samplingFinalized, 'finalized');
   });
@@ -54,6 +51,10 @@ describe('PrioritySampler with TagSampler', () => {
       t.firehose
     )}`, () => {
       let span = tracer.startSpan('opName');
+      assert.isFalse(span._spanContext.isSampled(), 'sampled');
+      assert.isFalse(span._spanContext.samplingFinalized, 'finalized');
+      span.setTag('theTag', 'Fry'); // wrong tag key
+      span.setTag('theWho', 'Fry'); // wrong tag value
       assert.isFalse(span._spanContext.isSampled(), 'sampled');
       assert.isFalse(span._spanContext.samplingFinalized, 'finalized');
       span.setTag('theWho', t.who);
@@ -68,33 +69,5 @@ describe('PrioritySampler with TagSampler', () => {
     let span2 = tracer.startSpan('opName2', { childOf: span.context() });
     assert.isFalse(span._spanContext.isSampled(), 'sampled');
     assert.isFalse(span._spanContext.samplingFinalized, 'finalized');
-  });
-
-  it('should not sample or finalize span after serializing context', () => {
-    let span = tracer.startSpan('opName');
-    let carrier = {};
-    tracer.inject(span.context(), opentracing.FORMAT_TEXT_MAP, carrier);
-    assert.isOk(carrier);
-    assert.isFalse(span._spanContext.isSampled(), 'sampled');
-    assert.isFalse(span._spanContext.samplingFinalized, 'finalized');
-  });
-
-  it('should delegate calls to close() and invoke a callback', () => {
-    let s1: any = new BaseSamplerV2('s1');
-    let s2: any = new BaseSamplerV2('s2');
-    s1.close = c => {
-      s1._closed = true;
-      c();
-    };
-    s2.close = c => {
-      s2._closed = true;
-      c();
-    };
-    let callback = sinon.spy();
-    let priSampler = new PrioritySampler([s1, s2]);
-    priSampler.close(callback);
-    assert.isTrue(s1._closed);
-    assert.isTrue(s1._closed);
-    assert.isTrue(callback.calledOnce);
   });
 });
