@@ -60,9 +60,8 @@ export default class SpanContext {
       if (this._traceIdStr.length === traceIdExactLength) {
         this._traceId = Utils.newBufferFromHex(this._traceIdStr);
       } else {
-        const paddings = ['0000000000000000', '00000000000000000000000000000000'];
-        const paddingIndex = traceIdExactLength === 16 ? 0 : 1;
-        const safeTraceIdStr = (paddings[paddingIndex] + this._traceIdStr).slice(-traceIdExactLength);
+        const padding = traceIdExactLength === 16 ? '0000000000000000' : '00000000000000000000000000000000';
+        const safeTraceIdStr = (padding + this._traceIdStr).slice(-traceIdExactLength);
         this._traceId = Utils.newBufferFromHex(safeTraceIdStr);
       }
     }
