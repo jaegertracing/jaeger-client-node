@@ -32,16 +32,16 @@ describe('extended remote sampler', () => {
     }
 
     _updateSampler(strategy: any): boolean {
-      if (strategy.strategyType == 'extended' && strategy.tagEqualsStrategy) {
+      if (strategy.tagEqualsStrategy) {
         let tagSampler = TagEqualsSampler.fromStrategy(strategy.tagEqualsStrategy);
         if (this._sampler instanceof PrioritySampler) {
           this._sampler = this._sampler._delegates[1];
         }
-        super._updateSampler(strategy);
+        super._updateSampler(strategy.classicStrategy);
         this._sampler = new PrioritySampler([tagSampler, this._sampler]);
         return true;
       }
-      return super._updateSampler(strategy);
+      return super._updateSampler(strategy.classicStrategy);
     }
   }
 
@@ -75,7 +75,6 @@ describe('extended remote sampler', () => {
 
   it('should parse extended strategy response', function(done) {
     server.addStrategy('service1', {
-      strategyType: 'extended',
       tagEqualsStrategy: {
         key: 'theTag',
         values: {
@@ -87,17 +86,19 @@ describe('extended remote sampler', () => {
           },
         },
       },
-      operationSampling: {
-        defaultLowerBoundTracesPerSecond: 0,
-        defaultSamplingProbability: 0,
-        perOperationStrategies: [
-          {
-            operation: 'op1',
-            probabilisticSampling: {
-              samplingRate: 0,
+      classicStrategy: {
+        operationSampling: {
+          defaultLowerBoundTracesPerSecond: 0,
+          defaultSamplingProbability: 0,
+          perOperationStrategies: [
+            {
+              operation: 'op1',
+              probabilisticSampling: {
+                samplingRate: 0,
+              },
             },
-          },
-        ],
+          ],
+        },
       },
     });
     remoteSampler._onSamplerUpdate = s => {
