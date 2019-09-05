@@ -27,6 +27,7 @@ const DEFAULT_REFRESH_INTERVAL = 60000;
 const DEFAULT_MAX_OPERATIONS = 2000;
 const DEFAULT_SAMPLING_HOST = '0.0.0.0';
 const DEFAULT_SAMPLING_PORT = 5778;
+const DEFAULT_SAMPLING_PATH = '/sampling';
 const PROBABILISTIC_STRATEGY_TYPE = 'PROBABILISTIC';
 const RATE_LIMITING_STRATEGY_TYPE = 'RATE_LIMITING';
 
@@ -40,6 +41,7 @@ export default class RemoteControlledSampler implements Sampler {
   _refreshInterval: number;
   _host: string;
   _port: number;
+  _samplingPath: string;
   _maxOperations: number;
 
   _onSamplerUpdate: ?Function;
@@ -59,6 +61,7 @@ export default class RemoteControlledSampler implements Sampler {
    * @param {string} [options.hostPort] - host and port for jaeger-agent, defaults to 'localhost:5778'
    * @param {string} [options.host] - host for jaeger-agent, defaults to 'localhost'
    * @param {number} [options.port] - port for jaeger-agent for SamplingManager endpoint
+   * @param {string} [options.samplingPath] - path on jaeger-agent for SamplingManager endpoint
    * @param {number} [options.maxOperations] - max number of operations to track in PerOperationSampler
    * @param {function} [options.onSamplerUpdate]
    */
@@ -77,6 +80,7 @@ export default class RemoteControlledSampler implements Sampler {
       this._host = options.host || DEFAULT_SAMPLING_HOST;
       this._port = options.port || DEFAULT_SAMPLING_PORT;
     }
+    this._samplingPath = options.samplingPath || DEFAULT_SAMPLING_PATH;
     this._onSamplerUpdate = options.onSamplerUpdate;
 
     if (options.refreshInterval !== 0) {
@@ -118,7 +122,7 @@ export default class RemoteControlledSampler implements Sampler {
       this._logger.error(`Error in fetching sampling strategy: ${err}.`);
       this._metrics.samplerQueryFailure.increment(1);
     };
-    Utils.httpGet(this._host, this._port, `/sampling?service=${serviceName}`, success, error);
+    Utils.httpGet(this._host, this._port, `${this._samplingPath}?service=${serviceName}`, success, error);
   }
 
   _handleSamplingServerResponse(body: string) {
