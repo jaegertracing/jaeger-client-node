@@ -256,12 +256,11 @@ describe('RemoteSampler', () => {
     assert.deepEqual([span, 'pi', 3.1415], mockSampler._onSetTag);
   });
 
-  it ('should support setting a custom path for sampling endpoint', done => {
+  it('should support setting a custom path for sampling endpoint', () => {
     let samplingPath = '/custom-sampling-path';
-    let remoteSampler = new RemoteSampler('service1', {
-      samplingPath: samplingPath
+    let rs = new RemoteSampler('service1', {
+      samplingPath: samplingPath,
     });
-    assert.equal(remoteSampler._samplingPath, samplingPath);
-    remoteSampler.close();
+    assert.equal(rs._samplingPath, samplingPath);
   });
 });

@@ -80,9 +80,7 @@ export default class RemoteControlledSampler implements Sampler {
       this._host = options.host || DEFAULT_SAMPLING_HOST;
       this._port = options.port || DEFAULT_SAMPLING_PORT;
     }
-    if (options.samplingPath) {
-      this._samplingPath = options.samplingPath|| DEFAULT_SAMPLING_PATH;
-    }
+    this._samplingPath = options.samplingPath || DEFAULT_SAMPLING_PATH;
     this._onSamplerUpdate = options.onSamplerUpdate;
 
     if (options.refreshInterval !== 0) {
