@@ -41,7 +41,7 @@ export default class SpanContext {
   ) {
     this._traceId = traceId;
     this._spanId = spanId;
-    this._parentId = parentId;
+    this._parentId = parentId || null;
     this._traceIdStr = traceIdStr;
     this._spanIdStr = spanIdStr;
     this._parentIdStr = parentIdStr;

@@ -163,7 +163,7 @@ describe('tracer should', () => {
     });
 
     assert.equal(span.context().traceId, span.context().spanId);
-    assert.isNotOk(span.context().parentId);
+    assert.equal(span.context().parentId, null);
     assert.isOk(span.context().isSampled());
     assert.equal(span._startTime, startTime);
   });
