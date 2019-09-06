@@ -91,7 +91,7 @@ describe('tracer should', () => {
     let rootSpan = tracer.startSpan('fry', { childOf: spanContext });
 
     assert.isOk(rootSpan.context().traceId);
-    assert.isNotOk(rootSpan.context().parentId);
+    assert.isNull(rootSpan.context().parentId);
     assert.equal(rootSpan.context().flags, 1);
     assert.equal('Bender', rootSpan.getBaggageItem('robot'));
     assert.equal('Leela', rootSpan.getBaggageItem('female'));

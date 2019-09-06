@@ -41,8 +41,8 @@ describe('TestUtils', () => {
     span.addTags(tags);
 
     assert.isOk(TestUtils.hasTags(span, tags));
-    assert.isNotOk(TestUtils.hasTags(span, { k: 'v' }));
-    assert.isNotOk(TestUtils.hasTags(span, { keyOne: 'valueTwo' }));
+    assert.isFalse(TestUtils.hasTags(span, { k: 'v' }));
+    assert.isFalse(TestUtils.hasTags(span, { keyOne: 'valueTwo' }));
   });
 
   it('should support getTags', () => {

@@ -152,7 +152,7 @@ describe('udp sender', () => {
           if (o.expectedParentId) {
             assert.deepEqual(batch.spans[0].parentId, o.expectedParentId);
           } else {
-            assert.isNotOk(batch.spans[0].parentId);
+            assert.isUndefined(batch.spans[0].parentId);
           }
 
           sender.close();

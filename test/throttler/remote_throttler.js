@@ -66,7 +66,7 @@ describe('RemoteThrottler should', () => {
       assert.equal(LocalBackend.counterValue(metrics.throttledDebugSpans), 1);
       done();
     };
-    assert.isNotOk(throttler.isAllowed(operation));
+    assert.isFalse(throttler.isAllowed(operation));
     throttler._refreshCredits();
   });
 
@@ -86,18 +86,18 @@ describe('RemoteThrottler should', () => {
   });
 
   it("return false for _isAllowed if operation isn't in _credits or operation has no credits", () => {
-    assert.isNotOk(
+    assert.isFalse(
       throttler._isAllowed(operation),
       'operation is not set so operation should not be allowed'
     );
     throttler._credits[operation] = 0;
-    assert.isNotOk(throttler._isAllowed(operation), 'operation is set but lacks credit');
+    assert.isFalse(throttler._isAllowed(operation), 'operation is set but lacks credit');
     assert.equal(LocalBackend.counterValue(metrics.throttledDebugSpans), 2);
   });
 
   it("return false for isAllowed if operation doesn't have enough credits", () => {
     throttler._credits[operation] = 0.5;
-    assert.isNotOk(throttler._isAllowed(operation));
+    assert.isFalse(throttler._isAllowed(operation));
     assert.equal(LocalBackend.counterValue(metrics.throttledDebugSpans), 1);
   });
 

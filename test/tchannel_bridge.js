@@ -104,7 +104,7 @@ describe('test tchannel span bridge', () => {
         let tracedChannel = bridge.tracedChannel(encodedChannel);
 
         let clientCallback = (err, res, headers, body) => {
-          assert.isNotOk(err);
+          assert.isNull(err);
           assert.equal(reporter.spans.length, 2);
 
           // the first span to be reported is the server span

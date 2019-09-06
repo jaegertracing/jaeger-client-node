@@ -86,9 +86,9 @@ describe('Zipkin B3 Text Map Codec should', () => {
       let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, testCase);
 
       assert.isOk(context);
-      assert.isNotOk(context.spanIdStr);
-      assert.isNotOk(context.traceIdStr);
-      assert.isNotOk(context.parentIdStr);
+      assert.equal('', context.spanIdStr);
+      assert.equal('', context.traceIdStr);
+      assert.equal('', context.parentIdStr);
     });
   });
 
@@ -123,7 +123,7 @@ describe('Zipkin B3 Text Map Codec should', () => {
 
     let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
     assert.isOk(context.isSampled());
-    assert.isNotOk(context.isDebug());
+    assert.isFalse(context.isDebug());
   });
 
   it('not set the sampled flag if sampling is denied', () => {
@@ -132,7 +132,7 @@ describe('Zipkin B3 Text Map Codec should', () => {
     };
 
     const context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
-    assert.isNotOk(context.isSampled());
+    assert.isFalse(context.isSampled());
   });
 
   it('handle true value for the sampled header', () => {
@@ -150,7 +150,7 @@ describe('Zipkin B3 Text Map Codec should', () => {
     };
 
     let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
-    assert.isNotOk(context.isSampled());
+    assert.isFalse(context.isSampled());
   });
 
   it('set the debug and sampled flags when the zipkin flags header is received', () => {
@@ -167,8 +167,8 @@ describe('Zipkin B3 Text Map Codec should', () => {
     };
 
     context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
-    assert.isNotOk(context.isSampled());
-    assert.isNotOk(context.isDebug());
+    assert.isFalse(context.isSampled());
+    assert.isFalse(context.isDebug());
   });
 
   it('should set the sampled header to "0" if not sampling', () => {
