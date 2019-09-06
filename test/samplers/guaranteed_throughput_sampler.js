@@ -109,8 +109,8 @@ describe('GuaranteedThroughput sampler', () => {
     let p2 = sampler._lowerBoundSampler;
     let isUpdated: boolean = sampler.update(2, 0.9);
     assert.isTrue(isUpdated);
-    assert.isFalse(p1 === sampler._probabilisticSampler);
-    assert.strictEqual(sampler._lowerBoundSampler, p2);
+    assert.notStrictEqual(p1, sampler._probabilisticSampler);
+    assert.strictEqual(p2, sampler._lowerBoundSampler);
     assertValues(sampler, 2, 0.9);
   });
 
