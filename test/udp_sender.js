@@ -87,7 +87,6 @@ describe('udp sender', () => {
     server.on('message', (msg, remote) => {
       let thriftObj = thrift.Agent.emitBatch.argumentsMessageRW.readFrom(msg, 0);
       let batch = thriftObj.value.body.batch;
-      assert.isOk(batch);
       assert.equal(batch.spans.length, 2);
 
       assertThriftSpanEqual(assert, spanOne, batch.spans[0]);
@@ -143,7 +142,6 @@ describe('udp sender', () => {
           let thriftObj = thrift.Agent.emitBatch.argumentsMessageRW.readFrom(msg, 0);
           let batch = thriftObj.value.body.batch;
 
-          assert.isOk(batch);
           assertThriftSpanEqual(assert, tSpan, batch.spans[0]);
           if (o.expectedTraceId) {
             assert.deepEqual(batch.spans[0].traceIdLow, o.expectedTraceId);
@@ -261,7 +259,7 @@ describe('udp sender', () => {
         console.log('sender info: ' + msg);
       },
       error: msg => {
-        assert.isOk(expectLogs);
+        assert.isTrue(expectLogs);
         expect(msg).to.have.string('error sending spans over UDP: Error: getaddrinfo ENOTFOUND');
         tracer.close(done);
       },

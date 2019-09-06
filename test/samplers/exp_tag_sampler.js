@@ -38,8 +38,6 @@ describe('TagSampler', () => {
 
   it('should sample and finalize created span with tag', () => {
     let span = tracer.startSpan('opName', { tags: { theWho: 'Bender' } });
-    console.log('span has tags');
-    console.log(span.getTags());
     assert.isTrue(span._spanContext.isSampled(), 'sampled');
     assert.isTrue(span._spanContext.samplingFinalized, 'finalized');
   });

@@ -73,7 +73,7 @@ describe('PrioritySampler with TagSampler', () => {
     let span = tracer.startSpan('opName');
     let carrier = {};
     tracer.inject(span.context(), opentracing.FORMAT_TEXT_MAP, carrier);
-    assert.isOk(carrier);
+    assert.isDefined(carrier['uber-trace-id']);
     assert.isFalse(span._spanContext.isSampled(), 'sampled');
     assert.isFalse(span._spanContext.samplingFinalized, 'finalized');
   });

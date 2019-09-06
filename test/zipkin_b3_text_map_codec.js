@@ -51,8 +51,8 @@ describe('Zipkin B3 Text Map Codec should', () => {
 
     let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
 
-    assert.isOk(context);
-    assert.isOk(LocalBackend.counterEquals(metrics.decodingErrors, 1));
+    assert.isNotNull(context);
+    assert.isTrue(LocalBackend.counterEquals(metrics.decodingErrors, 1));
   });
 
   it('set debug flag when debug-id-header is received', () => {
@@ -85,7 +85,7 @@ describe('Zipkin B3 Text Map Codec should', () => {
     testCases.forEach(testCase => {
       let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, testCase);
 
-      assert.isOk(context);
+      assert.isNotNull(context);
       assert.equal('', context.spanIdStr);
       assert.equal('', context.traceIdStr);
       assert.equal('', context.parentIdStr);
@@ -108,12 +108,12 @@ describe('Zipkin B3 Text Map Codec should', () => {
 
     const context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
 
-    assert.isOk(context.traceIdStr);
-    assert.isOk(context.spanIdStr);
-    assert.isOk(context.parentIdStr);
-    assert.isOk(context.isSampled());
-    assert.isOk(context.isDebug());
-    assert.isOk(context.debugId);
+    assert.equal('123abc', context.traceIdStr);
+    assert.equal('456def', context.spanIdStr);
+    assert.equal('789ghi', context.parentIdStr);
+    assert.isTrue(context.isSampled());
+    assert.isTrue(context.isDebug());
+    assert.equal('678pqr', context.debugId);
   });
 
   it('set the sampled flag when the zipkin sampled header is received', () => {
@@ -122,7 +122,7 @@ describe('Zipkin B3 Text Map Codec should', () => {
     };
 
     let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
-    assert.isOk(context.isSampled());
+    assert.isTrue(context.isSampled());
     assert.isFalse(context.isDebug());
   });
 
@@ -141,7 +141,7 @@ describe('Zipkin B3 Text Map Codec should', () => {
     };
 
     let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
-    assert.isOk(context.isSampled());
+    assert.isTrue(context.isSampled());
   });
 
   it('handle false value for the sampled header', () => {
@@ -159,8 +159,8 @@ describe('Zipkin B3 Text Map Codec should', () => {
     };
 
     let context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
-    assert.isOk(context.isSampled());
-    assert.isOk(context.isDebug());
+    assert.isTrue(context.isSampled());
+    assert.isTrue(context.isDebug());
 
     headers = {
       'x-b3-flags': '0',

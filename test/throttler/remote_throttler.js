@@ -60,7 +60,7 @@ describe('RemoteThrottler should', () => {
     throttler.setProcess({ uuid: uuid });
     server.addCredits(serviceName, [{ operation: operation, balance: 3 }]);
     creditsUpdatedHook = _throttler => {
-      assert.isOk(_throttler.isAllowed(operation));
+      assert.isTrue(_throttler.isAllowed(operation));
       assert.equal(_throttler._credits[operation], 2);
       assert.equal(LocalBackend.counterValue(metrics.throttlerUpdateSuccess), 1);
       assert.equal(LocalBackend.counterValue(metrics.throttledDebugSpans), 1);
@@ -110,9 +110,9 @@ describe('RemoteThrottler should', () => {
     throttler._credits[operation] = 0;
     throttler._credits[other_operation] = 0;
     creditsUpdatedHook = _throttler => {
-      assert.isOk(_throttler.isAllowed(operation));
+      assert.isTrue(_throttler.isAllowed(operation));
       assert.equal(_throttler._credits[operation], 4);
-      assert.isOk(_throttler.isAllowed(other_operation));
+      assert.isTrue(_throttler.isAllowed(other_operation));
       assert.equal(_throttler._credits[other_operation], 2);
       assert.equal(LocalBackend.counterValue(metrics.throttlerUpdateSuccess), 1);
       done();
@@ -166,7 +166,7 @@ describe('RemoteThrottler should', () => {
     throttler._credits[operation] = 0;
     server.addCredits(serviceName, [{ operation: operation, balance: 5 }]);
     creditsUpdatedHook = _throttler => {
-      assert.isOk(_throttler.isAllowed(operation));
+      assert.isTrue(_throttler.isAllowed(operation));
       assert.equal(_throttler._credits[operation], 4);
       assert.equal(LocalBackend.counterValue(metrics.throttlerUpdateSuccess), 1);
       done();

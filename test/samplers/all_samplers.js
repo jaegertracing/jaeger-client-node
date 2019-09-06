@@ -117,7 +117,7 @@ describe('ConstSampler', () => {
   });
 
   it('decision reflects given parameter', () => {
-    assert.isOk(sampler.decision);
+    assert.isTrue(sampler.decision);
   });
 
   it('does NOT equal another type of sampler', () => {
@@ -127,7 +127,7 @@ describe('ConstSampler', () => {
 
   it('does equal the same type of sampler', () => {
     let otherSampler = new ConstSampler(true);
-    assert.isOk(sampler.equal(otherSampler));
+    assert.isTrue(sampler.equal(otherSampler));
   });
 });
 
