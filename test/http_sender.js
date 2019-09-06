@@ -105,7 +105,6 @@ describe('http sender', () => {
     spanTwo = ThriftUtils.spanToThrift(spanTwo);
 
     server.on('batchReceived', batch => {
-      assert.isOk(batch);
       assert.equal(batch.spans.length, 2);
 
       assertThriftSpanEqual(assert, spanOne, batch.spans[0]);

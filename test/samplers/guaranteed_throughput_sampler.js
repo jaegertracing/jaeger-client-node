@@ -53,7 +53,7 @@ describe('GuaranteedThroughput sampler', () => {
       // Since the test runs under one second, we expect 2 successful samples
       // and one unsuccessful.
       if (expectedDecision) {
-        assert.isOk(decision, 'must sample');
+        assert.isTrue(decision, 'must sample');
         assert.deepEqual(expectedTags, actualTags);
       } else {
         assert.isFalse(decision, 'must not sample');
@@ -148,7 +148,7 @@ describe('GuaranteedThroughput sampler', () => {
       let actualTags = {};
       let decision = sampler.isSampled('testOperationName', actualTags);
       if (expectedDecision) {
-        assert.isOk(decision, `must sample, test case ${testCase.num}`);
+        assert.isTrue(decision, `must sample, test case ${testCase.num}`);
         assert.deepEqual(expectedTags, actualTags, `must match tags, test case ${testCase.num}`);
       } else {
         assert.isFalse(decision, `must not sample, test case ${testCase.num}`);

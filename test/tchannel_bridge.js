@@ -122,8 +122,8 @@ describe('test tchannel span bridge', () => {
           clientSpanTags[opentracing.Tags.PEER_SERVICE] = 'server';
           clientSpanTags[opentracing.Tags.SPAN_KIND] = opentracing.Tags.SPAN_KIND_RPC_CLIENT;
 
-          assert.isOk(TestUtils.hasTags(serverSpan, serverSpanTags));
-          assert.isOk(TestUtils.hasTags(clientSpan, clientSpanTags));
+          assert.isTrue(TestUtils.hasTags(serverSpan, serverSpanTags));
+          assert.isTrue(TestUtils.hasTags(clientSpan, clientSpanTags));
           assert.equal(serverSpan.context().parentIdStr, clientSpan.context().spanIdStr);
           // If context exists then the following conditions are true
           // else the following conditons are false

@@ -51,10 +51,10 @@ describe('Text Map Codec should', () => {
 
     let span = tracer.startSpan('root', { childOf: context });
 
-    assert.isNull(span.context().parentId);
-    assert.notEqual('', span.context().traceIdStr);
-    assert.isTrue(span.context().isSampled());
-    assert.isTrue(span.context().isDebug());
+    assert.isNotOk(span.context().parentId);
+    assert.isOk(span.context().traceId !== 0);
+    assert.isOk(span.context().isSampled());
+    assert.isOk(span.context().isDebug());
 
     let tagFound = false;
     for (let i = 0; i < span._tags.length; i++) {
@@ -82,7 +82,7 @@ describe('Text Map Codec should', () => {
 
     let span = tracer.startSpan('root', { childOf: context });
     let prevTagLength = span._tags.length;
-    assert.isFalse(span.context().isDebug());
+    assert.isNotOk(span.context().isDebug());
     assert.equal(
       prevTagLength,
       span._tags.length,

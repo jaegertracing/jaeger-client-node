@@ -48,8 +48,8 @@ describe('SpanContext', () => {
       Utils.encodeInt64(3),
       3
     );
-    assert.isOk(context.isSampled());
-    assert.isOk(context.isDebug());
+    assert.isTrue(context.isSampled());
+    assert.isTrue(context.isDebug());
 
     context.flags = 0;
     assert.isFalse(context.isSampled());

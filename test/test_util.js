@@ -40,7 +40,7 @@ describe('TestUtils', () => {
     };
     span.addTags(tags);
 
-    assert.isOk(TestUtils.hasTags(span, tags));
+    assert.isTrue(TestUtils.hasTags(span, tags));
     assert.isFalse(TestUtils.hasTags(span, { k: 'v' }));
     assert.isFalse(TestUtils.hasTags(span, { keyOne: 'valueTwo' }));
   });

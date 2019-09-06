@@ -69,7 +69,7 @@ describe('All Reporters should', () => {
 
       reporter.close(o.callback);
 
-      assert.isOk(o.predicate(o.callback));
+      assert.isTrue(o.predicate(o.callback));
     });
   });
 
@@ -101,7 +101,7 @@ describe('All Reporters should', () => {
       let reporter = new CompositeReporter([mockReporter]);
       reporter.report();
 
-      assert.isOk(mockReporter.report.calledOnce);
+      assert.isTrue(mockReporter.report.calledOnce);
     });
   });
 });

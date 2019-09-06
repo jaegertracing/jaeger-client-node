@@ -90,7 +90,8 @@ describe('tracer should', () => {
     let spanContext = tracer.extract(opentracing.FORMAT_TEXT_MAP, headers);
     let rootSpan = tracer.startSpan('fry', { childOf: spanContext });
 
-    assert.isOk(rootSpan.context().traceId);
+    assert.isNotNull(rootSpan.context().traceId);
+    assert.isDefined(rootSpan.context().traceId);
     assert.isNull(rootSpan.context().parentId);
     assert.equal(rootSpan.context().flags, 1);
     assert.equal('Bender', rootSpan.getBaggageItem('robot'));
@@ -130,7 +131,7 @@ describe('tracer should', () => {
     assert.deepEqual(span.context().parentId, parentId);
     assert.equal(span.context().flags, flags);
     assert.equal(span._startTime, start);
-    assert.isOk(
+    assert.isTrue(
       JaegerTestUtils.hasTags(span, {
         keyOne: 'Leela',
         keyTwo: 'Bender',
@@ -144,7 +145,7 @@ describe('tracer should', () => {
   it('report a span with no tracer level tags', () => {
     let span = tracer.startSpan('op-name');
     tracer._report(span);
-    assert.isOk(reporter.spans.length, 1);
+    assert.equal(1, reporter.spans.length);
     let actualTags = _.sortBy(span._tags, o => {
       return o.key;
     });
@@ -164,7 +165,7 @@ describe('tracer should', () => {
 
     assert.equal(span.context().traceId, span.context().spanId);
     assert.equal(span.context().parentId, null);
-    assert.isOk(span.context().isSampled());
+    assert.isTrue(span.context().isSampled());
     assert.equal(span._startTime, startTime);
   });
 
@@ -412,7 +413,7 @@ describe('tracer should', () => {
         });
 
         _.each(o.metrics, metricName => {
-          assert.isOk(LocalBackend.counterEquals(metrics[metricName], 1));
+          assert.isTrue(LocalBackend.counterEquals(metrics[metricName], 1));
         });
       });
     });
@@ -425,7 +426,7 @@ describe('tracer should', () => {
       let span = tracer.startSpan('bender');
       tracer._report(span);
 
-      assert.isOk(LocalBackend.counterEquals(metrics.spansFinished, 1));
+      assert.isTrue(LocalBackend.counterEquals(metrics.spansFinished, 1));
     });
   });
 

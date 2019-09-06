@@ -391,7 +391,6 @@ describe('sampling finalizer', () => {
     let carrier = {};
     tracer.inject(span2.context(), opentracing.FORMAT_HTTP_HEADERS, carrier);
     let ctx = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, carrier);
-    console.log(ctx);
     assert.isTrue(ctx.isRemote(), 'extracted context is "remote"');
     let span3 = tracer.startSpan('test2', { childOf: ctx });
     assert.isTrue(span3.context().samplingFinalized, 'child span of remote parent is finalized');
