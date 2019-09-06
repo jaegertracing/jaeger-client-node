@@ -56,7 +56,7 @@ describe('GuaranteedThroughput sampler', () => {
         assert.isOk(decision, 'must sample');
         assert.deepEqual(expectedTags, actualTags);
       } else {
-        assert.isNotOk(decision, 'must not sample');
+        assert.isFalse(decision, 'must not sample');
         assert.deepEqual({}, actualTags);
       }
     });
@@ -109,7 +109,7 @@ describe('GuaranteedThroughput sampler', () => {
     let p2 = sampler._lowerBoundSampler;
     let isUpdated: boolean = sampler.update(2, 0.9);
     assert.isTrue(isUpdated);
-    assert.isNotOk(p1 === sampler._probabilisticSampler);
+    assert.isFalse(p1 === sampler._probabilisticSampler);
     assert.strictEqual(sampler._lowerBoundSampler, p2);
     assertValues(sampler, 2, 0.9);
   });
@@ -151,7 +151,7 @@ describe('GuaranteedThroughput sampler', () => {
         assert.isOk(decision, `must sample, test case ${testCase.num}`);
         assert.deepEqual(expectedTags, actualTags, `must match tags, test case ${testCase.num}`);
       } else {
-        assert.isNotOk(decision, `must not sample, test case ${testCase.num}`);
+        assert.isFalse(decision, `must not sample, test case ${testCase.num}`);
         assert.deepEqual({}, actualTags, `must not have tags, test case ${testCase.num}`);
       }
     });

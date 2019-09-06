@@ -52,8 +52,8 @@ describe('SpanContext', () => {
     assert.isOk(context.isDebug());
 
     context.flags = 0;
-    assert.isNotOk(context.isSampled());
-    assert.isNotOk(context.isDebug());
+    assert.isFalse(context.isSampled());
+    assert.isFalse(context.isDebug());
   });
 
   it('should format strings properly with toString', () => {

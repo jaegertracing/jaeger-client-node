@@ -122,7 +122,7 @@ describe('ConstSampler', () => {
 
   it('does NOT equal another type of sampler', () => {
     let otherSampler = new ProbabilisticSampler(0.5);
-    assert.isNotOk(sampler.equal(otherSampler));
+    assert.isFalse(sampler.equal(otherSampler));
   });
 
   it('does equal the same type of sampler', () => {
@@ -141,13 +141,13 @@ describe('ProbabilisticSampler', () => {
   it('calls is Sampled, and returns false', () => {
     let sampler = new ProbabilisticSampler(0.0);
     let tags = {};
-    assert.isNotOk(sampler.isSampled('operation', tags));
+    assert.isFalse(sampler.isSampled('operation', tags));
     assert.deepEqual(tags, {});
   });
 
   it('does NOT equal another type of sampler', () => {
     let sampler = new ProbabilisticSampler(0.0);
     let otherSampler = new ConstSampler(true);
-    assert.isNotOk(sampler.equal(otherSampler));
+    assert.isFalse(sampler.equal(otherSampler));
   });
 });

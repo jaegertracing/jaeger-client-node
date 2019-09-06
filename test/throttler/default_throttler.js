@@ -17,7 +17,7 @@ describe('DefaultThrottler should', () => {
   it('throttle everything', () => {
     const throttler = new DefaultThrottler(true);
     throttler.setProcess({});
-    assert.isNotOk(throttler.isAllowed('key'));
+    assert.isFalse(throttler.isAllowed('key'));
     throttler.close();
   });
 
