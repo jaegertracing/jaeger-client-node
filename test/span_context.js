@@ -22,6 +22,11 @@ describe('SpanContext', () => {
     LARGEST_64_BUFFER.writeUInt32BE(0xffffffff, 4);
   });
 
+  it('should initialize parent to null', () => {
+    let ctx = SpanContext.constructor();
+    assert.equal(null, ctx.parentId);
+  });
+
   it('should return given values as they were set', () => {
     let traceId = Utils.encodeInt64(1);
     let spanId = Utils.encodeInt64(2);
