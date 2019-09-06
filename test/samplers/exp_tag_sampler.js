@@ -14,11 +14,10 @@
 import { assert } from 'chai';
 import sinon from 'sinon';
 import * as opentracing from 'opentracing';
-import Span from '../../src/span';
+import { Span, Tracer, InMemoryReporter } from '../../src/index';
 import Utils from '../../src/util';
-import TagEqualsSampler from '../../src/samplers/experimental/tag_equals_sampler';
-import InMemoryReporter from '../../src/reporters/in_memory_reporter';
-import Tracer from '../../src/tracer';
+
+var TagEqualsSampler = require('../../src/index').experimental.TagEqualsSampler;
 
 describe('TagSampler', () => {
   const tagSampler = new TagEqualsSampler('theWho', [

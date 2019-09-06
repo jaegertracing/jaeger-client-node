@@ -21,6 +21,8 @@ import ConstSampler from './samplers/const_sampler';
 import ProbabilisticSampler from './samplers/probabilistic_sampler';
 import RateLimitingSampler from './samplers/rate_limiting_sampler';
 import RemoteSampler from './samplers/remote_sampler';
+import PrioritySampler from './samplers/experimental/priority_sampler';
+import TagEqualsSampler from './samplers/experimental/tag_equals_sampler';
 
 import CompositeReporter from './reporters/composite_reporter';
 import InMemoryReporter from './reporters/in_memory_reporter';
@@ -50,6 +52,10 @@ module.exports = {
   ProbabilisticSampler,
   RateLimitingSampler,
   RemoteSampler,
+  experimental: {
+    PrioritySampler,
+    TagEqualsSampler,
+  },
 
   CompositeReporter,
   InMemoryReporter,
