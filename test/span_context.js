@@ -22,6 +22,11 @@ describe('SpanContext', () => {
     LARGEST_64_BUFFER.writeUInt32BE(0xffffffff, 4);
   });
 
+  it('should initialize parent to null', () => {
+    let ctx = SpanContext.constructor();
+    assert.equal(null, ctx.parentId);
+  });
+
   it('should return given values as they were set', () => {
     let traceId = Utils.encodeInt64(1);
     let spanId = Utils.encodeInt64(2);
@@ -58,12 +63,12 @@ describe('SpanContext', () => {
       Utils.encodeInt64(3),
       3
     );
-    assert.isOk(context.isSampled());
-    assert.isOk(context.isDebug());
+    assert.isTrue(context.isSampled());
+    assert.isTrue(context.isDebug());
 
     context.flags = 0;
-    assert.isNotOk(context.isSampled());
-    assert.isNotOk(context.isDebug());
+    assert.isFalse(context.isSampled());
+    assert.isFalse(context.isDebug());
   });
 
   it('should format strings properly with toString', () => {

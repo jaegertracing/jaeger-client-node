@@ -105,7 +105,6 @@ describe('http sender', () => {
     spanTwo = ThriftUtils.spanToThrift(spanTwo);
 
     server.on('batchReceived', batch => {
-      assert.isOk(batch);
       assert.equal(batch.spans.length, 2);
 
       assertThriftSpanEqual(assert, spanOne, batch.spans[0]);
@@ -158,7 +157,7 @@ describe('http sender', () => {
         const tSpan = ThriftUtils.spanToThrift(span);
 
         server.on('batchReceived', function(batch) {
-          assert.isOk(batch);
+          assert.isNotNull(batch);
           assertThriftSpanEqual(assert, tSpan, batch.spans[0]);
 
           if (o.expectedTraceId) {
@@ -168,7 +167,7 @@ describe('http sender', () => {
           if (o.expectedParentId) {
             assert.deepEqual(batch.spans[0].parentId, o.expectedParentId);
           } else {
-            assert.isNotOk(batch.spans[0].parentId);
+            assert.isUndefined(batch.spans[0].parentId);
           }
 
           done();

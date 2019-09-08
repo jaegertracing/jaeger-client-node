@@ -61,7 +61,7 @@ describe('Remote Reporter', () => {
 
     reporter.flush(() => {
       assert.equal(sender._batch.spans.length, 0);
-      assert.isOk(LocalBackend.counterEquals(metrics.reporterSuccess, 1));
+      assert.isTrue(LocalBackend.counterEquals(metrics.reporterSuccess, 1));
       done();
     });
   });
@@ -96,7 +96,7 @@ describe('Remote Reporter', () => {
     reporter._sender = mockSender;
     reporter.flush(() => {
       expect(logger._errorMsgs[0]).to.have.string('Failed to flush spans in reporter');
-      assert.isOk(LocalBackend.counterEquals(metrics.reporterFailure, 1));
+      assert.isTrue(LocalBackend.counterEquals(metrics.reporterFailure, 1));
       done();
     });
   });

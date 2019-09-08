@@ -26,7 +26,7 @@ describe('RateLimitingSampler should', () => {
     }
 
     assert.equal(sampler.maxTracesPerSecond, 10);
-    assert.isNotOk(sampler.equal(new ProbabilisticSampler(0.5)));
+    assert.isFalse(sampler.equal(new ProbabilisticSampler(0.5)));
 
     let tags = {};
     let decision = sampler.isSampled('operation', tags);
@@ -51,7 +51,7 @@ describe('RateLimitingSampler should', () => {
     let sampler = new RateLimitingSampler(1.0);
     let otherSampler = new RateLimitingSampler(1.0);
 
-    assert.isOk(sampler.equal(otherSampler));
+    assert.isTrue(sampler.equal(otherSampler));
   });
 
   it('work with maxCreditsPerSecond smaller than 1', () => {

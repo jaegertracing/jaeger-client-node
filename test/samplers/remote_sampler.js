@@ -117,7 +117,7 @@ describe('RemoteSampler', () => {
   it('should set ratelimiting sampler', done => {
     let maxTracesPerSecond = 10;
     remoteSampler._onSamplerUpdate = s => {
-      assert.isOk(s.equal(new RateLimitingSampler(maxTracesPerSecond)));
+      assert.isTrue(s.equal(new RateLimitingSampler(maxTracesPerSecond)));
       done();
     };
     server.addStrategy('service1', {
@@ -135,7 +135,7 @@ describe('RemoteSampler', () => {
     let maxTracesPerSecond = 5;
     remoteSampler._onSamplerUpdate = s => {
       assert.strictEqual(rateLimitingSampler, remoteSampler._sampler);
-      assert.isOk(s.equal(new RateLimitingSampler(maxTracesPerSecond)));
+      assert.isTrue(s.equal(new RateLimitingSampler(maxTracesPerSecond)));
       done();
     };
     server.addStrategy('service1', {
@@ -176,7 +176,7 @@ describe('RemoteSampler', () => {
       },
     });
     remoteSampler._onSamplerUpdate = s => {
-      assert.isOk(s instanceof PerOperationSampler);
+      assert.isTrue(s instanceof PerOperationSampler);
       assert.equal(LocalBackend.counterValue(metrics.samplerRetrieved), 1);
       assert.equal(LocalBackend.counterValue(metrics.samplerUpdated), 1);
 
@@ -254,5 +254,13 @@ describe('RemoteSampler', () => {
 
     assert.deepEqual(decision, remoteSampler.onSetTag(span, 'pi', 3.1415));
     assert.deepEqual([span, 'pi', 3.1415], mockSampler._onSetTag);
+  });
+
+  it('should support setting a custom path for sampling endpoint', () => {
+    let samplingPath = '/custom-sampling-path';
+    let rs = new RemoteSampler('service1', {
+      samplingPath: samplingPath,
+    });
+    assert.equal(rs._samplingPath, samplingPath);
   });
 });

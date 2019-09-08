@@ -14,14 +14,13 @@
 import { assert } from 'chai';
 import sinon from 'sinon';
 import * as opentracing from 'opentracing';
-import Span from '../../src/span';
+import { ConstSampler, InMemoryReporter, Span, Tracer } from '../../src/index';
 import Utils from '../../src/util';
-import ConstSampler from '../../src/samplers/const_sampler';
-import TagEqualsSampler from '../../src/samplers/experimental/tag_equals_sampler';
-import PrioritySampler from '../../src/samplers/experimental/priority_sampler';
-import InMemoryReporter from '../../src/reporters/in_memory_reporter';
-import Tracer from '../../src/tracer';
 import BaseSamplerV2 from '../../src/samplers/v2/base';
+
+// import these from index to test 'experimental' export.
+var PrioritySampler = require('../../src/index').experimental.PrioritySampler;
+var TagEqualsSampler = require('../../src/index').experimental.TagEqualsSampler;
 
 describe('PrioritySampler with TagSampler', () => {
   const tagSampler = new TagEqualsSampler('theWho', [
@@ -74,7 +73,7 @@ describe('PrioritySampler with TagSampler', () => {
     let span = tracer.startSpan('opName');
     let carrier = {};
     tracer.inject(span.context(), opentracing.FORMAT_TEXT_MAP, carrier);
-    assert.isOk(carrier);
+    assert.isDefined(carrier['uber-trace-id']);
     assert.isFalse(span._spanContext.isSampled(), 'sampled');
     assert.isFalse(span._spanContext.samplingFinalized, 'finalized');
   });
