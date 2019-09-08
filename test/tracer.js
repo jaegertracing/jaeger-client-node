@@ -467,9 +467,28 @@ describe('tracer should', () => {
     let span = tracer.startSpan('test-name');
 
     assert.deepEqual(span.context().traceId.slice(-8), span.context().spanId);
-    assert.isOk(span.context().traceId);
-    assert.isNotOk(span.context().parentId);
-    assert.isOk(span.context().isSampled());
+    assert.equal(16, span.context().traceId.length);
+  });
+
+  it('preserve 64bit traceId even when in 128bit mode', () => {
+    // NB: because we currently trim leading zeros, this test is not as effective as it could be.
+    // But once https://github.com/jaegertracing/jaeger-client-node/issues/391 is fixed, this test
+    // will be more useful as it can catch regression.
+    tracer = new Tracer('test-service-name', reporter, new ConstSampler(true), { traceId128bit: true });
+    let span = tracer.startSpan('test-name');
+    assert.equal(16, span.context().traceId.length, 'new traces use 128bit IDs');
+
+    let parent = SpanContext.fromString('100:7f:0:1');
+    assert.equal(8, parent.traceId.length, 'respect 64bit length');
+
+    let child = tracer.startSpan('test-name', { childOf: parent });
+    assert.equal(8, child.context().traceId.length, 'preserve 64bit length');
+
+    let carrier = {};
+    tracer.inject(child.context(), opentracing.FORMAT_TEXT_MAP, carrier);
+    // Once https://github.com/jaegertracing/jaeger-client-node/issues/391 is fixed, the following
+    // asset will fail and will need to be changed to compare against '0000000000000100' string.
+    assert.equal('100:', carrier['uber-trace-id'].substring(0, 4), 'preserve 64bit length');
   });
 
   it('should NOT mutate tags', () => {

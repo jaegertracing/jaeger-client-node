@@ -15,8 +15,9 @@ import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
 import { Thrift } from 'thriftrw';
-import NullLogger from '../logger.js';
-import SenderUtils from './sender_utils.js';
+import NullLogger from '../logger';
+import SenderUtils from './sender_utils';
+import Utils from '../util';
 
 const HOST = 'localhost';
 const PORT = 6832;
@@ -128,7 +129,7 @@ export default class UDPSender {
     }
 
     const bufferLen = this._totalSpanBytes + this._emitSpanBatchOverhead;
-    const thriftBuffer = new Buffer(bufferLen);
+    const thriftBuffer = Utils.newBuffer(bufferLen);
     const writeResult = this._agentThrift.Agent.emitBatch.argumentsMessageRW.writeInto(
       this._convertBatchToThriftMessage(),
       thriftBuffer,
