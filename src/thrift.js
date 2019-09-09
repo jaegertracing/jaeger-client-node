@@ -22,7 +22,7 @@ export default class ThriftUtils {
     source: fs.readFileSync(path.join(__dirname, './jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
     allowOptionalArguments: true,
   });
-  static emptyBuffer: Buffer = Utils.newBuffer(8).fill(0);
+  static emptyBuffer: Buffer = Utils.newBuffer(8);
 
   static getThriftTags(initialTags: Array<Tag>): Array<any> {
     let thriftTags = [];
