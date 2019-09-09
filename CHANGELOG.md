@@ -1,5 +1,8 @@
 # Changes by Version
 
+## 3.17.0 (unreleased)
+* nothing yet
+
 ## 3.16.0 (2019-09-09)
 
 * Support 128bit traceIDs (#361) - thanks @PaulMiami
