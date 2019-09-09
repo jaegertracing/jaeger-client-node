@@ -254,7 +254,7 @@ describe('http sender', () => {
       expect(err).to.have.string('error sending spans over HTTP: Error: getaddrinfo ENOTFOUND');
       tracer.close(done);
     });
-  });
+  }).timeout(5000);
 
   it('should handle HTTPS collectors', done => {
     // Make it ignore the fact that our cert isn't valid.

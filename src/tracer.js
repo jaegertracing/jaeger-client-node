@@ -44,6 +44,7 @@ export default class Tracer {
   _baggageSetter: BaggageSetter;
   _debugThrottler: Throttler & ProcessSetter;
   _process: Process;
+  _traceId128bit: boolean;
 
   /**
    * @param {String} [serviceName] - name of the current service or application.
@@ -57,6 +58,7 @@ export default class Tracer {
    * @param {Object} [options.baggageRestrictionManager] - a baggageRestrictionManager matching
    * @param {Object} [options.contextKey] - a name of the key to extract/inject context from headers
    * @param {Object} [options.baggagePrefix] - a name of the context baggage key prefix
+   * @param {boolean} [options.traceId128bit] - generate root span with a 128bit traceId.
    * BaggageRestrictionManager API from ./baggage.js.
    */
   constructor(
@@ -117,6 +119,8 @@ export default class Tracer {
     this._debugThrottler.setProcess(this._process);
     // TODO update reporter to implement ProcessSetter
     this._reporter.setProcess(this._process.serviceName, this._process.tags);
+
+    this._traceId128bit = options.traceId128bit;
   }
 
   _startInternalSpan(
@@ -230,8 +234,13 @@ export default class Tracer {
     let internalTags: any = {};
     let hasValidParent = false;
     if (!parent || !parent.isValid) {
-      let randomId = Utils.getRandom64();
-      ctx = new SpanContext(randomId, randomId);
+      if (this._traceId128bit) {
+        let randomId = Utils.getRandom128();
+        ctx = new SpanContext(randomId, randomId.slice(-8));
+      } else {
+        let randomId = Utils.getRandom64();
+        ctx = new SpanContext(randomId, randomId);
+      }
       if (parent) {
         // fake parent, doesn't contain a parent trace-id, but may contain debug-id/baggage
         if (parent.isDebugIDContainerOnly() && this._isDebugAllowed(operationName)) {
