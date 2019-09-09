@@ -4,7 +4,7 @@
 
 * Support 128bit traceIDs (#361) - thanks @PaulMiami
 * Support delayed sampling (#380) - thanks @yurishkuro
-* All spans of a trace share sampling state (#377) - thanks @yurishkuro
+* All spans of a trace share sampling state (#377) - thanks @tiffon and @yurishkuro
 
 ## 3.15.0 (2019-05-10)
 
