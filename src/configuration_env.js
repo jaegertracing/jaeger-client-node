@@ -149,6 +149,15 @@ export default class ConfigurationEnv {
       reporterConfig.agentPort = parseInt(value);
     }
 
+    value = ConfigurationEnv._getConfigValue(
+      config.reporter,
+      'agentSocketType',
+      process.env.JAEGER_AGENT_SOCKET_TYPE
+    );
+    if (value) {
+      reporterConfig.agentSocketType = value;
+    }
+
     return reporterConfig;
   }
 

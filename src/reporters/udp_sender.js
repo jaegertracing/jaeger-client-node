@@ -21,6 +21,7 @@ import Utils from '../util';
 
 const HOST = 'localhost';
 const PORT = 6832;
+const SOCKET_TYPE = 'udp4';
 const UDP_PACKET_MAX_LENGTH = 65000;
 
 export default class UDPSender {
@@ -43,7 +44,7 @@ export default class UDPSender {
     this._port = options.port || PORT;
     this._maxPacketSize = options.maxPacketSize || UDP_PACKET_MAX_LENGTH;
     this._logger = options.logger || new NullLogger();
-    this._client = dgram.createSocket('udp4');
+    this._client = dgram.createSocket(options.socketType || SOCKET_TYPE);
     this._client.on('error', err => {
       this._logger.error(`error sending spans over UDP: ${err}`);
     });
