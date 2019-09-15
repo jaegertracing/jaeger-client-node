@@ -27,6 +27,7 @@ const UDP_PACKET_MAX_LENGTH = 65000;
 export default class UDPSender {
   _host: string;
   _port: number;
+  _socketType: string;
   _maxPacketSize: number;
   _process: Process;
   _emitSpanBatchOverhead: number;
@@ -42,9 +43,10 @@ export default class UDPSender {
   constructor(options: any = {}) {
     this._host = options.host || HOST;
     this._port = options.port || PORT;
+    this._socketType = options.socketType || SOCKET_TYPE;
     this._maxPacketSize = options.maxPacketSize || UDP_PACKET_MAX_LENGTH;
     this._logger = options.logger || new NullLogger();
-    this._client = dgram.createSocket(options.socketType || SOCKET_TYPE);
+    this._client = dgram.createSocket(this._socketType);
     this._client.on('error', err => {
       this._logger.error(`error sending spans over UDP: ${err}`);
     });
