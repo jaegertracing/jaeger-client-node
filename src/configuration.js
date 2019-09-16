@@ -196,6 +196,7 @@ export default class Configuration {
    * @param {Object} [options.logger] - a logger (see ./_flow/logger.js)
    * @param {Object} [options.tags] - set of key-value pairs which will be set
    *        as process-level tags on the Tracer itself.
+   * @param {boolean} [options.traceId128bit] - generate root span with a 128bit traceId.
    */
   static initTracer(config, options = {}) {
     let reporter;
@@ -238,6 +239,7 @@ export default class Configuration {
       metrics: options.metrics,
       logger: options.logger,
       tags: options.tags,
+      traceId128bit: options.traceId128bit,
       debugThrottler: throttler,
     });
   }
