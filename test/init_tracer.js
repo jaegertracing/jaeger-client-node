@@ -215,11 +215,13 @@ describe('initTracer', () => {
         },
         contextKey: 'custom-header',
         baggagePrefix: 'prfx-',
+        traceId128bit: true,
       }
     );
     assert.equal(tracer._logger, logger);
     assert.equal(tracer._metrics._factory, metrics);
     assert.equal(tracer._tags['x'], 'y');
+    assert.equal(tracer._traceId128bit, true);
 
     const textMapInjector = tracer._injectors[opentracing.FORMAT_TEXT_MAP];
     assert.equal(textMapInjector._contextKey, 'custom-header');
