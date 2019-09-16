@@ -49,6 +49,7 @@ let jaegerSchema = {
         logSpans: { type: 'boolean' },
         agentHost: { type: 'string' },
         agentPort: { type: 'number' },
+        agentSocketType: { type: 'string' },
         collectorEndpoint: { type: 'string' },
         username: { type: 'string' },
         password: { type: 'string' },
@@ -142,6 +143,10 @@ export default class Configuration {
 
       if (config.reporter.agentPort) {
         senderConfig['port'] = config.reporter.agentPort;
+      }
+
+      if (config.reporter.agentSocketType) {
+        senderConfig['socketType'] = config.reporter.agentSocketType;
       }
     }
     reporterConfig['metrics'] = options.metrics;

@@ -145,6 +145,7 @@ describe('initTracer', () => {
           logSpans: true,
           agentHost: '127.0.0.1',
           agentPort: 4939,
+          agentSocketType: 'udp6',
           flushIntervalMs: 2000,
         },
       };
@@ -163,6 +164,7 @@ describe('initTracer', () => {
       assert.equal(remoteReporter._bufferFlushInterval, 2000);
       assert.equal(remoteReporter._sender._host, '127.0.0.1');
       assert.equal(remoteReporter._sender._port, 4939);
+      assert.equal(remoteReporter._sender._socketType, 'udp6');
       assert.instanceOf(remoteReporter._sender, UDPSender);
       tracer.close(done);
     });
@@ -314,6 +316,7 @@ describe('initTracerFromENV', () => {
     delete process.env.JAEGER_AGENT_PORT;
     delete process.env.JAEGER_REPORTER_AGENT_HOST;
     delete process.env.JAEGER_AGENT_HOST;
+    delete process.env.JAEGER_AGENT_SOCKET_TYPE;
     delete process.env.JAEGER_REPORTER_ENDPOINT;
     delete process.env.JAEGER_ENDPOINT;
     delete process.env.JAEGER_REPORTER_USER;
@@ -428,6 +431,7 @@ describe('initTracerFromENV', () => {
     process.env.JAEGER_REPORTER_LOG_SPANS = 'true';
     process.env.JAEGER_AGENT_HOST = '127.0.0.1';
     process.env.JAEGER_AGENT_PORT = 4939;
+    process.env.JAEGER_AGENT_SOCKET_TYPE = 'udp6';
     process.env.JAEGER_REPORTER_FLUSH_INTERVAL = 2000;
 
     let tracer = initTracerFromEnv();
@@ -444,6 +448,7 @@ describe('initTracerFromENV', () => {
     assert.equal(remoteReporter._bufferFlushInterval, 2000);
     assert.equal(remoteReporter._sender._host, '127.0.0.1');
     assert.equal(remoteReporter._sender._port, 4939);
+    assert.equal(remoteReporter._sender._socketType, 'udp6');
     assert.instanceOf(remoteReporter._sender, UDPSender);
 
     tracer.close(done);
