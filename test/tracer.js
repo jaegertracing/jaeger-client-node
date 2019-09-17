@@ -51,10 +51,10 @@ describe('tracer should', () => {
     };
 
     let mycontext = mytracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
-    assert.equal(mycontext.toString(), headers[ck]);
+    assert.equal(mycontext.toString(), '000000000000000a:000000000000000b:000000000000000c:d');
 
     let myspan = mytracer.startSpan('myspan', { childOf: mycontext });
-    assert.equal(myspan.context().traceIdStr, 'a');
+    assert.equal(myspan.context().traceIdStr, '000000000000000a');
 
     let exheaders = {};
 
@@ -256,10 +256,10 @@ describe('tracer should', () => {
     headers[ck] = 'a:b:c:d';
 
     let mycontext = mytracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
-    assert.equal(mycontext.toString(), headers[ck]);
+    assert.equal(mycontext.toString(), '000000000000000a:000000000000000b:000000000000000c:d');
 
     let myspan = mytracer.startSpan('myspan', { childOf: mycontext });
-    assert.equal(myspan.context().traceIdStr, 'a');
+    assert.equal(myspan.context().traceIdStr, '000000000000000a');
 
     let exheaders = Object.create(null);
 
@@ -488,7 +488,7 @@ describe('tracer should', () => {
     tracer.inject(child.context(), opentracing.FORMAT_TEXT_MAP, carrier);
     // Once https://github.com/jaegertracing/jaeger-client-node/issues/391 is fixed, the following
     // asset will fail and will need to be changed to compare against '0000000000000100' string.
-    assert.equal('100:', carrier['uber-trace-id'].substring(0, 4), 'preserve 64bit length');
+    assert.equal('0000000000000100:', carrier['uber-trace-id'].substring(0, 17), 'preserve 64bit length');
   });
 
   it('should NOT mutate tags', () => {

@@ -23,8 +23,8 @@ describe('SamplingState', () => {
     assert.equal('dark force', s.extendedState()['sithlord']['something, something']);
   });
   it('should recognize local root span', () => {
-    let s = new SamplingState('id123');
-    assert.equal('id123', s.localRootSpanId());
+    let s = new SamplingState('00000000000id123');
+    assert.equal('00000000000id123', s.localRootSpanId());
     let ctx1 = SpanContext.withStringIds('', 'id123', null, 0);
     let ctx2 = SpanContext.withStringIds('', 'id12345', null, 0);
     assert.equal(true, s.isLocalRootSpan(ctx1));

@@ -53,19 +53,7 @@ export default class SpanContext {
 
   get traceId(): any {
     if (this._traceId == null && this._traceIdStr != null) {
-      // make sure that the string is 32 or 16 characters long to generate the
-      // corresponding 64 or 128 bits buffer by padding the start with zeros if necessary
-      // https://github.com/jaegertracing/jaeger/issues/1657
-      // At the same time this will enforce that the HEX has an even number of digits, node is expecting 2 HEX characters per byte
-      // https://github.com/nodejs/node/issues/21242
-      const traceIdExactLength = this._traceIdStr.length > 16 ? 32 : 16;
-      if (this._traceIdStr.length === traceIdExactLength) {
-        this._traceId = Utils.newBufferFromHex(this._traceIdStr);
-      } else {
-        const padding = traceIdExactLength === 16 ? '0000000000000000' : '00000000000000000000000000000000';
-        const safeTraceIdStr = (padding + this._traceIdStr).slice(-traceIdExactLength);
-        this._traceId = Utils.newBufferFromHex(safeTraceIdStr);
-      }
+      this._traceId = Utils.newBufferFromHex(this._traceIdStr);
     }
     return this._traceId;
   }
@@ -86,21 +74,21 @@ export default class SpanContext {
 
   get traceIdStr(): ?string {
     if (this._traceIdStr == null && this._traceId != null) {
-      this._traceIdStr = Utils.removeLeadingZeros(this._traceId.toString('hex'));
+      this._traceIdStr = this._traceId.toString('hex');
     }
     return this._traceIdStr;
   }
 
   get spanIdStr(): ?string {
     if (this._spanIdStr == null && this._spanId != null) {
-      this._spanIdStr = Utils.removeLeadingZeros(this._spanId.toString('hex'));
+      this._spanIdStr = this._spanId.toString('hex');
     }
     return this._spanIdStr;
   }
 
   get parentIdStr(): ?string {
     if (this._parentIdStr == null && this._parentId != null) {
-      this._parentIdStr = Utils.removeLeadingZeros(this._parentId.toString('hex'));
+      this._parentIdStr = this._parentId.toString('hex');
     }
     return this._parentIdStr;
   }
@@ -310,9 +298,9 @@ export default class SpanContext {
       null, // traceId,
       null, // spanId,
       null, // parentId,
-      traceIdStr,
-      spanIdStr,
-      parentIdStr,
+      Utils.padTraceIdStrWithZeros(traceIdStr),
+      Utils.padTraceIdStrWithZeros(spanIdStr),
+      Utils.padTraceIdStrWithZeros(parentIdStr),
       baggage,
       debugId
     );

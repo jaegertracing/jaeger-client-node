@@ -16,21 +16,28 @@ import Utils from '../src/util.js';
 import combinations from './lib/combinations.js';
 
 describe('utils', () => {
-  describe('removeLeadingZeros', () => {
-    it('should leave single 0 digit intact', () => {
-      assert.equal('0', Utils.removeLeadingZeros('0'));
+  describe('padTraceIdStrWithZeros', () => {
+    it('should return empty string for empty input', () => {
+      assert.equal('', Utils.padTraceIdStrWithZeros(''));
     });
 
-    it('should leave single non-0 digit intact', () => {
-      assert.equal('1', Utils.removeLeadingZeros('1'));
+    it('should not pad string 16 characters long', () => {
+      assert.equal('0123456789abcdef', Utils.padTraceIdStrWithZeros('0123456789abcdef'));
     });
 
-    it('should strip leading zeros', () => {
-      assert.equal('1', Utils.removeLeadingZeros('0001'));
+    it('should not pad string 32 characters long', () => {
+      assert.equal(
+        '0123456789abcdef0123456789abcdef',
+        Utils.padTraceIdStrWithZeros('0123456789abcdef0123456789abcdef')
+      );
     });
 
-    it('should convert all zeros to a single 0', () => {
-      assert.equal('0', Utils.removeLeadingZeros('0000'));
+    it('should pad string <16 characters long', () => {
+      assert.equal('0000000000000123', Utils.padTraceIdStrWithZeros('123'));
+    });
+
+    it('should pad string <32 characters long', () => {
+      assert.equal('0000000000000000123456789abcdef0', Utils.padTraceIdStrWithZeros('0123456789abcdef0'));
     });
   });
 

@@ -82,21 +82,26 @@ export default class Utils {
   }
 
   /**
-   * @param {string} input - the input for which leading zeros should be removed.
-   * @return {string} - returns the input string without leading zeros.
+   * @param {string} input - trace id (e.g. traceIdStr) for which leading zeros should be added.
+   * @return {string} - returns the id string 32 or 16 characters long.
    **/
-  static removeLeadingZeros(input: string): string {
-    let counter = 0;
-    let length = input.length - 1;
-    for (let i = 0; i < length; i++) {
-      if (input.charAt(i) === '0') {
-        counter++;
-      } else {
-        break;
-      }
+  static padTraceIdStrWithZeros(input: string) {
+    if (!input) {
+      return input;
     }
 
-    return input.substring(counter);
+    // make sure that the string is 32 or 16 characters long to generate the
+    // corresponding 64 or 128 bits buffer by padding the start with zeros if necessary
+    // https://github.com/jaegertracing/jaeger/issues/1657
+    // At the same time this will enforce that the HEX has an even number of digits, node is expecting 2 HEX characters per byte
+    // https://github.com/nodejs/node/issues/21242
+    const traceIdExactLength = input.length > 16 ? 32 : 16;
+    if (input.length === traceIdExactLength) {
+      return input;
+    } else {
+      const padding = traceIdExactLength === 16 ? '0000000000000000' : '00000000000000000000000000000000';
+      return (padding + input).slice(-traceIdExactLength);
+    }
   }
 
   static myIp(): string {

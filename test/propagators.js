@@ -36,7 +36,7 @@ describe('TextMapCodec', () => {
     let ctx = SpanContext.fromString('1:1:1:1');
     let out = {};
     codec.inject(ctx, out);
-    assert.strictEqual(out['trace-context'], '1:1:1:1');
+    assert.strictEqual(out['trace-context'], '0000000000000001:0000000000000001:0000000000000001:1');
   });
 
   it('should decode baggage', () => {
@@ -69,9 +69,9 @@ describe('ZipkinB3TextMapCodec', () => {
     };
 
     let ctx = codec.extract(carrier);
-    assert.equal(ctx.parentIdStr, '123abc');
-    assert.equal(ctx.spanIdStr, 'aaafff');
-    assert.equal(ctx.traceIdStr, '789fed');
+    assert.equal(ctx.parentIdStr, '0000000000123abc');
+    assert.equal(ctx.spanIdStr, '0000000000aaafff');
+    assert.equal(ctx.traceIdStr, '0000000000789fed');
     assert.equal(ctx.isSampled(), true);
     assert.equal(ctx.isDebug(), true);
   });
@@ -120,9 +120,9 @@ describe('ZipkinB3TextMapCodec', () => {
     ctx.flags = constants.DEBUG_MASK | constants.SAMPLED_MASK;
 
     codec.inject(ctx, carrier);
-    assert.equal(carrier['x-b3-traceid'], '789fed');
-    assert.equal(carrier['x-b3-spanid'], 'aaafff');
-    assert.equal(carrier['x-b3-parentspanid'], '123abc');
+    assert.equal(carrier['x-b3-traceid'], '0000000000789fed');
+    assert.equal(carrier['x-b3-spanid'], '0000000000aaafff');
+    assert.equal(carrier['x-b3-parentspanid'], '0000000000123abc');
     assert.equal(carrier['x-b3-flags'], '1');
 
     // > Since Debug implies Sampled, so don't also send "X-B3-Sampled: 1"

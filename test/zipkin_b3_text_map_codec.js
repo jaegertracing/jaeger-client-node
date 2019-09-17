@@ -108,9 +108,9 @@ describe('Zipkin B3 Text Map Codec should', () => {
 
     const context = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, headers);
 
-    assert.equal('123abc', context.traceIdStr);
-    assert.equal('456def', context.spanIdStr);
-    assert.equal('789ghi', context.parentIdStr);
+    assert.equal('0000000000123abc', context.traceIdStr);
+    assert.equal('0000000000456def', context.spanIdStr);
+    assert.equal('0000000000789ghi', context.parentIdStr);
     assert.isTrue(context.isSampled());
     assert.isTrue(context.isDebug());
     assert.equal('678pqr', context.debugId);

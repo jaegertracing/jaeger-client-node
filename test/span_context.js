@@ -50,7 +50,7 @@ describe('SpanContext', () => {
     let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
 
     assert.deepEqual(traceId, context.traceId);
-    assert.deepEqual('20000000000000001', context.traceIdStr);
+    assert.deepEqual('00000000000000020000000000000001', context.traceIdStr);
     assert.deepEqual(spanId, context.spanId);
     assert.deepEqual(parentId, context.parentId);
     assert.equal(flags, context.flags);
@@ -73,7 +73,7 @@ describe('SpanContext', () => {
 
   it('should format strings properly with toString', () => {
     let ctx1 = SpanContext.withBinaryIds(Utils.encodeInt64(0x100), Utils.encodeInt64(0x7f), null, 1);
-    assert.equal(ctx1.toString(), '100:7f:0:1');
+    assert.equal(ctx1.toString(), '0000000000000100:000000000000007f:0:1');
 
     let ctx2 = SpanContext.withBinaryIds(
       Utils.encodeInt64(255 << 4),
@@ -81,7 +81,7 @@ describe('SpanContext', () => {
       Utils.encodeInt64(256),
       0
     );
-    assert.equal(ctx2.toString(), 'ff0:7f:100:0');
+    assert.equal(ctx2.toString(), '0000000000000ff0:000000000000007f:0000000000000100:0');
 
     // test large numbers
     let ctx3 = SpanContext.withBinaryIds(LARGEST_64_BUFFER, LARGEST_64_BUFFER, LARGEST_64_BUFFER, 0);
@@ -94,7 +94,7 @@ describe('SpanContext', () => {
   it('should turn properly formatted strings into correct span contexts', () => {
     let context = SpanContext.fromString('100:7f:0:1');
 
-    assert.deepEqual('100', context.traceIdStr);
+    assert.deepEqual('0000000000000100', context.traceIdStr);
     assert.deepEqual(Utils.encodeInt64(0x100), context.traceId);
     assert.deepEqual(Utils.encodeInt64(0x7f), context.spanId);
     assert.equal(null, context.parentId);
@@ -113,7 +113,7 @@ describe('SpanContext', () => {
   it('should turn properly formatted strings into correct span contexts 128 bit', () => {
     let context = SpanContext.fromString('20000000000000100:7f:0:1');
 
-    assert.deepEqual('20000000000000100', context.traceIdStr);
+    assert.deepEqual('00000000000000020000000000000100', context.traceIdStr);
     assert.deepEqual(Buffer.concat([Utils.encodeInt64(0x2), Utils.encodeInt64(0x100)]), context.traceId);
     assert.deepEqual(Utils.encodeInt64(0x7f), context.spanId);
     assert.equal(null, context.parentId);
@@ -127,6 +127,12 @@ describe('SpanContext', () => {
     assert.deepEqual(LARGEST_64_BUFFER, context.spanId);
     assert.deepEqual(Utils.encodeInt64(0x5), context.parentId);
     assert.equal(context.flags, 0x1);
+  });
+
+  it('should parse string ids with stripped leading zero', () => {
+    const ctx = SpanContext.withStringIds('ff0', '7f', '100', 0);
+
+    assert.equal(ctx.toString(), '0000000000000ff0:000000000000007f:0000000000000100:0');
   });
 
   it('should return null on malformed traces', () => {
