@@ -45,6 +45,7 @@ export default class Tracer {
   _debugThrottler: Throttler & ProcessSetter;
   _process: Process;
   _traceId128bit: boolean;
+  _shareRpcSpan: boolean;
 
   /**
    * @param {String} [serviceName] - name of the current service or application.
@@ -59,6 +60,7 @@ export default class Tracer {
    * @param {Object} [options.contextKey] - a name of the key to extract/inject context from headers
    * @param {Object} [options.baggagePrefix] - a name of the context baggage key prefix
    * @param {boolean} [options.traceId128bit] - generate root span with a 128bit traceId.
+   * @param {boolean} [options.shareRpcSpan] - share spanIds for rpc servers.
    * BaggageRestrictionManager API from ./baggage.js.
    */
   constructor(
@@ -121,6 +123,7 @@ export default class Tracer {
     this._reporter.setProcess(this._process.serviceName, this._process.tags);
 
     this._traceId128bit = options.traceId128bit;
+    this._shareRpcSpan = options.shareRpcSpan;
   }
 
   _startInternalSpan(
@@ -233,6 +236,7 @@ export default class Tracer {
     let ctx: SpanContext;
     let internalTags: any = {};
     let hasValidParent = false;
+    const isRpcServer = Boolean(userTags && userTags[otTags.SPAN_KIND] === otTags.SPAN_KIND_RPC_SERVER);
     if (!parent || !parent.isValid) {
       if (this._traceId128bit) {
         let randomId = Utils.getRandom128();
@@ -253,14 +257,16 @@ export default class Tracer {
       }
     } else {
       hasValidParent = true;
-      let spanId = Utils.getRandom64();
+      let spanId = this._shareRpcSpan && isRpcServer ? parent.spanId : Utils.getRandom64();
       ctx = parent._makeChildContext(spanId);
+      if (this._shareRpcSpan && isRpcServer) {
+        ctx.parentId = parent.parentId;
+      }
       if (parent.isRemote()) {
         ctx.finalizeSampling(); // will finalize sampling for all spans sharing this traceId
       }
     }
 
-    const isRpcServer = Boolean(userTags && userTags[otTags.SPAN_KIND] === otTags.SPAN_KIND_RPC_SERVER);
     return this._startInternalSpan(
       ctx,
       operationName,

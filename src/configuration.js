@@ -197,7 +197,9 @@ export default class Configuration {
    * @param {Object} [options.tags] - set of key-value pairs which will be set
    *        as process-level tags on the Tracer itself.
    * @param {boolean} [options.traceId128bit] - generate root span with a 128bit traceId.
+   * @param {boolean} [options.shareRpcSpan] - Share the same span for rpc span_kind.
    */
+
   static initTracer(config, options = {}) {
     let reporter;
     let sampler;
@@ -240,6 +242,7 @@ export default class Configuration {
       logger: options.logger,
       tags: options.tags,
       traceId128bit: options.traceId128bit,
+      shareRpcSpan: options.shareRpcSpan,
       debugThrottler: throttler,
     });
   }
