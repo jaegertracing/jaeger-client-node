@@ -1,6 +1,6 @@
 {
   "name": "jaeger-client",
-  "version": "3.16.1dev",
+  "version": "3.17.0",
   "description": "Jaeger binding for OpenTracing Node",
   "engines": {
     "node": ">=0.10"
@@ -14,7 +14,7 @@
     "url": "git://github.com/jaegertracing/jaeger-client-node.git"
   },
   "files": ["dist/src"],
-  "contributors": ["Yuri Shkuro <ys@uber.com>", "Won Jun Jang <wjang@uber.com>"],
+  "contributors": ["Yuri Shkuro <ys@uber.com>", "Won Jun Jang <wjang@uber.com>", "Jaeger Authors <jaeger-tracing@googlegroups.com>"],
   "dependencies": {
     "node-int64": "^0.4.0",
     "opentracing": "^0.13.0",
