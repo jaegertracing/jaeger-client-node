@@ -1,5 +1,9 @@
 # Changes by Version
 
+## 3.17.1 (unreleased)
+
+* Nothing yet.
+
 ## 3.17.0 (2019-09-23)
 
 * Add option to support zipkin's shared span id between client and server spans (#399) -- Jonathan Monette
