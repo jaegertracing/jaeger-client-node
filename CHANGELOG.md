@@ -1,7 +1,10 @@
 # Changes by Version
 
-## 3.17.0 (unreleased)
-* nothing yet
+## 3.17.0 (2019-09-23)
+
+* Add option to support zipkin's shared span id between client and server spans (#399) -- Jonathan Monette
+* Allow specifying 128bit trace IDs via Configuration (#397) -- Aleksei Androsov
+* Add support for UDP over IPv6 (#396) -- Aleksei Androsov
 
 ## 3.16.0 (2019-09-09)
 
