@@ -18,6 +18,10 @@ export default class NoopReporter implements Reporter {
     return 'NoopReporter';
   }
 
+  toString(): string {
+    return this.name();
+  }
+
   report(span: Span): void {}
 
   close(callback?: () => void): void {

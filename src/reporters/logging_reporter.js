@@ -29,6 +29,10 @@ export default class LoggingReporter implements Reporter {
     return 'LoggingReporter';
   }
 
+  toString(): string {
+    return this.name();
+  }
+
   close(callback?: () => void): void {
     if (callback) {
       callback();

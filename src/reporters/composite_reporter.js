@@ -25,6 +25,10 @@ export default class CompositeReporter implements Reporter {
     return 'CompositeReporter';
   }
 
+  toString(): string {
+    return `${this.name()}(${this._reporters.map(reporter => reporter.toString()).join(',')})`;
+  }
+
   report(span: Span): void {
     this._reporters.forEach(r => {
       r.report(span);
