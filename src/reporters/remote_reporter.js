@@ -44,6 +44,10 @@ export default class RemoteReporter implements Reporter {
     return 'RemoteReporter';
   }
 
+  toString(): string {
+    return this.name();
+  }
+
   report(span: Span): void {
     const thriftSpan = ThriftUtils.spanToThrift(span);
     this._sender.append(thriftSpan, this._appendCallback);

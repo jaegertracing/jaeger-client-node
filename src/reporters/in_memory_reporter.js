@@ -26,6 +26,10 @@ export default class InMemoryReporter implements Reporter {
     return 'InMemoryReporter';
   }
 
+  toString(): string {
+    return this.name();
+  }
+
   report(span: Span): void {
     this._spans.push(span);
   }

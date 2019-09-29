@@ -505,3 +505,28 @@ describe('tracer should', () => {
     });
   });
 });
+
+it('should match parent and spanIds when in rpc server mode', () => {
+  let traceId = Utils.encodeInt64(1);
+  let spanId = Utils.encodeInt64(2);
+  let flags = 1;
+  const parentContext = SpanContext.withBinaryIds(traceId, spanId, null, flags);
+
+  let tags = {};
+  tags[opentracing.Tags.SPAN_KIND] = opentracing.Tags.SPAN_KIND_RPC_SERVER;
+
+  let customReporter = new InMemoryReporter();
+  let customTracer = new Tracer('test-service-name', customReporter, new ConstSampler(true), {
+    shareRpcSpan: true,
+  });
+  let span = customTracer.startSpan('bender', {
+    childOf: parentContext,
+    tags: tags,
+  });
+
+  assert.equal(parentContext.spanId, span._spanContext.spanId);
+  assert.equal(parentContext.parentId, span._spanContext.parentId);
+
+  customReporter.clear();
+  customTracer.close();
+});
