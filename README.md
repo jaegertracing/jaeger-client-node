@@ -4,7 +4,7 @@
 
 This is [Jaeger](https://jaegertracing.io/)'s client side instrumentation library for Node.js that implements [Javascript OpenTracing API 1.0](https://github.com/opentracing/opentracing-javascript/).
 
-## Contributing and Developing
+## Contribution and Development
 
 Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
