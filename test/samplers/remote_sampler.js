@@ -198,7 +198,7 @@ describe('RemoteSampler', () => {
     server.addStrategy('service1', {
       strategyType: 'PROBABILISTIC',
       probabilisticSampling: {
-        samplingRate: 1.0,
+        samplingRate: 0.0,
       },
       operationSampling: {
         defaultSamplingProbability: 0.05,
@@ -224,6 +224,8 @@ describe('RemoteSampler', () => {
       let sp1 = tracer.startSpan('op1', 'op1 should not be sampled');
       assert.isFalse(sp1.context().isSampled());
       let sp2 = tracer.startSpan('op2', { childOf: sp1 });
+      assert.isFalse(sp1.context().isSampled(), 'op2 should not be sampled on the child span');
+      sp2.setOperationName('op2');
       assert.isFalse(sp1.context().isSampled(), 'op2 should not be sampled on the child span');
 
       done();
