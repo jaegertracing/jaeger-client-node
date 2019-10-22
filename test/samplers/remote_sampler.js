@@ -21,6 +21,8 @@ import MockLogger from '../lib/mock_logger';
 import ConfigServer from '../lib/config_server';
 import LocalMetricFactory from '../lib/metrics/local/metric_factory.js';
 import LocalBackend from '../lib/metrics/local/backend.js';
+import Tracer from '../../src/tracer.js';
+import NoopReporter from '../../src/reporters/noop_reporter.js';
 
 describe('RemoteSampler', () => {
   let server: ConfigServer;
@@ -188,6 +190,43 @@ describe('RemoteSampler', () => {
         done();
       };
       remoteSampler._refreshSamplingStrategy();
+    };
+    remoteSampler._refreshSamplingStrategy();
+  });
+
+  it('should not use per-operation sampler on child spans', done => {
+    server.addStrategy('service1', {
+      strategyType: 'PROBABILISTIC',
+      probabilisticSampling: {
+        samplingRate: 1.0,
+      },
+      operationSampling: {
+        defaultSamplingProbability: 0.05,
+        defaultLowerBoundTracesPerSecond: 0.1,
+        perOperationStrategies: [
+          {
+            operation: 'op1',
+            probabilisticSampling: { samplingRate: 0.0 },
+          },
+          {
+            operation: 'op2',
+            probabilisticSampling: { samplingRate: 1.0 },
+          },
+        ],
+      },
+    });
+    remoteSampler._onSamplerUpdate = s => {
+      let tracer = new Tracer('service', new NoopReporter(), s);
+
+      let sp0 = tracer.startSpan('op2');
+      assert.isTrue(sp0.context().isSampled(), 'op2 should be sampled on the root span');
+
+      let sp1 = tracer.startSpan('op1', 'op1 should not be sampled');
+      assert.isFalse(sp1.context().isSampled());
+      let sp2 = tracer.startSpan('op2', { childOf: sp1 });
+      assert.isFalse(sp1.context().isSampled(), 'op2 should not be sampled on the child span');
+
+      done();
     };
     remoteSampler._refreshSamplingStrategy();
   });
