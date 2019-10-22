@@ -92,10 +92,10 @@ export default class PerOperationSampler implements Sampler {
 
   onCreateSpan(span: Span): SamplingDecision {
     const outTags = {};
-    if (!span.context()._samplingState.isLocalRootSpan(span.context())) {
-      return { sample: false, retryable: false, tags: outTags };
+    let isSampled = false;
+    if (span.context()._samplingState.isLocalRootSpan(span.context())) {
+      isSampled = this.isSampled(span.operationName, outTags);
     }
-    let isSampled = this.isSampled(span.operationName, outTags);
     // returning retryable=true since we can change the sampling decision
     // after the first call to setOperationName()
     return { sample: isSampled, retryable: true, tags: outTags };
@@ -103,10 +103,10 @@ export default class PerOperationSampler implements Sampler {
 
   onSetOperationName(span: Span, operationName: string): SamplingDecision {
     const outTags = {};
-    if (!span.context()._samplingState.isLocalRootSpan(span.context())) {
-      return { sample: false, retryable: false, tags: outTags };
+    let isSampled = false;
+    if (span.context()._samplingState.isLocalRootSpan(span.context())) {
+      isSampled = this.isSampled(span.operationName, outTags);
     }
-    const isSampled = this.isSampled(span.operationName, outTags);
     return { sample: isSampled, retryable: false, tags: outTags };
   }
 

@@ -226,14 +226,19 @@ describe('RemoteSampler', () => {
       sp1.setOperationName('op2');
       assert.isTrue(sp1.context().isSampled(), 'op2 should be sampled on the root span');
 
-      let parent = tracer.startSpan('op1', 'op1 should not be sampled');
-      assert.isFalse(parent.context().isSampled());
-      assert.isFalse(parent.context().samplingFinalized);
+      let parent = tracer.startSpan('op1');
+      assert.isFalse(parent.context().isSampled(), 'parent span should not be sampled');
+      assert.isFalse(parent.context().samplingFinalized, 'parent span should not be finalized');
 
       let child = tracer.startSpan('op2', { childOf: parent });
-      assert.isFalse(child.context().isSampled(), 'op2 should not be sampled on the child span');
+      assert.isFalse(child.context().isSampled(), 'child span should not be sampled even with op2');
+      assert.isFalse(child.context().samplingFinalized, 'child span should not be finalized');
       child.setOperationName('op2');
       assert.isFalse(child.context().isSampled(), 'op2 should not be sampled on the child span');
+      assert.isTrue(
+        child.context().samplingFinalized,
+        'child span should be finalized after setOperationName'
+      );
 
       done();
     };
