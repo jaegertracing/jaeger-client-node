@@ -96,7 +96,8 @@ export default class PerOperationSampler implements Sampler {
       return { sample: false, retryable: false, tags: outTags };
     }
     let isSampled = this.isSampled(span.operationName, outTags);
-    // returning retryable=true since we can change decision after setOperationName().
+    // returning retryable=true since we can change the sampling decision
+    // after the first call to setOperationName()
     return { sample: isSampled, retryable: true, tags: outTags };
   }
 
