@@ -221,6 +221,11 @@ describe('RemoteSampler', () => {
       let sp0 = tracer.startSpan('op2');
       assert.isTrue(sp0.context().isSampled(), 'op2 should be sampled on the root span');
 
+      sp0 = tracer.startSpan('op1');
+      assert.isFalse(sp0.context().isSampled(), 'op1 should not be sampled');
+      sp0.setOperationName('op2');
+      assert.isTrue(sp0.context().isSampled(), 'op2 should be sampled on the root span');
+
       let sp1 = tracer.startSpan('op1', 'op1 should not be sampled');
       assert.isFalse(sp1.context().isSampled());
       let sp2 = tracer.startSpan('op2', { childOf: sp1 });
