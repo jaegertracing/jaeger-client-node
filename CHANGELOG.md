@@ -1,8 +1,9 @@
 # Changes by Version
 
-## 3.17.1 (unreleased)
+## 3.17.1 (2019-10-22)
 
-* Nothing yet.
+* [bug fix] Do not apply adaptive sampler to child spans (#410) -- Yuri Shkuro
+* Add toString to reporters (#403) -- Andrea Di Giorgi
 
 ## 3.17.0 (2019-09-23)
 
