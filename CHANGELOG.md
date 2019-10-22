@@ -1,5 +1,9 @@
 # Changes by Version
 
+## 3.17.2 (unreleased)
+
+* Nothing yet.
+
 ## 3.17.1 (2019-10-22)
 
 * [bug fix] Do not apply adaptive sampler to child spans (#410) -- Yuri Shkuro
