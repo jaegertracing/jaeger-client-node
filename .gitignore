@@ -6,4 +6,6 @@ dist/
 .idea/
 *.iml
 
+.envrc
+
 crossdock/jaeger-docker-compose.yml
