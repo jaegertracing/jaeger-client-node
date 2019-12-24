@@ -229,6 +229,7 @@ describe('http sender', () => {
     sender.flush((numSpans, err) => {
       assert.equal(numSpans, 1);
       expect(err).to.have.string('Error encoding Thrift batch:');
+      assert.equal(sender._batch.spans.length, 0); // should empty spans in flush() on failed buffer conversion
       done();
     });
   });
@@ -283,4 +284,44 @@ describe('http sender', () => {
       done();
     });
   });
+
+  it('should avoid OOM on failed buffer conversion', done => {
+    function createSpan(name) {
+      const span = tracer.startSpan(name);
+      span.finish(); // finish to set span duration
+      return span;
+    }
+
+    const maxSpanBatchSize = 5;
+
+    sender = new HTTPSender({
+      endpoint: serverEndpoint,
+      maxSpanBatchSize,
+    });
+    sender.setProcess(reporter._process);
+
+    // simulate the server use jaeger client keep sending data
+    let num = 0;
+    const intervalHandle = setInterval(() => {
+      if (num === 14) {
+        const wrongSpan = createSpan(); // name is required, make a mistake in create span
+        sender.append(ThriftUtils.spanToThrift(wrongSpan)); // append dirty span to the send queue, it will cause serialization error in flush
+      } else {
+        sender.append(ThriftUtils.spanToThrift(createSpan(num)));
+      }
+      num++;
+    }, 1);
+
+    setTimeout(() => {
+      clearInterval(intervalHandle);
+
+      // check spans length in the send queue
+      assert.equal(sender._batch.spans.length < maxSpanBatchSize, true);
+
+      sender.flush((numSpans, err) => {
+        assert.equal(sender._batch.spans.length, 0);
+        done();
+      });
+    }, 3000);
+  }).timeout(5000);
 });

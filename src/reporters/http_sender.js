@@ -103,6 +103,7 @@ export default class HTTPSender {
 
     const result = this._jaegerThrift.Batch.rw.toBuffer(this._batch);
     if (result.err) {
+      this._reset();
       SenderUtils.invokeCallback(callback, numSpans, `Error encoding Thrift batch: ${result.err}`);
       return;
     }
