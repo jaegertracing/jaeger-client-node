@@ -102,12 +102,12 @@ export default class HTTPSender {
     }
 
     const result = this._jaegerThrift.Batch.rw.toBuffer(this._batch);
+    this._reset(); // clear buffer for new spans, even if Thrift conversion fails
+
     if (result.err) {
       SenderUtils.invokeCallback(callback, numSpans, `Error encoding Thrift batch: ${result.err}`);
       return;
     }
-
-    this._reset();
 
     const requester = this._url.protocol === 'https:' ? https.request : http.request;
 

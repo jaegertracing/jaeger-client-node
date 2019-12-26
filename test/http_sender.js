@@ -229,6 +229,7 @@ describe('http sender', () => {
     sender.flush((numSpans, err) => {
       assert.equal(numSpans, 1);
       expect(err).to.have.string('Error encoding Thrift batch:');
+      assert.equal(sender._batch.spans.length, 0); // should empty spans in flush() on failed buffer conversion
       done();
     });
   });
