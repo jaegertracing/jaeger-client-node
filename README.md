@@ -1,8 +1,10 @@
 [![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![NPM Published Version][npm-img]][npm] [![OpenTracing 1.0 Enabled][ot-img]][ot-url]
 
-# Jaeger Bindings for Javascript OpenTracing API
+# Jaeger Bindings for OpenTracing API for Node.js
 
 This is [Jaeger](https://jaegertracing.io/)'s client side instrumentation library for Node.js that implements [Javascript OpenTracing API 1.0](https://github.com/opentracing/opentracing-javascript/).
+
+Note that this library is not designed to run in the browser, only in the Node.js-backend servers. For browser-only version, see https://github.com/jaegertracing/jaeger-client-javascript.
 
 ## Contributing and Developing
 
