@@ -1,8 +1,8 @@
 # Changes by Version
 
-## 3.17.2 (unreleased)
+## 3.17.2 (2020-02-07)
 
-* Nothing yet.
+* README: Clarify that this library is not designed to work in the browser.
 
 ## 3.17.1 (2019-10-22)
 
