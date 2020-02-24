@@ -93,7 +93,6 @@ var config = {
     // password: '',
     // agentHost: 'only ip address of jaeger agent, no port , no http://',
     // agentPort: //Optional as auto set by Jaeger Thrift 
-                  //Only set if different than compact(6831), binary(6832) 
   },
 };
 var options = {
