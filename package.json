@@ -48,6 +48,7 @@
     "lodash": "^4.15.0",
     "minimist": "1.2.0",
     "mocha": "^3.0.1",
+    "mock-fs": "^4.10.4",
     "prettier": "1.10.2",
     "request": "2.74.0",
     "rsvp": "^3.3.1",
@@ -75,7 +76,8 @@
     "test-throttler": "mocha --compilers js:babel-core/register test/throttler",
     "test-prom-metrics": "mocha --compilers js:babel-core/register test/metrics",
     "test-crossdock": "mocha --compilers js:babel-register crossdock/test",
-    "show-cover": "open coverage/lcov-report/index.html"
+    "show-cover": "open coverage/lcov-report/index.html",
+    "generate-thrift": "node scripts/javascriptifier-cli"
   },
   "lint-staged": {
     "*.{js,json,md}": ["prettier --write", "git add"]

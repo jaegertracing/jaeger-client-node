@@ -14,7 +14,6 @@ import _ from 'lodash';
 import { assert, expect } from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import dgram from 'dgram';
-import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
@@ -24,6 +23,7 @@ import Tracer from '../src/tracer.js';
 import { Thrift } from 'thriftrw';
 import ThriftUtils from '../src/thrift.js';
 import UDPSender from '../src/reporters/udp_sender.js';
+import ThriftData from '../src/generated/thrift';
 
 const PORT = 6832;
 
@@ -66,9 +66,9 @@ function createUdpSenderTest(options) {
       sender = new UDPSender({ host: options.host, socketType: options.socketType });
       sender.setProcess(reporter._process);
       thrift = new Thrift({
-        entryPoint: path.join(__dirname, '../src/thriftrw-idl/agent.thrift'),
+        entryPoint: 'thriftrw-idl/agent.thrift',
+        idls: ThriftData,
         allowOptionalArguments: true,
-        allowFilesystemAccess: true,
       });
     });
 

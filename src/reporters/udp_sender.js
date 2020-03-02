@@ -12,12 +12,12 @@
 // the License.
 
 import dgram from 'dgram';
-import fs from 'fs';
 import path from 'path';
 import { Thrift } from 'thriftrw';
 import NullLogger from '../logger';
 import SenderUtils from './sender_utils';
 import Utils from '../util';
+import ThriftData from '../generated/thrift';
 
 const HOST = 'localhost';
 const PORT = 6832;
@@ -51,12 +51,13 @@ export default class UDPSender {
       this._logger.error(`error sending spans over UDP: ${err}`);
     });
     this._agentThrift = new Thrift({
-      entryPoint: path.join(__dirname, '../thriftrw-idl/agent.thrift'),
+      entryPoint: 'thriftrw-idl/agent.thrift',
+      idls: ThriftData,
       allowOptionalArguments: true,
-      allowFilesystemAccess: true,
     });
     this._jaegerThrift = new Thrift({
-      source: fs.readFileSync(path.join(__dirname, '../jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
+      entryPoint: 'jaeger-idl/thrift/jaeger.thrift',
+      idls: ThriftData,
       allowOptionalArguments: true,
     });
     this._totalSpanBytes = 0;

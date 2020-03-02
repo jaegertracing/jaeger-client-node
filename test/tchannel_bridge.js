@@ -26,6 +26,7 @@ import TChannelBridge from '../src/tchannel_bridge.js';
 import TChannelAsThrift from 'tchannel/as/thrift';
 import TChannelAsJSON from 'tchannel/as/json';
 import combinations from './lib/combinations.js';
+import { convertDirectoryToJavascriptObject } from '../scripts/lib/javascriptifier';
 
 describe('test tchannel span bridge', () => {
   // BIG_TIMEOUT is useful for debugging purposes.
@@ -48,6 +49,8 @@ describe('test tchannel span bridge', () => {
     context: [ctx1, null],
     headers: [{}, null],
   });
+
+  let thriftData = convertDirectoryToJavascriptObject(`${__dirname}/thrift`, __dirname);
 
   _.each(options, o => {
     o.description = `as=${o.as}|mode=${o.mode}`;
@@ -80,7 +83,12 @@ describe('test tchannel span bridge', () => {
       // Wrap the subchannel in an encoding
       let encodedChannel = o.channelEncoding({
         channel: clientSubChannel,
-        entryPoint: path.join(__dirname, 'thrift', 'echo.thrift'), // ignored in json case
+        source:
+          thriftData['thrift/echo.thrift'] ||
+          (() => {
+            console.error(thriftData);
+            throw new Error(`path not found`);
+          }), // ignored in json case
       });
 
       let options: any = {};

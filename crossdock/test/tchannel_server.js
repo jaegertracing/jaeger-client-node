@@ -23,9 +23,9 @@ import TChannelServer from '../src/tchannel_server.js';
 import TChannelAsThrift from 'tchannel/as/thrift';
 import TChannel from 'tchannel';
 import Tracer from '../../src/tracer.js';
-import fs from 'fs';
 import path from 'path';
 import Utils from '../../src/util.js';
+import ThriftData from '../../src/generated/thrift';
 
 process.env.NODE_ENV = 'test';
 
@@ -36,16 +36,7 @@ describe('crossdock tchannel server should', () => {
   let server;
   let tracer;
   let bridge;
-  let crossdockSpecPath = path.join(
-    __dirname,
-    '..',
-    '..',
-    'src',
-    'jaeger-idl',
-    'thrift',
-    'crossdock',
-    'tracetest.thrift'
-  );
+  let crossdockSpecPath = 'jaeger-idl/thrift/crossdock/tracetest.thrift';
 
   before(() => {
     tracer = new Tracer('node', new InMemoryReporter(), new ConstSampler(false));
@@ -68,6 +59,7 @@ describe('crossdock tchannel server should', () => {
       let thriftChannel = TChannelAsThrift({
         channel: requestChannel,
         entryPoint: crossdockSpecPath,
+        idls: ThriftData,
       });
       let tracedChannel = bridge.tracedChannel(thriftChannel);
 

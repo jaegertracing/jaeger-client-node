@@ -148,7 +148,8 @@ let server = new TChannel({ serviceName: 'server' });
 server.listen(4040, '127.0.0.1');
 let serverThriftChannel = TChannelAsThrift({
   channel: server,
-  entryPoint: path.join(__dirname, 'thrift', 'echo.thrift'), // file path to a thrift file
+  entryPoint: 'thrift/echo.thrift', //  path to a thrift IDL
+  idls: ThriftData,
 });
 
 let perProcessOptions = {};
@@ -168,6 +169,7 @@ Outbound calls can be made in two ways, shown below.
 
 ```javascript
 import { TChannelBridge } from 'jaeger-client';
+import ThriftData from './generated/thrift';
 
 let bridge = new TChannelBridge(tracer);
 // Create the toplevel client channel.
@@ -181,7 +183,8 @@ let clientSubChannel = client.makeSubChannel({
 
 let encodedThriftChannel = TChannelAsThrift({
   channel: clientSubChannel,
-  entryPoint: path.join(__dirname, 'thrift', 'echo.thrift'), // file path to a thrift file
+  entryPoint: 'thrift/echo.thrift', // path to a thrift IDL
+  idls: ThriftData,
 });
 
 // wrap encodedThriftChannel in a tracing decorator

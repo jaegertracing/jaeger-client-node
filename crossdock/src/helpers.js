@@ -12,7 +12,6 @@
 // the License.
 
 import * as constants from './constants.js';
-import fs from 'fs';
 import path from 'path';
 import dns from 'dns';
 import DefaultContext from '../../src/default_context';
@@ -26,6 +25,7 @@ import TChannel from 'tchannel/channel';
 import TChannelThrift from 'tchannel/as/thrift';
 import TChannelBridge from '../../src/tchannel_bridge';
 import Utils from '../../src/util.js';
+import ThriftData from '../../src/generated/thrift';
 
 export default class Helpers {
   _tracer: Tracer;
@@ -40,13 +40,10 @@ export default class Helpers {
       peers: [Utils.myIp() + ':8082'],
     });
 
-    let crossdockSpec = fs.readFileSync(
-      path.join(__dirname, '..', '..', 'src', 'jaeger-idl', 'thrift', 'crossdock', 'tracetest.thrift'),
-      'utf8'
-    );
+    let crossdockSpec = ThriftData['jaeger-idl/thrift/crossdock/tracetest.thrift'];
     let thriftChannel = TChannelThrift({
       channel: channel,
-      source: crossdockSpec,
+      source: ThriftData[crossdockSpec],
     });
 
     let bridge = new TChannelBridge(this._tracer);

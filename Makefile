@@ -58,14 +58,11 @@ build-node: check-node-lts node-modules build-without-install
 .PHONY: build-without-install
 build-without-install:
 	rm -rf ./dist/
+	npm run generate-thrift
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/src/ src/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/test/ test/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/crossdock/ crossdock/
 	cat src/version.js | sed "s|VERSION_TBD|$(shell node -p 'require("./package.json").version')|g" > dist/src/version.js
-	cp -R ./test/thrift ./dist/test/thrift/
-	cp -R ./src/jaeger-idl ./dist/src/
-	rm -rf ./dist/src/jaeger-idl/.git
-	cp -R ./src/thriftrw-idl ./dist/src/
 
 .PHONY: node-modules
 node-modules:

@@ -17,7 +17,6 @@ import { raw } from 'body-parser';
 import { assert, expect } from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import https from 'https';
-import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
@@ -27,6 +26,7 @@ import Tracer from '../src/tracer.js';
 import { Thrift } from 'thriftrw';
 import ThriftUtils from '../src/thrift.js';
 import HTTPSender from '../src/reporters/http_sender.js';
+import ThriftData from '../src/generated/thrift';
 
 const batchSize = 100;
 
@@ -53,7 +53,8 @@ describe('http sender', () => {
 
   beforeEach(() => {
     thrift = new Thrift({
-      source: fs.readFileSync(path.join(__dirname, '../src/jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
+      entryPoint: 'jaeger-idl/thrift/jaeger.thrift',
+      idls: ThriftData,
       allowOptionalArguments: true,
     });
 

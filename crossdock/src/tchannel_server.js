@@ -24,6 +24,7 @@ import TChannelBridge from '../../src/tchannel_bridge';
 import TChannel from 'tchannel';
 import TChannelThrift from 'tchannel/as/thrift';
 import Utils from '../../src/util.js';
+import ThriftData from '../../src/generated/thrift';
 
 let DEFAULT_THRIFT_PATH = '/crossdock/tracetest.thrift';
 export default class TChannelServer {
@@ -35,9 +36,14 @@ export default class TChannelServer {
     this._helpers = new Helpers(this._tracer);
 
     let serverChannel = TChannel({ serviceName: 'node' });
+
     let tchannelThrift = TChannelThrift({
       channel: serverChannel,
-      entryPoint: crossdockSpecPath,
+      source:
+        ThriftData[crossdockSpecPath] ||
+        (() => {
+          throw new Error(`${crossdockSpecPath} not found`);
+        }),
     });
     let context = new DefaultContext();
 

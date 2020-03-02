@@ -11,7 +11,6 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import fs from 'fs';
 import http from 'http';
 import https from 'https';
 import path from 'path';
@@ -20,6 +19,7 @@ import { Thrift } from 'thriftrw';
 
 import NullLogger from '../logger.js';
 import SenderUtils from './sender_utils.js';
+import ThriftData from '../generated/thrift';
 
 const DEFAULT_PATH = '/api/traces';
 const DEFAULT_PORT = 14268;
@@ -55,7 +55,8 @@ export default class HTTPSender {
 
     this._logger = options.logger || new NullLogger();
     this._jaegerThrift = new Thrift({
-      source: fs.readFileSync(path.join(__dirname, '../jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
+      entryPoint: 'jaeger-idl/thrift/jaeger.thrift',
+      idls: ThriftData,
       allowOptionalArguments: true,
     });
 

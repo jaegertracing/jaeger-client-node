@@ -11,15 +11,16 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import fs from 'fs';
 import opentracing from 'opentracing';
 import path from 'path';
 import { Thrift } from 'thriftrw';
 import Utils from './util.js';
+import ThriftData from './generated/thrift';
 
 export default class ThriftUtils {
   static _thrift = new Thrift({
-    source: fs.readFileSync(path.join(__dirname, './jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
+    entryPoint: 'jaeger-idl/thrift/jaeger.thrift',
+    idls: ThriftData,
     allowOptionalArguments: true,
   });
   static emptyBuffer: Buffer = Utils.newBuffer(8);

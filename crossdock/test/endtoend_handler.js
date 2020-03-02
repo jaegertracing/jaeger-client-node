@@ -12,7 +12,6 @@
 
 import { assert } from 'chai';
 import dgram from 'dgram';
-import fs from 'fs';
 import EndToEndHandler from '../src/endtoend_handler';
 import path from 'path';
 import request from 'request';
@@ -20,6 +19,7 @@ import JaegerTestUtils from '../../src/test_util';
 import { Thrift } from 'thriftrw';
 import bodyParser from 'body-parser';
 import express from 'express';
+import { ThriftData } from '../../src/generated/thrift';
 
 const PORT = 6832;
 const HOST = '127.0.0.1';
@@ -32,9 +32,9 @@ describe('Endtoend Handler should', () => {
     server = dgram.createSocket('udp4');
     server.bind(PORT, HOST);
     thrift = new Thrift({
-      entryPoint: path.join(__dirname, '../../src/thriftrw-idl/agent.thrift'),
+      entryPoint: 'thriftrw-idl/agent.thrift',
+      idls: ThriftData,
       allowOptionalArguments: true,
-      allowFilesystemAccess: true,
     });
 
     let handler = new EndToEndHandler({ port: PORT, host: HOST });
