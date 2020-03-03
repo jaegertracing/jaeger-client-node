@@ -1,4 +1,4 @@
-// Copyright (c) 2017, The Jaeger Authors
+// Copyright (c) 2020, The Jaeger Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -113,8 +113,7 @@ function generateJavascriptKeyValuePair(name /*: string*/, data /*: string*/) {
 }
 
 function getHeader() {
-  return `
-/* eslint-disable camelcase */
+  return `/* eslint-disable camelcase */
 
 // GENERATED CODE - DO NOT MODIFY!
 

@@ -36,14 +36,10 @@ export default class TChannelServer {
     this._helpers = new Helpers(this._tracer);
 
     let serverChannel = TChannel({ serviceName: 'node' });
-
     let tchannelThrift = TChannelThrift({
       channel: serverChannel,
       source:
-        ThriftData[crossdockSpecPath] ||
-        (() => {
-          throw new Error(`${crossdockSpecPath} not found`);
-        }),
+        ThriftData[crossdockSpecPath],
     });
     let context = new DefaultContext();
 
