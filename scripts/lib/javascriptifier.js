@@ -102,6 +102,7 @@ function writeObjectAsJavascriptModule(obj /*: string */, targetPath /*: string 
     writeSync(handle, js);
   });
   writeSync(handle, getFooter());
+  closeSync(handle);
 }
 
 /**
