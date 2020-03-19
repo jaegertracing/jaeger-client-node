@@ -12,5 +12,6 @@ ADD .babelrc /
 # Doing a full npm install inside the container would make this build really slow.
 # We pin tchannel to v3, because v4 removed support for Node-v0.10.
 RUN npm install tchannel@^3
+RUN npm ls
 
 CMD ["/crossdock/src/driver.sh"]
