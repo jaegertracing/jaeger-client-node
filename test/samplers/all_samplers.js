@@ -135,7 +135,7 @@ describe('ProbabilisticSampler', () => {
   it('throws error on out of range sampling rate', () => {
     expect(() => {
       new ProbabilisticSampler(2.0);
-    }).to.throw('The sampling rate must be less than 0.0 and greater than 1.0. Received 2');
+    }).to.throw('The sampling rate must be between 0.0 and 1.0. Received 2');
   });
 
   it('calls is Sampled, and returns false', () => {
