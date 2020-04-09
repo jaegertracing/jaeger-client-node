@@ -129,7 +129,7 @@ var tracer = initTracer(config, options);
 
 ## Usage
 
-The Tracer instance created by `initTracer` is OpenTracing-1.0 compliant. See [opentracing-javascript](https://github.com/opentracing/opentracing-javascript) for usage examples.
+The Tracer instance created by `initTracer` is OpenTracing-1.0 compliant. See [opentracing-javascript](https://github.com/opentracing/opentracing-javascript) for usage examples. Ensure that `tracer.close()` is called on application exit to flush buffered traces.
 
 ### TChannel Span Bridging
 
@@ -241,6 +241,16 @@ span.setTag('jaeger-debug-id', 'some-correlation-id');
 ```
 
 This allows using Jaeger UI to find the trace by this tag.
+
+### Trace Buffer
+
+Specify the reporter's flush interval (ms) with `config.reporter.flushIntervalMs` or `JAEGER_REPORTER_FLUSH_INTERVAL`. The default is 1000 ms.
+
+Calling `.close()` on the tracer will properly flush and close composed objects, including the reporter and sampler. This prevents dropped traces in the event of an error or unexpected early termination prior to normal periodic flushing.
+
+```javascript
+tracer.close(cb?)
+```
 
 ### Zipkin Compatibility
 
