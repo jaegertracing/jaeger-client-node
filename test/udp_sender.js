@@ -19,7 +19,7 @@ import path from 'path';
 import semver from 'semver';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import RemoteReporter from '../src/reporters/remote_reporter.js';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import Tracer from '../src/tracer.js';
 import { Thrift } from 'thriftrw';
 import ThriftUtils from '../src/thrift.js';

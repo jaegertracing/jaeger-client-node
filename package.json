@@ -17,7 +17,7 @@
   "contributors": ["Yuri Shkuro <ys@uber.com>", "Won Jun Jang <wjang@uber.com>", "Jaeger Authors <jaeger-tracing@googlegroups.com>"],
   "dependencies": {
     "node-int64": "^0.4.0",
-    "opentracing": "^0.13.0",
+    "opentracing": "^0.14.4",
     "thriftrw": "^3.5.0",
     "uuid": "^3.2.1",
     "xorshift": "^0.2.0"

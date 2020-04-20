@@ -16,7 +16,7 @@ import fs from 'fs';
 import path from 'path';
 import dns from 'dns';
 import DefaultContext from '../../src/default_context';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import request from 'request';
 import RSVP from 'rsvp';
 import Span from '../../src/span.js';

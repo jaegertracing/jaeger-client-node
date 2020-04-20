@@ -13,7 +13,7 @@
 import { assert } from 'chai';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import SpanContext from '../src/span_context.js';
 import Tracer from '../src/tracer.js';
 import TestUtils from '../src/test_util.js';
