@@ -10,10 +10,11 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import * as apiCompatibilityChecks from 'opentracing/lib/test/api_compatibility.js';
+// import * as apiCompatibilityChecks from 'opentracing/lib/test/api_compatibility.js';
+const apiCompatibilityChecks = require('opentracing/lib/test/api_compatibility.js').default;
 import { assert } from 'chai';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
-import * as opentracing from 'opentracing';
+import ConstSampler from '../src/samplers/const_sampler.js';
 import Tracer from '../src/tracer';
 
 describe('Jaeger Tracer', () => {
