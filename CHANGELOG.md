@@ -3,8 +3,7 @@
 ## 3.18.0 (2020-04-21)
 
 * Upgrade to opentracing-javascript 0.14 (#117) - Yuri Shkuro
-
-- Add OpenTracing methods to get span and trace id (#425) - Sandes de Silva
+* Add OpenTracing methods to get span and trace id (#425) - Sandes de Silva
 
 ## 3.17.2 (2020-02-07)
 
