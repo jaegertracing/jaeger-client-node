@@ -16,7 +16,7 @@ import * as constants from '../../src/constants';
 import * as crossdock_constants from '../src/constants';
 import ConstSampler from '../../src/samplers/const_sampler.js';
 import DefaultContext from '../../src/default_context';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import InMemoryReporter from '../../src/reporters/in_memory_reporter.js';
 import TChannelBridge from '../../src/tchannel_bridge';
 import TChannelServer from '../src/tchannel_server.js';

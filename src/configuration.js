@@ -21,7 +21,7 @@ import Metrics from './metrics/metrics';
 import Tracer from './tracer';
 import UDPSender from './reporters/udp_sender';
 import HTTPSender from './reporters/http_sender';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import * as constants from './constants.js';
 import RemoteThrottler from './throttler/remote_throttler';
 import Utils from './util.js';

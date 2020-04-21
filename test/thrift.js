@@ -11,7 +11,7 @@
 // the License.
 
 import { assert } from 'chai';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import Tracer from '../src/tracer.js';
