@@ -1,8 +1,9 @@
 # Changes by Version
 
-## 3.17.3 (unreleased)
+## 3.18.0 (2020-04-21)
 
-* Nothing yet
+* Upgrade to opentracing-javascript 0.14 (#117) - Yuri Shkuro
+* Add OpenTracing methods to get span and trace id (#425) - Sandes de Silva
 
 ## 3.17.2 (2020-02-07)
 
