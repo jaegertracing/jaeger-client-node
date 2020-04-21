@@ -1,5 +1,9 @@
 # Changes by Version
 
+## 3.18.1 (unreleased)
+
+* Noting yet.
+
 ## 3.18.0 (2020-04-21)
 
 * Upgrade to opentracing-javascript 0.14 (#117) - Yuri Shkuro

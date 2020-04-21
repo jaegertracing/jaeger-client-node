@@ -34,4 +34,5 @@ Declaring formal releases requires peer review.
   * Add a new entry to [CHANGELOG.md](./CHANGELOG.md)
     * Caption `{next_version} (unreleased)`
     * In place of the list of changes, add one entry "- nothing yet"
+  * `make build-node` to update the lock file
   * Get this pull request merged asap
