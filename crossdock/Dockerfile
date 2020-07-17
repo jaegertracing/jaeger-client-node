@@ -1,4 +1,11 @@
-FROM woorank/docker-node-babel
+# 2020-07-16: the source image used to be woorank/docker-node-babel.
+#   However, it is no longer available from Docker Hub.
+#   It was republished from a local cache as jaegertracing/xdock-node:docker-node-babel.
+#     woorank/docker-node-babel                                        latest              1fef8ea9e76f        4 years ago         778MB
+#     jaegertracing/xdock-node                                         docker-node-babel   1fef8ea9e76f        4 years ago         778MB
+
+FROM jaegertracing/xdock-node:docker-node-babel
+
 EXPOSE 8080-8082
 
 ADD node_modules/ /node_modules
