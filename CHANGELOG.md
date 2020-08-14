@@ -1,5 +1,9 @@
 # Changes by Version
 
+## 3.18.2 (unreleased)
+
+* Nothing yet.
+
 ## 3.18.1 (2020-08-14)
 
 * Always read thrift defs from `./` to better support bundling (#441) - Hendrik Liebau
