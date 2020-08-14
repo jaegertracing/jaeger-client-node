@@ -1,6 +1,6 @@
 {
   "name": "jaeger-client",
-  "version": "3.18.1",
+  "version": "3.18.2dev",
   "description": "Jaeger binding for OpenTracing API for Node.js",
   "engines": {
     "node": ">=0.10"
