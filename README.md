@@ -267,6 +267,23 @@ tracer.registerExtractor(opentracing.FORMAT_HTTP_HEADERS, codec);
 
 This can prove useful when compatibility with existing Zipkin tracing/instrumentation is desired.
 
+### Webpack Compatibility
+
+In order to bundle the library using webpack, e.g. for uploading code to an AWS Lambda function, it is required to copy the Jaeger thrift definition file into the output directory of the bundle:
+
+```js
+{
+  plugins: [
+    new CopyPlugin([
+      {
+        from: require.resolve('jaeger-client/dist/src/jaeger-idl/thrift/jaeger.thrift'),
+        to: 'jaeger-idl/thrift/jaeger.thrift',
+      },
+    ]),
+  ];
+}
+```
+
 ## License
 
 [Apache 2.0 License](./LICENSE).
