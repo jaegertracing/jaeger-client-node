@@ -53,7 +53,7 @@ describe('http sender', () => {
 
   beforeEach(() => {
     thrift = new Thrift({
-      source: fs.readFileSync(path.join(__dirname, '../src/jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
+      source: ThriftUtils.loadJaegerThriftDefinition(),
       allowOptionalArguments: true,
     });
 
