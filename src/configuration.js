@@ -196,6 +196,7 @@ export default class Configuration {
    * @param {Object} [options.logger] - a logger (see ./_flow/logger.js)
    * @param {Object} [options.tags] - set of key-value pairs which will be set
    *        as process-level tags on the Tracer itself.
+   * @param {string} [options.contextKey] - context trace key, a name of the key to extract/inject context from headers. default to `uber-trace-id` 
    * @param {boolean} [options.traceId128bit] - generate root span with a 128bit traceId.
    * @param {boolean} [options.shareRpcSpan] - Share the same span for rpc span_kind.
    */
