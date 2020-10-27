@@ -546,4 +546,37 @@ describe('initTracerFromENV', () => {
     assert.equal(tracer._tags['KEY2'], 'VALUE2');
     tracer.close(done);
   });
+
+  it('should be respect context key options from env', done => {
+    process.env.JAEGER_SERVICE_NAME = 'test-service';
+    process.env.JAEGER_CONTEXT_KEY = 'custom-trace-id';
+
+    let tracer = initTracerFromEnv();
+
+    const textCodec = tracer._injectors[opentracing.FORMAT_TEXT_MAP];
+    const httpCodec = tracer._injectors[opentracing.FORMAT_HTTP_HEADERS];
+
+    assert.equal(textCodec._contextKey, 'custom-trace-id');
+    assert.equal(httpCodec._contextKey, 'custom-trace-id');
+    tracer.close(done);
+  });
+
+  it('should be override context key via direct config setting.', done => {
+    process.env.JAEGER_SERVICE_NAME = 'test-service';
+    process.env.JAEGER_CONTEXT_KEY = 'custom-trace-id';
+
+    let tracer = initTracerFromEnv(
+      {},
+      {
+        contextKey: 'another-trace-id',
+      }
+    );
+
+    const textCodec = tracer._injectors[opentracing.FORMAT_TEXT_MAP];
+    const httpCodec = tracer._injectors[opentracing.FORMAT_HTTP_HEADERS];
+
+    assert.equal(textCodec._contextKey, 'another-trace-id');
+    assert.equal(httpCodec._contextKey, 'another-trace-id');
+    tracer.close(done);
+  });
 });
