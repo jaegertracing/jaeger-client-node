@@ -188,6 +188,18 @@ export default class ConfigurationEnv {
     return tags;
   }
 
+  static _getContextKeyFromEnv(options) {
+    if (options.contextKey) {
+      return options.contextKey;
+    }
+
+    if (process.env.JAEGER_CONTEXT_KEY) {
+      return process.env.JAEGER_CONTEXT_KEY;
+    }
+
+    return '';
+  }
+
   /**
    * Initialize and return a new instance of Jaeger Tracer from environment variables.
    * config or options can be passed to override environment variables.
@@ -214,6 +226,12 @@ export default class ConfigurationEnv {
         config.reporter = reporterConfig;
       }
     }
+
+    const ctxKey = ConfigurationEnv._getContextKeyFromEnv(options)
+    if (ctxKey) {
+      options.contextKey = ctxKey;
+    }
+
     return Configuration.initTracer(config, options);
   }
 }
