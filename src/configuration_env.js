@@ -11,6 +11,7 @@
 // the License.
 
 import Configuration from './configuration.js';
+import { TRACER_STATE_HEADER_NAME } from './constants';
 import Utils from './util.js';
 
 const deprecatedEnvVars = {
@@ -197,7 +198,7 @@ export default class ConfigurationEnv {
       return process.env.JAEGER_CONTEXT_KEY;
     }
 
-    return '';
+    return TRACER_STATE_HEADER_NAME;
   }
 
   /**
@@ -227,10 +228,7 @@ export default class ConfigurationEnv {
       }
     }
 
-    const ctxKey = ConfigurationEnv._getContextKeyFromEnv(options)
-    if (ctxKey) {
-      options.contextKey = ctxKey;
-    }
+    options.contextKey = ConfigurationEnv._getContextKeyFromEnv(options) || TRACER_STATE_HEADER_NAME;
 
     return Configuration.initTracer(config, options);
   }
