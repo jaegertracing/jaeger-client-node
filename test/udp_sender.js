@@ -268,7 +268,7 @@ function createUdpSenderTest(options) {
       // this test tends to timeout
       this.timeout(15000);
       let tracer = new Tracer('test-service-name', new RemoteReporter(sender), new ConstSampler(true));
-      sender._host = 'foo.bar.xyz';
+      sender._host = 'foo.bar.invalid';
       // In Node 0.10 and 0.12 the error is logged twice: (1) from inline callback, (2) from on('error') handler.
       let expectLogs = semver.satisfies(process.version, '0.10.x || 0.12.x');
       sender._logger = {

@@ -242,7 +242,7 @@ describe('http sender', () => {
     // this test tends to timeout
     this.timeout(15000);
     sender = new HTTPSender({
-      endpoint: 'http://foo.bar.xyz',
+      endpoint: 'http://foo.bar.invalid',
       maxSpanBatchSize: batchSize,
     });
     sender.setProcess(reporter._process);
