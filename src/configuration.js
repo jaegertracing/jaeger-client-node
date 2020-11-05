@@ -148,6 +148,9 @@ export default class Configuration {
       if (config.reporter.agentSocketType) {
         senderConfig['socketType'] = config.reporter.agentSocketType;
       }
+      if (config.reporter.maxUdpPacketSize) {
+        senderConfig['maxPacketSize'] = config.reporter.maxUdpPacketSize;
+      }
     }
     reporterConfig['metrics'] = options.metrics;
     reporterConfig['logger'] = options.logger;
