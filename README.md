@@ -6,6 +6,8 @@ This is [Jaeger](https://jaegertracing.io/)'s client side instrumentation librar
 
 Note that this library is not designed to run in the browser, only in the Node.js-backend servers. For browser-only version, see https://github.com/jaegertracing/jaeger-client-javascript.
 
+To get up and running follow the get started [tutorial](https://github.com/yurishkuro/opentracing-tutorial/tree/master/nodejs).
+
 ## Contributing and Developing
 
 Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
