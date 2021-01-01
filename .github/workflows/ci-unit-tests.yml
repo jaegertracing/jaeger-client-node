@@ -41,7 +41,7 @@ jobs:
         make build-node
         rm -rf ${{ github.workspace }}/node_modules/ ${{ github.workspace }}/package-lock.json    
 
-    - name: Configure Node Version
+    - name: Configure Test Node Version
       uses: actions/setup-node@v2
       with:
         node-version: ${{ matrix.env.TEST_NODE_VERSION }}
