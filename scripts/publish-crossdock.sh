@@ -18,6 +18,8 @@ else
   exit 0
 fi
 
-docker build -f crossdock/Dockerfile -t $REPO:$COMMIT .
+# This image is already built in "make crossdock" step.
+# Not specifying a tag means "latest" tag implicitly.
+docker tag $REPO $REPO:$COMMIT
 docker tag $REPO:$COMMIT $REPO:$TAG
 docker push $REPO
