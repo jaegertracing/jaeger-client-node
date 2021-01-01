@@ -290,8 +290,8 @@ In order to bundle the library using webpack, e.g. for uploading code to an AWS 
 
 [Apache 2.0 License](./LICENSE).
 
-[ci-img]: https://travis-ci.org/jaegertracing/jaeger-client-node.svg?branch=master
-[ci]: https://travis-ci.org/jaegertracing/jaeger-client-node
+[ci-img]: https://github.com/jaegertracing/jaeger-client-node/workflows/Unit%20Tests/badge.svg?branch=master
+[ci]: https://github.com/jaegertracing/jaeger-client-node/actions?query=branch%3Amaster
 [cov-img]: https://codecov.io/gh/jaegertracing/jaeger-client-node/branch/master/graph/badge.svg
 [cov]: https://codecov.io/gh/jaegertracing/jaeger-client-node/branch/master/
 [npm-img]: https://badge.fury.io/js/jaeger-client.svg

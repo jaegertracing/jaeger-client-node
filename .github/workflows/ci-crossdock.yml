@@ -58,13 +58,15 @@ jobs:
         node-version: "0.10"
 
     - name: Run Crossdock
+      id: run-crossdock
       run: |
         make crossdock-fresh
-
-    - name: Push Crossdock
-      run: |
-        bash scripts/build-crossdock.sh
 
     - name: Output Crossdock Logs
       run: make crossdock-logs
       if: ${{ failure() }}
+
+    - name: Publish Crossdock Image
+      run: |
+        bash scripts/publish-crossdock.sh
+      if: steps.run-crossdock.outcome == 'success'

@@ -24,10 +24,15 @@ jobs:
     name: unit-tests - node ${{ matrix.env.TEST_NODE_VERSION }}
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
+        fetch-depth: 2
+
     - name: Configure Node Version (LTS)
       uses: actions/setup-node@v2
       with:
         node-version: ${{ env.NODE_LTS }}
+
     - name: Install Base Project
       run: |
         npm install babel-cli
@@ -35,25 +40,33 @@ jobs:
         make node-modules
         make build-node
         rm -rf ${{ github.workspace }}/node_modules/ ${{ github.workspace }}/package-lock.json    
-    - name: Configure Node Version
+
+    - name: Configure Test Node Version
       uses: actions/setup-node@v2
       with:
         node-version: ${{ matrix.env.TEST_NODE_VERSION }}
       if: ${{ env.NODE_LTS != matrix.env.TEST_NODE_VERSION}}
+
     - name: Install Dependencies
       run: |
         sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
         node --version
         npm install
+
     - name: Run Linter
       run: |
         npm run lint
       if: ${{ matrix.env.LINT == '1' }}
+
     - name: Run Tests
-      run: |
-        make test-without-build
+      run: make test-without-build
+
     - name: Run Code Coverage
-      uses: codecov/codecov-action@v1
+      id: run-coverage
+      run: npm run cover
+      if: ${{ matrix.env.COVER == '1' }}
+
+    - uses: codecov/codecov-action@v1
       with:
         verbose: true
-      if: ${{ matrix.env.COVER == '1' }}
+      if: steps.run-coverage.outcome == 'success'
