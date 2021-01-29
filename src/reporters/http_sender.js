@@ -20,6 +20,7 @@ import { Thrift } from 'thriftrw';
 
 import NullLogger from '../logger.js';
 import SenderUtils from './sender_utils.js';
+import ThriftUtils from '../thrift.js';
 
 const DEFAULT_PATH = '/api/traces';
 const DEFAULT_PORT = 14268;
@@ -55,7 +56,7 @@ export default class HTTPSender {
 
     this._logger = options.logger || new NullLogger();
     this._jaegerThrift = new Thrift({
-      source: fs.readFileSync(path.join(__dirname, '../jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
+      source: ThriftUtils.loadJaegerThriftDefinition(),
       allowOptionalArguments: true,
     });
 
@@ -102,12 +103,12 @@ export default class HTTPSender {
     }
 
     const result = this._jaegerThrift.Batch.rw.toBuffer(this._batch);
+    this._reset(); // clear buffer for new spans, even if Thrift conversion fails
+
     if (result.err) {
       SenderUtils.invokeCallback(callback, numSpans, `Error encoding Thrift batch: ${result.err}`);
       return;
     }
-
-    this._reset();
 
     const requester = this._url.protocol === 'https:' ? https.request : http.request;
 

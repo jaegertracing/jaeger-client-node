@@ -1,7 +1,7 @@
 {
   "name": "jaeger-client",
-  "version": "3.17.1dev",
-  "description": "Jaeger binding for OpenTracing Node",
+  "version": "3.18.2dev",
+  "description": "Jaeger binding for OpenTracing API for Node.js",
   "engines": {
     "node": ">=0.10"
   },
@@ -17,10 +17,10 @@
   "contributors": ["Yuri Shkuro <ys@uber.com>", "Won Jun Jang <wjang@uber.com>", "Jaeger Authors <jaeger-tracing@googlegroups.com>"],
   "dependencies": {
     "node-int64": "^0.4.0",
-    "opentracing": "^0.13.0",
+    "opentracing": "^0.14.4",
     "thriftrw": "^3.5.0",
     "uuid": "^3.2.1",
-    "xorshift": "^0.2.0"
+    "xorshift": "^1.1.1"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",
@@ -33,7 +33,7 @@
     "benchmark": "^2.1.1",
     "body-parser": "^1.15.2",
     "chai": "^3.5.0",
-    "eslint": "^3.14.1",
+    "eslint": "^4.18.2",
     "eslint-config-airbnb": "^15.1.0",
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-flowtype": "^2.4.0",
@@ -46,7 +46,7 @@
     "husky": "^0.14.3",
     "lint-staged": "^6.0.0",
     "lodash": "^4.15.0",
-    "minimist": "1.2.0",
+    "minimist": "1.2.3",
     "mocha": "^3.0.1",
     "prettier": "1.10.2",
     "request": "2.74.0",

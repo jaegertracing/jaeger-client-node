@@ -18,7 +18,7 @@ import ConstSampler from '../src/samplers/const_sampler';
 import DefaultContext from '../src/default_context';
 import path from 'path';
 import InMemoryReporter from '../src/reporters/in_memory_reporter';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import TestUtils from '../src/test_util.js';
 import Tracer from '../src/tracer';
 import TChannel from 'tchannel';

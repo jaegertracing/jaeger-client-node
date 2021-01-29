@@ -85,7 +85,7 @@ export default class SpanContext {
     }
     return this._spanIdStr;
   }
-
+  
   get parentIdStr(): ?string {
     if (this._parentIdStr == null && this._parentId != null) {
       this._parentIdStr = this._parentId.toString('hex');
@@ -217,6 +217,20 @@ export default class SpanContext {
       this._debugId, // debugID
       this._samplingState // samplingState
     );
+  }
+
+  /**
+   * @return {string} - returns trace ID as string or "" if null
+   */
+  toTraceId(): string {
+    return this.traceIdStr || "";
+  }
+
+  /**
+   * @return {string} - returns span ID as string or "" if null
+   */
+  toSpanId(): string {
+    return this.spanIdStr || "";
   }
 
   /**

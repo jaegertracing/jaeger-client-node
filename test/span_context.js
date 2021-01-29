@@ -154,4 +154,10 @@ describe('SpanContext', () => {
     context._setFirehose(false);
     assert.isFalse(context.isFirehose());
   });
+
+  it('should return span and trace id as strings', () => {
+    const context = SpanContext.fromString('ffffffffffffffffffffffffffffffff:ffffffffffffffff:5:1');;
+    assert.equal(context.toTraceId(), 'ffffffffffffffffffffffffffffffff');
+    assert.equal(context.toSpanId(), 'ffffffffffffffff');
+  });
 });

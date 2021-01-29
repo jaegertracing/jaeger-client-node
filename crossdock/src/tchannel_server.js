@@ -17,7 +17,7 @@ import DefaultContext from '../../src/default_context.js';
 import Helpers from './helpers';
 import InMemoryReporter from '../../src/reporters/in_memory_reporter.js';
 import Tracer from '../../src/tracer.js';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import path from 'path';
 import TChannelBridge from '../../src/tchannel_bridge';
 

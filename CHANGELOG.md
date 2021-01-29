@@ -1,8 +1,26 @@
 # Changes by Version
 
-## 3.17.1 (unreleased)
+## 3.18.2 (unreleased)
 
 * Nothing yet.
+
+## 3.18.1 (2020-08-14)
+
+* Always read thrift defs from `./` to better support bundling (#441) - Hendrik Liebau
+
+## 3.18.0 (2020-04-21)
+
+* Upgrade to opentracing-javascript 0.14 (#117) - Yuri Shkuro
+* Add OpenTracing methods to get span and trace id (#425) - Sandes de Silva
+
+## 3.17.2 (2020-02-07)
+
+* README: Clarify that this library is not designed to work in the browser.
+
+## 3.17.1 (2019-10-22)
+
+* [bug fix] Do not apply adaptive sampler to child spans (#410) -- Yuri Shkuro
+* Add toString to reporters (#403) -- Andrea Di Giorgi
 
 ## 3.17.0 (2019-09-23)
 

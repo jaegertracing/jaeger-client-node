@@ -22,7 +22,7 @@ import path from 'path';
 import semver from 'semver';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import RemoteReporter from '../src/reporters/remote_reporter.js';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import Tracer from '../src/tracer.js';
 import { Thrift } from 'thriftrw';
 import ThriftUtils from '../src/thrift.js';
@@ -53,7 +53,7 @@ describe('http sender', () => {
 
   beforeEach(() => {
     thrift = new Thrift({
-      source: fs.readFileSync(path.join(__dirname, '../src/jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
+      source: ThriftUtils.loadJaegerThriftDefinition(),
       allowOptionalArguments: true,
     });
 
@@ -229,6 +229,7 @@ describe('http sender', () => {
     sender.flush((numSpans, err) => {
       assert.equal(numSpans, 1);
       expect(err).to.have.string('Error encoding Thrift batch:');
+      assert.equal(sender._batch.spans.length, 0); // should empty spans in flush() on failed buffer conversion
       done();
     });
   });

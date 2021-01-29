@@ -17,7 +17,7 @@ import DefaultContext from './default_context';
 import Span from './span';
 import SpanContext from './span_context';
 import Utils from './util';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import Tracer from './tracer';
 import TextMapCodec from './propagators/text_map_codec';
 

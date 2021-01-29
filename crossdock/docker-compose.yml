@@ -33,6 +33,7 @@ services:
             - REPORT=compact
 
     node:
+        image: jaegertracing/xdock-node
         build:
             context: ../.
             dockerfile: crossdock/Dockerfile

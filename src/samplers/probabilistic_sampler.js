@@ -20,9 +20,7 @@ export default class ProbabilisticSampler extends LegacySamplerV1Base implements
   constructor(samplingRate: number) {
     super('ProbabilisticSampler');
     if (samplingRate < 0.0 || samplingRate > 1.0) {
-      throw new Error(
-        `The sampling rate must be less than 0.0 and greater than 1.0. Received ${samplingRate}`
-      );
+      throw new Error(`The sampling rate must be between 0.0 and 1.0. Received ${samplingRate}`);
     }
 
     this._samplingRate = samplingRate;

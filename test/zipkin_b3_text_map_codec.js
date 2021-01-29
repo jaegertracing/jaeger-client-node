@@ -14,7 +14,7 @@ import { assert } from 'chai';
 import * as constants from '../src/constants.js';
 import ConstSampler from '../src/samplers/const_sampler.js';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import Tracer from '../src/tracer.js';
 import Metrics from '../src/metrics/metrics.js';
 import LocalMetricFactory from './lib/metrics/local/metric_factory.js';
