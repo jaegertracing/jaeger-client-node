@@ -72,7 +72,7 @@ export default class PrometheusMetricsFactory {
     let key = name + ',' + labelNames.toString();
     let help = name;
     if (this._namespace) {
-      name = this._namespace + '_' + name;
+      name = this._namespace.replace(/-/g, '_') + '_' + name;
     }
     if (!(key in this._cache)) {
       this._cache[key] = new metric({ name, help, labelNames });
