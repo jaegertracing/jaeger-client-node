@@ -115,7 +115,14 @@ export default class HTTPSender {
     const req = requester(this._httpOptions, resp => {
       // consume response data to free up memory
       resp.resume();
-      SenderUtils.invokeCallback(callback, numSpans);
+
+      let error;
+      if (resp.statusCode >= 400) {
+        error = `error sending spans over HTTP: server responded with HTTP ${resp.statusCode}`;
+        this._logger.error(error);
+      }
+
+      SenderUtils.invokeCallback(callback, numSpans, error);
     });
 
     req.on('error', err => {
