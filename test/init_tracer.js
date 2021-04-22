@@ -546,4 +546,27 @@ describe('initTracerFromENV', () => {
     assert.equal(tracer._tags['KEY2'], 'VALUE2');
     tracer.close(done);
   });
+
+  it('should parse falsy values from direct config setting', done => {
+    let config = {
+      serviceName: 'test-service-arg',
+      sampler: {
+        type: 'const',
+      },
+    };
+
+    let tracer;
+
+    expect(() => {
+      tracer = initTracerFromEnv(config);
+    }).to.throw();
+
+    config.sampler.param = 0;
+    expect(() => {
+      tracer = initTracerFromEnv(config);
+    }).to.not.throw();
+    assert.equal(tracer._sampler._decision, false);
+
+    tracer.close(done);
+  });
 });
