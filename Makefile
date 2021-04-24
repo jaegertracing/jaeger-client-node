@@ -1,7 +1,7 @@
 -include crossdock/rules.mk
 
 NODE_VER=$(shell node -v)
-ifeq ($(patsubst v10.%,matched,$(NODE_VER)), matched)
+ifeq ($(patsubst v14.%,matched,$(NODE_VER)), matched)
 	NODE_LTS=true
 else
 	NODE_LTS=false

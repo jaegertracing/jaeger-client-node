@@ -10,17 +10,20 @@ jobs:
   unit-tests:
     runs-on: ubuntu-latest
     env:
-      NODE_LTS: "10"
+      # this must match NODE_LTS version in Makefile
+      NODE_LTS: "14"
     strategy:
       matrix:
         env:
+          # 0.10 is used for legacy reasons for crossdock tests
           - TEST_NODE_VERSION: "0.10"
-          - TEST_NODE_VERSION: "4"
-          - TEST_NODE_VERSION: "6"
           - TEST_NODE_VERSION: "10"
+          - TEST_NODE_VERSION: "12"
+          # current Active LTS, https://nodejs.org/en/about/releases/
+          - TEST_NODE_VERSION: "14"
             LINT: "1"
             COVER: "1"
-          - TEST_NODE_VERSION: "12"
+          - TEST_NODE_VERSION: "16"
     name: unit-tests - node ${{ matrix.env.TEST_NODE_VERSION }}
     steps:
     - uses: actions/checkout@v2
