@@ -15,8 +15,6 @@ jobs:
     strategy:
       matrix:
         env:
-          # 0.10 is used for legacy reasons for crossdock tests
-          - TEST_NODE_VERSION: "0.10"
           - TEST_NODE_VERSION: "10"
           - TEST_NODE_VERSION: "12"
           # current Active LTS, https://nodejs.org/en/about/releases/
@@ -40,7 +38,6 @@ jobs:
       run: |
         npm install babel-cli
         npm uninstall -D husky lint-staged
-        make node-modules
         make build-node
         rm -rf ${{ github.workspace }}/node_modules/ ${{ github.workspace }}/package-lock.json    
 

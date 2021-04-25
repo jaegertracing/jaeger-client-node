@@ -4,21 +4,26 @@
 #     woorank/docker-node-babel                                        latest              1fef8ea9e76f        4 years ago         778MB
 #     jaegertracing/xdock-node                                         docker-node-babel   1fef8ea9e76f        4 years ago         778MB
 
-FROM jaegertracing/xdock-node:docker-node-babel
+# FROM jaegertracing/xdock-node:docker-node-babel
+
+FROM node:14-alpine
+RUN apk update && apk add python g++ make bash && rm -rf /var/cache/apk/*
 
 EXPOSE 8080-8082
 
-ADD node_modules/ /node_modules
+# ADD node_modules/ /node_modules
 ADD package.json /
+ADD package-lock.json /
 ADD src/ /src
 ADD src/jaeger-idl/thrift/crossdock/tracetest.thrift /crossdock/tracetest.thrift
-ADD crossdock/src /crossdock/src
+ADD crossdock/src/ /crossdock/src
 ADD .babelrc /
 
 # We re-install tchannel because it is the only depenency that requires native code compilation.
 # Doing a full npm install inside the container would make this build really slow.
-# We pin tchannel to v3, because v4 removed support for Node-v0.10.
-RUN npm install tchannel@3.9.13
+# RUN npm install tchannel@4
+RUN npm install
 RUN npm ls
+RUN node -v
 
-CMD ["/crossdock/src/driver.sh"]
+CMD ["/bin/bash", "/crossdock/src/driver.sh"]
