@@ -1,5 +1,6 @@
 FROM node:14-alpine
 
+# tchannel uses node-gyp to compile native libs, which requires python.
 RUN apk update && apk add python g++ make bash && rm -rf /var/cache/apk/*
 
 EXPOSE 8080-8082

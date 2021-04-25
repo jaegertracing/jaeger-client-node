@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Current Active LTS is 14: https://nodejs.org/en/about/releases/.
-      # This must match LTS_NODE_VER in Makefile.
+      # This must match LTS_NODE_VER in Makefile and `.npmrc`.
       NODE_LTS: "14"
     strategy:
       matrix:
