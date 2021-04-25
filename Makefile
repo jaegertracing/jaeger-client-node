@@ -7,12 +7,6 @@ ifeq ($(patsubst v$(LTS_NODE_VER).%,matched,$(NODE_VER)), matched)
 else
 	NODE_LTS=false
 endif
-# TODO remove
-ifeq ($(patsubst v0.10%,matched,$(NODE_VER)), matched)
-	NODE_0_10=true
-else
-	NODE_0_10=false
-endif
 
 .PHONY: publish
 publish: build-node
@@ -25,20 +19,13 @@ publish: build-node
 test: build-node test-without-build
 
 .PHONY: test-without-build
-test-without-build: install-test-deps
+test-without-build:
 	npm run flow
 ifeq ($(NODE_LTS),true)
 	npm run test-all
 endif
 	npm run test-dist
 	npm run check-license
-
-# TODO remove
-.PHONY: install-test-deps
-install-test-deps:
-ifeq ($(NODE_0_10), false)
-	echo skipping npm install --no-save prom-client@11.0.0
-endif
 
 .PHONY: check-node-lts
 check-node-lts:

@@ -10,14 +10,14 @@ jobs:
   unit-tests:
     runs-on: ubuntu-latest
     env:
-      # this must match NODE_LTS version in Makefile
+      # Current Active LTS is 14: https://nodejs.org/en/about/releases/.
+      # This must match LTS_NODE_VER in Makefile.
       NODE_LTS: "14"
     strategy:
       matrix:
         env:
           - TEST_NODE_VERSION: "10"
           - TEST_NODE_VERSION: "12"
-          # current Active LTS, https://nodejs.org/en/about/releases/
           - TEST_NODE_VERSION: "14"
             LINT: "1"
             COVER: "1"
@@ -36,10 +36,8 @@ jobs:
 
     - name: Install Base Project
       run: |
-        npm install babel-cli
-        npm uninstall -D husky lint-staged
         make build-node
-        rm -rf ${{ github.workspace }}/node_modules/ ${{ github.workspace }}/package-lock.json    
+        rm -rf ${{ github.workspace }}/node_modules/ ${{ github.workspace }}/package-lock.json
 
     - name: Configure Test Node Version
       uses: actions/setup-node@v2

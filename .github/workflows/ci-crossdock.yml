@@ -46,11 +46,8 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        # npm install babel-cli
         sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
-        #npm uninstall -D husky lint-staged
         make build-node
-        # rm -rf ./node_modules package-lock.json
 
     - name: Run Crossdock
       id: run-crossdock
