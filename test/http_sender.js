@@ -219,6 +219,17 @@ describe('http sender', () => {
     });
   });
 
+  it('should use timeout provided', done => {
+    sender = new HTTPSender({
+      endpoint: serverEndpoint,
+      timeoutMs: 20,
+    });
+    sender.setProcess(reporter._process);
+
+    assert.equal(sender._timeoutMs, 20);
+    done();
+  });
+
   it('should returns error from flush() on failed buffer conversion', done => {
     let span = tracer.startSpan('leela');
     span.finish(); // finish to set span duration
