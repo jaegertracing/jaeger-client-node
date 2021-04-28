@@ -515,7 +515,7 @@ describe('initTracerFromENV', () => {
     assert.equal(tracer._reporter._sender._url.href, 'http://127.0.0.1:8080/');
     assert.equal(tracer._reporter._sender._username, 'test');
     assert.equal(tracer._reporter._sender._password, 'xxxx');
-    assert.equal(tracer._reporter._sender._timeout, 225);
+    assert.equal(tracer._reporter._sender._timeoutMs, 225);
 
     tracer.close(done);
   });
