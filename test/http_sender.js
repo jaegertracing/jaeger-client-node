@@ -257,6 +257,33 @@ describe('http sender', () => {
     });
   }).timeout(5000);
 
+  it('should log http errors when reporting', function(done) {
+    let loggedError = null;
+    const noop = () => {};
+    const logError = errMsg => {
+      loggedError = errMsg;
+    };
+
+    reporter = new InMemoryReporter();
+    tracer = new Tracer('test-service-name', reporter, new ConstSampler(true));
+    sender = new HTTPSender({
+      logger: { error: logError, info: noop },
+      endpoint: `http://localhost:${server.address().port}/404`,
+      maxSpanBatchSize: batchSize,
+    });
+    sender.setProcess(reporter._process);
+
+    let tracer = new Tracer('test-service-name', new RemoteReporter(sender), new ConstSampler(true));
+
+    tracer.startSpan('testSpan').finish();
+    sender.flush((numSpans, err) => {
+      assert.equal(numSpans, 1);
+      expect(err).to.have.string('error sending spans over HTTP: server responded with HTTP 404');
+      expect(loggedError).to.have.string('error sending spans over HTTP: server responded with HTTP 404');
+      tracer.close(done);
+    });
+  }).timeout(5000);
+
   it('should handle HTTPS collectors', done => {
     // Make it ignore the fact that our cert isn't valid.
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
