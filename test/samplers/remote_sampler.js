@@ -13,7 +13,7 @@
 import { assert } from 'chai';
 import sinon from 'sinon';
 import Metrics from '../../src/metrics/metrics.js';
-import RateLimitingSampler from '../../src/samplers/ratelimiting_sampler';
+import RateLimitingSampler from '../../src/samplers/rate_limiting_sampler';
 import ProbabilisticSampler from '../../src/samplers/probabilistic_sampler.js';
 import PerOperationSampler from '../../src/samplers/per_operation_sampler';
 import RemoteSampler from '../../src/samplers/remote_sampler';
@@ -21,6 +21,8 @@ import MockLogger from '../lib/mock_logger';
 import ConfigServer from '../lib/config_server';
 import LocalMetricFactory from '../lib/metrics/local/metric_factory.js';
 import LocalBackend from '../lib/metrics/local/backend.js';
+import Tracer from '../../src/tracer.js';
+import NoopReporter from '../../src/reporters/noop_reporter.js';
 
 describe('RemoteSampler', () => {
   let server: ConfigServer;
@@ -117,7 +119,7 @@ describe('RemoteSampler', () => {
   it('should set ratelimiting sampler', done => {
     let maxTracesPerSecond = 10;
     remoteSampler._onSamplerUpdate = s => {
-      assert.isOk(s.equal(new RateLimitingSampler(maxTracesPerSecond)));
+      assert.isTrue(s.equal(new RateLimitingSampler(maxTracesPerSecond)));
       done();
     };
     server.addStrategy('service1', {
@@ -135,13 +137,29 @@ describe('RemoteSampler', () => {
     let maxTracesPerSecond = 5;
     remoteSampler._onSamplerUpdate = s => {
       assert.strictEqual(rateLimitingSampler, remoteSampler._sampler);
-      assert.isOk(s.equal(new RateLimitingSampler(maxTracesPerSecond)));
+      assert.isTrue(s.equal(new RateLimitingSampler(maxTracesPerSecond)));
       done();
     };
     server.addStrategy('service1', {
       strategyType: 'RATE_LIMITING',
       rateLimitingSampling: {
         maxTracesPerSecond: maxTracesPerSecond,
+      },
+    });
+    remoteSampler._refreshSamplingStrategy();
+  });
+
+  it('should reset probabilistic sampler', done => {
+    remoteSampler._sampler = new RateLimitingSampler(10);
+    assert.instanceOf(remoteSampler._sampler, RateLimitingSampler);
+    remoteSampler._onSamplerUpdate = s => {
+      assert.instanceOf(remoteSampler._sampler, ProbabilisticSampler);
+      done();
+    };
+    server.addStrategy('service1', {
+      strategyType: 'PROBABILISTIC',
+      probabilisticSampling: {
+        samplingRate: 1.0,
       },
     });
     remoteSampler._refreshSamplingStrategy();
@@ -160,7 +178,7 @@ describe('RemoteSampler', () => {
       },
     });
     remoteSampler._onSamplerUpdate = s => {
-      assert.isOk(s instanceof PerOperationSampler);
+      assert.isTrue(s instanceof PerOperationSampler);
       assert.equal(LocalBackend.counterValue(metrics.samplerRetrieved), 1);
       assert.equal(LocalBackend.counterValue(metrics.samplerUpdated), 1);
 
@@ -172,6 +190,57 @@ describe('RemoteSampler', () => {
         done();
       };
       remoteSampler._refreshSamplingStrategy();
+    };
+    remoteSampler._refreshSamplingStrategy();
+  });
+
+  it('should not use per-operation sampler on child spans', done => {
+    server.addStrategy('service1', {
+      strategyType: 'PROBABILISTIC',
+      probabilisticSampling: {
+        samplingRate: 0.0,
+      },
+      operationSampling: {
+        defaultSamplingProbability: 0.05,
+        defaultLowerBoundTracesPerSecond: 0.1,
+        perOperationStrategies: [
+          {
+            operation: 'op1',
+            probabilisticSampling: { samplingRate: 0.0 },
+          },
+          {
+            operation: 'op2',
+            probabilisticSampling: { samplingRate: 1.0 },
+          },
+        ],
+      },
+    });
+    remoteSampler._onSamplerUpdate = s => {
+      let tracer = new Tracer('service', new NoopReporter(), s);
+
+      let sp0 = tracer.startSpan('op2');
+      assert.isTrue(sp0.context().isSampled(), 'op2 should be sampled on the root span');
+
+      let sp1 = tracer.startSpan('op1');
+      assert.isFalse(sp1.context().isSampled(), 'op1 should not be sampled');
+      sp1.setOperationName('op2');
+      assert.isTrue(sp1.context().isSampled(), 'op2 should be sampled on the root span');
+
+      let parent = tracer.startSpan('op1');
+      assert.isFalse(parent.context().isSampled(), 'parent span should not be sampled');
+      assert.isFalse(parent.context().samplingFinalized, 'parent span should not be finalized');
+
+      let child = tracer.startSpan('op2', { childOf: parent });
+      assert.isFalse(child.context().isSampled(), 'child span should not be sampled even with op2');
+      assert.isFalse(child.context().samplingFinalized, 'child span should not be finalized');
+      child.setOperationName('op2');
+      assert.isFalse(child.context().isSampled(), 'op2 should not be sampled on the child span');
+      assert.isTrue(
+        child.context().samplingFinalized,
+        'child span should be finalized after setOperationName'
+      );
+
+      done();
     };
     remoteSampler._refreshSamplingStrategy();
   });
@@ -204,5 +273,47 @@ describe('RemoteSampler', () => {
     });
 
     clock.tick(20);
+  });
+
+  it('should delegate all sampling calls', () => {
+    const decision: SamplingDecision = {
+      sample: false,
+      retryable: true,
+      tags: null,
+      fake: 'fake',
+    };
+    const mockSampler: Sampler = {
+      onCreateSpan: function onCreateSpan(span: Span): SamplingDecision {
+        this._onCreateSpan = [span];
+        return decision;
+      },
+      onSetOperationName: function onSetOperationName(span: Span, operationName: string): SamplingDecision {
+        this._onSetOperationName = [span, operationName];
+        return decision;
+      },
+      onSetTag: function onSetOperationName(span: Span, key: string, value: any): SamplingDecision {
+        this._onSetTag = [span, key, value];
+        return decision;
+      },
+    };
+    remoteSampler._sampler = mockSampler;
+    const span: Span = { fake: 'fake' };
+
+    assert.deepEqual(decision, remoteSampler.onCreateSpan(span));
+    assert.deepEqual([span], mockSampler._onCreateSpan);
+
+    assert.deepEqual(decision, remoteSampler.onSetOperationName(span, 'op1'));
+    assert.deepEqual([span, 'op1'], mockSampler._onSetOperationName);
+
+    assert.deepEqual(decision, remoteSampler.onSetTag(span, 'pi', 3.1415));
+    assert.deepEqual([span, 'pi', 3.1415], mockSampler._onSetTag);
+  });
+
+  it('should support setting a custom path for sampling endpoint', () => {
+    let samplingPath = '/custom-sampling-path';
+    let rs = new RemoteSampler('service1', {
+      samplingPath: samplingPath,
+    });
+    assert.equal(rs._samplingPath, samplingPath);
   });
 });

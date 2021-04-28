@@ -12,9 +12,9 @@
 // the License.
 
 import assert from 'assert';
-import * as constants from '../constants.js';
-import ProbabilisticSampler from './probabilistic_sampler.js';
-import GuaranteedThroughputSampler from './guaranteed_throughput_sampler.js';
+import { SAMPLER_API_V2 } from './constants';
+import GuaranteedThroughputSampler from './guaranteed_throughput_sampler';
+import ProbabilisticSampler from './probabilistic_sampler';
 
 type SamplersByOperation = { [key: string]: GuaranteedThroughputSampler, __proto__: null };
 
@@ -23,7 +23,8 @@ type SamplersByOperation = { [key: string]: GuaranteedThroughputSampler, __proto
 // that all endpoints are represented in the sampled traces. If the number
 // of distinct operation names exceeds maxOperations, all other names are
 // sampled with a default probabilistic sampler.
-export default class PerOperationSampler {
+export default class PerOperationSampler implements Sampler {
+  apiVersion = SAMPLER_API_V2;
   _maxOperations: number;
   _samplersByOperation: SamplersByOperation;
   _defaultSampler: ProbabilisticSampler;
@@ -78,7 +79,7 @@ export default class PerOperationSampler {
   }
 
   isSampled(operation: string, tags: any): boolean {
-    let sampler: Sampler = this._samplersByOperation[operation];
+    let sampler: LegacySamplerV1 = this._samplersByOperation[operation];
     if (!sampler) {
       if (Object.keys(this._samplersByOperation).length >= this._maxOperations) {
         return this._defaultSampler.isSampled(operation, tags);
@@ -89,7 +90,31 @@ export default class PerOperationSampler {
     return sampler.isSampled(operation, tags);
   }
 
-  equal(other: Sampler): boolean {
+  onCreateSpan(span: Span): SamplingDecision {
+    const outTags = {};
+    let isSampled = false;
+    if (span.context()._samplingState.isLocalRootSpan(span.context())) {
+      isSampled = this.isSampled(span.operationName, outTags);
+    }
+    // returning retryable=true since we can change the sampling decision
+    // after the first call to setOperationName()
+    return { sample: isSampled, retryable: true, tags: outTags };
+  }
+
+  onSetOperationName(span: Span, operationName: string): SamplingDecision {
+    const outTags = {};
+    let isSampled = false;
+    if (span.context()._samplingState.isLocalRootSpan(span.context())) {
+      isSampled = this.isSampled(span.operationName, outTags);
+    }
+    return { sample: isSampled, retryable: false, tags: outTags };
+  }
+
+  onSetTag(span: Span, key: string, value: any): SamplingDecision {
+    return { sample: false, retryable: true, tags: null };
+  }
+
+  equal(other: LegacySamplerV1): boolean {
     return false; // TODO equal should be removed
   }
 

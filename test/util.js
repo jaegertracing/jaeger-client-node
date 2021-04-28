@@ -44,4 +44,18 @@ describe('utils', () => {
     ];
     assert.deepEqual(expectedTags, results);
   });
+
+  it('should create new empty buffer', () => {
+    let results = Utils.newBuffer(8);
+    assert.isNotNull(results);
+    assert.equal(results.length, 8);
+    assert.deepEqual(new Buffer([0, 0, 0, 0, 0, 0, 0, 0]), results);
+  });
+
+  it('should create new buffer from hex', () => {
+    let expectedValue = 'deadbeef';
+    let results = Utils.newBufferFromHex(expectedValue);
+    assert.isNotNull(results);
+    assert.equal(expectedValue, results.toString('hex'));
+  });
 });

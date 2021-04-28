@@ -14,7 +14,7 @@
 import Span from '../span.js';
 import ThriftUtils from '../thrift.js';
 
-export default class InMemoryReporter {
+export default class InMemoryReporter implements Reporter {
   _spans: Array<Span>;
   _process: Process;
 
@@ -24,6 +24,10 @@ export default class InMemoryReporter {
 
   name(): string {
     return 'InMemoryReporter';
+  }
+
+  toString(): string {
+    return this.name();
   }
 
   report(span: Span): void {

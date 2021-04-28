@@ -89,11 +89,11 @@ describe('ZipkinB3TextMapCodec', () => {
     };
 
     let ctx = codec.extract(carrier);
-    assert.isNotOk(ctx.parentIdStr);
-    assert.isNotOk(ctx.spanIdStr);
-    assert.isNotOk(ctx.traceIdStr);
-    assert.equal(ctx.isSampled(), true);
-    assert.equal(ctx.isDebug(), true);
+    assert.equal('', ctx.parentIdStr);
+    assert.equal('', ctx.spanIdStr);
+    assert.equal('', ctx.traceIdStr);
+    assert.isTrue(ctx.isSampled());
+    assert.isTrue(ctx.isDebug());
   });
   it('should not extract parentspanid if not injected', () => {
     let codec = new ZipkinB3TextMapCodec({ urlEncoding: true });

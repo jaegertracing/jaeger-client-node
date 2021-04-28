@@ -1,15 +1,17 @@
-FROM woorank/docker-node-babel
+FROM node:14-alpine
+
+# tchannel uses node-gyp to compile native libs, which requires python.
+RUN apk update && apk add python g++ make bash && rm -rf /var/cache/apk/*
+
 EXPOSE 8080-8082
 
-ADD node_modules/ /node_modules
 ADD package.json /
+ADD package-lock.json /
 ADD src/ /src
 ADD src/jaeger-idl/thrift/crossdock/tracetest.thrift /crossdock/tracetest.thrift
-ADD crossdock/src /crossdock/src
+ADD crossdock/src/ /crossdock/src
 ADD .babelrc /
 
-# We re-install tchannel because it is the only depenency that requires native code compilation.
-# Doing a full npm install inside the container would make this build really slow.
-RUN npm install tchannel
+RUN npm install
 
-CMD ["/crossdock/src/driver.sh"]
+CMD ["/bin/bash", "/crossdock/src/driver.sh"]

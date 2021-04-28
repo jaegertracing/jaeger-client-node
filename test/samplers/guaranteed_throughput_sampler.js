@@ -34,8 +34,8 @@ describe('GuaranteedThroughput sampler', () => {
 
   it('should equal itself', () => {
     let sampler = new GuaranteedThroughputSampler(2, 0);
-    assert.isOk(sampler.equal(sampler));
-    assert.isOk(sampler.equal(new GuaranteedThroughputSampler(2, 0)));
+    assert.isTrue(sampler.equal(sampler));
+    assert.isTrue(sampler.equal(new GuaranteedThroughputSampler(2, 0)));
     sampler.close();
   });
 
@@ -53,10 +53,10 @@ describe('GuaranteedThroughput sampler', () => {
       // Since the test runs under one second, we expect 2 successful samples
       // and one unsuccessful.
       if (expectedDecision) {
-        assert.isOk(decision, 'must sample');
+        assert.isTrue(decision, 'must sample');
         assert.deepEqual(expectedTags, actualTags);
       } else {
-        assert.isNotOk(decision, 'must not sample');
+        assert.isFalse(decision, 'must not sample');
         assert.deepEqual({}, actualTags);
       }
     });
@@ -65,10 +65,10 @@ describe('GuaranteedThroughput sampler', () => {
     sampler.close();
   });
 
-  let assertValues = function assertValues(sampler, lb, rate) {
+  function assertValues(sampler, lb, rate) {
     assert.equal(lb, sampler._lowerBoundSampler.maxTracesPerSecond);
     assert.equal(rate, sampler._probabilisticSampler.samplingRate);
-  };
+  }
 
   it('should not change when update() called with the same values', () => {
     let sampler = new GuaranteedThroughputSampler(2, 1.0);
@@ -109,8 +109,8 @@ describe('GuaranteedThroughput sampler', () => {
     let p2 = sampler._lowerBoundSampler;
     let isUpdated: boolean = sampler.update(2, 0.9);
     assert.isTrue(isUpdated);
-    assert.isNotOk(p1 === sampler._probabilisticSampler);
-    assert.strictEqual(sampler._lowerBoundSampler, p2);
+    assert.notStrictEqual(p1, sampler._probabilisticSampler);
+    assert.strictEqual(p2, sampler._lowerBoundSampler);
     assertValues(sampler, 2, 0.9);
   });
 
@@ -148,10 +148,10 @@ describe('GuaranteedThroughput sampler', () => {
       let actualTags = {};
       let decision = sampler.isSampled('testOperationName', actualTags);
       if (expectedDecision) {
-        assert.isOk(decision, `must sample, test case ${testCase.num}`);
+        assert.isTrue(decision, `must sample, test case ${testCase.num}`);
         assert.deepEqual(expectedTags, actualTags, `must match tags, test case ${testCase.num}`);
       } else {
-        assert.isNotOk(decision, `must not sample, test case ${testCase.num}`);
+        assert.isFalse(decision, `must not sample, test case ${testCase.num}`);
         assert.deepEqual({}, actualTags, `must not have tags, test case ${testCase.num}`);
       }
     });

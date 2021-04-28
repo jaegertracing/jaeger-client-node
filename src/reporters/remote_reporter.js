@@ -18,7 +18,7 @@ import NoopMetricFactory from '../metrics/noop/metric_factory';
 
 const DEFAULT_BUFFER_FLUSH_INTERVAL_MILLIS = 1000;
 
-export default class RemoteReporter {
+export default class RemoteReporter implements Reporter {
   _bufferFlushInterval: number;
   _logger: Logger;
   _sender: Sender;
@@ -42,6 +42,10 @@ export default class RemoteReporter {
 
   name(): string {
     return 'RemoteReporter';
+  }
+
+  toString(): string {
+    return this.name();
   }
 
   report(span: Span): void {

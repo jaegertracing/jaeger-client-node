@@ -11,19 +11,27 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import * as constants from '../constants.js';
+import * as constants from '../constants';
+import LegacySamplerV1Base from './_adapt_sampler';
 
-export default class ProbabilisticSampler {
+export default class ProbabilisticSampler extends LegacySamplerV1Base implements LegacySamplerV1 {
   _samplingRate: number;
 
   constructor(samplingRate: number) {
+    super('ProbabilisticSampler');
     if (samplingRate < 0.0 || samplingRate > 1.0) {
-      throw new Error(
-        `The sampling rate must be less than 0.0 and greater than 1.0. Received ${samplingRate}`
-      );
+      throw new Error(`The sampling rate must be between 0.0 and 1.0. Received ${samplingRate}`);
     }
 
     this._samplingRate = samplingRate;
+  }
+
+  update(samplingRate: number): boolean {
+    if (this._samplingRate == samplingRate) {
+      return false;
+    }
+    this._samplingRate = samplingRate;
+    return true;
   }
 
   name(): string {
@@ -51,17 +59,11 @@ export default class ProbabilisticSampler {
     return Math.random();
   }
 
-  equal(other: Sampler): boolean {
+  equal(other: LegacySamplerV1): boolean {
     if (!(other instanceof ProbabilisticSampler)) {
       return false;
     }
 
     return this.samplingRate === other.samplingRate;
-  }
-
-  close(callback: ?Function): void {
-    if (callback) {
-      callback();
-    }
   }
 }

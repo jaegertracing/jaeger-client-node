@@ -12,17 +12,21 @@
 // the License.
 
 import fs from 'fs';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import path from 'path';
 import { Thrift } from 'thriftrw';
 import Utils from './util.js';
 
 export default class ThriftUtils {
   static _thrift = new Thrift({
-    source: fs.readFileSync(path.join(__dirname, './jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
+    source: ThriftUtils.loadJaegerThriftDefinition(),
     allowOptionalArguments: true,
   });
-  static emptyBuffer: Buffer = new Buffer([0, 0, 0, 0, 0, 0, 0, 0]);
+  static emptyBuffer: Buffer = Utils.newBuffer(8);
+
+  static loadJaegerThriftDefinition(): string {
+    return fs.readFileSync(path.join(__dirname, './jaeger-idl/thrift/jaeger.thrift'), 'ascii');
+  }
 
   static getThriftTags(initialTags: Array<Tag>): Array<any> {
     let thriftTags = [];
@@ -104,13 +108,29 @@ export default class ThriftUtils {
 
       thriftRefs.push({
         refType: refEnum,
-        traceIdLow: context.traceId,
-        traceIdHigh: ThriftUtils.emptyBuffer,
+        traceIdLow: ThriftUtils.getTraceIdLow(context.traceId),
+        traceIdHigh: ThriftUtils.getTraceIdHigh(context.traceId),
         spanId: context.spanId,
       });
     }
 
     return thriftRefs;
+  }
+
+  static getTraceIdLow(traceId: Buffer) {
+    if (traceId != null) {
+      return traceId.slice(-8);
+    }
+
+    return ThriftUtils.emptyBuffer;
+  }
+
+  static getTraceIdHigh(traceId: Buffer) {
+    if (traceId != null && traceId.length > 8) {
+      return traceId.slice(-16, -8);
+    }
+
+    return ThriftUtils.emptyBuffer;
   }
 
   static spanToThrift(span: Span): any {
@@ -119,8 +139,8 @@ export default class ThriftUtils {
     let unsigned = true;
 
     return {
-      traceIdLow: span._spanContext.traceId,
-      traceIdHigh: ThriftUtils.emptyBuffer, // TODO(oibe) implement 128 bit ids
+      traceIdLow: ThriftUtils.getTraceIdLow(span._spanContext.traceId),
+      traceIdHigh: ThriftUtils.getTraceIdHigh(span._spanContext.traceId),
       spanId: span._spanContext.spanId,
       parentSpanId: span._spanContext.parentId || ThriftUtils.emptyBuffer,
       operationName: span._operationName,

@@ -18,9 +18,9 @@ import RemoteReporter from '../src/reporters/remote_reporter';
 import ConstSampler from '../src/samplers/const_sampler';
 import ProbabilisticSampler from '../src/samplers/probabilistic_sampler';
 import RemoteSampler from '../src/samplers/remote_sampler';
-import RateLimitingSampler from '../src/samplers/ratelimiting_sampler';
+import RateLimitingSampler from '../src/samplers/rate_limiting_sampler';
 import { initTracer, initTracerFromEnv } from '../src/index.js';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import RemoteThrottler from '../src/throttler/remote_throttler';
 import DefaultThrottler from '../src/throttler/default_throttler';
 import HTTPSender from '../src/reporters/http_sender.js';
@@ -96,7 +96,11 @@ describe('initTracer', () => {
       config.sampler = samplerConfig;
       let tracer = initTracer(config);
 
-      expect(tracer._sampler).to.be.an.instanceof(expectedType);
+      if (tracer._sampler._delegate) {
+        expect(tracer._sampler._delegate).to.be.an.instanceof(expectedType);
+      } else {
+        expect(tracer._sampler).to.be.an.instanceof(expectedType);
+      }
       tracer.close();
       // TODO(oibe:head) test utils for expectedParam here?
     });
@@ -141,6 +145,7 @@ describe('initTracer', () => {
           logSpans: true,
           agentHost: '127.0.0.1',
           agentPort: 4939,
+          agentSocketType: 'udp6',
           flushIntervalMs: 2000,
         },
       };
@@ -159,6 +164,7 @@ describe('initTracer', () => {
       assert.equal(remoteReporter._bufferFlushInterval, 2000);
       assert.equal(remoteReporter._sender._host, '127.0.0.1');
       assert.equal(remoteReporter._sender._port, 4939);
+      assert.equal(remoteReporter._sender._socketType, 'udp6');
       assert.instanceOf(remoteReporter._sender, UDPSender);
       tracer.close(done);
     });
@@ -213,11 +219,13 @@ describe('initTracer', () => {
         },
         contextKey: 'custom-header',
         baggagePrefix: 'prfx-',
+        traceId128bit: true,
       }
     );
     assert.equal(tracer._logger, logger);
     assert.equal(tracer._metrics._factory, metrics);
     assert.equal(tracer._tags['x'], 'y');
+    assert.equal(tracer._traceId128bit, true);
 
     const textMapInjector = tracer._injectors[opentracing.FORMAT_TEXT_MAP];
     assert.equal(textMapInjector._contextKey, 'custom-header');
@@ -255,8 +263,10 @@ describe('initTracer', () => {
         metrics: metrics,
       }
     );
+    expect(tracer._reporter).to.be.an.instanceof(RemoteReporter);
     assert.equal(tracer._reporter._metrics._factory, metrics);
     assert.equal(tracer._reporter._logger, logger);
+    expect(tracer._sampler).to.be.an.instanceof(RemoteSampler);
     assert.equal(tracer._sampler._metrics._factory, metrics);
     assert.equal(tracer._sampler._logger, logger);
     tracer.close(done);
@@ -308,6 +318,7 @@ describe('initTracerFromENV', () => {
     delete process.env.JAEGER_AGENT_PORT;
     delete process.env.JAEGER_REPORTER_AGENT_HOST;
     delete process.env.JAEGER_AGENT_HOST;
+    delete process.env.JAEGER_AGENT_SOCKET_TYPE;
     delete process.env.JAEGER_REPORTER_ENDPOINT;
     delete process.env.JAEGER_ENDPOINT;
     delete process.env.JAEGER_REPORTER_USER;
@@ -422,6 +433,7 @@ describe('initTracerFromENV', () => {
     process.env.JAEGER_REPORTER_LOG_SPANS = 'true';
     process.env.JAEGER_AGENT_HOST = '127.0.0.1';
     process.env.JAEGER_AGENT_PORT = 4939;
+    process.env.JAEGER_AGENT_SOCKET_TYPE = 'udp6';
     process.env.JAEGER_REPORTER_FLUSH_INTERVAL = 2000;
 
     let tracer = initTracerFromEnv();
@@ -438,6 +450,7 @@ describe('initTracerFromENV', () => {
     assert.equal(remoteReporter._bufferFlushInterval, 2000);
     assert.equal(remoteReporter._sender._host, '127.0.0.1');
     assert.equal(remoteReporter._sender._port, 4939);
+    assert.equal(remoteReporter._sender._socketType, 'udp6');
     assert.instanceOf(remoteReporter._sender, UDPSender);
 
     tracer.close(done);
@@ -535,6 +548,29 @@ describe('initTracerFromENV', () => {
     assert.equal(tracer._sampler._port, 8080);
     assert.equal(tracer._sampler._refreshInterval, 100);
     assert.equal(tracer._tags['KEY2'], 'VALUE2');
+    tracer.close(done);
+  });
+
+  it('should parse falsy values from direct config setting', done => {
+    let config = {
+      serviceName: 'test-service-arg',
+      sampler: {
+        type: 'const',
+      },
+    };
+
+    let tracer;
+
+    expect(() => {
+      tracer = initTracerFromEnv(config);
+    }).to.throw();
+
+    config.sampler.param = 0;
+    expect(() => {
+      tracer = initTracerFromEnv(config);
+    }).to.not.throw();
+    assert.equal(tracer._sampler._decision, false);
+
     tracer.close(done);
   });
 });

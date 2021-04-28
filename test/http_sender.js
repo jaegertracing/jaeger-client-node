@@ -22,7 +22,7 @@ import path from 'path';
 import semver from 'semver';
 import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
 import RemoteReporter from '../src/reporters/remote_reporter.js';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import Tracer from '../src/tracer.js';
 import { Thrift } from 'thriftrw';
 import ThriftUtils from '../src/thrift.js';
@@ -53,7 +53,7 @@ describe('http sender', () => {
 
   beforeEach(() => {
     thrift = new Thrift({
-      source: fs.readFileSync(path.join(__dirname, '../src/jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
+      source: ThriftUtils.loadJaegerThriftDefinition(),
       allowOptionalArguments: true,
     });
 
@@ -105,7 +105,6 @@ describe('http sender', () => {
     spanTwo = ThriftUtils.spanToThrift(spanTwo);
 
     server.on('batchReceived', batch => {
-      assert.isOk(batch);
       assert.equal(batch.spans.length, 2);
 
       assertThriftSpanEqual(assert, spanOne, batch.spans[0]);
@@ -158,7 +157,7 @@ describe('http sender', () => {
         const tSpan = ThriftUtils.spanToThrift(span);
 
         server.on('batchReceived', function(batch) {
-          assert.isOk(batch);
+          assert.isNotNull(batch);
           assertThriftSpanEqual(assert, tSpan, batch.spans[0]);
 
           if (o.expectedTraceId) {
@@ -168,7 +167,7 @@ describe('http sender', () => {
           if (o.expectedParentId) {
             assert.deepEqual(batch.spans[0].parentId, o.expectedParentId);
           } else {
-            assert.isNotOk(batch.spans[0].parentId);
+            assert.isUndefined(batch.spans[0].parentId);
           }
 
           done();
@@ -241,6 +240,7 @@ describe('http sender', () => {
     sender.flush((numSpans, err) => {
       assert.equal(numSpans, 1);
       expect(err).to.have.string('Error encoding Thrift batch:');
+      assert.equal(sender._batch.spans.length, 0); // should empty spans in flush() on failed buffer conversion
       done();
     });
   });
@@ -249,7 +249,9 @@ describe('http sender', () => {
     sender.flush(assertCallback(0, undefined));
   });
 
-  it('should gracefully handle errors emitted by socket.send', done => {
+  it('should gracefully handle errors emitted by socket.send', function(done) {
+    // this test tends to timeout
+    this.timeout(15000);
     sender = new HTTPSender({
       endpoint: 'http://foo.bar.xyz',
       maxSpanBatchSize: batchSize,
@@ -264,7 +266,34 @@ describe('http sender', () => {
       expect(err).to.have.string('error sending spans over HTTP: Error: getaddrinfo ENOTFOUND');
       tracer.close(done);
     });
-  });
+  }).timeout(5000);
+
+  it('should log http errors when reporting', function(done) {
+    let loggedError = null;
+    const noop = () => {};
+    const logError = errMsg => {
+      loggedError = errMsg;
+    };
+
+    reporter = new InMemoryReporter();
+    tracer = new Tracer('test-service-name', reporter, new ConstSampler(true));
+    sender = new HTTPSender({
+      logger: { error: logError, info: noop },
+      endpoint: `http://localhost:${server.address().port}/404`,
+      maxSpanBatchSize: batchSize,
+    });
+    sender.setProcess(reporter._process);
+
+    let tracer = new Tracer('test-service-name', new RemoteReporter(sender), new ConstSampler(true));
+
+    tracer.startSpan('testSpan').finish();
+    sender.flush((numSpans, err) => {
+      assert.equal(numSpans, 1);
+      expect(err).to.have.string('error sending spans over HTTP: server responded with HTTP 404');
+      expect(loggedError).to.have.string('error sending spans over HTTP: server responded with HTTP 404');
+      tracer.close(done);
+    });
+  }).timeout(5000);
 
   it('should handle HTTPS collectors', done => {
     // Make it ignore the fact that our cert isn't valid.

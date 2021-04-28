@@ -12,8 +12,9 @@
 // the License.
 
 import Span from '../span.js';
+import Utils from '../util.js';
 
-export default class CompositeReporter {
+export default class CompositeReporter implements Reporter {
   _reporters: Array<Reporter>;
 
   constructor(reporters: Array<Reporter>) {
@@ -24,29 +25,19 @@ export default class CompositeReporter {
     return 'CompositeReporter';
   }
 
+  toString(): string {
+    return `${this.name()}(${this._reporters.map(reporter => reporter.toString()).join(',')})`;
+  }
+
   report(span: Span): void {
     this._reporters.forEach(r => {
       r.report(span);
     });
   }
 
-  _compositeCallback(limit: number, callback: () => void): () => void {
-    let count = 0;
-    return () => {
-      count++;
-      if (count >= limit) {
-        callback();
-      }
-    };
-  }
-
   close(callback?: () => void): void {
-    const modifiedCallback = callback
-      ? this._compositeCallback(this._reporters.length, callback)
-      : function() {};
-    this._reporters.forEach(r => {
-      r.close(modifiedCallback);
-    });
+    const countdownCallback = Utils.countdownCallback(this._reporters.length, callback);
+    this._reporters.forEach(r => r.close(countdownCallback));
   }
 
   setProcess(serviceName: string, tags: Array<Tag>): void {

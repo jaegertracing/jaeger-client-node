@@ -16,7 +16,7 @@ import ConstSampler from '../../src/samplers/const_sampler.js';
 import express from 'express';
 import Helpers from './helpers';
 import InMemoryReporter from '../../src/reporters/in_memory_reporter.js';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import Tracer from '../../src/tracer.js';
 import EndToEndHandler from './endtoend_handler';
 

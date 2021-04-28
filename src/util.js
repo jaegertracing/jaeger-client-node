@@ -42,16 +42,33 @@ export default class Utils {
   }
 
   /**
-   * Determines whether a string contains a given prefix.
+   * Get a random buffer representing a random 64 bit.
    *
    * @return {Buffer}  - returns a buffer representing a random 64 bit
    * number.
    **/
   static getRandom64(): Buffer {
     let randint = xorshift.randomint();
-    let buf = new Buffer(8);
+    let buf = this.newBuffer(8);
     buf.writeUInt32BE(randint[0], 0);
     buf.writeUInt32BE(randint[1], 4);
+    return buf;
+  }
+
+  /**
+   * Get a random buffer representing a random 128 bit.
+   *
+   * @return {Buffer}  - returns a buffer representing a random 128 bit
+   * number.
+   **/
+  static getRandom128(): Buffer {
+    let randint1 = xorshift.randomint();
+    let randint2 = xorshift.randomint();
+    let buf = this.newBuffer(16);
+    buf.writeUInt32BE(randint1[0], 0);
+    buf.writeUInt32BE(randint1[1], 4);
+    buf.writeUInt32BE(randint2[0], 8);
+    buf.writeUInt32BE(randint2[1], 12);
     return buf;
   }
 
@@ -147,5 +164,48 @@ export default class Utils {
       .on('error', err => {
         error(err);
       });
+  }
+
+  /**
+   * @param {string|number} input - a hex encoded string to store in the buffer.
+   * @return {Buffer} - returns a buffer representing the hex encoded string.
+   **/
+  static newBufferFromHex(input: string): Buffer {
+    const encoding = 'hex';
+    // check that 'Buffer.from' exists based on node's documentation
+    // https://nodejs.org/en/docs/guides/buffer-constructor-deprecation/#variant-3
+    if (Buffer.from && Buffer.from !== Uint8Array.from) {
+      return Buffer.from(input, encoding);
+    }
+    return new Buffer(input, encoding);
+  }
+
+  /**
+   * @param {number} input - a number of octets to allocate.
+   * @return {Buffer} - returns an empty buffer.
+   **/
+  static newBuffer(size: number): Buffer {
+    if (Buffer.alloc) {
+      return Buffer.alloc(size);
+    }
+    const buffer = new Buffer(size);
+    buffer.fill(0);
+    return buffer;
+  }
+
+  /**
+   * Creates a callback function that only delegates to passed <code>callback</code>
+   * after <code>limit</code> invocations. Useful in types like CompositeReporter that
+   * needs to invoke the top level callback only after all delegates' close() methods
+   * are called.
+   */
+  static countdownCallback(limit: number, callback: ?() => void): () => void {
+    let count = 0;
+    return () => {
+      count++;
+      if (count >= limit && callback) {
+        callback();
+      }
+    };
   }
 }

@@ -11,14 +11,16 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import * as constants from '../constants.js';
-import RateLimiter from '../rate_limiter.js';
+import * as constants from '../constants';
+import LegacySamplerV1Base from './_adapt_sampler';
+import RateLimiter from '../rate_limiter';
 
-export default class RateLimitingSampler {
+export default class RateLimitingSampler extends LegacySamplerV1Base implements LegacySamplerV1 {
   _rateLimiter: RateLimiter;
   _maxTracesPerSecond: number;
 
   constructor(maxTracesPerSecond: number, initBalance: ?number) {
+    super('RateLimitingSampler');
     this._init(maxTracesPerSecond, initBalance);
   }
 
@@ -63,17 +65,11 @@ export default class RateLimitingSampler {
     return decision;
   }
 
-  equal(other: Sampler): boolean {
+  equal(other: LegacySamplerV1): boolean {
     if (!(other instanceof RateLimitingSampler)) {
       return false;
     }
 
     return this.maxTracesPerSecond === other.maxTracesPerSecond;
-  }
-
-  close(callback: ?Function): void {
-    if (callback) {
-      callback();
-    }
   }
 }

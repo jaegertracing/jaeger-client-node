@@ -1,15 +1,11 @@
 -include crossdock/rules.mk
 
+LTS_NODE_VER=14
 NODE_VER=$(shell node -v)
-ifeq ($(patsubst v6.%,matched,$(NODE_VER)), matched)
-	NODE_6=true
+ifeq ($(patsubst v$(LTS_NODE_VER).%,matched,$(NODE_VER)), matched)
+	NODE_LTS=true
 else
-	NODE_6=false
-endif
-ifeq ($(patsubst v0.10%,matched,$(NODE_VER)), matched)
-	NODE_0_10=true
-else
-	NODE_0_10=false
+	NODE_LTS=false
 endif
 
 .PHONY: publish
@@ -20,37 +16,33 @@ publish: build-node
 	# Update Changelog.md to relfect the newest version changes.
 
 .PHONY: test
-test: build-node
-	make test-without-build
+test: build-node test-without-build
 
 .PHONY: test-without-build
-test-without-build: install-test-deps
+test-without-build:
 	npm run flow
-ifeq ($(NODE_6),true)
+ifeq ($(NODE_LTS),true)
 	npm run test-all
 endif
 	npm run test-dist
 	npm run check-license
 
-.PHONY: install-test-deps
-install-test-deps:
-ifeq ($(NODE_0_10), false)
-	npm install prom-client@11.0.0
-endif
-
-.PHONY: check-node-6
-check-node-6:
-	@$(NODE_6) || echo Build requires Node 6.x
-	@$(NODE_6) && echo Building using Node 6.x
+.PHONY: check-node-lts
+check-node-lts:
+	@$(NODE_LTS) || echo Build requires Node v$(LTS_NODE_VER)
+	@$(NODE_LTS) && echo Building using Node v$(LTS_NODE_VER)
 
 .PHONY: build-node
-build-node: check-node-6 node-modules
+build-node: check-node-lts node-modules build-without-install
+
+.PHONY: build-without-install
+build-without-install:
 	rm -rf ./dist/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/src/ src/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/test/ test/
 	node_modules/.bin/babel --presets env --plugins transform-class-properties --source-maps -d dist/crossdock/ crossdock/
+	cat src/version.js | sed "s|VERSION_TBD|$(shell node -p 'require("./package.json").version')|g" > dist/src/version.js
 	cp -R ./test/thrift ./dist/test/thrift/
-	cp package.json ./dist/
 	cp -R ./src/jaeger-idl ./dist/src/
 	rm -rf ./dist/src/jaeger-idl/.git
 	cp -R ./src/thriftrw-idl ./dist/src/

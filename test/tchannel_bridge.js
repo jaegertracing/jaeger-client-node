@@ -18,7 +18,7 @@ import ConstSampler from '../src/samplers/const_sampler';
 import DefaultContext from '../src/default_context';
 import path from 'path';
 import InMemoryReporter from '../src/reporters/in_memory_reporter';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import TestUtils from '../src/test_util.js';
 import Tracer from '../src/tracer';
 import TChannel from 'tchannel';
@@ -104,7 +104,7 @@ describe('test tchannel span bridge', () => {
         let tracedChannel = bridge.tracedChannel(encodedChannel);
 
         let clientCallback = (err, res, headers, body) => {
-          assert.isNotOk(err);
+          assert.isNull(err);
           assert.equal(reporter.spans.length, 2);
 
           // the first span to be reported is the server span
@@ -122,9 +122,8 @@ describe('test tchannel span bridge', () => {
           clientSpanTags[opentracing.Tags.PEER_SERVICE] = 'server';
           clientSpanTags[opentracing.Tags.SPAN_KIND] = opentracing.Tags.SPAN_KIND_RPC_CLIENT;
 
-          assert.isOk(TestUtils.hasTags(serverSpan, serverSpanTags));
-          assert.isOk(TestUtils.hasTags(clientSpan, clientSpanTags));
-
+          assert.isTrue(TestUtils.hasTags(serverSpan, serverSpanTags));
+          assert.isTrue(TestUtils.hasTags(clientSpan, clientSpanTags));
           assert.equal(serverSpan.context().parentIdStr, clientSpan.context().spanIdStr);
           // If context exists then the following conditions are true
           // else the following conditons are false

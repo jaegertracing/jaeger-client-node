@@ -16,7 +16,7 @@ import sinon from 'sinon';
 import * as constants from '../../src/constants.js';
 import ConstSampler from '../../src/samplers/const_sampler.js';
 import ProbabilisticSampler from '../../src/samplers/probabilistic_sampler.js';
-import RateLimitingSampler from '../../src/samplers/ratelimiting_sampler.js';
+import RateLimitingSampler from '../../src/samplers/rate_limiting_sampler.js';
 import GuaranteedThroughputSampler from '../../src/samplers/guaranteed_throughput_sampler.js';
 import PerOperationSampler from '../../src/samplers/per_operation_sampler.js';
 import RemoteSampler from '../../src/samplers/remote_sampler.js';
@@ -85,7 +85,7 @@ describe('All samplers', () => {
       let sampler = samplerSetup['sampler'];
       it(sampler.toString(), () => {
         let expectedTags = {};
-        let expectedDecision = !!samplerSetup['decision'];
+        let expectedDecision = Boolean(samplerSetup['decision']);
         let description = `${sampler.toString()}, param=${samplerSetup['param']}`;
 
         if (expectedDecision) {
@@ -93,7 +93,16 @@ describe('All samplers', () => {
           expectedTags[constants.SAMPLER_PARAM_TAG_KEY] = samplerSetup['param'];
         }
         let actualTags = {};
-        let decision = sampler.isSampled('operation', actualTags);
+        let decision: boolean;
+        if (typeof sampler.isSampled === 'function') {
+          decision = sampler.isSampled('operation', actualTags);
+        } else {
+          // assume V2 sampler
+          let s: Span = {};
+          let d = sampler.onCreateSpan(s);
+          decision = d.sample;
+          actualTags = d.tags;
+        }
         assert.equal(decision, expectedDecision, description);
         assert.deepEqual(actualTags, expectedTags, description);
       });
@@ -108,17 +117,17 @@ describe('ConstSampler', () => {
   });
 
   it('decision reflects given parameter', () => {
-    assert.isOk(sampler.decision);
+    assert.isTrue(sampler.decision);
   });
 
   it('does NOT equal another type of sampler', () => {
     let otherSampler = new ProbabilisticSampler(0.5);
-    assert.isNotOk(sampler.equal(otherSampler));
+    assert.isFalse(sampler.equal(otherSampler));
   });
 
   it('does equal the same type of sampler', () => {
     let otherSampler = new ConstSampler(true);
-    assert.isOk(sampler.equal(otherSampler));
+    assert.isTrue(sampler.equal(otherSampler));
   });
 });
 
@@ -126,19 +135,19 @@ describe('ProbabilisticSampler', () => {
   it('throws error on out of range sampling rate', () => {
     expect(() => {
       new ProbabilisticSampler(2.0);
-    }).to.throw('The sampling rate must be less than 0.0 and greater than 1.0. Received 2');
+    }).to.throw('The sampling rate must be between 0.0 and 1.0. Received 2');
   });
 
   it('calls is Sampled, and returns false', () => {
     let sampler = new ProbabilisticSampler(0.0);
     let tags = {};
-    assert.isNotOk(sampler.isSampled('operation', tags));
+    assert.isFalse(sampler.isSampled('operation', tags));
     assert.deepEqual(tags, {});
   });
 
   it('does NOT equal another type of sampler', () => {
     let sampler = new ProbabilisticSampler(0.0);
     let otherSampler = new ConstSampler(true);
-    assert.isNotOk(sampler.equal(otherSampler));
+    assert.isFalse(sampler.equal(otherSampler));
   });
 });

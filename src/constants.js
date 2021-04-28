@@ -13,8 +13,13 @@
 // SAMPLED_MASK is the bit mask indicating that a span has been sampled.
 export const SAMPLED_MASK = 0x1;
 
-// DEBUG_MASK is the bit mask indicationg that a span has been marked for debug.
+// DEBUG_MASK is the bit mask indicating that a span has been marked for debug.
 export const DEBUG_MASK = 0x2;
+
+// MASK = 0x4 is reserved for deferred sampling in the future.
+
+// FIREHOSE_MASK is the bit mask indicating a span is a firehose span.
+export const FIREHOSE_MASK = 0x8;
 
 // JAEGER_CLIENT_VERSION_TAG_KEY is the name of the tag used to report client version.
 export const JAEGER_CLIENT_VERSION_TAG_KEY = 'jaeger.version';

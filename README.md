@@ -1,8 +1,12 @@
 [![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![NPM Published Version][npm-img]][npm] [![OpenTracing 1.0 Enabled][ot-img]][ot-url]
 
-# Jaeger Bindings for Javascript OpenTracing API
+# Jaeger Bindings for OpenTracing API for Node.js
 
 This is [Jaeger](https://jaegertracing.io/)'s client side instrumentation library for Node.js that implements [Javascript OpenTracing API 1.0](https://github.com/opentracing/opentracing-javascript/).
+
+Note that this library is not designed to run in the browser, only in the Node.js-backend servers. For browser-only version, see https://github.com/jaegertracing/jaeger-client-javascript.
+
+See the [OpenTracing tutorial](https://github.com/yurishkuro/opentracing-tutorial/tree/master/nodejs) for the introduction on using the OpenTracing API and the Jaeger SDK.
 
 ## Contributing and Developing
 
@@ -57,6 +61,7 @@ None of the env vars are required and all of them can be overridden via properti
 | JAEGER_SERVICE_NAME              | The service name                                                                                                                                                                                                                                                                                                 |
 | JAEGER_AGENT_HOST                | The hostname for communicating with agent via UDP                                                                                                                                                                                                                                                                |
 | JAEGER_AGENT_PORT                | The port for communicating with agent via UDP                                                                                                                                                                                                                                                                    |
+| JAEGER_AGENT_SOCKET_TYPE         | The family of socket. Must be either 'udp4' or 'udp6' ('udp4' by default).                                                                                                                                                                                                                                       |
 | JAEGER_ENDPOINT                  | The HTTP endpoint for sending spans directly to a collector, i.e. http://jaeger-collector:14268/api/traces                                                                                                                                                                                                       |
 | JAEGER_USER                      | Username to send as part of "Basic" authentication to the collector endpoint                                                                                                                                                                                                                                     |
 | JAEGER_PASSWORD                  | Password to send as part of "Basic" authentication to the collector endpoint                                                                                                                                                                                                                                     |
@@ -127,7 +132,7 @@ var tracer = initTracer(config, options);
 
 ## Usage
 
-The Tracer instance created by `initTracer` is OpenTracing-1.0 compliant. See [opentracing-javascript](https://github.com/opentracing/opentracing-javascript) for usage examples.
+The Tracer instance created by `initTracer` is OpenTracing-1.0 compliant. See [opentracing-javascript](https://github.com/opentracing/opentracing-javascript) for usage examples. Ensure that `tracer.close()` is called on application exit to flush buffered traces.
 
 ### TChannel Span Bridging
 
@@ -240,6 +245,16 @@ span.setTag('jaeger-debug-id', 'some-correlation-id');
 
 This allows using Jaeger UI to find the trace by this tag.
 
+### Trace Buffer
+
+Specify the reporter's flush interval (ms) with `config.reporter.flushIntervalMs` or `JAEGER_REPORTER_FLUSH_INTERVAL`. The default is 1000 ms.
+
+Calling `.close()` on the tracer will properly flush and close composed objects, including the reporter and sampler. This prevents dropped traces in the event of an error or unexpected early termination prior to normal periodic flushing.
+
+```javascript
+tracer.close(cb?)
+```
+
 ### Zipkin Compatibility
 
 Support for [Zipkin's B3 Propagation HTTP headers](https://github.com/openzipkin/b3-propagation) is provided by the `ZipkinB3TextMapCodec`, which can be configured instead of the default `TextMapCodec`.
@@ -255,12 +270,29 @@ tracer.registerExtractor(opentracing.FORMAT_HTTP_HEADERS, codec);
 
 This can prove useful when compatibility with existing Zipkin tracing/instrumentation is desired.
 
+### Webpack Compatibility
+
+In order to bundle the library using webpack, e.g. for uploading code to an AWS Lambda function, it is required to copy the Jaeger thrift definition file into the output directory of the bundle:
+
+```js
+{
+  plugins: [
+    new CopyPlugin([
+      {
+        from: require.resolve('jaeger-client/dist/src/jaeger-idl/thrift/jaeger.thrift'),
+        to: 'jaeger-idl/thrift/jaeger.thrift',
+      },
+    ]),
+  ];
+}
+```
+
 ## License
 
 [Apache 2.0 License](./LICENSE).
 
-[ci-img]: https://travis-ci.org/jaegertracing/jaeger-client-node.svg?branch=master
-[ci]: https://travis-ci.org/jaegertracing/jaeger-client-node
+[ci-img]: https://github.com/jaegertracing/jaeger-client-node/workflows/Unit%20Tests/badge.svg?branch=master
+[ci]: https://github.com/jaegertracing/jaeger-client-node/actions?query=branch%3Amaster
 [cov-img]: https://codecov.io/gh/jaegertracing/jaeger-client-node/branch/master/graph/badge.svg
 [cov]: https://codecov.io/gh/jaegertracing/jaeger-client-node/branch/master/
 [npm-img]: https://badge.fury.io/js/jaeger-client.svg

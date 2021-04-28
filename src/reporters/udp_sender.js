@@ -15,16 +15,20 @@ import dgram from 'dgram';
 import fs from 'fs';
 import path from 'path';
 import { Thrift } from 'thriftrw';
-import NullLogger from '../logger.js';
-import SenderUtils from './sender_utils.js';
+import NullLogger from '../logger';
+import SenderUtils from './sender_utils';
+import ThriftUtils from '../thrift';
+import Utils from '../util';
 
 const HOST = 'localhost';
 const PORT = 6832;
+const SOCKET_TYPE = 'udp4';
 const UDP_PACKET_MAX_LENGTH = 65000;
 
 export default class UDPSender {
   _host: string;
   _port: number;
+  _socketType: string;
   _maxPacketSize: number;
   _process: Process;
   _emitSpanBatchOverhead: number;
@@ -40,9 +44,10 @@ export default class UDPSender {
   constructor(options: any = {}) {
     this._host = options.host || HOST;
     this._port = options.port || PORT;
+    this._socketType = options.socketType || SOCKET_TYPE;
     this._maxPacketSize = options.maxPacketSize || UDP_PACKET_MAX_LENGTH;
     this._logger = options.logger || new NullLogger();
-    this._client = dgram.createSocket('udp4');
+    this._client = dgram.createSocket(this._socketType);
     this._client.on('error', err => {
       this._logger.error(`error sending spans over UDP: ${err}`);
     });
@@ -52,7 +57,7 @@ export default class UDPSender {
       allowFilesystemAccess: true,
     });
     this._jaegerThrift = new Thrift({
-      source: fs.readFileSync(path.join(__dirname, '../jaeger-idl/thrift/jaeger.thrift'), 'ascii'),
+      source: ThriftUtils.loadJaegerThriftDefinition(),
       allowOptionalArguments: true,
     });
     this._totalSpanBytes = 0;
@@ -128,7 +133,7 @@ export default class UDPSender {
     }
 
     const bufferLen = this._totalSpanBytes + this._emitSpanBatchOverhead;
-    const thriftBuffer = new Buffer(bufferLen);
+    const thriftBuffer = Utils.newBuffer(bufferLen);
     const writeResult = this._agentThrift.Agent.emitBatch.argumentsMessageRW.writeInto(
       this._convertBatchToThriftMessage(),
       thriftBuffer,

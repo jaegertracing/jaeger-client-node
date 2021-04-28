@@ -1,5 +1,46 @@
 # Changes by Version
 
+## 3.18.2 (unreleased)
+
+* Nothing yet.
+
+## 3.18.1 (2020-08-14)
+
+* Always read thrift defs from `./` to better support bundling (#441) - Hendrik Liebau
+
+## 3.18.0 (2020-04-21)
+
+* Upgrade to opentracing-javascript 0.14 (#117) - Yuri Shkuro
+* Add OpenTracing methods to get span and trace id (#425) - Sandes de Silva
+
+## 3.17.2 (2020-02-07)
+
+* README: Clarify that this library is not designed to work in the browser.
+
+## 3.17.1 (2019-10-22)
+
+* [bug fix] Do not apply adaptive sampler to child spans (#410) -- Yuri Shkuro
+* Add toString to reporters (#403) -- Andrea Di Giorgi
+
+## 3.17.0 (2019-09-23)
+
+* Add option to support zipkin's shared span id between client and server spans (#399) -- Jonathan Monette
+* Allow specifying 128bit trace IDs via Configuration (#397) -- Aleksei Androsov
+* Add support for UDP over IPv6 (#396) -- Aleksei Androsov
+
+## 3.16.0 (2019-09-09)
+
+* Support 128bit traceIDs (#361) - thanks @PaulMiami
+* Support delayed sampling (#380) - thanks @yurishkuro
+* All spans of a trace share sampling state (#377) - thanks @tiffon and @yurishkuro
+
+## 3.15.0 (2019-05-10)
+
+* Avoid mutation of user's tags (#348) - Thanks @fapspirit
+* Support false values for the B3 Sampled header (#346) - Thanks @sebnow
+* Fix HTTP sender, consume response data to free up memory (#343) - Thanks @baldmaster
+* Transform IP for int32 representation to dot representation (#340) - Thanks @Etienne-Carriere
+
 ## 3.14.4 (2019-01-24)
 
 * Hard code version

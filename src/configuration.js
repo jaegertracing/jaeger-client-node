@@ -12,7 +12,7 @@
 
 import ConstSampler from './samplers/const_sampler';
 import ProbabilisticSampler from './samplers/probabilistic_sampler';
-import RateLimitingSampler from './samplers/ratelimiting_sampler';
+import RateLimitingSampler from './samplers/rate_limiting_sampler';
 import RemoteReporter from './reporters/remote_reporter';
 import CompositeReporter from './reporters/composite_reporter';
 import LoggingReporter from './reporters/logging_reporter';
@@ -21,7 +21,7 @@ import Metrics from './metrics/metrics';
 import Tracer from './tracer';
 import UDPSender from './reporters/udp_sender';
 import HTTPSender from './reporters/http_sender';
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import * as constants from './constants.js';
 import RemoteThrottler from './throttler/remote_throttler';
 import Utils from './util.js';
@@ -49,6 +49,7 @@ let jaegerSchema = {
         logSpans: { type: 'boolean' },
         agentHost: { type: 'string' },
         agentPort: { type: 'number' },
+        agentSocketType: { type: 'string' },
         collectorEndpoint: { type: 'string' },
         username: { type: 'string' },
         password: { type: 'string' },
@@ -147,6 +148,10 @@ export default class Configuration {
       if (config.reporter.agentPort) {
         senderConfig['port'] = config.reporter.agentPort;
       }
+
+      if (config.reporter.agentSocketType) {
+        senderConfig['socketType'] = config.reporter.agentSocketType;
+      }
     }
     reporterConfig['metrics'] = options.metrics;
     reporterConfig['logger'] = options.logger;
@@ -195,7 +200,10 @@ export default class Configuration {
    * @param {Object} [options.logger] - a logger (see ./_flow/logger.js)
    * @param {Object} [options.tags] - set of key-value pairs which will be set
    *        as process-level tags on the Tracer itself.
+   * @param {boolean} [options.traceId128bit] - generate root span with a 128bit traceId.
+   * @param {boolean} [options.shareRpcSpan] - Share the same span for rpc span_kind.
    */
+
   static initTracer(config, options = {}) {
     let reporter;
     let sampler;
@@ -228,7 +236,7 @@ export default class Configuration {
     }
 
     if (options.logger) {
-      options.logger.info(`Initializing Jaeger Tracer with ${reporter.name()} and ${sampler.name()}`);
+      options.logger.info(`Initializing Jaeger Tracer with ${reporter} and ${sampler}`);
     }
 
     return new Tracer(config.serviceName, reporter, sampler, {
@@ -237,6 +245,8 @@ export default class Configuration {
       metrics: options.metrics,
       logger: options.logger,
       tags: options.tags,
+      traceId128bit: options.traceId128bit,
+      shareRpcSpan: options.shareRpcSpan,
       debugThrottler: throttler,
     });
   }

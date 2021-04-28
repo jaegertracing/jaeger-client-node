@@ -12,19 +12,20 @@
 
 import _ from 'lodash';
 import { assert, expect } from 'chai';
-import ConstSampler from '../src/samplers/const_sampler.js';
-import * as constants from '../src/constants.js';
-import InMemoryReporter from '../src/reporters/in_memory_reporter.js';
+import ConstSampler from '../src/samplers/const_sampler';
+import * as constants from '../src/constants';
+import InMemoryReporter from '../src/reporters/in_memory_reporter';
 import * as opentracing from 'opentracing';
-import SpanContext from '../src/span_context.js';
-import Tracer from '../src/tracer.js';
-import Utils from '../src/util.js';
-import Metrics from '../src/metrics/metrics.js';
-import LocalMetricFactory from './lib/metrics/local/metric_factory.js';
-import LocalBackend from './lib/metrics/local/backend.js';
+import SpanContext from '../src/span_context';
+import Tracer from '../src/tracer';
+import Utils from '../src/util';
+import Metrics from '../src/metrics/metrics';
+import LocalMetricFactory from './lib/metrics/local/metric_factory';
+import LocalBackend from './lib/metrics/local/backend';
 import sinon from 'sinon';
 import DefaultThrottler from '../src/throttler/default_throttler';
 import os from 'os';
+import JaegerTestUtils from '../src/test_util';
 
 describe('tracer should', () => {
   let tracer;
@@ -89,8 +90,9 @@ describe('tracer should', () => {
     let spanContext = tracer.extract(opentracing.FORMAT_TEXT_MAP, headers);
     let rootSpan = tracer.startSpan('fry', { childOf: spanContext });
 
-    assert.isOk(rootSpan.context().traceId);
-    assert.isNotOk(rootSpan.context().parentId);
+    assert.isNotNull(rootSpan.context().traceId);
+    assert.isDefined(rootSpan.context().traceId);
+    assert.isNull(rootSpan.context().parentId);
     assert.equal(rootSpan.context().flags, 1);
     assert.equal('Bender', rootSpan.getBaggageItem('robot'));
     assert.equal('Leela', rootSpan.getBaggageItem('female'));
@@ -105,21 +107,23 @@ describe('tracer should', () => {
     let context = SpanContext.withBinaryIds(traceId, spanId, parentId, flags);
     let start = 123.456;
     let rpcServer = false;
-    let internalTags = [];
-    let references = [];
     let tags = {
-      keyOne: 'leela',
-      keyTwo: 'bender',
+      keyOne: 'Leela',
+      keyTwo: 'Bender',
     };
+    let internalTags = {
+      'internal-tag': 'Fry',
+    };
+    let references = [];
     let span = tracer._startInternalSpan(
       context,
       'op-name',
       start,
-      internalTags,
       tags,
-      null,
-      rpcServer,
-      references
+      internalTags,
+      references,
+      false,
+      rpcServer
     );
 
     assert.deepEqual(span.context().traceId, traceId);
@@ -127,13 +131,21 @@ describe('tracer should', () => {
     assert.deepEqual(span.context().parentId, parentId);
     assert.equal(span.context().flags, flags);
     assert.equal(span._startTime, start);
-    assert.equal(Object.keys(span._tags).length, 2);
+    assert.isTrue(
+      JaegerTestUtils.hasTags(span, {
+        keyOne: 'Leela',
+        keyTwo: 'Bender',
+        'sampler.type': 'const',
+        'sampler.param': true,
+        'internal-tag': 'Fry',
+      })
+    );
   });
 
   it('report a span with no tracer level tags', () => {
     let span = tracer.startSpan('op-name');
     tracer._report(span);
-    assert.isOk(reporter.spans.length, 1);
+    assert.equal(1, reporter.spans.length);
     let actualTags = _.sortBy(span._tags, o => {
       return o.key;
     });
@@ -152,8 +164,8 @@ describe('tracer should', () => {
     });
 
     assert.equal(span.context().traceId, span.context().spanId);
-    assert.isNotOk(span.context().parentId);
-    assert.isOk(span.context().isSampled());
+    assert.equal(span.context().parentId, null);
+    assert.isTrue(span.context().isSampled());
     assert.equal(span._startTime, startTime);
   });
 
@@ -264,6 +276,38 @@ describe('tracer should', () => {
     };
     let savedContext = SpanContext.withBinaryIds(
       Utils.encodeInt64(1),
+      Utils.encodeInt64(2),
+      Utils.encodeInt64(3),
+      constants.SAMPLED_MASK,
+      baggage
+    );
+
+    let assertByFormat = format => {
+      let carrier = {};
+      tracer.inject(savedContext, format, carrier);
+      let extractedContext = tracer.extract(format, carrier);
+
+      assert.deepEqual(savedContext.traceId, extractedContext.traceId);
+      assert.deepEqual(savedContext.spanId, extractedContext.spanId);
+      assert.deepEqual(savedContext.parentId, extractedContext.parentId);
+      assert.equal(savedContext.flags, extractedContext.flags);
+      assert.equal(savedContext.baggage[keyOne], extractedContext.baggage[keyOne]);
+      assert.equal(savedContext.baggage[keyTwo], extractedContext.baggage[keyTwo]);
+    };
+
+    assertByFormat(opentracing.FORMAT_TEXT_MAP);
+    assertByFormat(opentracing.FORMAT_HTTP_HEADERS);
+  });
+
+  it('inject plain text headers into carrier, and extract span context with the same value 128bits', () => {
+    let keyOne = 'keyOne';
+    let keyTwo = 'keyTwo';
+    let baggage = {
+      keyOne: 'leela',
+      keyTwo: 'bender',
+    };
+    let savedContext = SpanContext.withBinaryIds(
+      Buffer.concat([Utils.encodeInt64(1), Utils.encodeInt64(2)]),
       Utils.encodeInt64(2),
       Utils.encodeInt64(3),
       constants.SAMPLED_MASK,
@@ -401,7 +445,7 @@ describe('tracer should', () => {
         });
 
         _.each(o.metrics, metricName => {
-          assert.isOk(LocalBackend.counterEquals(metrics[metricName], 1));
+          assert.isTrue(LocalBackend.counterEquals(metrics[metricName], 1));
         });
       });
     });
@@ -414,7 +458,75 @@ describe('tracer should', () => {
       let span = tracer.startSpan('bender');
       tracer._report(span);
 
-      assert.isOk(LocalBackend.counterEquals(metrics.spansFinished, 1));
+      assert.isTrue(LocalBackend.counterEquals(metrics.spansFinished, 1));
     });
   });
+
+  it('start a root span with 128 bit traceId', () => {
+    tracer = new Tracer('test-service-name', reporter, new ConstSampler(true), { traceId128bit: true });
+    let span = tracer.startSpan('test-name');
+
+    assert.deepEqual(span.context().traceId.slice(-8), span.context().spanId);
+    assert.equal(16, span.context().traceId.length);
+  });
+
+  it('preserve 64bit traceId even when in 128bit mode', () => {
+    // NB: because we currently trim leading zeros, this test is not as effective as it could be.
+    // But once https://github.com/jaegertracing/jaeger-client-node/issues/391 is fixed, this test
+    // will be more useful as it can catch regression.
+    tracer = new Tracer('test-service-name', reporter, new ConstSampler(true), { traceId128bit: true });
+    let span = tracer.startSpan('test-name');
+    assert.equal(16, span.context().traceId.length, 'new traces use 128bit IDs');
+
+    let parent = SpanContext.fromString('100:7f:0:1');
+    assert.equal(8, parent.traceId.length, 'respect 64bit length');
+
+    let child = tracer.startSpan('test-name', { childOf: parent });
+    assert.equal(8, child.context().traceId.length, 'preserve 64bit length');
+
+    let carrier = {};
+    tracer.inject(child.context(), opentracing.FORMAT_TEXT_MAP, carrier);
+    // Once https://github.com/jaegertracing/jaeger-client-node/issues/391 is fixed, the following
+    // asset will fail and will need to be changed to compare against '0000000000000100' string.
+    assert.equal('100:', carrier['uber-trace-id'].substring(0, 4), 'preserve 64bit length');
+  });
+
+  it('should NOT mutate tags', () => {
+    const tags = {
+      robot: 'bender',
+    };
+    tracer = new Tracer('test-service-name', reporter, new ConstSampler(true), {
+      tags: tags,
+    });
+    tracer.close();
+    assert.notEqual(tags, tracer._tags);
+    assert.deepEqual(tags, {
+      robot: 'bender',
+    });
+  });
+});
+
+it('should match parent and spanIds when in rpc server mode', () => {
+  let traceId = Utils.encodeInt64(1);
+  let spanId = Utils.encodeInt64(2);
+  let flags = 1;
+  const parentContext = SpanContext.withBinaryIds(traceId, spanId, null, flags);
+
+  let tags = {};
+  tags[opentracing.Tags.SPAN_KIND] = opentracing.Tags.SPAN_KIND_RPC_SERVER;
+
+  let customReporter = new InMemoryReporter();
+  let customTracer = new Tracer('test-service-name', customReporter, new ConstSampler(true), {
+    shareRpcSpan: true,
+  });
+  let span = customTracer.startSpan('bender', {
+    childOf: parentContext,
+    tags: tags,
+  });
+
+  assert.equal(parentContext.spanId, span._spanContext.spanId);
+  assert.equal(parentContext.parentId, span._spanContext.parentId);
+
+  customReporter.clear();
+  customTracer.close();
 });

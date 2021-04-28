@@ -11,7 +11,7 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import opentracing from 'opentracing';
+import * as opentracing from 'opentracing';
 import Span from './span';
 import Utils from './util';
 

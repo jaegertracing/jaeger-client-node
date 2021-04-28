@@ -11,10 +11,10 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import Span from '../span.js';
-import NullLogger from '../logger.js';
+import Span from '../span';
+import NullLogger from '../logger';
 
-export default class LoggingReporter {
+export default class LoggingReporter implements Reporter {
   _logger: Logger;
 
   constructor(logger: Logger) {
@@ -27,6 +27,10 @@ export default class LoggingReporter {
 
   name(): string {
     return 'LoggingReporter';
+  }
+
+  toString(): string {
+    return this.name();
   }
 
   close(callback?: () => void): void {

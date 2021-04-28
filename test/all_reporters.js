@@ -48,6 +48,21 @@ describe('All Reporters should', () => {
     assert.equal(compositeReporter.name(), 'CompositeReporter');
   });
 
+  it('have proper toString', () => {
+    let loggingReporter = new LoggingReporter();
+    let inMemoryReporter = new InMemoryReporter();
+    inMemoryReporter.setProcess('service-name', []);
+    let noopReporter = new NoopReporter();
+    let remoteReporter = new RemoteReporter(new UDPSender());
+    let compositeReporter = new CompositeReporter([loggingReporter, inMemoryReporter]);
+
+    assert.equal(loggingReporter.toString(), 'LoggingReporter');
+    assert.equal(inMemoryReporter.toString(), 'InMemoryReporter');
+    assert.equal(noopReporter.toString(), 'NoopReporter');
+    assert.equal(remoteReporter.toString(), 'RemoteReporter');
+    assert.equal(compositeReporter.toString(), 'CompositeReporter(LoggingReporter,InMemoryReporter)');
+  });
+
   let closeOptions = [
     {
       callback: sinon.spy(),
@@ -69,7 +84,7 @@ describe('All Reporters should', () => {
 
       reporter.close(o.callback);
 
-      assert.isOk(o.predicate(o.callback));
+      assert.isTrue(o.predicate(o.callback));
     });
   });
 
@@ -101,7 +116,7 @@ describe('All Reporters should', () => {
       let reporter = new CompositeReporter([mockReporter]);
       reporter.report();
 
-      assert.isOk(mockReporter.report.calledOnce);
+      assert.isTrue(mockReporter.report.calledOnce);
     });
   });
 });

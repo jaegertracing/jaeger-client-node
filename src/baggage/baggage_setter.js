@@ -11,9 +11,9 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
-import Span from '../span.js';
-import SpanContext from '../span_context.js';
-import Metrics from '../metrics/metrics.js';
+import Span from '../span';
+import SpanContext from '../span_context';
+import Metrics from '../metrics/metrics';
 
 /**
  * BaggageSetter is a class that sets a baggage key:value and the associated

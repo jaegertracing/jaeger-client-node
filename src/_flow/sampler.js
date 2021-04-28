@@ -1,5 +1,5 @@
 // @flow
-// Copyright (c) 2016 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -11,31 +11,24 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 
+import Span from '../span';
+import type { SamplerApiVersion } from '../samplers/constants';
+
+/**
+ * Sampler methods return SamplingDecision struct.
+ */
+declare type SamplingDecision = {
+  sample: boolean,
+  retryable: boolean,
+  tags: ?{},
+};
+
 declare interface Sampler {
-  name(): string;
+  apiVersion: SamplerApiVersion;
 
-  /**
-   * Decides if a new trace starting with given operation name
-   * should be sampled or not. If the method returns true, it
-   * must populate the tags dictionary with tags that identify
-   * the sampler, namely sampler.type and sampler.param.
-   *
-   * This API is different from Python and Go, because Javascript
-   * does not allow functions to return multiple values. We would
-   * have to return an object like {sampled: bool, tags: map},
-   * which would require heap allocation every time, and in most
-   * cases will have sampled=false where tags are irrelevant.
-   * By passing tags as an out parameter we can minimize the
-   * allocations.
-   *
-   * @param {string} operation - Operation name of the root span.
-   * @param {Object} tags - output dictionary to store sampler tags.
-   * @return {boolean} - returns whether the trace should be sampled.
-   *
-   */
-  isSampled(operation: string, tags: any): boolean;
+  onCreateSpan(span: Span): SamplingDecision;
+  onSetOperationName(span: Span, operationName: string): SamplingDecision;
+  onSetTag(span: Span, key: string, value: any): SamplingDecision;
 
-  equal(other: Sampler): boolean;
-
-  close(callback: ?Function): void;
+  close(callback: ?() => void): void;
 }
