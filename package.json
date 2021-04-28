@@ -3,7 +3,7 @@
   "version": "3.18.2dev",
   "description": "Jaeger binding for OpenTracing API for Node.js",
   "engines": {
-    "node": ">=0.10"
+    "node": ">=10"
   },
   "license": "Apache-2.0",
   "keywords": [],
@@ -49,12 +49,13 @@
     "minimist": "1.2.3",
     "mocha": "^3.0.1",
     "prettier": "1.10.2",
+    "prom-client": "11.0.0",
     "request": "2.74.0",
     "rsvp": "^3.3.1",
     "semver": "^5",
     "sinon": "^1.17.5",
     "source-map-support": "^0.4.5",
-    "tchannel": "^3.9.0",
+    "tchannel": "^4",
     "uber-licence": "^2.0.2",
     "underscore": "^1.8.3"
   },
