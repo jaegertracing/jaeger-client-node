@@ -38,7 +38,7 @@ export default class ConfigurationEnv {
   }
 
   static _getConfigValue(obj, key, defaultValue) {
-    return (obj && obj[key]) || defaultValue;
+    return obj && key in obj ? obj[key] : defaultValue;
   }
 
   static _getSamplerFromEnv(config) {
@@ -49,7 +49,7 @@ export default class ConfigurationEnv {
     }
 
     value = ConfigurationEnv._getConfigValue(config.sampler, 'param', process.env.JAEGER_SAMPLER_PARAM);
-    if (value) {
+    if (!isNaN(value)) {
       samplerConfig.param = parseFloat(value);
     }
 
