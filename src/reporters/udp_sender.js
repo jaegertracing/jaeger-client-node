@@ -117,11 +117,27 @@ export default class UDPSender {
       return;
     }
 
-    this.flush((numSpans: number, err?: string) => {
-      // TODO theoretically we can have buffer overflow here too, if many spans were appended during flush()
-      this._batch.spans.push(span);
-      this._totalSpanBytes += spanSize;
-      SenderUtils.invokeCallback(callback, numSpans, err);
+    this.flushWithPendingSpan(span, spanSize, callback);
+  }
+
+  flushWithPendingSpan(span, spanSize, callback){
+    this.flush((numSpans, err) => {
+      //Test totalSpanBytes before push
+      if(this._totalSpanBytes + spanSize <= this._maxSpanBytes) {
+        this._batch.spans.push(span);
+        this._totalSpanBytes += spanSize;
+
+        if (this._totalSpanBytes < this._maxSpanBytes) {
+          // still have space in the buffer, don't flush it yet
+          SenderUtils.invokeCallback(callback, numSpans, err);
+          return;
+        }
+        // buffer size === this._maxSpanBytes
+        this.flush(callback);
+      }else{
+        //Not enough space so we call recursively flushWithPendingSpan
+        this.flushWithPendingSpan(span, spanSize, callback);
+      }
     });
   }
 
