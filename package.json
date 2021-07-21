@@ -54,7 +54,7 @@
     "rsvp": "^3.3.1",
     "semver": "^5",
     "sinon": "^1.17.5",
-    "source-map-support": "^0.4.5",
+    "source-map-support": "^0.5.19",
     "tchannel": "^4",
     "uber-licence": "^2.0.2",
     "underscore": "^1.8.3"
