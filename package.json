@@ -51,7 +51,7 @@
     "prettier": "1.10.2",
     "prom-client": "11.0.0",
     "request": "2.74.0",
-    "rsvp": "^3.3.1",
+    "rsvp": "^4.8.5",
     "semver": "^5",
     "sinon": "^1.17.5",
     "source-map-support": "^0.4.5",
