@@ -41,7 +41,7 @@
     "eslint-plugin-jsx-a11y": "^5.1.1",
     "eslint-plugin-react": "^7.1.0",
     "express": "^4.14.0",
-    "flow-bin": "^0.75.0",
+    "flow-bin": "^0.155.1",
     "gulp-sourcemaps": "1.7.x",
     "husky": "^0.14.3",
     "lint-staged": "^6.0.0",
