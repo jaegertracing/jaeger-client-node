@@ -43,7 +43,7 @@
     "express": "^4.14.0",
     "flow-bin": "^0.75.0",
     "gulp-sourcemaps": "1.7.x",
-    "husky": "^0.14.3",
+    "husky": "^7.0.1",
     "lint-staged": "^6.0.0",
     "lodash": "^4.15.0",
     "minimist": "1.2.3",
