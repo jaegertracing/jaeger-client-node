@@ -53,7 +53,7 @@
     "request": "2.74.0",
     "rsvp": "^3.3.1",
     "semver": "^5",
-    "sinon": "^1.17.5",
+    "sinon": "^11.1.1",
     "source-map-support": "^0.4.5",
     "tchannel": "^4",
     "uber-licence": "^2.0.2",
