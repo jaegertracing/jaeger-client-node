@@ -14,7 +14,7 @@
 import * as opentracing from 'opentracing';
 import { Tags as otTags } from 'opentracing';
 import os from 'os';
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import BaggageSetter from './baggage/baggage_setter';
 import DefaultBaggageRestrictionManager from './baggage/default_baggage_restriction_manager';
 import * as constants from './constants';
