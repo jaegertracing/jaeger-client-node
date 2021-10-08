@@ -66,7 +66,7 @@ function createUdpSenderTest(options) {
       sender = new UDPSender({ host: options.host, socketType: options.socketType });
       sender.setProcess(reporter._process);
       thrift = new Thrift({
-        entryPoint: path.join(__dirname, '../src/thriftrw-idl/agent.thrift'),
+        entryPoint: ThriftUtils.buildAgentThriftPath(),
         allowOptionalArguments: true,
         allowFilesystemAccess: true,
       });
