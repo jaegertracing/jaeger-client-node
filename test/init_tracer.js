@@ -313,6 +313,7 @@ describe('initTracerFromENV', () => {
     delete process.env.JAEGER_SAMPLER_HOST;
     delete process.env.JAEGER_SAMPLER_PORT;
     delete process.env.JAEGER_SAMPLER_MANAGER_HOST_PORT;
+    delete process.env.JAEGER_SAMPLER_SAMPLING_PATH;
     delete process.env.JAEGER_SAMPLER_REFRESH_INTERVAL;
     delete process.env.JAEGER_REPORTER_AGENT_PORT;
     delete process.env.JAEGER_AGENT_PORT;
@@ -397,11 +398,13 @@ describe('initTracerFromENV', () => {
 
     process.env.JAEGER_SAMPLER_TYPE = 'remote';
     process.env.JAEGER_SAMPLER_MANAGER_HOST_PORT = 'localhost:8080';
+    process.env.JAEGER_SAMPLER_SAMPLING_PATH = '/api/sampling';
     process.env.JAEGER_SAMPLER_REFRESH_INTERVAL = 100;
     tracer = initTracerFromEnv();
     expect(tracer._sampler).to.be.an.instanceof(RemoteSampler);
     assert.equal(tracer._sampler._host, 'localhost');
     assert.equal(tracer._sampler._port, 8080);
+    assert.equal(tracer._sampler._samplingPath, '/api/sampling');
     assert.equal(tracer._sampler._refreshInterval, 100);
     tracer.close();
   });
@@ -419,11 +422,13 @@ describe('initTracerFromENV', () => {
     process.env.JAEGER_SAMPLER_TYPE = 'remote';
     process.env.JAEGER_SAMPLER_HOST = 'localhost';
     process.env.JAEGER_SAMPLER_PORT = 8080;
+    process.env.JAEGER_SAMPLER_SAMPLING_PATH = '/api/sampling';
     process.env.JAEGER_SAMPLER_REFRESH_INTERVAL = 100;
     tracer = initTracerFromEnv();
     expect(tracer._sampler).to.be.an.instanceof(RemoteSampler);
     assert.equal(tracer._sampler._host, 'localhost');
     assert.equal(tracer._sampler._port, 8080);
+    assert.equal(tracer._sampler._samplingPath, '/api/sampling');
     assert.equal(tracer._sampler._refreshInterval, 100);
     tracer.close();
   });
