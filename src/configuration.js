@@ -39,6 +39,7 @@ let jaegerSchema = {
         hostPort: { type: 'string' },
         host: { type: 'string' },
         port: { type: 'number' },
+        samplingPath: { type: 'string' },
         refreshIntervalMs: { type: 'number' },
       },
       required: ['type', 'param'],
@@ -76,6 +77,7 @@ export default class Configuration {
     let hostPort = config.sampler.hostPort;
     let host = config.sampler.host;
     let port = config.sampler.port;
+    let samplingPath = config.sampler.samplingPath;
     let refreshIntervalMs = config.sampler.refreshIntervalMs;
 
     if (typeof param !== 'number') {
@@ -101,6 +103,7 @@ export default class Configuration {
         hostPort: hostPort,
         host: host,
         port: port,
+        samplingPath: samplingPath,
         refreshInterval: refreshIntervalMs,
         metrics: options.metrics,
         logger: options.logger,
@@ -138,7 +141,7 @@ export default class Configuration {
           senderConfig['password'] = config.reporter.password;
         }
         if (config.reporter.timeoutMs) {
-          senderConfig[ 'timeoutMs' ] = config.reporter.timeoutMs;
+          senderConfig['timeoutMs'] = config.reporter.timeoutMs;
         }
       }
       if (config.reporter.agentHost) {

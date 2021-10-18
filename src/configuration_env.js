@@ -74,6 +74,15 @@ export default class ConfigurationEnv {
 
     value = ConfigurationEnv._getConfigValue(
       config.sampler,
+      'samplingPath',
+      process.env.JAEGER_SAMPLER_SAMPLING_PATH
+    );
+    if (value) {
+      samplerConfig.samplingPath = value;
+    }
+
+    value = ConfigurationEnv._getConfigValue(
+      config.sampler,
       'refreshIntervalMs',
       process.env.JAEGER_SAMPLER_REFRESH_INTERVAL
     );
