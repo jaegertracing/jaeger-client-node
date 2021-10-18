@@ -50,7 +50,7 @@
     "mocha": "^3.0.1",
     "prettier": "1.10.2",
     "prom-client": "11.0.0",
-    "request": "2.74.0",
+    "request": "2.88.2",
     "rsvp": "^3.3.1",
     "semver": "^5",
     "sinon": "^1.17.5",
