@@ -52,7 +52,7 @@ export default class UDPSender {
       this._logger.error(`error sending spans over UDP: ${err}`);
     });
     this._agentThrift = new Thrift({
-      entryPoint: path.join(__dirname, '../thriftrw-idl/agent.thrift'),
+      entryPoint: ThriftUtils.buildAgentThriftPath(),
       allowOptionalArguments: true,
       allowFilesystemAccess: true,
     });

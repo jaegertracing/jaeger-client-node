@@ -28,6 +28,10 @@ export default class ThriftUtils {
     return fs.readFileSync(path.join(__dirname, './jaeger-idl/thrift/jaeger.thrift'), 'ascii');
   }
 
+  static buildAgentThriftPath(): string {
+    return path.join(__dirname, './thriftrw-idl/agent.thrift');
+  }
+
   static getThriftTags(initialTags: Array<Tag>): Array<any> {
     let thriftTags = [];
     for (let i = 0; i < initialTags.length; i++) {

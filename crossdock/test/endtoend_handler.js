@@ -17,6 +17,7 @@ import EndToEndHandler from '../src/endtoend_handler';
 import path from 'path';
 import request from 'request';
 import JaegerTestUtils from '../../src/test_util';
+import ThriftUtils from '../../src/thrift';
 import { Thrift } from 'thriftrw';
 import bodyParser from 'body-parser';
 import express from 'express';
@@ -32,7 +33,7 @@ describe('Endtoend Handler should', () => {
     server = dgram.createSocket('udp4');
     server.bind(PORT, HOST);
     thrift = new Thrift({
-      entryPoint: path.join(__dirname, '../../src/thriftrw-idl/agent.thrift'),
+      entryPoint: ThriftUtils.buildAgentThriftPath(),
       allowOptionalArguments: true,
       allowFilesystemAccess: true,
     });

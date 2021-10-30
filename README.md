@@ -282,6 +282,10 @@ In order to bundle the library using webpack, e.g. for uploading code to an AWS 
         from: require.resolve('jaeger-client/dist/src/jaeger-idl/thrift/jaeger.thrift'),
         to: 'jaeger-idl/thrift/jaeger.thrift',
       },
+      {
+        from: require.resolve('jaeger-client/dist/src/thriftrw-idl/agent.thrift'),
+        to: 'thriftrw-idl/agent.thrift',
+      },
     ]),
   ];
 }
