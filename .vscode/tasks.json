@@ -1,15 +1,15 @@
 {
-  "version": "0.1.0",
+  "version": "2.0.0",
   "command": "bash",
-  "isShellCommand": true,
-  "showOutput": "always",
   "args": ["-c"],
   "tasks": [
     {
-      "taskName": "build-node",
-      "suppressTaskName": true,
-      "isBuildCommand": true,
-      "args": ["make build-node"]
+      "label": "build-node",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-c", "make build-node"],
+      "problemMatcher": [],
+      "group": "build"
     }
   ]
 }

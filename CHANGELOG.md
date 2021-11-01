@@ -1,8 +1,16 @@
 # Changes by Version
 
-## 3.18.2 (unreleased)
+## 3.19.0 (2021-10-31)
 
-* Nothing yet.
+* Simplify bundling udp_sender (#530) -- Thorsten Nadel
+* Add sampling path for tracer sampler config (#532) (#533) -- 飞雪无情
+* Bump opentracing from 0.14.4 to 0.14.5 (#487) -- dependabot
+* Update uuid package to latest stable version (#516) -- Manuel Alejandro de Brito Fontes
+* Allow configuring http client timeout (#465) -- Yuri Shkuro
+* Report HTTP errors when flushing spans (#459) -- Espen Hovlandsdal
+* Fix env parsing of falsy values (#462) -- Gerrit-K
+* Stop testing with Node <v10; upgrade tchannel->4.x (#463) -- Yuri Shkuro
+* Upgrade xorshift@^1.1.1 (#442) -- Oliver Salzburg
 
 ## 3.18.1 (2020-08-14)
 
