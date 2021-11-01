@@ -1,5 +1,9 @@
 # Changes by Version
 
+## 3.19.1 (unreleased)
+
+* Nothing yet.
+
 ## 3.19.0 (2021-10-31)
 
 * Simplify bundling udp_sender (#530) -- Thorsten Nadel
