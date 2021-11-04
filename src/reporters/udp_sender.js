@@ -48,6 +48,10 @@ export default class UDPSender {
     this._maxPacketSize = options.maxPacketSize || UDP_PACKET_MAX_LENGTH;
     this._logger = options.logger || new NullLogger();
     this._client = dgram.createSocket(this._socketType);
+    if (this._host == 'localhost') {
+      // When the agent runs locally, we attach our UDP socket to localhost (as opposed to 0.0.0.0)
+      this._client.bind(0, 'localhost');
+    }
     this._client.on('error', err => {
       this._logger.error(`error sending spans over UDP: ${err}`);
     });

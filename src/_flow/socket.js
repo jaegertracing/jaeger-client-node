@@ -13,6 +13,7 @@
 
 declare class dgram$Socket {
   on(event: string, listener: Function): this;
+  bind(port?: number, address?: string): void;
   close(): void;
   send(
     msg: Buffer,
