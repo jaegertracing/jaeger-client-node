@@ -1,6 +1,8 @@
 [![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![NPM Published Version][npm-img]][npm] [![OpenTracing 1.0 Enabled][ot-img]][ot-url]
 
-# 🛑 This library is being deprecated!
+# 🛑 This library is DEPRECATED!
+
+No new pull requests are accepted except for security fixes.
 
 We urge all users to migrate to [OpenTelemetry](https://opentelemetry.io/). Please refer to the [notice in the documentation](https://www.jaegertracing.io/docs/latest/client-libraries/#deprecating-jaeger-clients) for details.
 
@@ -116,8 +118,7 @@ The `metrics` and `logger` objects shown in the above example must satisfy the [
 
 #### Prometheus metrics
 
-This module brings a [Prometheus(prom-client)](https://www.npmjs.com/package/prom-client) integration to the internal Jaeger metrics.  
-The way to initialize the tracer with Prometheus metrics:
+This module brings a [Prometheus(prom-client)](https://www.npmjs.com/package/prom-client) integration to the internal Jaeger metrics. The way to initialize the tracer with Prometheus metrics:
 
 ```javascript
 var PrometheusMetricsFactory = require('jaeger-client').PrometheusMetricsFactory;
