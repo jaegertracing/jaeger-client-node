@@ -30,7 +30,7 @@ jobs:
         fetch-depth: 2
 
     - name: Configure Node Version (LTS)
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ env.NODE_LTS }}
 
@@ -40,7 +40,7 @@ jobs:
         rm -rf ${{ github.workspace }}/node_modules/ ${{ github.workspace }}/package-lock.json
 
     - name: Configure Test Node Version
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.env.TEST_NODE_VERSION }}
       if: ${{ env.NODE_LTS != matrix.env.TEST_NODE_VERSION}}
