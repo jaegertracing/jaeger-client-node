@@ -19,7 +19,7 @@
     "node-int64": "^0.4.0",
     "opentracing": "^0.14.4",
     "thriftrw": "^3.5.0",
-    "uuid": "^8.3.2",
+    "uuid": "^9.0.0",
     "xorshift": "^1.1.1"
   },
   "devDependencies": {
