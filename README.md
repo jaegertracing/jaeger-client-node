@@ -2,7 +2,7 @@
 
 # 🛑 This library is DEPRECATED!
 
-No new pull requests are accepted except for security fixes.
+There will be no new releases of this library.
 
 We urge all users to migrate to [OpenTelemetry](https://opentelemetry.io/). Please refer to the [notice in the documentation](https://www.jaegertracing.io/docs/latest/client-libraries/#deprecating-jaeger-clients) for details.
 
